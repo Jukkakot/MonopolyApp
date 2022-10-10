@@ -3,19 +3,17 @@ package org.example;
 import processing.core.PApplet;
 
 public class MonopolyApp extends PApplet {
-    @Override
+    Game game;
     public void settings() {
-        size(500, 500);
+        size(1700,1000);
     }
 
-    @Override
+    public void setup() {
+        game = new Game(this);
+    }
+
     public void draw() {
-        background(0);
-        fill(255, 0, 0);
-        ellipse(mouseX, mouseY, 100, 100);
+        game.draw();
     }
 
-    public static void main(String[] args) {
-        PApplet.main(MonopolyApp.class.getCanonicalName());
-    }
 }
