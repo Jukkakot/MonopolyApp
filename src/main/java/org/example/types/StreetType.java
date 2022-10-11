@@ -6,20 +6,23 @@ import static org.example.Utils.toFloat;
 
 public enum StreetType {
 
-    BROWN(Color.BROWN),
-    LIGHT_BLUE(color(toFloat(90),toFloat(200),toFloat(250))),
-    PINK(Color.PINK),
-    ORANGE(Color.ORANGE),
+    BROWN(Color.SADDLEBROWN),
+    LIGHT_BLUE(toColor(90,200,250)),
+    PURPLE(toColor(180, 39, 219)),
+    ORANGE(toColor(240, 169, 26)),
     RED(Color.RED),
     YELLOW(Color.YELLOW),
     GREEN(Color.GREEN),
-    DARK_BLUE(color(toFloat(255),toFloat(51),toFloat(51))),
-    RAILROAD(null),
-    UTILITY(null),
-    CORNER(null);
+    DARK_BLUE(Color.BLUE),
+    RAILROAD(Color.BLACK),
+    UTILITY(Color.PINK);
 
     public final Color color;
     StreetType(Color color) {
         this.color = color;
     }
+    private static Color toColor(int r, int g, int b) {
+        return color(toFloat(r), toFloat(g), toFloat(b));
+    }
 }
+

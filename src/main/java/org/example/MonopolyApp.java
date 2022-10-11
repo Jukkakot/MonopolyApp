@@ -13,6 +13,7 @@ public class MonopolyApp extends PApplet {
     }
 
     public void draw() {
+        background(64, 199, 80);
         game.draw();
     }
 

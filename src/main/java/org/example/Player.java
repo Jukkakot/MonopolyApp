@@ -1,6 +1,6 @@
 package org.example;
 
-import org.example.types.PropertyType;
+import org.example.types.SpotType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +10,6 @@ public class Player {
     String name;
     Integer money = 0;
     Token token;
-    List<PropertyType> ownedProperties = new ArrayList<>();
+    List<SpotType> ownedProperties = new ArrayList<>();
 
 }
