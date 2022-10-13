@@ -2,15 +2,13 @@ package org.example.spots;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
-import org.example.Player;
+import org.example.images.IconImage;
 import org.example.images.Image;
 import org.example.images.PropertyImage;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
 import processing.core.PApplet;
 
-
-import java.util.List;
 
 public class Spot extends MonopolyApp implements Drawable {
     public static final int spotW = 1000/12;
@@ -48,9 +46,11 @@ public class Spot extends MonopolyApp implements Drawable {
 
     public void setImage(SpotType spotType) {
         if (spotType.name().startsWith("CORNER")) {
-            this.image = new SpotImage(p, this, true);
+            this.image = new IconImage(p, this, spotType, true);
         } else if (spotType.streetType == null) {
             this.image = new SpotImage(p, this);
+        } else if (spotType.streetType.imgName != null) {
+            this.image = new IconImage(p,this, spotType);
         } else {
             this.image = new PropertyImage(p, this, spotType);
         }

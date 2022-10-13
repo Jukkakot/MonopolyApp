@@ -13,6 +13,6 @@ public class Game {
     }
     public void draw() {
         board.draw();
-        i += 0.5;
+        i += 0.01;
     }
 }

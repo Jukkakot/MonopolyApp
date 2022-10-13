@@ -4,13 +4,20 @@ import org.example.spots.Drawable;
 import org.example.spots.Spot;
 import org.example.types.SpotType;
 import processing.core.PApplet;
+import processing.core.PImage;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Board implements Drawable {
     List<Spot> spots = new ArrayList<>();
+    final List<SpotType> spotTypes = Arrays.asList(SpotType.CORNER1, SpotType.B1, SpotType.COMMUNITY1, SpotType.B2,
+            SpotType.TAX1, SpotType.RR1, SpotType.LB1, SpotType.CHANCE1, SpotType.LB2, SpotType.LB3, SpotType.CORNER2,
+            SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.CORNER3,
+            SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.CORNER4,
+            SpotType.G1, SpotType.G2, SpotType.COMMUNITY3, SpotType.G3, SpotType.RR4, SpotType.CHANCE3, SpotType.DB1, SpotType.TAX2, SpotType.DB2);
     PApplet p;
 
     public Board(PApplet p) {
@@ -45,10 +52,10 @@ public class Board implements Drawable {
         }
         currY += Spot.spotW;
         currY -= Spot.spotH / 2 + Spot.spotW / 2;
-        spots.add(new Spot(p, currX, currY, currRotation));
 
         //TOP ROW
         currRotation += 90;
+        spots.add(new Spot(p, currX, currY, currRotation));
         currX += Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
             spots.add(new Spot(p, currX, currY, currRotation));
@@ -68,60 +75,29 @@ public class Board implements Drawable {
     }
 
     private void initImages() {
-        int i = 0;
-        spots.get(i).setImage(SpotType.CORNER1);
-        spots.get(++i).setImage(SpotType.B1);
-        spots.get(++i).setImage(SpotType.COMMUNITY1);
-        spots.get(++i).setImage(SpotType.B2);
-        spots.get(++i).setImage(SpotType.TAX1);
-        spots.get(++i).setImage(SpotType.RR1);
-        spots.get(++i).setImage(SpotType.LB1);
-        spots.get(++i).setImage(SpotType.CHANCE1);
-        spots.get(++i).setImage(SpotType.LB2);
-        spots.get(++i).setImage(SpotType.LB3);
-
-        spots.get(++i).setImage(SpotType.CORNER2);
-        spots.get(++i).setImage(SpotType.P1);
-        spots.get(++i).setImage(SpotType.U1);
-        spots.get(++i).setImage(SpotType.P2);
-        spots.get(++i).setImage(SpotType.P3);
-        spots.get(++i).setImage(SpotType.RR2);
-        spots.get(++i).setImage(SpotType.O1);
-        spots.get(++i).setImage(SpotType.COMMUNITY2);
-        spots.get(++i).setImage(SpotType.O2);
-        spots.get(++i).setImage(SpotType.O3);
-
-        spots.get(++i).setImage(SpotType.CORNER2);
-        spots.get(++i).setImage(SpotType.R1);
-        spots.get(++i).setImage(SpotType.CHANCE2);
-        spots.get(++i).setImage(SpotType.R2);
-        spots.get(++i).setImage(SpotType.R3);
-        spots.get(++i).setImage(SpotType.RR3);
-        spots.get(++i).setImage(SpotType.Y1);
-        spots.get(++i).setImage(SpotType.Y2);
-        spots.get(++i).setImage(SpotType.U2);
-        spots.get(++i).setImage(SpotType.Y3);
-
-        spots.get(++i).setImage(SpotType.CORNER4);
-        spots.get(++i).setImage(SpotType.G1);
-        spots.get(++i).setImage(SpotType.G2);
-        spots.get(++i).setImage(SpotType.COMMUNITY3);
-        spots.get(++i).setImage(SpotType.G3);
-        spots.get(++i).setImage(SpotType.RR4);
-        spots.get(++i).setImage(SpotType.CHANCE3);
-        spots.get(++i).setImage(SpotType.DB1);
-        spots.get(++i).setImage(SpotType.TAX2);
-        spots.get(++i).setImage(SpotType.DB2);
-
+        spots.forEach(s -> {
+            SpotType sT = spotTypes.get(spots.indexOf(s));
+            s.setImage(sT);
+        });
     }
 
     @Override
     public void draw(float rotate) {
-        spots.forEach(s -> s.draw(rotate));
+        drawBackgorund(rotate);
     }
 
     @Override
     public void draw() {
         draw(0);
+    }
+
+    private void drawBackgorund(float rotate) {
+        p.push();
+        p.imageMode(p.CENTER);
+        PImage img = MonopolyApp.IMAGES.get("Background.png");
+        img.resize(Spot.spotW * 9, Spot.spotW * 9);
+        p.image(MonopolyApp.IMAGES.get("Background.png"), (float) (Spot.spotW * 6), (float) (Spot.spotW * 6));
+        spots.forEach(s -> s.draw(rotate));
+        p.pop();
     }
 }

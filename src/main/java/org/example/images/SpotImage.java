@@ -17,11 +17,6 @@ public class SpotImage extends Image {
     }
 
     @Override
-    public void draw() {
-        draw(0);
-    }
-
-    @Override
     public void draw(float rotate) {
         super.draw(rotate);
         p.push();

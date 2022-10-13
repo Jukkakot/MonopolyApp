@@ -5,6 +5,7 @@ import org.example.spots.Drawable;
 import org.example.spots.Spot;
 import org.example.types.SpotType;
 import processing.core.PApplet;
+
 import static org.example.Utils.toFloat;
 
 public class PropertyImage extends SpotImage implements Drawable {
@@ -14,10 +15,6 @@ public class PropertyImage extends SpotImage implements Drawable {
     public PropertyImage(PApplet p, Spot spot, SpotType spotType) {
         super(p, spot);
         this.spotType = spotType;
-    }
-    @Override
-    public void draw() {
-        draw(0);
     }
 
     @Override
@@ -29,6 +26,7 @@ public class PropertyImage extends SpotImage implements Drawable {
         p.stroke(0);
 
         p.translate(x, y);
+
         //Property color
         p.rotate(radians((rotation + rotate)));
         if (spotType.streetType != null && spotType.streetType.color != null) {
@@ -36,6 +34,11 @@ public class PropertyImage extends SpotImage implements Drawable {
             p.fill(toFloat(color.getRed()), toFloat(color.getGreen()), toFloat(color.getBlue()));
         }
         p.rect(-width / 2, -height / 2, width, height / 4);
+
+        p.fill(0);
+        p.textAlign(CENTER);
+        p.textFont(font);
+        p.text(spotType.getName(), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
 
         p.pop();
     }
