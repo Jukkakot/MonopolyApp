@@ -8,11 +8,8 @@ import processing.core.PApplet;
 
 import static org.example.Utils.toFloat;
 
-public class PropertyImage extends SpotImage implements Drawable {
-
-    private final SpotType spotType;
-
-    public PropertyImage(PApplet p, Spot spot, SpotType spotType) {
+public class PropertySpotImage extends SpotImage implements Drawable {
+    public PropertySpotImage(PApplet p, Spot spot, SpotType spotType) {
         super(p, spot);
         this.spotType = spotType;
     }
@@ -38,7 +35,8 @@ public class PropertyImage extends SpotImage implements Drawable {
         p.fill(0);
         p.textAlign(CENTER);
         p.textFont(font);
-        p.text(spotType.getName(), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
+        p.textLeading(10);
+        p.text(spotType.getProperty("name"), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
 
         p.pop();
     }

@@ -1,12 +1,12 @@
 package org.example.images;
 
+import org.example.spots.Drawable;
 import org.example.spots.Spot;
+import org.example.types.SpotType;
 import processing.core.PApplet;
 
-public class SpotImage extends Image {
-    protected final float width;
-    protected final float height;
-
+public class SpotImage extends Image implements Drawable {
+    protected SpotType spotType;
     public SpotImage(PApplet p, Spot spot) {
         this(p, spot, false);
     }
@@ -18,7 +18,6 @@ public class SpotImage extends Image {
 
     @Override
     public void draw(float rotate) {
-        super.draw(rotate);
         p.push();
 
         p.noFill();
@@ -30,6 +29,14 @@ public class SpotImage extends Image {
         //Outside border
         p.rotate(radians(rotation + rotate));
         p.rect(-width/2, -height/2, width, height);
+
+        if(!spotType.getProperty("price").trim().isEmpty()) {
+            p.fill(0);
+            p.textAlign(CENTER);
+            p.textFont(font);
+
+            p.text("M"+spotType.getProperty("price"), (int) -(width * 0.37), height/3, (int) (width * 0.75), height);
+        }
 
         p.pop();
     }

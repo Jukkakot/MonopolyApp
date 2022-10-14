@@ -2,16 +2,16 @@ package org.example.spots;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
-import org.example.images.IconImage;
+import org.example.images.IconSpotImage;
 import org.example.images.Image;
-import org.example.images.PropertyImage;
+import org.example.images.PropertySpotImage;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
 import processing.core.PApplet;
 
 
 public class Spot extends MonopolyApp implements Drawable {
-    public static final int spotW = 1000/12;
+    public static final int spotW = 996/12;
     public static final int spotH = (int) (spotW * 1.5);
     @Getter
     protected final int x;
@@ -19,7 +19,7 @@ public class Spot extends MonopolyApp implements Drawable {
     protected final int y;
     @Getter
     protected final float rotation;
-    private Image image;
+    private SpotImage image;
     protected final PApplet p;
 
     public Spot(PApplet p, final int x, final int y, final float rotation) {
@@ -36,7 +36,6 @@ public class Spot extends MonopolyApp implements Drawable {
         } else {
             Image.defaultDraw(p, x, y);
         }
-
     }
 
     @Override
@@ -46,13 +45,13 @@ public class Spot extends MonopolyApp implements Drawable {
 
     public void setImage(SpotType spotType) {
         if (spotType.name().startsWith("CORNER")) {
-            this.image = new IconImage(p, this, spotType, true);
+            this.image = new IconSpotImage(p, this, spotType, true);
         } else if (spotType.streetType == null) {
             this.image = new SpotImage(p, this);
         } else if (spotType.streetType.imgName != null) {
-            this.image = new IconImage(p,this, spotType);
+            this.image = new IconSpotImage(p,this, spotType);
         } else {
-            this.image = new PropertyImage(p, this, spotType);
+            this.image = new PropertySpotImage(p, this, spotType);
         }
     }
 }

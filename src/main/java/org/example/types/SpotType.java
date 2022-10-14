@@ -36,15 +36,15 @@ public enum SpotType {
 
     }
 
-    public String getName() {
+    public String getProperty(String propName) {
         try {
             if (!name().startsWith("COMMUNITY") && !name().startsWith("CHANCE")) {
-                return props.getProperty(this.name() + ".name", "");
+                return props.getProperty(this.name() + "."+propName, "");
             } else {
-                return props.getProperty(this.name().substring(0, this.name().length() - 1) + ".name", "");
+                return props.getProperty(this.name().substring(0, this.name().length() - 1) + "."+propName, "");
             }
         } catch (Exception e) {
-            System.err.println("Name missing for " + this.name());
+            System.err.println(propName+" missing for " + this.name());
             return "";
         }
     }

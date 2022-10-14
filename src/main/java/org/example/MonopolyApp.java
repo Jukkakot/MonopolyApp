@@ -1,5 +1,6 @@
 package org.example;
 
+import controlP5.ControlP5;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -13,13 +14,15 @@ import java.util.stream.Stream;
 
 public class MonopolyApp extends PApplet {
     Game game;
+    ControlP5 p5;
     public static Map<String, PImage> IMAGES = new HashMap<>();
     public static PFont font;
     public void settings() {
-        size(1700, 1000);
+        size(1700, 996);
     }
 
     public void setup() {
+        p5 = new ControlP5(this);
         initImages();
         font = createFont("Monopoly Regular.ttf",10);
         textFont(font);
@@ -45,5 +48,10 @@ public class MonopolyApp extends PApplet {
                 .filter(file -> !file.isDirectory())
                 .map(File::getName)
                 .toList();
+    }
+    public void rollDice(int theValue) {
+        if(game != null ) {
+            game.rollDice();
+        }
     }
 }

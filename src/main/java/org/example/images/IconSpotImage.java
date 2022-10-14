@@ -6,13 +6,12 @@ import org.example.types.SpotType;
 import processing.core.PApplet;
 import processing.core.PImage;
 
-public class IconImage extends SpotImage implements Drawable {
-    private final SpotType spotType;
+public class IconSpotImage extends SpotImage implements Drawable {
 
-    public IconImage(PApplet p, Spot spot, SpotType spotType) {
+    public IconSpotImage(PApplet p, Spot spot, SpotType spotType) {
        this(p, spot, spotType, false);
     }
-    public IconImage(PApplet p, Spot spot, SpotType spotType, boolean isCorner) {
+    public IconSpotImage(PApplet p, Spot spot, SpotType spotType, boolean isCorner) {
         super(p, spot, isCorner);
         this.spotType = spotType;
     }
@@ -30,7 +29,8 @@ public class IconImage extends SpotImage implements Drawable {
         p.fill(0);
         p.textAlign(CENTER);
         p.textFont(font);
-        p.text(spotType.getName(), (int) -(width * 0.37), (int) -(height * 0.42), (int) (width * 0.75), height / 2);
+        p.textLeading(10);
+        p.text(spotType.getProperty("name"), (int) -(width * 0.37), (int) -(height * 0.42), (int) (width * 0.75), height / 2);
 
         p.pop();
     }
