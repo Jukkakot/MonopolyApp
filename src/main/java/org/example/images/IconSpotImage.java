@@ -1,7 +1,7 @@
 package org.example.images;
 
-import org.example.spots.Drawable;
-import org.example.spots.Spot;
+import org.example.Drawable;
+import org.example.components.Spot;
 import org.example.types.SpotType;
 import processing.core.PApplet;
 import processing.core.PImage;

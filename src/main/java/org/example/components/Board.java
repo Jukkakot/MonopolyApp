@@ -1,22 +1,19 @@
-package org.example;
+package org.example.components;
 
-import org.example.spots.Drawable;
-import org.example.spots.Spot;
+import lombok.Getter;
+import org.example.Drawable;
+import org.example.MonopolyApp;
+import org.example.Player;
 import org.example.types.SpotType;
 import processing.core.PImage;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Board extends MonopolyApp implements Drawable {
-    List<Spot> spots = new ArrayList<>();
-    final List<SpotType> spotTypes = Arrays.asList(SpotType.CORNER1, SpotType.B1, SpotType.COMMUNITY1, SpotType.B2,
-            SpotType.TAX1, SpotType.RR1, SpotType.LB1, SpotType.CHANCE1, SpotType.LB2, SpotType.LB3, SpotType.CORNER2,
-            SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.CORNER3,
-            SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.CORNER4,
-            SpotType.G1, SpotType.G2, SpotType.COMMUNITY3, SpotType.G3, SpotType.RR4, SpotType.CHANCE3, SpotType.DB1, SpotType.TAX2, SpotType.DB2);
+    @Getter
+    private final List<Spot> spots = new ArrayList<>();
     MonopolyApp p;
 
     public Board(MonopolyApp p) {
@@ -75,7 +72,7 @@ public class Board extends MonopolyApp implements Drawable {
 
     private void initImages() {
         spots.forEach(s -> {
-            SpotType sT = spotTypes.get(spots.indexOf(s));
+            SpotType sT = SpotType.spotTypes.get(spots.indexOf(s));
             s.setImage(sT);
         });
     }
@@ -83,6 +80,7 @@ public class Board extends MonopolyApp implements Drawable {
     @Override
     public void draw(float rotate) {
         drawBackground(rotate);
+//        spots.forEach(Spot::drawPlayers);
     }
 
     @Override
@@ -98,5 +96,10 @@ public class Board extends MonopolyApp implements Drawable {
         p.image(MonopolyApp.IMAGES.get("Background.png"), (float) (Spot.spotW * 6), (float) (Spot.spotW * 6));
         spots.forEach(s -> s.draw(rotate));
         p.pop();
+    }
+
+    public Spot getNewSpot(Player player, int diceValue) {
+        int currSpot = spots.indexOf(player.getToken().getSpot());
+        return spots.get((currSpot + diceValue) % spots.size());
     }
 }

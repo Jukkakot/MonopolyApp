@@ -2,7 +2,7 @@ package org.example.types;
 import javafx.scene.paint.Color;
 
 import static javafx.scene.paint.Color.color;
-import static org.example.Utils.toFloat;
+import static org.example.utils.Utils.toFloat;
 
 public enum StreetType {
 

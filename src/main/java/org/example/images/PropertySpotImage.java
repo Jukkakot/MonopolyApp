@@ -1,12 +1,12 @@
 package org.example.images;
 
 import javafx.scene.paint.Color;
-import org.example.spots.Drawable;
-import org.example.spots.Spot;
+import org.example.Drawable;
+import org.example.components.Spot;
 import org.example.types.SpotType;
 import processing.core.PApplet;
 
-import static org.example.Utils.toFloat;
+import static org.example.utils.Utils.toColor;
 
 public class PropertySpotImage extends SpotImage implements Drawable {
     public PropertySpotImage(PApplet p, Spot spot, SpotType spotType) {
@@ -28,7 +28,7 @@ public class PropertySpotImage extends SpotImage implements Drawable {
         p.rotate(radians((rotation + rotate)));
         if (spotType.streetType != null && spotType.streetType.color != null) {
             Color color = spotType.streetType.color;
-            p.fill(toFloat(color.getRed()), toFloat(color.getGreen()), toFloat(color.getBlue()));
+            p.fill(toColor(p, color));
         }
         p.rect(-width / 2, -height / 2, width, height / 4);
 

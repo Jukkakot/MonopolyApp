@@ -49,9 +49,4 @@ public class MonopolyApp extends PApplet {
                 .map(File::getName)
                 .toList();
     }
-    public void rollDice(int theValue) {
-        if(game != null ) {
-            game.rollDice();
-        }
-    }
 }
