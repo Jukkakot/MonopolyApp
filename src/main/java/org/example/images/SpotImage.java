@@ -1,6 +1,7 @@
 package org.example.images;
 
 import org.example.Drawable;
+import org.example.MonopolyApp;
 import org.example.components.Spot;
 import org.example.types.SpotType;
 import processing.core.PApplet;
@@ -27,13 +28,13 @@ public class SpotImage extends Image implements Drawable {
         p.translate(x, y);
 
         //Outside border
-        p.rotate(radians(rotation + rotate));
+        p.rotate(MonopolyApp.radians(rotation + rotate));
         p.rect(-width/2, -height/2, width, height);
 
         if(!spotType.getProperty("price").trim().isEmpty()) {
             p.fill(0);
-            p.textAlign(CENTER);
-            p.textFont(font);
+            p.textAlign(p.CENTER);
+            p.textFont(MonopolyApp.font);
 
             p.text("M"+spotType.getProperty("price"), (int) -(width * 0.37), height/3, (int) (width * 0.75), height);
         }

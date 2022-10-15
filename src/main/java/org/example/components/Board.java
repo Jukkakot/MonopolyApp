@@ -1,17 +1,18 @@
 package org.example.components;
 
 import lombok.Getter;
-import org.example.Drawable;
 import org.example.MonopolyApp;
 import org.example.Player;
 import org.example.types.SpotType;
+import org.example.utils.Coordinates;
 import processing.core.PImage;
 
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class Board extends MonopolyApp implements Drawable {
+public class Board extends MonopolyApp {
     @Getter
     private final List<Spot> spots = new ArrayList<>();
     MonopolyApp p;
@@ -77,15 +78,8 @@ public class Board extends MonopolyApp implements Drawable {
         });
     }
 
-    @Override
     public void draw(float rotate) {
         drawBackground(rotate);
-//        spots.forEach(Spot::drawPlayers);
-    }
-
-    @Override
-    public void draw() {
-        draw(0);
     }
 
     private void drawBackground(float rotate) {
@@ -98,8 +92,19 @@ public class Board extends MonopolyApp implements Drawable {
         p.pop();
     }
 
-    public Spot getNewSpot(Player player, int diceValue) {
-        int currSpot = spots.indexOf(player.getToken().getSpot());
+    public Spot getNewSpot(Spot spot, int diceValue) {
+        int currSpot = spots.indexOf(spot);
         return spots.get((currSpot + diceValue) % spots.size());
+    }
+
+    public List<Coordinates> getPath(Spot start, int value, Player player) {
+        List<Spot> result = new ArrayList<>();
+        Spot nextSpot = getNewSpot(start, 1);
+        result.add(nextSpot);
+        for (int i = 0; i < value; i++) {
+            result.add(nextSpot);
+            nextSpot = getNewSpot(nextSpot, 1);
+        }
+        return result.stream().map(s -> s.getCoordinates(player)).collect(Collectors.toList());
     }
 }

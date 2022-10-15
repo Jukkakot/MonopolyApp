@@ -2,6 +2,7 @@ package org.example.images;
 
 import javafx.scene.paint.Color;
 import org.example.Drawable;
+import org.example.MonopolyApp;
 import org.example.components.Spot;
 import org.example.types.SpotType;
 import processing.core.PApplet;
@@ -25,7 +26,7 @@ public class PropertySpotImage extends SpotImage implements Drawable {
         p.translate(x, y);
 
         //Property color
-        p.rotate(radians((rotation + rotate)));
+        p.rotate(MonopolyApp.radians((rotation + rotate)));
         if (spotType.streetType != null && spotType.streetType.color != null) {
             Color color = spotType.streetType.color;
             p.fill(toColor(p, color));
@@ -33,8 +34,8 @@ public class PropertySpotImage extends SpotImage implements Drawable {
         p.rect(-width / 2, -height / 2, width, height / 4);
 
         p.fill(0);
-        p.textAlign(CENTER);
-        p.textFont(font);
+        p.textAlign(p.CENTER);
+        p.textFont(MonopolyApp.font);
         p.textLeading(10);
         p.text(spotType.getProperty("name"), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
 

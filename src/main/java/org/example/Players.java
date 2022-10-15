@@ -5,7 +5,7 @@ import org.example.components.Spot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Players implements Drawable {
+public class Players {
 
     private final List<Player> playerList = new ArrayList<>();
     private int turnNum = 1;
@@ -13,7 +13,7 @@ public class Players implements Drawable {
     public Player addPlayer(Player p, Spot spot) {
         playerList.add(p);
         p.getToken().setSpot(spot);
-       spot.addPlayer(p);
+        spot.addPlayer(p);
        return p;
     }
     public void removePlayer(Player p) {
@@ -21,7 +21,7 @@ public class Players implements Drawable {
     }
 
     public Player switchTurn() {
-        turnNum = ++turnNum % playerList.size() + 1;
+        turnNum = turnNum++ % playerList.size() + 1;
         List<Player> players = playerList.stream().filter(p -> p.getTurnNumber() == turnNum).toList();
         if (players.size() == 1) {
             return players.get(0);
@@ -39,13 +39,8 @@ public class Players implements Drawable {
             return null;
         }
     }
-    @Override
-    public void draw(float rotate) {
-        playerList.forEach(p -> p.draw(rotate));
+    public void draw() {
+        playerList.forEach(Player::draw);
     }
 
-    @Override
-    public void draw() {
-        draw(0);
-    }
 }

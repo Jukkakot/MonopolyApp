@@ -41,12 +41,12 @@ public enum SpotType {
     public String getProperty(String propName) {
         try {
             if (!name().startsWith("COMMUNITY") && !name().startsWith("CHANCE")) {
-                return props.getProperty(this.name() + "."+propName, "");
+                return props.getProperty(this.name() + "." + propName, "");
             } else {
-                return props.getProperty(this.name().substring(0, this.name().length() - 1) + "."+propName, "");
+                return props.getProperty(this.name().substring(0, this.name().length() - 1) + "." + propName, "");
             }
         } catch (Exception e) {
-            System.err.println(propName+" missing for " + this.name());
+            System.err.println(propName + " missing for " + this.name());
             return "";
         }
     }
@@ -55,6 +55,7 @@ public enum SpotType {
         int randomIndex = (int) (Math.random() * SpotType.values().length);
         return SpotType.values()[randomIndex];
     }
+
     public static final List<SpotType> spotTypes = Arrays.asList(SpotType.CORNER1, SpotType.B1, SpotType.COMMUNITY1, SpotType.B2,
             SpotType.TAX1, SpotType.RR1, SpotType.LB1, SpotType.CHANCE1, SpotType.LB2, SpotType.LB3, SpotType.CORNER2,
             SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.CORNER3,

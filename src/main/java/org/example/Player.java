@@ -28,6 +28,17 @@ public class Player implements Drawable {
     public void draw(Coordinates coords) {
         token.draw(coords);
     }
+
+    @Override
+    public Coordinates getCoords() {
+        return token.getCoords();
+    }
+
+    @Override
+    public void setCoords(Coordinates coords) {
+        token.setCoords(coords);
+    }
+
     @Override
     public void draw(float rotate) {
         token.draw(rotate);

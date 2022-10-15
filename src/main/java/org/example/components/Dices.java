@@ -2,11 +2,10 @@ package org.example.components;
 
 import javafx.util.Pair;
 import lombok.Getter;
-import org.example.Drawable;
 import org.example.types.SpotProps;
 import processing.core.PApplet;
 
-public class Dices implements Drawable {
+public class Dices{
     private final Pair<Dice, Dice> dices;
     @Getter
     private int value = 0;
@@ -22,14 +21,9 @@ public class Dices implements Drawable {
         return value;
     }
 
-    @Override
     public void draw(float rotate) {
         dices.getKey().draw(rotate);
         dices.getValue().draw(rotate);
     }
 
-    @Override
-    public void draw() {
-        draw(0);
-    }
 }
