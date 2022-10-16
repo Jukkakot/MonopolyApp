@@ -1,6 +1,6 @@
 package org.example;
 
-import org.example.components.Spot;
+import org.example.components.spots.Spot;
 
 import java.util.ArrayList;
 import java.util.List;

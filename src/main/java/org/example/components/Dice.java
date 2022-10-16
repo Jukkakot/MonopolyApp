@@ -2,7 +2,7 @@ package org.example.components;
 
 import org.example.images.Image;
 import org.example.Drawable;
-import org.example.types.SpotProps;
+import org.example.utils.SpotProps;
 import org.example.utils.Coordinates;
 import processing.core.PApplet;
 
@@ -24,19 +24,15 @@ public class Dice implements Drawable {
         return "Dice" + value + ".png";
     }
 
-    @Override
-    public void draw(float rotate) {
-        img.draw(rotate);
-    }
 
     @Override
     public void draw() {
-        draw(0);
+        draw(null);
     }
 
     @Override
-    public void draw(Coordinates coordinates) {
-
+    public void draw(Coordinates c) {
+        img.draw(c);
     }
 
     @Override

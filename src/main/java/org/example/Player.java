@@ -1,7 +1,7 @@
 package org.example;
 
 import lombok.Getter;
-import org.example.components.Spot;
+import org.example.components.spots.Spot;
 import org.example.components.Token;
 import org.example.utils.Coordinates;
 
@@ -40,11 +40,7 @@ public class Player implements Drawable {
     }
 
     @Override
-    public void draw(float rotate) {
-        token.draw(rotate);
-    }
-    @Override
     public void draw() {
-        draw(0);
+        draw(null);
     }
 }

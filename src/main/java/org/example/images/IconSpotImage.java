@@ -2,43 +2,38 @@ package org.example.images;
 
 import org.example.Drawable;
 import org.example.MonopolyApp;
-import org.example.components.Spot;
-import org.example.types.SpotType;
+import org.example.types.SpotTypeEnum;
 import org.example.utils.Coordinates;
 import processing.core.PApplet;
 import processing.core.PImage;
 
 public class IconSpotImage extends SpotImage implements Drawable {
 
-    public IconSpotImage(PApplet p, Spot spot, SpotType spotType) {
-       this(p, spot, spotType, false);
+    public IconSpotImage(PApplet p, Coordinates coords, SpotTypeEnum spotTypeEnum) {
+       this(p, coords, spotTypeEnum, false);
     }
-    public IconSpotImage(PApplet p, Spot spot, SpotType spotType, boolean isCorner) {
-        super(p, spot, isCorner);
-        this.spotType = spotType;
+    public IconSpotImage(PApplet p, Coordinates coords, SpotTypeEnum spotTypeEnum, boolean isCorner) {
+        super(p, coords, isCorner);
+        this.spotTypeEnum = spotTypeEnum;
     }
     @Override
-    public void draw(float rotate) {
-        super.draw(rotate);
+    public void draw(Coordinates c) {
+        float rotation = c != null ? c.rotation() : 0;
+        super.draw(c);
         p.push();
-        p.translate(x, y);
-        p.rotate(MonopolyApp.radians((rotation + rotate)));
+        p.translate(coords.x(), coords.y());
+        p.rotate(MonopolyApp.radians((coords.rotation() + rotation)));
         p.imageMode(p.CENTER);
-        PImage img = MonopolyApp.IMAGES.get(spotType.streetType.imgName);
+        PImage img = MonopolyApp.IMAGES.get(spotTypeEnum.streetType.imgName);
         img.resize((int) width, (int) height);
         p.image(img, 0, 0);
 
         p.fill(0);
         p.textAlign(p.CENTER);
-        p.textFont(MonopolyApp.font);
+        p.textFont(MonopolyApp.font10);
         p.textLeading(10);
-        p.text(spotType.getProperty("name"), (int) -(width * 0.37), (int) -(height * 0.42), (int) (width * 0.75), height / 2);
+        p.text(spotTypeEnum.getProperty("name"), (int) -(width * 0.37), (int) -(height * 0.42), (int) (width * 0.75), height / 2);
 
         p.pop();
-    }
-
-    @Override
-    public void draw(Coordinates coordinates) {
-        draw();
     }
 }

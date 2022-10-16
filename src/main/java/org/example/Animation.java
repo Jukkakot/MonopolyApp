@@ -11,18 +11,25 @@ public class Animation {
     private final List<Coordinates> path;
     private final static float MIN_ANIM_DISTANCE = 2;
     private final static double ANIMATION_SPEED = 0.2;
-
-    public Animation(Drawable drawable, List<Coordinates> path) {
+    private Action endAction;
+    public Animation(Drawable drawable, List<Coordinates> path, Action endAction) {
         this.drawable = drawable;
         this.path = path;
+        this.endAction = endAction;
     }
+
     public void finishAnimation() {
-        if(path.size() >= 1) {
-            drawable.setCoords(path.get(path.size()-1));
+        if (path.size() >= 1) {
+            drawable.setCoords(path.get(path.size() - 1));
         }
+        endAction.doAction();
     }
+
     public boolean updateAnimation() {
-        if (path.size() == 0) return false;
+        if (path.isEmpty()){
+            finishAnimation();
+            return false;
+        }
 
         Coordinates currCoords = drawable.getCoords();
         Coordinates goalCoords = path.get(0);

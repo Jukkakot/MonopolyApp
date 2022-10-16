@@ -14,9 +14,10 @@ import java.util.stream.Stream;
 
 public class MonopolyApp extends PApplet {
     Game game;
-    ControlP5 p5;
+    public ControlP5 p5;
     public static Map<String, PImage> IMAGES = new HashMap<>();
-    public static PFont font;
+    public static PFont font10;
+    public static PFont font20;
     public void settings() {
         size(1700, 996);
     }
@@ -24,8 +25,9 @@ public class MonopolyApp extends PApplet {
     public void setup() {
         p5 = new ControlP5(this);
         initImages();
-        font = createFont("Monopoly Regular.ttf",10);
-        textFont(font);
+        font10 = createFont("Monopoly Regular.ttf",10);
+        font20 = createFont("Monopoly Regular.ttf",20);
+        textFont(font10);
         game = new Game(this);
     }
 

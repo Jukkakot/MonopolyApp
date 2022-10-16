@@ -1,10 +1,11 @@
 package org.example;
 
+import controlP5.Button;
 import javafx.scene.paint.Color;
-import org.example.components.Board;
-import org.example.components.Dices;
-import org.example.components.Spot;
-import org.example.components.Token;
+import org.example.components.*;
+import org.example.components.popup.OkPopup;
+import org.example.components.popup.Popup;
+import org.example.components.spots.Spot;
 
 public class Game {
     Board board;
@@ -12,6 +13,8 @@ public class Game {
     Players players;
     MonopolyApp p;
     Animations animations;
+    Popup confirmPopup;
+    private final Button rollDiceButton;
     float i = 0;
 
     public Game(MonopolyApp p) {
@@ -22,36 +25,43 @@ public class Game {
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(1, "Toka", new Token(p, spot, Color.MEDIUMPURPLE), 1), spot);
-        players.addPlayer(new Player(2, "Kolmas", new Token(p, spot, Color.PINK), 2), spot);
-        players.addPlayer(new Player(3, "Neljäs", new Token(p, spot, Color.DARKOLIVEGREEN), 3), spot);
-        players.addPlayer(new Player(4, "Toka", new Token(p, spot, Color.TURQUOISE), 4), spot);
-        players.addPlayer(new Player(5, "Kolmas", new Token(p, spot, Color.BLANCHEDALMOND), 5), spot);
-        players.addPlayer(new Player(6, "Neljäs", new Token(p, spot, Color.DIMGREY), 6), spot);
+        players.addPlayer(new Player(1, "Eka", new Token(p, spot, Color.MEDIUMPURPLE), 1), spot);
+        players.addPlayer(new Player(2, "Toka", new Token(p, spot, Color.PINK), 2), spot);
+        players.addPlayer(new Player(3, "Kolmas", new Token(p, spot, Color.DARKOLIVEGREEN), 3), spot);
+        players.addPlayer(new Player(4, "Neljäs", new Token(p, spot, Color.TURQUOISE), 4), spot);
 
-        p.p5.addButton("rollDice")
-                .setValue(0)
+        rollDiceButton = new Button(p.p5, "rollDice")
                 .setPosition((int) (Spot.spotW * 5.4), (int) (Spot.spotW * 3))
                 .addListener(e -> rollDice())
                 .setLabel("Roll dice")
+                .setFont(MonopolyApp.font20)
                 .setSize(100, 50);
+
+        confirmPopup = new OkPopup(p, "Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at" +
+                " this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot," +
+                " Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome!" +
+                " Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome!");
+        p.p5.addCanvas(confirmPopup);
     }
 
     public void draw() {
         animations.updateAnimations();
-        board.draw(0);
-        dices.draw(0);
+        board.draw(null);
+        dices.draw(null);
         players.draw();
+        rollDiceButton.setVisible(!animations.isRunning());
         i += 0.5;
     }
 
     public void rollDice() {
+        if (confirmPopup.isVisible()) return;
         int value = dices.roll();
         Player turn = players.getTurn();
         Spot oldSpot = turn.getToken().getSpot();
         Spot newSpot = board.getNewSpot(oldSpot, value);
-        animations.addAnimation(new Animation(turn.getToken(), board.getPath(oldSpot, value, turn)));
+        animations.addAnimation(new Animation(turn.getToken(), board.getPath(oldSpot, value, turn), () -> confirmPopup.show()));
         turn.moveToken(newSpot);
+//        confirmPopup.show();
         players.switchTurn();
     }
 }

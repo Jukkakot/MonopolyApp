@@ -3,7 +3,10 @@ package org.example.components;
 import lombok.Getter;
 import org.example.MonopolyApp;
 import org.example.Player;
-import org.example.types.SpotType;
+import org.example.components.spots.Spot;
+import org.example.components.spots.SpotFactory;
+import org.example.images.ImageFactory;
+import org.example.types.SpotTypeEnum;
 import org.example.utils.Coordinates;
 import processing.core.PImage;
 
@@ -12,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Board extends MonopolyApp {
+public class Board {
     @Getter
     private final List<Spot> spots = new ArrayList<>();
     MonopolyApp p;
@@ -20,7 +23,6 @@ public class Board extends MonopolyApp {
     public Board(MonopolyApp p) {
         this.p = p;
         initSpots();
-        initImages();
     }
 
     private void initSpots() {
@@ -29,22 +31,22 @@ public class Board extends MonopolyApp {
         int currRotation = 0;
 
         //BOTTOM ROW
-        spots.add(new Spot(p, currX, currY, currRotation));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
         currX -= Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(new Spot(p, currX, currY, currRotation));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
             currX -= Spot.spotW;
 
         }
         currX += Spot.spotW;
         currX -= Spot.spotH / 2 + Spot.spotW / 2;
-        spots.add(new Spot(p, currX, currY, currRotation));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
 
         //LEFT COLUMN
         currRotation += 90;
         currY -= Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(new Spot(p, currX, currY, currRotation));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
             currY -= Spot.spotW;
         }
         currY += Spot.spotW;
@@ -52,43 +54,36 @@ public class Board extends MonopolyApp {
 
         //TOP ROW
         currRotation += 90;
-        spots.add(new Spot(p, currX, currY, currRotation));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
         currX += Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(new Spot(p, currX, currY, currRotation));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
             currX += Spot.spotW;
         }
         currX -= Spot.spotW;
         currX += Spot.spotH / 2 + Spot.spotW / 2;
-        spots.add(new Spot(p, currX, currY, currRotation));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
 
         //RIGHT COLUMN
         currRotation += 90;
         currY += Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(new Spot(p, currX, currY, currRotation));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
             currY += Spot.spotW;
         }
     }
 
-    private void initImages() {
-        spots.forEach(s -> {
-            SpotType sT = SpotType.spotTypes.get(spots.indexOf(s));
-            s.setImage(sT);
-        });
+    public void draw(Coordinates c) {
+        drawBackground(c);
     }
 
-    public void draw(float rotate) {
-        drawBackground(rotate);
-    }
-
-    private void drawBackground(float rotate) {
+    private void drawBackground(Coordinates c) {
         p.push();
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.IMAGES.get("Background.png");
         img.resize(Spot.spotW * 9, Spot.spotW * 9);
         p.image(MonopolyApp.IMAGES.get("Background.png"), (float) (Spot.spotW * 6), (float) (Spot.spotW * 6));
-        spots.forEach(s -> s.draw(rotate));
+        spots.forEach(s -> s.draw(c));
         p.pop();
     }
 
@@ -105,6 +100,6 @@ public class Board extends MonopolyApp {
             result.add(nextSpot);
             nextSpot = getNewSpot(nextSpot, 1);
         }
-        return result.stream().map(s -> s.getCoordinates(player)).collect(Collectors.toList());
+        return result.stream().map(s -> s.getTokenCoords(player)).collect(Collectors.toList());
     }
 }

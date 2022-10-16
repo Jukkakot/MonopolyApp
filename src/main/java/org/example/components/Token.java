@@ -2,6 +2,7 @@ package org.example.components;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.components.spots.Spot;
 import org.example.utils.Coordinates;
 import org.example.images.Image;
 import org.example.Drawable;
@@ -21,16 +22,13 @@ public class Token implements Drawable {
 //        this.img = new Image(p, spot, imgName);
         this.p = p;
         this.color = color;
-        this.img = new Image(p, spot, "Token.png");
-        img.setCoords(spot.getCoordinates());
+        this.spot = spot;
+        this.img = new Image(p, spot.getTokenCoords(), "Token.png");
     }
-    @Override
-    public void draw(float rotate) {
-        img.draw(img.getCoords(),color);
-    }
+
     @Override
     public void draw(Coordinates coords) {
-        img.draw(coords, color);
+        img.draw(color);
 //        Image.defaultDraw(p, coords, TOKEN_RADIUS, color);
     }
 
@@ -46,6 +44,6 @@ public class Token implements Drawable {
 
     @Override
     public void draw() {
-        this.draw(0);
+        this.draw(null);
     }
 }
