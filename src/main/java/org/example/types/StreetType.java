@@ -16,7 +16,7 @@ public enum StreetType {
     GREEN(PlaceType.STREET, Color.GREEN),
     DARK_BLUE(PlaceType.STREET, Color.BLUE),
     RAILROAD(PlaceType.RAILROAD, Color.BLACK, "Railroad.png"),
-    UTILITY1(PlaceType.UTILITY, "Utility1.png"), UTILITY2(PlaceType.UTILITY, "Utility2.png"),
+    UTILITY(PlaceType.UTILITY, "Utility.png"),
     CHANCE1(PlaceType.CHANCE_OR_COMMUNITY, "ChancePink.png"), CHANCE2(PlaceType.CHANCE_OR_COMMUNITY, "ChanceBlue.png"), CHANCE3(PlaceType.CHANCE_OR_COMMUNITY, "ChanceOrange.png"),
     COMMUNITY(PlaceType.CHANCE_OR_COMMUNITY, "Community.png"),
     TAX1(PlaceType.TAX, "Tax1.png"), TAX2(PlaceType.TAX, "Tax2.png"),
@@ -26,6 +26,9 @@ public enum StreetType {
     public final String imgName;
     public final PlaceType placeType;
 
+    StreetType(PlaceType pt) {
+        this(pt, null, null);
+    }
     StreetType(PlaceType pt, Color color) {
         this(pt, color, null);
     }

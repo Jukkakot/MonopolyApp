@@ -1,15 +1,40 @@
 package org.example.components.spots;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.example.MonopolyApp;
-import org.example.Player;
+import org.example.components.Player;
 import org.example.images.SpotImage;
 
-public class PropertySpot extends Spot {
+public class PropertySpot extends Spot implements SpotInterface {
     protected int value;
     protected int defaultRent;
+    @Getter
+    @Setter
+    protected boolean isMortgaged = false;
+    @Getter
+    @Setter
     protected Player ownerPlayer;
+
     public PropertySpot(MonopolyApp p, SpotImage sp) {
         super(p, sp);
         value = Integer.parseInt(spotTypeEnum.getProperty("price"));
+    }
+    protected boolean isOwner(Player p) {
+        return hasOwner() && ownerPlayer.equals(p);
+    }
+
+    protected  boolean hasOwner() {
+        return ownerPlayer != null;
+    }
+    @Override
+    public String getPopupText(Player p) {
+        if(!hasOwner()) {
+            return "Arrived at " + name + " do you want to buy it?";
+        } else if(!isOwner(p)) {
+            return "You own " + name +" Welcome!";
+        } else {
+            return "Uh oh... you need to pay UNKNOWN rent.";
+        }
     }
 }

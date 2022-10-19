@@ -2,6 +2,7 @@ package org.example.components.popup;
 
 
 import controlP5.Canvas;
+import lombok.Setter;
 import org.example.MonopolyApp;
 import org.example.components.spots.Spot;
 import org.example.utils.Coordinates;
@@ -10,8 +11,8 @@ import processing.core.PGraphics;
 import static processing.core.PConstants.CENTER;
 
 public class Popup extends Canvas {
-
-    protected final String popupText;
+    @Setter
+    protected String popupText;
     protected final MonopolyApp p;
     protected Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
     protected int width = 500;
@@ -25,6 +26,11 @@ public class Popup extends Canvas {
 
     public void show() {
         isVisible = true;
+    }
+
+    public void show(String text) {
+        this.popupText = text;
+        this.show();
     }
 
     protected void allButtonAction() {

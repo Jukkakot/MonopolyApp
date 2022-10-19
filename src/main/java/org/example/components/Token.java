@@ -5,12 +5,13 @@ import lombok.Setter;
 import org.example.components.spots.Spot;
 import org.example.utils.Coordinates;
 import org.example.images.Image;
-import org.example.Drawable;
 import processing.core.PApplet;
 import javafx.scene.paint.Color;
 
 public class Token implements Drawable {
+    @Getter
     private final Image img;
+    @Getter
     private final Color color;
     @Setter
     @Getter

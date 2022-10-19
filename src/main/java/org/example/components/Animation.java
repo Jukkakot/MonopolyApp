@@ -1,4 +1,4 @@
-package org.example;
+package org.example.components;
 
 import lombok.Getter;
 import org.example.utils.Coordinates;
@@ -41,6 +41,10 @@ public class Animation {
             updateAnimation();
         } else {
             drawable.setCoords(new Coordinates((float) (currCoords.x() + (dx * ANIMATION_SPEED)), (float) (currCoords.y() + (dy * ANIMATION_SPEED))));
+        }
+        if (path.isEmpty()){
+            finishAnimation();
+            return false;
         }
         return true;
     }

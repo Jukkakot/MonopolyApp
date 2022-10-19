@@ -14,7 +14,7 @@ public enum SpotTypeEnum {
     G1(StreetType.GREEN, 1), G2(StreetType.GREEN, 2), G3(StreetType.GREEN, 3),
     DB1(StreetType.DARK_BLUE, 1), DB2(StreetType.DARK_BLUE, 2),
     RR1(StreetType.RAILROAD, 1), RR2(StreetType.RAILROAD, 2), RR3(StreetType.RAILROAD, 3), RR4(StreetType.RAILROAD, 4),
-    U1(StreetType.UTILITY1, 1), U2(StreetType.UTILITY2, 2),
+    U1(StreetType.UTILITY, 1), U2(StreetType.UTILITY, 2),
     TAX1(StreetType.TAX1, 1), TAX2(StreetType.TAX2, 2),
     COMMUNITY1(StreetType.COMMUNITY, 1), COMMUNITY2(StreetType.COMMUNITY, 2), COMMUNITY3(StreetType.COMMUNITY, 3),
     CHANCE1(StreetType.CHANCE1, 1), CHANCE2(StreetType.CHANCE2, 2), CHANCE3(StreetType.CHANCE3, 3),

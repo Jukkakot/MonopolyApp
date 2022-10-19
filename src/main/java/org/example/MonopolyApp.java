@@ -1,6 +1,7 @@
 package org.example;
 
 import controlP5.ControlP5;
+import org.example.components.Token;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -42,6 +43,9 @@ public class MonopolyApp extends PApplet {
         for (String fileName : fileNames) {
             IMAGES.put(fileName, loadImage(dirPath + fileName));
         }
+        IMAGES.get("BigToken.png").resize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2);
+        IMAGES.get("BigTokenHover.png").resize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2);
+        IMAGES.get("BigTokenPressed.png").resize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2);
         println("Finished loading", IMAGES.size(), "images.");
     }
 

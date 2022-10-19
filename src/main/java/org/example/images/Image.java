@@ -1,9 +1,10 @@
 package org.example.images;
 
 import javafx.scene.paint.Color;
+import lombok.Getter;
 import lombok.Setter;
 import org.example.MonopolyApp;
-import org.example.Drawable;
+import org.example.components.Drawable;
 import org.example.components.Token;
 import org.example.utils.SpotProps;
 import org.example.utils.Coordinates;
@@ -18,6 +19,7 @@ public class Image implements Drawable {
     protected float width;
     protected float height;
     @Setter
+    @Getter
     protected String imgName;
     protected PApplet p;
 
@@ -97,6 +99,23 @@ public class Image implements Drawable {
         p.image(img, 0, 0);
 
         p.pop();
+    }
+
+    public static void defaultDraw(PApplet p, SpotProps sp, String imgName, boolean pushPop) {
+        if (pushPop) {
+            p.push();
+        }
+
+        p.translate(sp.x(), sp.y());
+        p.rotate(MonopolyApp.radians(sp.rotation()));
+        p.imageMode(p.CENTER);
+        PImage img = MonopolyApp.IMAGES.get(imgName);
+        img.resize((int) sp.width(), (int) sp.height());
+        p.image(img, 0, 0);
+
+        if (pushPop) {
+            p.pop();
+        }
     }
 
 }

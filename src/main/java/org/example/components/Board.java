@@ -2,10 +2,8 @@ package org.example.components;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
-import org.example.Player;
 import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
-import org.example.images.ImageFactory;
 import org.example.types.SpotTypeEnum;
 import org.example.utils.Coordinates;
 import processing.core.PImage;
@@ -75,6 +73,7 @@ public class Board {
 
     public void draw(Coordinates c) {
         drawBackground(c);
+        spots.forEach(s -> s.draw(c));
     }
 
     private void drawBackground(Coordinates c) {

@@ -1,6 +1,7 @@
 package org.example.images;
 
 import org.example.types.SpotTypeEnum;
+import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 import processing.core.PApplet;
 
@@ -13,7 +14,7 @@ public class ImageFactory {
         } else if (sp.streetType.imgName != null) {
             return new IconSpotImage(p, coords, sp);
         } else {
-            return new PropertySpotImage(p, coords, sp);
+            return new StreetSpotImage(p, coords, sp);
         }
     }
 }

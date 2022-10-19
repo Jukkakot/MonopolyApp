@@ -5,6 +5,7 @@ import javafx.scene.paint.Color;
 import org.example.components.*;
 import org.example.components.popup.OkPopup;
 import org.example.components.popup.Popup;
+import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
 
 public class Game {
@@ -21,7 +22,7 @@ public class Game {
         this.p = p;
         board = new Board(p);
         dices = new Dices(p);
-        players = new Players();
+        players = new Players(p);
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
@@ -29,6 +30,12 @@ public class Game {
         players.addPlayer(new Player(2, "Toka", new Token(p, spot, Color.PINK), 2), spot);
         players.addPlayer(new Player(3, "Kolmas", new Token(p, spot, Color.DARKOLIVEGREEN), 3), spot);
         players.addPlayer(new Player(4, "Neljäs", new Token(p, spot, Color.TURQUOISE), 4), spot);
+//
+//        for(Spot s : board.getSpots()) {
+//            if(s instanceof PropertySpot) {
+//                players.getPlayerList().forEach(player -> player.addDeed((PropertySpot) s));
+//            }
+//        }
 
         rollDiceButton = new Button(p.p5, "rollDice")
                 .setPosition((int) (Spot.spotW * 5.4), (int) (Spot.spotW * 3))
@@ -37,10 +44,7 @@ public class Game {
                 .setFont(MonopolyApp.font20)
                 .setSize(100, 50);
 
-        confirmPopup = new OkPopup(p, "Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at" +
-                " this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot," +
-                " Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome!" +
-                " Arrived at this spot, Welcome! Arrived at this spot, Welcome! Arrived at this spot, Welcome!");
+        confirmPopup = new OkPopup(p, "Default text");
         p.p5.addCanvas(confirmPopup);
     }
 
@@ -59,9 +63,13 @@ public class Game {
         Player turn = players.getTurn();
         Spot oldSpot = turn.getToken().getSpot();
         Spot newSpot = board.getNewSpot(oldSpot, value);
-        animations.addAnimation(new Animation(turn.getToken(), board.getPath(oldSpot, value, turn), () -> confirmPopup.show()));
+        animations.addAnimation(new Animation(turn.getToken(), board.getPath(oldSpot, value, turn), () -> {
+            confirmPopup.show(newSpot.getPopupText(turn));
+            //TODO why this called twice?
+        }));
+        players.switchTurn();
         turn.moveToken(newSpot);
 //        confirmPopup.show();
-        players.switchTurn();
+
     }
 }

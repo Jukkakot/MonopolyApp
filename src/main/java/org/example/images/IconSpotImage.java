@@ -1,8 +1,9 @@
 package org.example.images;
 
-import org.example.Drawable;
+import org.example.components.Drawable;
 import org.example.MonopolyApp;
 import org.example.types.SpotTypeEnum;
+import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -18,13 +19,25 @@ public class IconSpotImage extends SpotImage implements Drawable {
     }
     @Override
     public void draw(Coordinates c) {
-        float rotation = c != null ? c.rotation() : 0;
-        super.draw(c);
-        p.push();
-        p.translate(coords.x(), coords.y());
-        p.rotate(MonopolyApp.radians((coords.rotation() + rotation)));
+       draw(c, true);
+    }
+    @Override
+    public void draw(Coordinates c, boolean pushPop) {
+        if(c == null) {
+            c = coords;
+        }
+        super.draw(c,pushPop);
+        if(pushPop) {
+            p.push();
+        }
+        p.translate(c.x(), c.y());
+        p.rotate(MonopolyApp.radians((c.rotation())));
         p.imageMode(p.CENTER);
-        PImage img = MonopolyApp.IMAGES.get(spotTypeEnum.streetType.imgName);
+        String imgName = spotTypeEnum.streetType.imgName;
+        if(spotTypeEnum.streetType.equals(StreetType.UTILITY)) {
+            imgName = "Utility"+spotTypeEnum.id+".png";
+        }
+        PImage img = MonopolyApp.IMAGES.get(imgName);
         img.resize((int) width, (int) height);
         p.image(img, 0, 0);
 
@@ -34,6 +47,8 @@ public class IconSpotImage extends SpotImage implements Drawable {
         p.textLeading(10);
         p.text(spotTypeEnum.getProperty("name"), (int) -(width * 0.37), (int) -(height * 0.42), (int) (width * 0.75), height / 2);
 
-        p.pop();
+        if(pushPop) {
+            p.pop();
+        }
     }
 }
