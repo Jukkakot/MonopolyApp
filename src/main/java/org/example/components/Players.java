@@ -46,7 +46,7 @@ public class Players {
     }
 
     public Player switchTurn() {
-        turnNum = turnNum++ % playerList.size() + 1;
+        turnNum = turnNum % playerList.size() + 1;
         List<Player> players = playerList.stream().filter(p -> p.getTurnNumber() == turnNum).toList();
         if (players.size() == 1) {
             selectedPlayer = players.get(0);
@@ -79,7 +79,7 @@ public class Players {
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
         Map<StreetType, List<PropertySpot>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
-        for(StreetType pt : deedsMap.keySet()) {
+        for (StreetType pt : deedsMap.keySet()) {
             for (PropertySpot ps : deedsMap.get(pt)) {
                 ps.drawDeed(new Coordinates(0, 0, 0));
                 index++;

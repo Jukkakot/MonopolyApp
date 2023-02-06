@@ -6,8 +6,8 @@ import org.example.MonopolyApp;
 public class OkPopup extends Popup {
     private final Button okButton;
 
-    public OkPopup(MonopolyApp p, String popupText) {
-        super(p, popupText);
+    public OkPopup(MonopolyApp p) {
+        super(p);
         okButton = new Button(p.p5, "ok")
                 .setPosition(coords.x() - 50, coords.y() + height / 4)
                 .addListener(e -> okAction())
@@ -17,7 +17,8 @@ public class OkPopup extends Popup {
                 .setSize(100, 50);
     }
 
-    public void okAction() {
+    private void okAction() {
+        buttonActions.onAccept();
         allButtonAction();
     }
 

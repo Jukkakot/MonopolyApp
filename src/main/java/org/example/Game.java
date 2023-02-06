@@ -3,9 +3,9 @@ package org.example;
 import controlP5.Button;
 import javafx.scene.paint.Color;
 import org.example.components.*;
+import org.example.components.popup.ChoicePopup;
 import org.example.components.popup.OkPopup;
-import org.example.components.popup.Popup;
-import org.example.components.spots.PropertySpot;
+import org.example.components.popup.PopupActions;
 import org.example.components.spots.Spot;
 
 public class Game {
@@ -14,7 +14,8 @@ public class Game {
     Players players;
     MonopolyApp p;
     Animations animations;
-    Popup confirmPopup;
+    OkPopup okPopup;
+    ChoicePopup choicePopup;
     private final Button rollDiceButton;
     float i = 0;
 
@@ -44,8 +45,11 @@ public class Game {
                 .setFont(MonopolyApp.font20)
                 .setSize(100, 50);
 
-        confirmPopup = new OkPopup(p, "Default text");
-        p.p5.addCanvas(confirmPopup);
+        okPopup = new OkPopup(p);
+        p.p5.addCanvas(okPopup);
+
+        choicePopup = new ChoicePopup(p);
+        p.p5.addCanvas(choicePopup);
     }
 
     public void draw() {
@@ -53,23 +57,70 @@ public class Game {
         board.draw(null);
         dices.draw(null);
         players.draw();
-        rollDiceButton.setVisible(!animations.isRunning());
         i += 0.5;
     }
 
     public void rollDice() {
-        if (confirmPopup.isVisible()) return;
+        if (okPopup.isVisible()) return;
+        rollDiceButton.hide();
         int value = dices.roll();
-        Player turn = players.getTurn();
-        Spot oldSpot = turn.getToken().getSpot();
-        Spot newSpot = board.getNewSpot(oldSpot, value);
-        animations.addAnimation(new Animation(turn.getToken(), board.getPath(oldSpot, value, turn), () -> {
-            confirmPopup.show(newSpot.getPopupText(turn));
-            //TODO why this called twice?
-        }));
-        players.switchTurn();
-        turn.moveToken(newSpot);
-//        confirmPopup.show();
+        playRound(value);
+    }
 
+    private void playRound(int value) {
+        Player turn = players.getTurn();
+        Spot oldSpot = turn.getSpot();
+        Spot newSpot = board.getNewSpot(oldSpot, value);
+        addAnimation(value, turn, oldSpot, newSpot);
+        newSpot.addPlayer(turn);
+    }
+
+    private void addAnimation(int diceValue, Player turnPlayer, Spot oldSpot, Spot newSpot) {
+        animations.addAnimation(new Animation(turnPlayer.getToken(), board.getPath(oldSpot, diceValue, turnPlayer), getRoundEndCallback(turnPlayer, newSpot)));
+    }
+
+    private CallbackAction getRoundEndCallback(Player turnPlayer, Spot newSpot) {
+        return () -> {
+            String text = newSpot.getPopupText(turnPlayer);
+            if (text != null) {
+                showPopup(text, new PopupActions() {
+                    @Override
+                    public void onAccept() {
+                        switchTurn(turnPlayer, newSpot);
+                    }
+
+                    @Override
+                    public void onDecline() {
+                        switchTurn(turnPlayer, newSpot);
+                    }
+
+                    @Override
+                    public boolean isChoicePopup() {
+                        //TODO not random...
+                        return Math.random() < 0.5;
+                    }
+                });
+            } else {
+                switchTurn(turnPlayer, newSpot);
+            }
+        };
+    }
+
+    private void switchTurn(Player turnPlayer, Spot newSpot) {
+        turnPlayer.moveToken(newSpot);
+        players.switchTurn();
+        rollDiceButton.show();
+    }
+
+    private void showPopup(String text, PopupActions callbackAction) {
+        if (callbackAction.isChoicePopup()) {
+            choicePopup.setPopupText(text);
+            choicePopup.setButtonActions(callbackAction);
+            choicePopup.show();
+        } else {
+            okPopup.setPopupText(text);
+            okPopup.setButtonActions(callbackAction);
+            okPopup.show();
+        }
     }
 }

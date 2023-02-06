@@ -13,24 +13,36 @@ import static processing.core.PConstants.CENTER;
 public class Popup extends Canvas {
     @Setter
     protected String popupText;
+    @Setter
+    protected PopupActions buttonActions;
     protected final MonopolyApp p;
     protected Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
     protected int width = 500;
     protected int height = 300;
     protected boolean isVisible = false;
 
-    public Popup(MonopolyApp p, String popupText) {
-        this.popupText = popupText;
+    public Popup(MonopolyApp p) {
         this.p = p;
+        this.buttonActions = new PopupActions() {
+            @Override
+            public void onAccept() {
+                allButtonAction();
+            }
+
+            @Override
+            public void onDecline() {
+                allButtonAction();
+            }
+
+            @Override
+            public boolean isChoicePopup() {
+                return Popup.this instanceof ChoicePopup;
+            }
+        };
     }
 
     public void show() {
         isVisible = true;
-    }
-
-    public void show(String text) {
-        this.popupText = text;
-        this.show();
     }
 
     protected void allButtonAction() {

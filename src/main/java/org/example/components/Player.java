@@ -1,6 +1,5 @@
 package org.example.components;
 
-import jogamp.opengl.glu.nurbs.Property;
 import lombok.Getter;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
@@ -19,6 +18,7 @@ public class Player implements Drawable {
     private final int turnNumber;
     @Getter
     private final Deeds deeds;
+
     public Player(int id, String name, Token token, int turnNumber) {
         this.id = id;
         this.name = name;
@@ -27,17 +27,20 @@ public class Player implements Drawable {
         this.turnNumber = turnNumber;
         deeds = new Deeds();
     }
+
     public void moveToken(Spot spot) {
         token.getSpot().removePlayer(this);
         spot.addPlayer(this);
         token.setSpot(spot);
-        if(spot instanceof PropertySpot) {
-            addDeed((PropertySpot) spot);
+        if (spot instanceof PropertySpot ps) {
+            buyProperty(ps);
         }
     }
+
     public String getName() {
-        return name.replace("ö","o").replace("ä","a").replace("Ö","O").replace("Ä","A");
+        return name.replace("ö", "o").replace("ä", "a").replace("Ö", "O").replace("Ä", "A");
     }
+
     public void draw(Coordinates coords) {
         token.draw(coords);
     }
@@ -52,17 +55,31 @@ public class Player implements Drawable {
         token.setCoords(coords);
     }
 
+    public Spot getSpot() {
+        return token.getSpot();
+    }
+
     @Override
     public void draw() {
         draw(null);
     }
 
-    public void addDeed(PropertySpot ps) {
-        if(ps.getOwnerPlayer() == null) {
-            ps.setOwnerPlayer(this);
-            deeds.addDeed(ps);
+    private void addDeed(PropertySpot ps) {
+        ps.setOwnerPlayer(this);
+        deeds.addDeed(ps);
+    }
+
+    public boolean canBuyProperty(PropertySpot ps) {
+        return ps.getOwnerPlayer() == null && money >= ps.getPrice();
+    }
+
+    public void buyProperty(PropertySpot ps) {
+        if (canBuyProperty(ps)) {
+            money -= ps.getPrice();
+            addDeed(ps);
         }
     }
+
     public List<PropertySpot> getAllDeeds() {
         return deeds.getAllDeeds();
     }

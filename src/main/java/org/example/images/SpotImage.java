@@ -28,7 +28,7 @@ public class SpotImage extends Image implements Drawable {
     }
 
     public void draw(Coordinates c, boolean pushPop) {
-        if(c == null) {
+        if (c == null) {
             c = coords;
         }
 
@@ -46,15 +46,19 @@ public class SpotImage extends Image implements Drawable {
         p.rect(-width / 2, -height / 2, width, height);
 
         if (!spotTypeEnum.getProperty("price").trim().isEmpty()) {
-            p.fill(0);
-            p.textAlign(p.CENTER);
-            p.textFont(MonopolyApp.font10);
-
-            p.text("M" + spotTypeEnum.getProperty("price"), (int) -(width * 0.37), height / 3, (int) (width * 0.75), height);
+            drawPrice();
         }
 
-        if(pushPop) {
+        if (pushPop) {
             p.pop();
         }
+    }
+
+    private void drawPrice() {
+        p.fill(0);
+        p.textAlign(p.CENTER);
+        p.textFont(MonopolyApp.font10);
+
+        p.text("M" + spotTypeEnum.getProperty("price"), (int) -(width * 0.37), height / 3, (int) (width * 0.75), height);
     }
 }

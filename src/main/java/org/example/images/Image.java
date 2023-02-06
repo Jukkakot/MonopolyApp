@@ -72,6 +72,13 @@ public class Image implements Drawable {
         draw(coords);
     }
 
+    public void draw(Color color, Coordinates coords) {
+        p.push();
+        p.tint(toColor(p, color));
+        draw(coords);
+        p.pop();
+    }
+
     public void draw(Color color) {
         p.push();
 

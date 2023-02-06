@@ -3,14 +3,14 @@ package org.example.components.popup;
 import controlP5.Button;
 import org.example.MonopolyApp;
 
-public class ChoisePopup extends Popup {
+public class ChoicePopup extends Popup {
     private final Button acceptButton;
     private final Button declineButton;
 
-    public ChoisePopup(MonopolyApp p, String popupText) {
-        super(p, popupText);
+    public ChoicePopup(MonopolyApp p) {
+        super(p);
         acceptButton = new Button(p.p5, "accept")
-                .setPosition(coords.x() - 150, coords.y() + height/4)
+                .setPosition(coords.x() - 150, coords.y() + height / 4)
                 .addListener(e -> acceptAction())
                 .setLabel("Accept")
                 .setFont(MonopolyApp.font20)
@@ -18,19 +18,24 @@ public class ChoisePopup extends Popup {
                 .setSize(100, 50);
 
         declineButton = new Button(p.p5, "decline")
-                .setPosition(coords.x()+ 50, coords.y() + height/4)
+                .setPosition(coords.x() + 50, coords.y() + height / 4)
                 .addListener(e -> declineAction())
                 .setLabel("Decline")
                 .setFont(MonopolyApp.font20)
                 .hide()
                 .setSize(100, 50);
     }
-    public void acceptAction() {
+
+    private void acceptAction() {
+        buttonActions.onAccept();
         allButtonAction();
     }
-    public void declineAction() {
+
+    private void declineAction() {
+        buttonActions.onDecline();
         allButtonAction();
     }
+
     @Override
     public void show() {
         super.show();

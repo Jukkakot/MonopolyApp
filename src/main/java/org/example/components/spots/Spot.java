@@ -4,13 +4,13 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import org.example.components.Token;
 import org.example.images.ImageFactory;
-import org.example.images.StreetSpotImage;
 import org.example.utils.Coordinates;
 import org.example.MonopolyApp;
 import org.example.components.Player;
 import org.example.images.Image;
 import org.example.images.SpotImage;
 import org.example.types.SpotTypeEnum;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,25 +69,23 @@ public class Spot implements SpotInterface {
         if (image != null) {
             image.draw(c);
         } else {
-            Image.defaultDraw(p, image.getCoords(), 10, Color.BLACK);
+            Image.defaultDraw(p, c, 10, Color.BLACK);
         }
         players.forEach(p -> p.draw(c));
-//        p.push();
-//        p.fill(0);
-//        p.textSize(30);
-//        p.text(players.size(),x, y- Token.TOKEN_RADIUS);
-//        p.pop();
     }
+
     public void drawDeed(Coordinates c) {
         SpotImage newImg = ImageFactory.getImage(p, image.getCoords(), spotTypeEnum);
         newImg.draw(c, false);
     }
+
     public void draw() {
         this.draw(null);
     }
 
     @Override
     public String getPopupText(Player p) {
-        return "Default spot text, hello " + p.getName();
+        return null;
+//        return "Default spot text, hello " + p.getName();
     }
 }

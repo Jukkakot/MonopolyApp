@@ -29,7 +29,7 @@ public class Token implements Drawable {
 
     @Override
     public void draw(Coordinates coords) {
-        img.draw(color);
+        img.draw(color, coords);
 //        Image.defaultDraw(p, coords, TOKEN_RADIUS, color);
     }
 

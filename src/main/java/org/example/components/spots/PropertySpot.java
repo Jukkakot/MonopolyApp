@@ -7,7 +7,8 @@ import org.example.components.Player;
 import org.example.images.SpotImage;
 
 public class PropertySpot extends Spot implements SpotInterface {
-    protected int value;
+    @Getter
+    protected int price;
     protected int defaultRent;
     @Getter
     @Setter
@@ -18,23 +19,26 @@ public class PropertySpot extends Spot implements SpotInterface {
 
     public PropertySpot(MonopolyApp p, SpotImage sp) {
         super(p, sp);
-        value = Integer.parseInt(spotTypeEnum.getProperty("price"));
+        price = Integer.parseInt(spotTypeEnum.getProperty("price"));
     }
+
     protected boolean isOwner(Player p) {
         return hasOwner() && ownerPlayer.equals(p);
     }
 
-    protected  boolean hasOwner() {
+    protected boolean hasOwner() {
         return ownerPlayer != null;
     }
+
     @Override
     public String getPopupText(Player p) {
-        if(!hasOwner()) {
+        if (!hasOwner()) {
             return "Arrived at " + name + " do you want to buy it?";
-        } else if(!isOwner(p)) {
-            return "You own " + name +" Welcome!";
+        } else if (isOwner(p)) {
+            return null;
+//            return "You own " + name + " Welcome!";
         } else {
-            return "Uh oh... you need to pay UNKNOWN rent.";
+            return "Uh oh... you need to pay M" + price + " rent to " + ownerPlayer.getName();
         }
     }
 }

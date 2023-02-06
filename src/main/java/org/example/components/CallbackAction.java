@@ -1,6 +1,6 @@
 package org.example.components;
 
 
-public interface Action {
+public interface CallbackAction {
     void doAction();
 }
