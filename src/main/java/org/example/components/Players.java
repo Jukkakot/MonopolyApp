@@ -1,11 +1,9 @@
 package org.example.components;
 
 import controlP5.Button;
-import lombok.Getter;
 import org.example.MonopolyApp;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
-import org.example.types.PlaceType;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 
@@ -16,8 +14,7 @@ import java.util.Map;
 import static org.example.MonopolyApp.IMAGES;
 
 public class Players {
-    private final Coordinates coords = new Coordinates(Spot.spotW * 12, 0, 0);
-    @Getter //FIXME temporary!
+    private final Coordinates baseCoords = new Coordinates(Spot.spotW * 12, 0, 0);
     private final List<Player> playerList = new ArrayList<>();
     private final List<Button> playerButtons = new ArrayList<>();
     private int turnNum = 1;
@@ -41,8 +38,8 @@ public class Players {
         return p;
     }
 
-    public void removePlayer(Player p) {
-        playerList.remove(p);
+    public boolean removePlayer(Player p) {
+        return playerList.remove(p);
     }
 
     public Player switchTurn() {
@@ -75,7 +72,7 @@ public class Players {
 
     private void drawDeeds() {
         p.push();
-        p.translate((int) (coords.x() + Spot.spotW / 2) + 10, Spot.spotH + (int) (coords.y() + Spot.spotW));
+        p.translate((int) (baseCoords.x() + Spot.spotW / 2) + 10, Spot.spotH + (int) (baseCoords.y() + Spot.spotW));
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
         Map<StreetType, List<PropertySpot>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
@@ -87,7 +84,7 @@ public class Players {
                     p.pop();
                     p.push();
                     int row = index / 5;
-                    p.translate((int) (coords.x() + Spot.spotW / 2) + 10, row * 10 + row * Spot.spotH + (Spot.spotH + (int) (coords.y() + Spot.spotW)));
+                    p.translate((int) (baseCoords.x() + Spot.spotW / 2) + 10, row * 10 + row * Spot.spotH + (Spot.spotH + (int) (baseCoords.y() + Spot.spotW)));
                 } else {
                     p.translate(Spot.spotW + 10, 0);
                 }
@@ -101,39 +98,44 @@ public class Players {
 
     private void drawPlayers() {
         p.push();
-        p.translate((int) (coords.x() + Token.TOKEN_RADIUS * 1.5), (int) (coords.y() + Token.TOKEN_RADIUS * 1.5));
-        Coordinates absoluteCoords = new Coordinates((int) (coords.x() + Token.TOKEN_RADIUS * 1.5), (int) (coords.y() + Token.TOKEN_RADIUS * 1.5));
+        Coordinates absoluteCoords = new Coordinates((int) (baseCoords.x() + Token.TOKEN_RADIUS * 1.5), (int) (baseCoords.y() + Token.TOKEN_RADIUS * 1.5));
+        p.translate(absoluteCoords.x(), absoluteCoords.y());
+        int totalDX = 0;
         for (Player player : playerList) {
-            drawPlayerIcon(new Coordinates(0, 0, 0), player, absoluteCoords);
+            drawPlayerIcon(player, absoluteCoords);
             int index = playerList.indexOf(player);
-            if (index > 0 && index % 2 == 0) {
-                p.pop();
-                p.push();
-                p.translate((int) (coords.x() + Token.TOKEN_RADIUS * 1.5), 2 * (int) (coords.y() + Token.TOKEN_RADIUS * 2));
-                absoluteCoords = new Coordinates((int) (coords.x() + Token.TOKEN_RADIUS * 1.5), 2 * (int) (coords.y() + Token.TOKEN_RADIUS * 2));
+            if ((index + 1)  % 3 == 0) {
+                absoluteCoords = absoluteCoords.move(-totalDX, 4 * Token.TOKEN_RADIUS);
+                p.translate(absoluteCoords.x(), absoluteCoords.y());
+                totalDX = 0;
             } else {
-                p.translate(10 + Token.TOKEN_RADIUS * 2 + player.getName().length() * 20, 0);
-                absoluteCoords = absoluteCoords.move(10 + Token.TOKEN_RADIUS * 2 + player.getName().length() * 20, 0);
+                int dX = 10 + Token.TOKEN_RADIUS * 2 + player.getName().length() * 17;
+                totalDX += dX;
+                absoluteCoords = absoluteCoords.move(dX, 0);
+                p.translate(dX, 0);
             }
-
         }
         p.pop();
     }
 
-    private void drawPlayerIcon(Coordinates coords, Player player, Coordinates absoluteCoords) {
-        p.translate(coords.x(), coords.y());
+    private void drawPlayerIcon(Player player, Coordinates absoluteCoords) {
+
         if (player.equals(selectedPlayer)) {
 //            p.stroke(toColor(p, player.getToken().getColor()));
+            p.pop();
             p.stroke(0);
             p.strokeWeight(10);
-            p.circle(0, 0, Token.TOKEN_RADIUS * 2);
+            p.circle(absoluteCoords.x(), absoluteCoords.y(), Token.TOKEN_RADIUS * 2);
+            p.push();
         }
 
         Button button = playerButtons.stream().filter(b -> b.getName().equals("" + player.getId())).toList().get(0);
         button.setPosition(absoluteCoords.x() - Token.TOKEN_RADIUS, absoluteCoords.y() - Token.TOKEN_RADIUS);
 
+        p.pop();
         p.fill(0);
         p.textSize(30);
-        p.text(player.getName(), Token.TOKEN_RADIUS + 10, 0);
+        p.text(player.getName(), absoluteCoords.x() + Token.TOKEN_RADIUS + 10, absoluteCoords.y());
+        p.push();
     }
 }

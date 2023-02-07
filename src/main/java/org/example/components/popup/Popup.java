@@ -11,9 +11,25 @@ import processing.core.PGraphics;
 import static processing.core.PConstants.CENTER;
 
 public class Popup extends Canvas {
+    private final PopupActions DEFAULT_BUTTON_ACTIONS = new PopupActions() {
+        @Override
+        public void onAccept() {
+            allButtonAction();
+        }
+
+        @Override
+        public void onDecline() {
+            allButtonAction();
+        }
+
+        @Override
+        public boolean isChoicePopup() {
+            //TODO not random...
+            return Math.random() < 0.5;
+        }
+    };
     @Setter
     protected String popupText;
-    @Setter
     protected PopupActions buttonActions;
     protected final MonopolyApp p;
     protected Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
@@ -23,22 +39,15 @@ public class Popup extends Canvas {
 
     public Popup(MonopolyApp p) {
         this.p = p;
-        this.buttonActions = new PopupActions() {
-            @Override
-            public void onAccept() {
-                allButtonAction();
-            }
+        this.buttonActions = DEFAULT_BUTTON_ACTIONS;
+    }
 
-            @Override
-            public void onDecline() {
-                allButtonAction();
-            }
-
-            @Override
-            public boolean isChoicePopup() {
-                return Popup.this instanceof ChoicePopup;
-            }
-        };
+    public void setButtonActions(PopupActions buttonActions) {
+        if (buttonActions != null) {
+            this.buttonActions = buttonActions;
+        } else {
+            this.buttonActions = DEFAULT_BUTTON_ACTIONS;
+        }
     }
 
     public void show() {

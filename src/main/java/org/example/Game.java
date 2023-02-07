@@ -17,6 +17,7 @@ public class Game {
     OkPopup okPopup;
     ChoicePopup choicePopup;
     private final Button rollDiceButton;
+    private final Button endRoundButton;
     float i = 0;
 
     public Game(MonopolyApp p) {
@@ -31,6 +32,8 @@ public class Game {
         players.addPlayer(new Player(2, "Toka", new Token(p, spot, Color.PINK), 2), spot);
         players.addPlayer(new Player(3, "Kolmas", new Token(p, spot, Color.DARKOLIVEGREEN), 3), spot);
         players.addPlayer(new Player(4, "Neljäs", new Token(p, spot, Color.TURQUOISE), 4), spot);
+        players.addPlayer(new Player(5, "Viides", new Token(p, spot, Color.MEDIUMPURPLE), 5), spot);
+        players.addPlayer(new Player(6, "Kuudes", new Token(p, spot, Color.PINK), 6), spot);
 //
 //        for(Spot s : board.getSpots()) {
 //            if(s instanceof PropertySpot) {
@@ -44,6 +47,14 @@ public class Game {
                 .setLabel("Roll dice")
                 .setFont(MonopolyApp.font20)
                 .setSize(100, 50);
+
+        endRoundButton = new Button(p.p5, "endRound")
+                .setPosition((int) (Spot.spotW * 5.4), (int) (p.height - Spot.spotW * 3))
+                .addListener(e -> endRound())
+                .setLabel("End round")
+                .setFont(MonopolyApp.font20)
+                .setSize(100, 50)
+                .hide();
 
         okPopup = new OkPopup(p);
         p.p5.addCanvas(okPopup);
@@ -60,11 +71,17 @@ public class Game {
         i += 0.5;
     }
 
-    public void rollDice() {
+    private void rollDice() {
         if (okPopup.isVisible()) return;
         rollDiceButton.hide();
         int value = dices.roll();
         playRound(value);
+    }
+
+    private void endRound() {
+        players.switchTurn();
+        rollDiceButton.show();
+        endRoundButton.hide();
     }
 
     private void playRound(int value) {
@@ -73,6 +90,7 @@ public class Game {
         Spot newSpot = board.getNewSpot(oldSpot, value);
         addAnimation(value, turn, oldSpot, newSpot);
         newSpot.addPlayer(turn);
+        turn.moveToken(newSpot);
     }
 
     private void addAnimation(int diceValue, Player turnPlayer, Spot oldSpot, Spot newSpot) {
@@ -86,34 +104,27 @@ public class Game {
                 showPopup(text, new PopupActions() {
                     @Override
                     public void onAccept() {
-                        switchTurn(turnPlayer, newSpot);
+                        endRoundButton.show();
                     }
 
                     @Override
                     public void onDecline() {
-                        switchTurn(turnPlayer, newSpot);
+                        onAccept();
                     }
 
                     @Override
                     public boolean isChoicePopup() {
-                        //TODO not random...
-                        return Math.random() < 0.5;
+                        return false;
                     }
                 });
             } else {
-                switchTurn(turnPlayer, newSpot);
+                endRoundButton.show();
             }
         };
     }
 
-    private void switchTurn(Player turnPlayer, Spot newSpot) {
-        turnPlayer.moveToken(newSpot);
-        players.switchTurn();
-        rollDiceButton.show();
-    }
-
     private void showPopup(String text, PopupActions callbackAction) {
-        if (callbackAction.isChoicePopup()) {
+        if (callbackAction != null && callbackAction.isChoicePopup()) {
             choicePopup.setPopupText(text);
             choicePopup.setButtonActions(callbackAction);
             choicePopup.show();

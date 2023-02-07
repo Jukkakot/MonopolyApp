@@ -32,9 +32,6 @@ public class Player implements Drawable {
         token.getSpot().removePlayer(this);
         spot.addPlayer(this);
         token.setSpot(spot);
-        if (spot instanceof PropertySpot ps) {
-            buyProperty(ps);
-        }
     }
 
     public String getName() {

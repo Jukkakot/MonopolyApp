@@ -10,7 +10,7 @@ public class Animation {
     private final Drawable drawable;
     private final List<Coordinates> path;
     private final static float MIN_ANIM_DISTANCE = 2;
-    private final static double ANIMATION_SPEED = 0.2;
+    private final static double ANIMATION_SPEED = 0.4;
     private final CallbackAction endCallback;
 
     public Animation(Drawable drawable, List<Coordinates> path, CallbackAction endCallback) {
