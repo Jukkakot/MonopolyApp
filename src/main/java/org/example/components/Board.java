@@ -10,6 +10,7 @@ import processing.core.PImage;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -94,11 +95,36 @@ public class Board {
     public List<Coordinates> getPath(Spot start, int value, Player player) {
         List<Spot> result = new ArrayList<>();
         Spot nextSpot = getNewSpot(start, 1);
-        result.add(nextSpot);
         for (int i = 0; i < value; i++) {
             result.add(nextSpot);
             nextSpot = getNewSpot(nextSpot, 1);
         }
-        return result.stream().map(s -> s.getTokenCoords(player)).collect(Collectors.toList());
+        return result.stream().map(spot -> spot.getTokenCoords(player)).collect(Collectors.toList());
+    }
+
+    public List<Coordinates> getPath(Spot start, Spot end, Player player, boolean flyOverSpots) {
+        if (flyOverSpots) {
+            List<Spot> result = Arrays.asList(start, end);
+            return result.stream().map(spot -> spot.getTokenCoords(player)).collect(Collectors.toList());
+        }
+        return getPath(start, getDistance(start, end), player);
+    }
+
+    public List<Coordinates> getPath(Spot start, Spot end, Player player) {
+        return getPath(start, end, player, false);
+    }
+
+    private int getDistance(Spot start, Spot end) {
+        int result = 0;
+        Spot nextSpot = start;
+        while (!nextSpot.equals(end)) {
+            result++;
+            nextSpot = getNewSpot(nextSpot, 1);
+        }
+        return result;
+    }
+
+    public Spot getJailSpot() {
+        return spots.get(10);
     }
 }

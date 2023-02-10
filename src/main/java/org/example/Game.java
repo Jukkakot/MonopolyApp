@@ -7,6 +7,7 @@ import org.example.components.popup.ChoicePopup;
 import org.example.components.popup.OkPopup;
 import org.example.components.popup.PopupActions;
 import org.example.components.spots.Spot;
+import org.example.utils.DiceValue;
 
 public class Game {
     Board board;
@@ -16,14 +17,19 @@ public class Game {
     Animations animations;
     OkPopup okPopup;
     ChoicePopup choicePopup;
-    private final Button rollDiceButton;
     private final Button endRoundButton;
     float i = 0;
 
     public Game(MonopolyApp p) {
         this.p = p;
         board = new Board(p);
-        dices = new Dices(p);
+        dices = new Dices(p) {
+            @Override
+            public void rollDice() {
+                super.rollDice();
+                Game.this.rollDice();
+            }
+        };
         players = new Players(p);
         animations = new Animations();
 
@@ -31,22 +37,15 @@ public class Game {
         players.addPlayer(new Player(1, "Eka", new Token(p, spot, Color.MEDIUMPURPLE), 1), spot);
         players.addPlayer(new Player(2, "Toka", new Token(p, spot, Color.PINK), 2), spot);
         players.addPlayer(new Player(3, "Kolmas", new Token(p, spot, Color.DARKOLIVEGREEN), 3), spot);
-        players.addPlayer(new Player(4, "Neljäs", new Token(p, spot, Color.TURQUOISE), 4), spot);
-        players.addPlayer(new Player(5, "Viides", new Token(p, spot, Color.MEDIUMPURPLE), 5), spot);
-        players.addPlayer(new Player(6, "Kuudes", new Token(p, spot, Color.PINK), 6), spot);
+//        players.addPlayer(new Player(4, "Neljäs", new Token(p, spot, Color.TURQUOISE), 4), spot);
+//        players.addPlayer(new Player(5, "Viides", new Token(p, spot, Color.MEDIUMPURPLE), 5), spot);
+//        players.addPlayer(new Player(6, "Kuudes", new Token(p, spot, Color.PINK), 6), spot);
 //
 //        for(Spot s : board.getSpots()) {
 //            if(s instanceof PropertySpot) {
 //                players.getPlayerList().forEach(player -> player.addDeed((PropertySpot) s));
 //            }
 //        }
-
-        rollDiceButton = new Button(p.p5, "rollDice")
-                .setPosition((int) (Spot.spotW * 5.4), (int) (Spot.spotW * 3))
-                .addListener(e -> rollDice())
-                .setLabel("Roll dice")
-                .setFont(MonopolyApp.font20)
-                .setSize(100, 50);
 
         endRoundButton = new Button(p.p5, "endRound")
                 .setPosition((int) (Spot.spotW * 5.4), (int) (p.height - Spot.spotW * 3))
@@ -73,38 +72,53 @@ public class Game {
 
     private void rollDice() {
         if (okPopup.isVisible()) return;
-        rollDiceButton.hide();
-        int value = dices.roll();
-        playRound(value);
+        playRound(dices.getValue());
     }
 
     private void endRound() {
         players.switchTurn();
-        rollDiceButton.show();
+        dices.reset();
         endRoundButton.hide();
     }
 
-    private void playRound(int value) {
+    private void playRound(DiceValue diceValue) {
+        Spot newSpot = getNewSpot(diceValue);
+        DiceState diceState = diceValue.diceState();
+        if (DiceState.JAIL.equals(diceState)) {
+            playRound(board.getJailSpot(), null);
+        } else {
+            playRound(newSpot, diceState);
+        }
+    }
+
+    private Spot getNewSpot(DiceValue diceValue) {
         Player turn = players.getTurn();
         Spot oldSpot = turn.getSpot();
-        Spot newSpot = board.getNewSpot(oldSpot, value);
-        addAnimation(value, turn, oldSpot, newSpot);
+        return board.getNewSpot(oldSpot, diceValue.value());
+    }
+
+    private void playRound(Spot newSpot, DiceState diceState) {
+        CallbackAction roundEndCallback = getRoundEndCallback(newSpot, diceState);
+        addAnimation(newSpot, diceState, roundEndCallback);
+        Player turn = players.getTurn();
         newSpot.addPlayer(turn);
         turn.moveToken(newSpot);
     }
 
-    private void addAnimation(int diceValue, Player turnPlayer, Spot oldSpot, Spot newSpot) {
-        animations.addAnimation(new Animation(turnPlayer.getToken(), board.getPath(oldSpot, diceValue, turnPlayer), getRoundEndCallback(turnPlayer, newSpot)));
+    private void addAnimation(Spot newSpot, DiceState diceState, CallbackAction roundEndCallback) {
+        Player turnPlayer = players.getTurn();
+        animations.addAnimation(new Animation(turnPlayer.getToken(), board.getPath(turnPlayer.getSpot(), newSpot, turnPlayer, diceState == null), roundEndCallback));
     }
 
-    private CallbackAction getRoundEndCallback(Player turnPlayer, Spot newSpot) {
+    private CallbackAction getRoundEndCallback(Spot newSpot, DiceState diceState) {
+        Player turnPlayer = players.getTurn();
         return () -> {
             String text = newSpot.getPopupText(turnPlayer);
             if (text != null) {
                 showPopup(text, new PopupActions() {
                     @Override
                     public void onAccept() {
-                        endRoundButton.show();
+                        doRoundEvent(diceState);
                     }
 
                     @Override
@@ -118,9 +132,21 @@ public class Game {
                     }
                 });
             } else {
-                endRoundButton.show();
+                doRoundEvent(diceState);
             }
         };
+    }
+
+    private void doRoundEvent(DiceState diceState) {
+        if (diceState == null || diceState.equals(DiceState.NOREROLL)) {
+            endRoundButton.show();
+        } else if (diceState.equals(DiceState.JAIL)) {
+            //shouldn't go here anymore?
+            System.out.println("JAIL CASE, shouldn't happen?");
+//            playRound(board.getJailSpot(), null);
+        } else {
+            dices.show();
+        }
     }
 
     private void showPopup(String text, PopupActions callbackAction) {
