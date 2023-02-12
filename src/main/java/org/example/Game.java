@@ -37,15 +37,11 @@ public class Game {
         players.addPlayer(new Player(1, "Eka", new Token(p, spot, Color.MEDIUMPURPLE), 1), spot);
         players.addPlayer(new Player(2, "Toka", new Token(p, spot, Color.PINK), 2), spot);
         players.addPlayer(new Player(3, "Kolmas", new Token(p, spot, Color.DARKOLIVEGREEN), 3), spot);
-//        players.addPlayer(new Player(4, "Neljäs", new Token(p, spot, Color.TURQUOISE), 4), spot);
-//        players.addPlayer(new Player(5, "Viides", new Token(p, spot, Color.MEDIUMPURPLE), 5), spot);
-//        players.addPlayer(new Player(6, "Kuudes", new Token(p, spot, Color.PINK), 6), spot);
-//
-//        for(Spot s : board.getSpots()) {
-//            if(s instanceof PropertySpot) {
-//                players.getPlayerList().forEach(player -> player.addDeed((PropertySpot) s));
-//            }
-//        }
+        players.addPlayer(new Player(4, "Neljäs", new Token(p, spot, Color.TURQUOISE), 4), spot);
+        players.addPlayer(new Player(5, "Viides", new Token(p, spot, Color.MEDIUMPURPLE), 5), spot);
+        players.addPlayer(new Player(6, "Kuudes", new Token(p, spot, Color.PINK), 6), spot);
+
+        players.giveRandomDeeds(board);
 
         endRoundButton = new Button(p.p5, "endRound")
                 .setPosition((int) (Spot.spotW * 5.4), (int) (p.height - Spot.spotW * 3))
@@ -101,13 +97,12 @@ public class Game {
         CallbackAction roundEndCallback = getRoundEndCallback(newSpot, diceState);
         addAnimation(newSpot, diceState, roundEndCallback);
         Player turn = players.getTurn();
-        newSpot.addPlayer(turn);
-        turn.moveToken(newSpot);
+        turn.setSpot(newSpot);
     }
 
     private void addAnimation(Spot newSpot, DiceState diceState, CallbackAction roundEndCallback) {
         Player turnPlayer = players.getTurn();
-        animations.addAnimation(new Animation(turnPlayer.getToken(), board.getPath(turnPlayer.getSpot(), newSpot, turnPlayer, diceState == null), roundEndCallback));
+        animations.addAnimation(new Animation(turnPlayer, board.getPath(turnPlayer.getSpot(), newSpot, turnPlayer, diceState == null), roundEndCallback));
     }
 
     private CallbackAction getRoundEndCallback(Spot newSpot, DiceState diceState) {

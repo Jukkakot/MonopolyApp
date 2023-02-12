@@ -31,7 +31,7 @@ public class IconSpotImage extends SpotImage implements Drawable {
             p.push();
         }
         p.translate(c.x(), c.y());
-        p.rotate(MonopolyApp.radians((c.rotation())));
+        p.rotate(MonopolyApp.radians((c.r())));
         p.imageMode(p.CENTER);
         String imgName = spotTypeEnum.streetType.imgName;
         if(spotTypeEnum.streetType.equals(StreetType.UTILITY)) {

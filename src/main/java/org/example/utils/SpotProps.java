@@ -6,6 +6,6 @@ public record SpotProps(int x, int y, float width, float height, float rotation)
     }
 
     public SpotProps(Coordinates coords, float width, float height) {
-        this((int) coords.x(), (int) coords.y(), width, height, coords.rotation());
+        this((int) coords.x(), (int) coords.y(), width, height, coords.r());
     }
 }

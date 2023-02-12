@@ -35,7 +35,7 @@ public class StreetSpotImage extends SpotImage implements Drawable {
         p.translate(c.x(), c.y());
 
         //Property color
-        p.rotate(MonopolyApp.radians((c.rotation())));
+        p.rotate(MonopolyApp.radians((c.r())));
         if (spotTypeEnum.streetType != null && spotTypeEnum.streetType.color != null) {
             Color color = spotTypeEnum.streetType.color;
             p.fill(toColor(p, color));

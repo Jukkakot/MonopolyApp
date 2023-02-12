@@ -17,8 +17,8 @@ public class MonopolyApp extends PApplet {
     Game game;
     public ControlP5 p5;
     public static Map<String, PImage> IMAGES = new HashMap<>();
-    public static PFont font10;
-    public static PFont font20;
+    public static PFont font10, font20, font30;
+
     public void settings() {
         size(1700, 996);
     }
@@ -26,8 +26,9 @@ public class MonopolyApp extends PApplet {
     public void setup() {
         p5 = new ControlP5(this);
         initImages();
-        font10 = createFont("Monopoly Regular.ttf",10);
-        font20 = createFont("Monopoly Regular.ttf",20);
+        font10 = createFont("Monopoly Regular.ttf", 10);
+        font20 = createFont("Monopoly Regular.ttf", 20);
+        font30 = createFont("Monopoly Regular.ttf", 30);
         textFont(font10);
         game = new Game(this);
     }

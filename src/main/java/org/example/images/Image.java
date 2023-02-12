@@ -83,7 +83,7 @@ public class Image implements Drawable {
         p.push();
 
         p.translate(coords.x(), coords.y());
-        p.rotate(MonopolyApp.radians((coords.rotation())));
+        p.rotate(MonopolyApp.radians((coords.r())));
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.IMAGES.get(imgName);
         img.resize((int) width, (int) height);
@@ -95,11 +95,11 @@ public class Image implements Drawable {
 
     @Override
     public void draw(Coordinates c) {
-        float rotation = c != null ? c.rotation() : 0;
+        float rotation = c != null ? c.r() : 0;
         p.push();
 
         p.translate(coords.x(), coords.y());
-        p.rotate(MonopolyApp.radians(coords.rotation() + rotation));
+        p.rotate(MonopolyApp.radians(coords.r() + rotation));
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.IMAGES.get(imgName);
         img.resize((int) width, (int) height);

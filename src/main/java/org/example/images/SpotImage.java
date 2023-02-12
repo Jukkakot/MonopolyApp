@@ -42,7 +42,7 @@ public class SpotImage extends Image implements Drawable {
         p.translate(c.x(), c.y());
 
         //Outside border
-        p.rotate(MonopolyApp.radians(c.rotation()));
+        p.rotate(MonopolyApp.radians(c.r()));
         p.rect(-width / 2, -height / 2, width, height);
 
         if (!spotTypeEnum.getProperty("price").trim().isEmpty()) {

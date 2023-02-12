@@ -11,8 +11,8 @@ public class Player implements Drawable {
     @Getter
     private final int id;
     private final String name;
-    @Getter
     private final Token token;
+    @Getter
     private Integer money;
     @Getter
     private final int turnNumber;
@@ -26,12 +26,6 @@ public class Player implements Drawable {
         this.money = 2000;
         this.turnNumber = turnNumber;
         deeds = new Deeds();
-    }
-
-    public void moveToken(Spot spot) {
-        token.getSpot().removePlayer(this);
-        spot.addPlayer(this);
-        token.setSpot(spot);
     }
 
     public String getName() {
@@ -56,6 +50,12 @@ public class Player implements Drawable {
         return token.getSpot();
     }
 
+    public void setSpot(Spot spot) {
+        token.getSpot().removePlayer(this);
+        spot.addPlayer(this);
+        token.setSpot(spot);
+    }
+
     @Override
     public void draw() {
         draw(null);
@@ -70,11 +70,13 @@ public class Player implements Drawable {
         return ps.getOwnerPlayer() == null && money >= ps.getPrice();
     }
 
-    public void buyProperty(PropertySpot ps) {
+    public boolean buyProperty(PropertySpot ps) {
         if (canBuyProperty(ps)) {
             money -= ps.getPrice();
             addDeed(ps);
+            return true;
         }
+        return false;
     }
 
     public List<PropertySpot> getAllDeeds() {

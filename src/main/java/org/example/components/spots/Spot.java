@@ -52,12 +52,12 @@ public class Spot implements SpotInterface {
     public Coordinates getTokenCoords(Player player) {
         int index = players.stream().filter(p -> !p.equals(player)).toList().size();
         Coordinates tokenSpot = tokenSpots.get(index % tokenSpots.size());
-        return new Coordinates(image.getCoords().x() + tokenSpot.x(), image.getCoords().y() + tokenSpot.y(), image.getCoords().rotation());
+        return image.getCoords().move(tokenSpot);
     }
 
     public Coordinates getTokenCoords() {
         Coordinates tokenSpot = tokenSpots.get(players.size() % tokenSpots.size());
-        return new Coordinates(image.getCoords().x() + tokenSpot.x(), image.getCoords().y() + tokenSpot.y(), image.getCoords().rotation());
+        return image.getCoords().move(tokenSpot);
     }
 
 

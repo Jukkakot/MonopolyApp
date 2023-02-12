@@ -66,6 +66,6 @@ public class Animation {
         Coordinates currCoords = drawable.getCoords();
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
-        drawable.setCoords(new Coordinates((float) (currCoords.x() + (dx * ANIMATION_SPEED)), (float) (currCoords.y() + (dy * ANIMATION_SPEED))));
+        drawable.setCoords(Coordinates.of(currCoords.x() + (dx * ANIMATION_SPEED), currCoords.y() + (dy * ANIMATION_SPEED)));
     }
 }
