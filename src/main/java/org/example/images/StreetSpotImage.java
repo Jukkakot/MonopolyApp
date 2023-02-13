@@ -3,16 +3,16 @@ package org.example.images;
 import javafx.scene.paint.Color;
 import org.example.components.Drawable;
 import org.example.MonopolyApp;
-import org.example.types.SpotTypeEnum;
+import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 import processing.core.PApplet;
 
 import static org.example.utils.Utils.toColor;
 
 public class StreetSpotImage extends SpotImage implements Drawable {
-    public StreetSpotImage(PApplet p, Coordinates coords, SpotTypeEnum spotTypeEnum) {
+    public StreetSpotImage(PApplet p, Coordinates coords, SpotType spotType) {
         super(p, coords);
-        this.spotTypeEnum = spotTypeEnum;
+        this.spotType = spotType;
     }
 
     @Override
@@ -36,8 +36,8 @@ public class StreetSpotImage extends SpotImage implements Drawable {
 
         //Property color
         p.rotate(MonopolyApp.radians((c.r())));
-        if (spotTypeEnum.streetType != null && spotTypeEnum.streetType.color != null) {
-            Color color = spotTypeEnum.streetType.color;
+        if (spotType.streetType != null && spotType.streetType.color != null) {
+            Color color = spotType.streetType.color;
             p.fill(toColor(p, color));
         }
         p.rect(-width / 2, -height / 2, width, height / 4);
@@ -46,7 +46,7 @@ public class StreetSpotImage extends SpotImage implements Drawable {
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
         p.textLeading(10);
-        p.text(spotTypeEnum.getProperty("name"), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
+        p.text(spotType.getProperty("name"), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
 
        if(pushPop) {
            p.pop();

@@ -11,26 +11,8 @@ import processing.core.PGraphics;
 import static processing.core.PConstants.CENTER;
 
 public class Popup extends Canvas {
-    private final PopupActions DEFAULT_BUTTON_ACTIONS = new PopupActions() {
-        @Override
-        public void onAccept() {
-            allButtonAction();
-        }
-
-        @Override
-        public void onDecline() {
-            allButtonAction();
-        }
-
-        @Override
-        public boolean isChoicePopup() {
-            //TODO not random...
-            return Math.random() < 0.5;
-        }
-    };
     @Setter
     protected String popupText;
-    protected PopupActions buttonActions;
     protected final MonopolyApp p;
     protected Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
     protected int width = 500;
@@ -39,15 +21,7 @@ public class Popup extends Canvas {
 
     public Popup(MonopolyApp p) {
         this.p = p;
-        this.buttonActions = DEFAULT_BUTTON_ACTIONS;
-    }
-
-    public void setButtonActions(PopupActions buttonActions) {
-        if (buttonActions != null) {
-            this.buttonActions = buttonActions;
-        } else {
-            this.buttonActions = DEFAULT_BUTTON_ACTIONS;
-        }
+        p.p5.addCanvas(this);
     }
 
     public void show() {
@@ -83,5 +57,28 @@ public class Popup extends Canvas {
         p.text(popupText, 0, -20, width, 200);
 
         p.pop();
+    }
+
+    public static void showInfo(MonopolyApp p, String text) {
+        showInfo(p, text, null);
+    }
+
+    public static void showInfo(MonopolyApp p, String text, ButtonAction onAccept) {
+        OkPopup okPopup = new OkPopup(p);
+        okPopup.setOnAccept(onAccept);
+        okPopup.setPopupText(text);
+        okPopup.show();
+    }
+
+    public static void showChoice(MonopolyApp p, String text, ButtonAction onAccept) {
+        showChoice(p, text, onAccept, null);
+    }
+
+    public static void showChoice(MonopolyApp p, String text, ButtonAction onAccept, ButtonAction onDecline) {
+        ChoicePopup choicePopup = new ChoicePopup(p);
+        choicePopup.setPopupText(text);
+        choicePopup.setOnAccept(onAccept);
+        choicePopup.setOnDecline(onDecline);
+        choicePopup.show();
     }
 }

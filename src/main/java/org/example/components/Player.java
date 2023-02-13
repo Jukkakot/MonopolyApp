@@ -3,6 +3,8 @@ package org.example.components;
 import lombok.Getter;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
+import org.example.types.SpotType;
+import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 
 import java.util.List;
@@ -81,5 +83,34 @@ public class Player implements Drawable {
 
     public List<PropertySpot> getAllDeeds() {
         return deeds.getAllDeeds();
+    }
+
+    public boolean updateMoney(Integer amount) {
+        if (money + amount >= 0) {
+            money += amount;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean giveMoney(Player from, Integer amount) {
+        if (amount < 0) {
+            System.out.println("Not possible to give negative amount of money.");
+            return false;
+        }
+        if (from.updateMoney(-amount)) {
+            updateMoney(amount);
+            return true;
+        }
+        System.out.println(from.getName() + " Didn't have enough money to give");
+        return false;
+    }
+
+    public List<PropertySpot> getOwnedSpots(StreetType streetType) {
+        return deeds.getDeeds(streetType);
+    }
+
+    public boolean ownsAllSpots(StreetType streetType) {
+        return SpotType.getNumberOfSpots(streetType).equals(getOwnedSpots(streetType).size());
     }
 }

@@ -9,19 +9,19 @@ import org.example.MonopolyApp;
 import org.example.components.Player;
 import org.example.images.Image;
 import org.example.images.SpotImage;
-import org.example.types.SpotTypeEnum;
+import org.example.types.SpotType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 
-public class Spot implements SpotInterface {
+public class Spot {
     public static final int spotW = 996 / 12;
     public static final int spotH = (int) (spotW * 1.5);
     private final SpotImage image;
     @Getter
-    protected SpotTypeEnum spotTypeEnum;
+    protected SpotType spotType;
     private final MonopolyApp p;
     @Getter
     protected final String name;
@@ -32,17 +32,16 @@ public class Spot implements SpotInterface {
     public Spot(MonopolyApp p, SpotImage spotImage) {
         this.p = p;
         this.image = spotImage;
-        this.spotTypeEnum = spotImage.getSpotTypeEnum();
+        this.spotType = spotImage.getSpotType();
         this.image.setCoords(getTokenCoords());
 
-        name = spotTypeEnum.getProperty("name");
+        name = spotType.getProperty("name");
     }
 
-    public Player addPlayer(Player p) {
+    public void addPlayer(Player p) {
         if (!players.contains(p)) {
             players.add(p);
         }
-        return p;
     }
 
     public void removePlayer(Player p) {
@@ -75,17 +74,11 @@ public class Spot implements SpotInterface {
     }
 
     public void drawDeed(Coordinates c) {
-        SpotImage newImg = ImageFactory.getImage(p, image.getCoords(), spotTypeEnum);
+        SpotImage newImg = ImageFactory.getImage(p, image.getCoords(), spotType);
         newImg.draw(c, false);
     }
 
     public void draw() {
         this.draw(null);
-    }
-
-    @Override
-    public String getPopupText(Player p) {
-        return null;
-//        return "Default spot text, hello " + p.getName();
     }
 }

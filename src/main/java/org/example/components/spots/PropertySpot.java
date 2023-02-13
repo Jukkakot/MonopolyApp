@@ -6,39 +6,36 @@ import org.example.MonopolyApp;
 import org.example.components.Player;
 import org.example.images.SpotImage;
 
-public class PropertySpot extends Spot implements SpotInterface {
+import java.util.Arrays;
+import java.util.List;
+
+public abstract class PropertySpot extends Spot {
     @Getter
     protected int price;
-    protected int defaultRent;
     @Getter
     @Setter
     protected boolean isMortgaged = false;
     @Getter
     @Setter
     protected Player ownerPlayer;
+    protected List<Integer> rentPrices;
 
     public PropertySpot(MonopolyApp p, SpotImage sp) {
         super(p, sp);
-        price = Integer.parseInt(spotTypeEnum.getProperty("price"));
+        price = Integer.parseInt(spotType.getProperty("price"));
+        String rentStr = spotType.getProperty("rents");
+        if (rentStr != null && !rentStr.equals("")) {
+            rentPrices = Arrays.stream(rentStr.split(",")).map(Integer::valueOf).toList();
+        }
     }
 
-    protected boolean isOwner(Player p) {
-        return hasOwner() && ownerPlayer.equals(p);
-    }
-
-    protected boolean hasOwner() {
+    public boolean hasOwner() {
         return ownerPlayer != null;
     }
 
-    @Override
-    public String getPopupText(Player p) {
-        if (!hasOwner()) {
-            return "Arrived at " + name + " do you want to buy it?";
-        } else if (isOwner(p)) {
-            return null;
-//            return "You own " + name + " Welcome!";
-        } else {
-            return "Uh oh... you need to pay M" + price + " rent to " + ownerPlayer.getName();
-        }
+    public boolean isOwner(Player p) {
+        return hasOwner() && ownerPlayer.equals(p);
     }
+
+    public abstract Integer getRent(Player player);
 }

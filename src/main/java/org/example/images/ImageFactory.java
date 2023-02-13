@@ -1,12 +1,11 @@
 package org.example.images;
 
-import org.example.types.SpotTypeEnum;
-import org.example.types.StreetType;
+import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 import processing.core.PApplet;
 
 public class ImageFactory {
-    public static SpotImage getImage(PApplet p, Coordinates coords, SpotTypeEnum sp) {
+    public static SpotImage getImage(PApplet p, Coordinates coords, SpotType sp) {
         if (sp.name().startsWith("CORNER")) {
             return new IconSpotImage(p, coords, sp, true);
         } else if (sp.streetType == null) {

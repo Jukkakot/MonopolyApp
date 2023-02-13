@@ -1,15 +1,18 @@
 package org.example.components.popup;
 
 import controlP5.Button;
+import lombok.Setter;
 import org.example.MonopolyApp;
 
 public class OkPopup extends Popup {
     private final Button okButton;
+    @Setter
+    private ButtonAction onAccept;
 
     public OkPopup(MonopolyApp p) {
         super(p);
         okButton = new Button(p.p5, "ok")
-                .setPosition(coords.x() - 50, coords.y() + height / 4)
+                .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
                 .addListener(e -> okAction())
                 .setLabel("Ok")
                 .setFont(MonopolyApp.font20)
@@ -18,7 +21,9 @@ public class OkPopup extends Popup {
     }
 
     private void okAction() {
-        buttonActions.onAccept();
+        if (onAccept != null) {
+            onAccept.doAction();
+        }
         allButtonAction();
     }
 

@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.example.MonopolyApp;
 import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
-import org.example.types.SpotTypeEnum;
+import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 import processing.core.PImage;
 
@@ -30,22 +30,22 @@ public class Board {
         int currRotation = 0;
 
         //BOTTOM ROW
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
         currX -= Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currX -= Spot.spotW;
 
         }
         currX += Spot.spotW;
         currX -= Spot.spotH / 2 + Spot.spotW / 2;
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //LEFT COLUMN
         currRotation += 90;
         currY -= Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currY -= Spot.spotW;
         }
         currY += Spot.spotW;
@@ -53,21 +53,21 @@ public class Board {
 
         //TOP ROW
         currRotation += 90;
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
         currX += Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currX += Spot.spotW;
         }
         currX -= Spot.spotW;
         currX += Spot.spotH / 2 + Spot.spotW / 2;
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //RIGHT COLUMN
         currRotation += 90;
         currY += Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotTypeEnum.SPOT_TYPE_ENUMS.get(spots.size())));
+            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currY += Spot.spotW;
         }
     }

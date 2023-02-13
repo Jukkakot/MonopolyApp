@@ -4,13 +4,13 @@ import lombok.Getter;
 import org.example.components.Drawable;
 import org.example.MonopolyApp;
 import org.example.components.spots.Spot;
-import org.example.types.SpotTypeEnum;
+import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 import processing.core.PApplet;
 
 public class SpotImage extends Image implements Drawable {
     @Getter
-    protected SpotTypeEnum spotTypeEnum;
+    protected SpotType spotType;
 
     public SpotImage(PApplet p, Coordinates coords) {
         this(p, coords, false);
@@ -45,7 +45,7 @@ public class SpotImage extends Image implements Drawable {
         p.rotate(MonopolyApp.radians(c.r()));
         p.rect(-width / 2, -height / 2, width, height);
 
-        if (!spotTypeEnum.getProperty("price").trim().isEmpty()) {
+        if (!spotType.getProperty("price").trim().isEmpty()) {
             drawPrice();
         }
 
@@ -59,6 +59,6 @@ public class SpotImage extends Image implements Drawable {
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
 
-        p.text("M" + spotTypeEnum.getProperty("price"), (int) -(width * 0.37), height / 3, (int) (width * 0.75), height);
+        p.text("M" + spotType.getProperty("price"), (int) -(width * 0.37), height / 3, (int) (width * 0.75), height);
     }
 }

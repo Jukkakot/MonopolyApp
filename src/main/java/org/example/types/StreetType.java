@@ -17,8 +17,8 @@ public enum StreetType {
     DARK_BLUE(PlaceType.STREET, Color.BLUE),
     RAILROAD(PlaceType.RAILROAD, Color.BLACK, "Railroad.png"),
     UTILITY(PlaceType.UTILITY, "Utility.png"),
-    CHANCE1(PlaceType.CHANCE_OR_COMMUNITY, "ChancePink.png"), CHANCE2(PlaceType.CHANCE_OR_COMMUNITY, "ChanceBlue.png"), CHANCE3(PlaceType.CHANCE_OR_COMMUNITY, "ChanceOrange.png"),
-    COMMUNITY(PlaceType.CHANCE_OR_COMMUNITY, "Community.png"),
+    CHANCE1(PlaceType.PICK_CARD, "ChancePink.png"), CHANCE2(PlaceType.PICK_CARD, "ChanceBlue.png"), CHANCE3(PlaceType.PICK_CARD, "ChanceOrange.png"),
+    COMMUNITY(PlaceType.PICK_CARD, "Community.png"),
     TAX1(PlaceType.TAX, "Tax1.png"), TAX2(PlaceType.TAX, "Tax2.png"),
     CORNER1(PlaceType.CORNER, "Corner1.png"), CORNER2(PlaceType.CORNER, "Corner2.png"), CORNER3(PlaceType.CORNER, "Corner3.png"), CORNER4(PlaceType.CORNER, "Corner4.png");
 
