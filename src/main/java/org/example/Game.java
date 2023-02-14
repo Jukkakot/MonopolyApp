@@ -11,35 +11,33 @@ public class Game {
     Dices dices;
     Players players;
     Animations animations;
-    MonopolyApp app;
     private final Button endRoundButton;
     float i = 0;
 
-    public Game(MonopolyApp app) {
-        this.app = app;
-        board = new Board(app);
-        dices = new Dices(app) {
+    public Game() {
+        board = new Board();
+        dices = new Dices() {
             @Override
             public void rollDice() {
                 super.rollDice();
                 Game.this.rollDice();
             }
         };
-        players = new Players(app);
+        players = new Players();
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(1, "Eka", new Token(app, spot, Color.MEDIUMPURPLE), 1), spot);
-        players.addPlayer(new Player(2, "Toka", new Token(app, spot, Color.PINK), 2), spot);
-        players.addPlayer(new Player(3, "Kolmas", new Token(app, spot, Color.DARKOLIVEGREEN), 3), spot);
+        players.addPlayer(new Player(1, "Eka", new Token(spot, Color.MEDIUMPURPLE), 1), spot);
+        players.addPlayer(new Player(2, "Toka", new Token(spot, Color.PINK), 2), spot);
+        players.addPlayer(new Player(3, "Kolmas", new Token(spot, Color.DARKOLIVEGREEN), 3), spot);
 //        players.addPlayer(new Player(4, "Neljäs", new Token(app, spot, Color.TURQUOISE), 4), spot);
 //        players.addPlayer(new Player(5, "Viides", new Token(app, spot, Color.MEDIUMPURPLE), 5), spot);
 //        players.addPlayer(new Player(6, "Kuudes", new Token(app, spot, Color.PINK), 6), spot);
 
         players.giveRandomDeeds(board);
 
-        endRoundButton = new Button(app.p5, "endRound")
-                .setPosition((int) (Spot.spotW * 5.4), app.height - Spot.spotW * 3)
+        endRoundButton = new Button(MonopolyApp.self.p5, "endRound")
+                .setPosition((int) (Spot.spotW * 5.4), MonopolyApp.self.height - Spot.spotW * 3)
                 .addListener(e -> endRound())
                 .setLabel("End round")
                 .setFont(MonopolyApp.font20)
@@ -94,7 +92,7 @@ public class Game {
     }
 
     private CallbackAction getRoundEndCallback(DiceState diceState) {
-        return () -> GameTurnUtils.getInstance(app).handleTurn(players, dices, () -> doRoundEvent(diceState));
+        return () -> GameTurnUtils.getInstance().handleTurn(players, dices, () -> doRoundEvent(diceState));
     }
 
     private void doRoundEvent(DiceState diceState) {

@@ -1,16 +1,15 @@
 package org.example.components;
 
 import org.example.images.Image;
-import org.example.utils.SpotProps;
 import org.example.utils.Coordinates;
-import processing.core.PApplet;
+import org.example.utils.SpotProps;
 
 public class Dice implements Drawable {
     private int value = 1;
     private final Image img;
 
-    public Dice(PApplet p, SpotProps sp) {
-        img = new Image(p, sp, getImgName());
+    public Dice(SpotProps sp) {
+        img = new Image(sp, getImgName());
     }
 
     public int roll() {

@@ -9,8 +9,8 @@ public class OkPopup extends Popup {
     @Setter
     private ButtonAction onAccept;
 
-    public OkPopup(MonopolyApp p) {
-        super(p);
+    public OkPopup() {
+        super();
         okButton = new Button(p.p5, "ok")
                 .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
                 .addListener(e -> okAction())

@@ -8,7 +8,6 @@ import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 import processing.core.PImage;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,10 +16,9 @@ import java.util.stream.Collectors;
 public class Board {
     @Getter
     private final List<Spot> spots = new ArrayList<>();
-    MonopolyApp p;
+    MonopolyApp p = MonopolyApp.self;
 
-    public Board(MonopolyApp p) {
-        this.p = p;
+    public Board() {
         initSpots();
     }
 
@@ -30,22 +28,22 @@ public class Board {
         int currRotation = 0;
 
         //BOTTOM ROW
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
         currX -= Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currX -= Spot.spotW;
 
         }
         currX += Spot.spotW;
         currX -= Spot.spotH / 2 + Spot.spotW / 2;
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //LEFT COLUMN
         currRotation += 90;
         currY -= Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currY -= Spot.spotW;
         }
         currY += Spot.spotW;
@@ -53,21 +51,21 @@ public class Board {
 
         //TOP ROW
         currRotation += 90;
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
         currX += Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currX += Spot.spotW;
         }
         currX -= Spot.spotW;
         currX += Spot.spotH / 2 + Spot.spotW / 2;
-        spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //RIGHT COLUMN
         currRotation += 90;
         currY += Spot.spotH / 2 + Spot.spotW / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(p, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currY += Spot.spotW;
         }
     }
@@ -80,9 +78,9 @@ public class Board {
     private void drawBackground(Coordinates c) {
         p.push();
         p.imageMode(p.CENTER);
-        PImage img = MonopolyApp.IMAGES.get("Background.png");
+        PImage img = MonopolyApp.getImage("Background.png");
         img.resize(Spot.spotW * 9, Spot.spotW * 9);
-        p.image(MonopolyApp.IMAGES.get("Background.png"), (float) (Spot.spotW * 6), (float) (Spot.spotW * 6));
+        p.image(MonopolyApp.getImage("Background.png"), (float) (Spot.spotW * 6), (float) (Spot.spotW * 6));
         spots.forEach(s -> s.draw(c));
         p.pop();
     }

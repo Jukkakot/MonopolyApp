@@ -2,7 +2,6 @@ package org.example.components.spots;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.example.MonopolyApp;
 import org.example.components.Player;
 import org.example.images.SpotImage;
 
@@ -20,8 +19,8 @@ public abstract class PropertySpot extends Spot {
     protected Player ownerPlayer;
     protected List<Integer> rentPrices;
 
-    public PropertySpot(MonopolyApp p, SpotImage sp) {
-        super(p, sp);
+    public PropertySpot(SpotImage sp) {
+        super(sp);
         price = Integer.parseInt(spotType.getProperty("price"));
         String rentStr = spotType.getProperty("rents");
         if (rentStr != null && !rentStr.equals("")) {

@@ -1,6 +1,5 @@
 package org.example.components.spots;
 
-import org.example.MonopolyApp;
 import org.example.images.ImageFactory;
 import org.example.images.SpotImage;
 import org.example.types.PlaceType;
@@ -9,17 +8,17 @@ import org.example.utils.Coordinates;
 
 public class SpotFactory {
 
-    public static Spot getSpot(MonopolyApp p, Coordinates coords, SpotType sp) {
+    public static Spot getSpot(Coordinates coords, SpotType sp) {
         PlaceType pt = sp.streetType.placeType;
-        SpotImage image = ImageFactory.getImage(p, coords, sp);
+        SpotImage image = ImageFactory.getImage(coords, sp);
         if (pt.equals(PlaceType.STREET)) {
-            return new StreetPropertySpot(p, image);
+            return new StreetPropertySpot(image);
         } else if (pt.equals(PlaceType.RAILROAD)) {
-            return new RailRoadPropertySpot(p, image);
+            return new RailRoadPropertySpot(image);
         } else if (pt.equals(PlaceType.UTILITY)) {
-            return new UtilityPropertySpot(p, image);
+            return new UtilityPropertySpot(image);
         } else {
-            return new Spot(p, image);
+            return new Spot(image);
         }
     }
 }

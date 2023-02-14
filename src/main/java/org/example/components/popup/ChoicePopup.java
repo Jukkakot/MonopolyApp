@@ -12,8 +12,8 @@ public class ChoicePopup extends Popup {
     @Setter
     private ButtonAction onDecline;
 
-    public ChoicePopup(MonopolyApp p) {
-        super(p);
+    public ChoicePopup() {
+        super();
         acceptButton = new Button(p.p5, "accept")
                 .setPosition(coords.x() - 150, coords.y() + (float) height / 4)
                 .addListener(e -> acceptAction())

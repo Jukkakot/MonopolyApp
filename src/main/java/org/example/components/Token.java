@@ -1,12 +1,11 @@
 package org.example.components;
 
+import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.components.spots.Spot;
-import org.example.utils.Coordinates;
 import org.example.images.Image;
-import processing.core.PApplet;
-import javafx.scene.paint.Color;
+import org.example.utils.Coordinates;
 
 public class Token implements Drawable {
     @Getter
@@ -16,21 +15,19 @@ public class Token implements Drawable {
     @Setter
     @Getter
     private Spot spot;
-    private PApplet p;
     public static final int TOKEN_RADIUS = 25;
 
-    public Token(PApplet p, Spot spot, Color color) {
-//        this.img = new Image(p, spot, imgName);
-        this.p = p;
+    public Token(Spot spot, Color color) {
+//        this.img = new Image( spot, imgName);
         this.color = color;
         this.spot = spot;
-        this.img = new Image(p, spot.getTokenCoords(), "Token.png");
+        this.img = new Image(spot.getTokenCoords(), "Token.png");
     }
 
     @Override
     public void draw(Coordinates coords) {
         img.draw(color, coords);
-//        Image.defaultDraw(p, coords, TOKEN_RADIUS, color);
+//        Image.defaultDraw( coords, TOKEN_RADIUS, color);
     }
 
     @Override

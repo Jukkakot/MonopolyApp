@@ -1,23 +1,22 @@
 package org.example.images;
 
 import lombok.Getter;
-import org.example.components.Drawable;
 import org.example.MonopolyApp;
+import org.example.components.Drawable;
 import org.example.components.spots.Spot;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
-import processing.core.PApplet;
 
 public class SpotImage extends Image implements Drawable {
     @Getter
     protected SpotType spotType;
 
-    public SpotImage(PApplet p, Coordinates coords) {
-        this(p, coords, false);
+    public SpotImage(Coordinates coords) {
+        this(coords, false);
     }
 
-    public SpotImage(PApplet p, Coordinates coords, boolean isCorner) {
-        super(p, coords);
+    public SpotImage(Coordinates coords, boolean isCorner) {
+        super(coords);
         this.width = isCorner ? Spot.spotH : Spot.spotW;
         this.height = Spot.spotH;
     }

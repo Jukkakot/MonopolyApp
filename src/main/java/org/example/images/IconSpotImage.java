@@ -1,21 +1,20 @@
 package org.example.images;
 
-import org.example.components.Drawable;
 import org.example.MonopolyApp;
+import org.example.components.Drawable;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
-import processing.core.PApplet;
 import processing.core.PImage;
 
 public class IconSpotImage extends SpotImage implements Drawable {
 
-    public IconSpotImage(PApplet p, Coordinates coords, SpotType spotType) {
-        this(p, coords, spotType, false);
+    public IconSpotImage(Coordinates coords, SpotType spotType) {
+        this(coords, spotType, false);
     }
 
-    public IconSpotImage(PApplet p, Coordinates coords, SpotType spotType, boolean isCorner) {
-        super(p, coords, isCorner);
+    public IconSpotImage(Coordinates coords, SpotType spotType, boolean isCorner) {
+        super(coords, isCorner);
         this.spotType = spotType;
     }
 
@@ -40,7 +39,7 @@ public class IconSpotImage extends SpotImage implements Drawable {
         if (spotType.streetType.equals(StreetType.UTILITY)) {
             imgName = "Utility" + spotType.id + ".png";
         }
-        PImage img = MonopolyApp.IMAGES.get(imgName);
+        PImage img = MonopolyApp.getImage(imgName);
         img.resize((int) width, (int) height);
         p.image(img, 0, 0);
 

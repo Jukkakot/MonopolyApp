@@ -2,14 +2,13 @@ package org.example.components.spots;
 
 import javafx.scene.paint.Color;
 import lombok.Getter;
-import org.example.components.Token;
-import org.example.images.ImageFactory;
-import org.example.utils.Coordinates;
-import org.example.MonopolyApp;
 import org.example.components.Player;
+import org.example.components.Token;
 import org.example.images.Image;
+import org.example.images.ImageFactory;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
+import org.example.utils.Coordinates;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,15 +21,13 @@ public class Spot {
     private final SpotImage image;
     @Getter
     protected SpotType spotType;
-    private final MonopolyApp p;
     @Getter
     protected final String name;
     List<Player> players = new ArrayList<>();
     public static final List<Coordinates> tokenSpots = Arrays.asList(new Coordinates(0, 0), new Coordinates(-Token.TOKEN_RADIUS, 0), new Coordinates(Token.TOKEN_RADIUS, 0),
             new Coordinates(0, Token.TOKEN_RADIUS), new Coordinates(-Token.TOKEN_RADIUS, Token.TOKEN_RADIUS), new Coordinates(Token.TOKEN_RADIUS, Token.TOKEN_RADIUS));
 
-    public Spot(MonopolyApp p, SpotImage spotImage) {
-        this.p = p;
+    public Spot(SpotImage spotImage) {
         this.image = spotImage;
         this.spotType = spotImage.getSpotType();
         this.image.setCoords(getTokenCoords());
@@ -68,13 +65,13 @@ public class Spot {
         if (image != null) {
             image.draw(c);
         } else {
-            Image.defaultDraw(p, c, 10, Color.BLACK);
+            Image.defaultDraw(c, 10, Color.BLACK);
         }
         players.forEach(p -> p.draw(c));
     }
 
     public void drawDeed(Coordinates c) {
-        SpotImage newImg = ImageFactory.getImage(p, image.getCoords(), spotType);
+        SpotImage newImg = ImageFactory.getImage(image.getCoords(), spotType);
         newImg.draw(c, false);
     }
 

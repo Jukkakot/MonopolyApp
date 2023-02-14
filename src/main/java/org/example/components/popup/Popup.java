@@ -13,14 +13,13 @@ import static processing.core.PConstants.CENTER;
 public class Popup extends Canvas {
     @Setter
     protected String popupText;
-    protected final MonopolyApp p;
+    protected final MonopolyApp p = MonopolyApp.self;
     protected Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
     protected int width = 500;
     protected int height = 300;
     protected boolean isVisible = false;
 
-    public Popup(MonopolyApp p) {
-        this.p = p;
+    public Popup() {
         p.p5.addCanvas(this);
     }
 
@@ -59,23 +58,23 @@ public class Popup extends Canvas {
         p.pop();
     }
 
-    public static void showInfo(MonopolyApp p, String text) {
-        showInfo(p, text, null);
+    public static void showInfo(String text) {
+        showInfo(text, null);
     }
 
-    public static void showInfo(MonopolyApp p, String text, ButtonAction onAccept) {
-        OkPopup okPopup = new OkPopup(p);
+    public static void showInfo(String text, ButtonAction onAccept) {
+        OkPopup okPopup = new OkPopup();
         okPopup.setOnAccept(onAccept);
         okPopup.setPopupText(text);
         okPopup.show();
     }
 
-    public static void showChoice(MonopolyApp p, String text, ButtonAction onAccept) {
-        showChoice(p, text, onAccept, null);
+    public static void showChoice(String text, ButtonAction onAccept) {
+        showChoice(text, onAccept, null);
     }
 
-    public static void showChoice(MonopolyApp p, String text, ButtonAction onAccept, ButtonAction onDecline) {
-        ChoicePopup choicePopup = new ChoicePopup(p);
+    public static void showChoice(String text, ButtonAction onAccept, ButtonAction onDecline) {
+        ChoicePopup choicePopup = new ChoicePopup();
         choicePopup.setPopupText(text);
         choicePopup.setOnAccept(onAccept);
         choicePopup.setOnDecline(onDecline);

@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.example.MonopolyApp.IMAGES;
-
 public class Players {
     private static final int PLAYERS_PER_ROW = 3;
     private final static int DEEDS_PER_ROW = 5;
@@ -22,23 +20,18 @@ public class Players {
     private final List<Player> playerList = new ArrayList<>();
     private final List<Button> playerButtons = new ArrayList<>();
     private int turnNum = 1;
-    private final MonopolyApp p;
+    private final MonopolyApp p = MonopolyApp.self;
     private Player selectedPlayer;
 
-    public Players(MonopolyApp p) {
-        this.p = p;
-    }
-
-    public Player addPlayer(Player p, Spot spot) {
+    public void addPlayer(Player p, Spot spot) {
         playerList.add(p);
         p.setSpot(spot);
         playerButtons.add(new Button(this.p.p5, "" + p.getId())
                 .setValue(p.getId())
                 .addListener(e -> selectedPlayer = playerList.get(playerList.indexOf(p)))
-                .setImages(IMAGES.get("BigToken.png"), IMAGES.get("BigTokenHover.png"), IMAGES.get("BigTokenPressed.png"))
+                .setImages(MonopolyApp.getImage("BigToken.png"), MonopolyApp.getImage("BigTokenHover.png"), MonopolyApp.getImage("BigTokenPressed.png"))
                 .setSize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2)
         );
-        return p;
     }
 
     public void giveRandomDeeds(Board board) {
@@ -106,7 +99,7 @@ public class Players {
         translate(startCoords);
         int deedTotalHeight = Spot.spotH + MARGIN;
         //Offset by needed amounts...
-        p.translate((float) (Spot.spotW / 2 + MARGIN), deedTotalHeight / 2);
+        p.translate((float) (Spot.spotW / 2 + MARGIN), (float) deedTotalHeight / 2);
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
         Map<StreetType, List<PropertySpot>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
@@ -182,7 +175,7 @@ public class Players {
         p.push();
         translate(baseCoords);
         translate(startCoords);
-        float textYAxel = TEXT_INFO_HEIGHT / 3;
+        float textYAxel = (float) TEXT_INFO_HEIGHT / 3;
         p.translate(0, MARGIN);
 
         p.fill(0);
@@ -197,7 +190,7 @@ public class Players {
     private void drawPlayerIcon(Player player, Coordinates absoluteCoords) {
 
         if (player.equals(selectedPlayer)) {
-//            p.stroke(toColor(p, player.getToken().getColor()));
+//            p.stroke(toColor( player.getToken().getColor()));
             p.pop();
             p.stroke(0);
             p.strokeWeight(10);

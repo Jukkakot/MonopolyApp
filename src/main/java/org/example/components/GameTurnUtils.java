@@ -1,22 +1,20 @@
 package org.example.components;
 
 import org.example.MonopolyApp;
-import org.example.components.popup.*;
+import org.example.components.popup.ButtonAction;
+import org.example.components.popup.Popup;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.components.spots.UtilityPropertySpot;
 
 public class GameTurnUtils {
     private static GameTurnUtils instance = null;
-    private final MonopolyApp p;
 
-    private GameTurnUtils(MonopolyApp p) {
-        this.p = p;
-    }
+    private GameTurnUtils() {}
 
-    public static GameTurnUtils getInstance(MonopolyApp p) {
+    public static GameTurnUtils getInstance() {
         if (instance == null) {
-            instance = new GameTurnUtils(p);
+            instance = new GameTurnUtils();
         }
         return instance;
     }
@@ -45,10 +43,10 @@ public class GameTurnUtils {
         String choiceText = "Arrived at " + ps.getName() + " do you want to buy it?";
         ButtonAction onAccept = () -> {
             if (!turnPlayer.buyProperty(ps)) {
-                Popup.showInfo(p, "Didn't have enough money to buy " + ps.getName(), callbackAction::doAction);
+                Popup.showInfo("Didn't have enough money to buy " + ps.getName(), callbackAction::doAction);
             }
         };
-        Popup.showChoice(p, choiceText, onAccept);
+        Popup.showChoice(choiceText, onAccept);
     }
 
     private void handlePayRent(PropertySpot ps, Player turnPlayer, Dices dices, CallbackAction callbackAction) {
@@ -59,7 +57,7 @@ public class GameTurnUtils {
             rent = ps.getRent(turnPlayer);
         }
         String popupText = "Uh oh... you need to pay M" + rent + " rent to " + ps.getOwnerPlayer().getName();
-        Popup.showInfo(p, popupText, () -> {
+        Popup.showInfo(popupText, () -> {
             if (ps.getOwnerPlayer().giveMoney(turnPlayer, rent)) {
                 callbackAction.doAction();
             } else {

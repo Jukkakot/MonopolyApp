@@ -16,13 +16,14 @@ public class Dices {
     @Getter
     private DiceValue value;
 
-    public Dices(MonopolyApp p) {
-        SpotProps sp1 = new SpotProps((int) (Spot.spotW * 5.7), (int) (Spot.spotW * 2.5), Spot.spotW / 2, Spot.spotW / 2);
+    public Dices() {
+        MonopolyApp p = MonopolyApp.self;
+        SpotProps sp1 = new SpotProps((int) (Spot.spotW * 5.7), (int) (Spot.spotW * 2.5), (float) Spot.spotW / 2, (float)Spot.spotW / 2);
         SpotProps sp2 = new SpotProps((int) (Spot.spotW * 6.3), sp1.y(), sp1.width(), sp1.height());
-        dices = new Pair<>(new Dice(p, sp1), new Dice(p, sp2));
+        dices = new Pair<>(new Dice(sp1), new Dice(sp2));
 
         rollDiceButton = new Button(p.p5, "rollDice")
-                .setPosition((int) (Spot.spotW * 5.4), (int) (Spot.spotW * 3))
+                .setPosition((int) (Spot.spotW * 5.4), Spot.spotW * 3)
                 .addListener(e -> rollDice())
                 .setLabel("Roll dice")
                 .setFont(MonopolyApp.font20)

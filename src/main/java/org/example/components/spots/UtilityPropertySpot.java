@@ -1,13 +1,12 @@
 package org.example.components.spots;
 
-import org.example.MonopolyApp;
 import org.example.components.Dices;
 import org.example.components.Player;
 import org.example.images.SpotImage;
 
 public class UtilityPropertySpot extends PropertySpot {
-    public UtilityPropertySpot(MonopolyApp p, SpotImage sp) {
-        super(p, sp);
+    public UtilityPropertySpot(SpotImage sp) {
+        super(sp);
     }
 
     @Override

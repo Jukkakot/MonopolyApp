@@ -29,6 +29,7 @@ public enum StreetType {
     StreetType(PlaceType pt) {
         this(pt, null, null);
     }
+
     StreetType(PlaceType pt, Color color) {
         this(pt, color, null);
     }

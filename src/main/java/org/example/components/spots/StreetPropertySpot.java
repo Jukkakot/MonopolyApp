@@ -1,6 +1,5 @@
 package org.example.components.spots;
 
-import org.example.MonopolyApp;
 import org.example.components.Player;
 import org.example.images.SpotImage;
 
@@ -8,8 +7,8 @@ public class StreetPropertySpot extends PropertySpot {
     private final int housePrice;
     private int houseCount = 0;
 
-    public StreetPropertySpot(MonopolyApp p, SpotImage spotImage) {
-        super(p, spotImage);
+    public StreetPropertySpot(SpotImage spotImage) {
+        super(spotImage);
         housePrice = Integer.parseInt(spotType.getProperty("housePrice"));
     }
 
