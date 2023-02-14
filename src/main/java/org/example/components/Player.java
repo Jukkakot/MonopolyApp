@@ -1,5 +1,6 @@
 package org.example.components;
 
+import javafx.scene.paint.Color;
 import lombok.Getter;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
@@ -112,5 +113,8 @@ public class Player implements Drawable {
 
     public boolean ownsAllSpots(StreetType streetType) {
         return SpotType.getNumberOfSpots(streetType).equals(getOwnedSpots(streetType).size());
+    }
+    public Color getColor() {
+        return token.getColor();
     }
 }

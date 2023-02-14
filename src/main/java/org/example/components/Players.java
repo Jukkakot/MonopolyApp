@@ -8,8 +8,11 @@ import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.example.utils.Utils.toColor;
 
 public class Players {
     private static final int PLAYERS_PER_ROW = 3;
@@ -18,7 +21,7 @@ public class Players {
     private static final int TEXT_INFO_HEIGHT = 50;
     private final Coordinates baseCoords = new Coordinates(Spot.spotW * 12, 0, 0);
     private final List<Player> playerList = new ArrayList<>();
-    private final List<Button> playerButtons = new ArrayList<>();
+    private final Map<String, Button> playerButtons = new HashMap<>();
     private int turnNum = 1;
     private final MonopolyApp p = MonopolyApp.self;
     private Player selectedPlayer;
@@ -26,10 +29,10 @@ public class Players {
     public void addPlayer(Player p, Spot spot) {
         playerList.add(p);
         p.setSpot(spot);
-        playerButtons.add(new Button(this.p.p5, "" + p.getId())
+        playerButtons.put("" + p.getId(), new Button(this.p.p5, "" + p.getId())
                 .setValue(p.getId())
                 .addListener(e -> selectedPlayer = playerList.get(playerList.indexOf(p)))
-                .setImages(MonopolyApp.getImage("BigToken.png"), MonopolyApp.getImage("BigTokenHover.png"), MonopolyApp.getImage("BigTokenPressed.png"))
+                .setImages(MonopolyApp.getImage("BigToken.png", p.getColor()), MonopolyApp.getImage("BigTokenHover.png", p.getColor()), MonopolyApp.getImage("BigTokenPressed.png", p.getColor()))
                 .setSize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2)
         );
     }
@@ -191,20 +194,22 @@ public class Players {
 
         if (player.equals(selectedPlayer)) {
 //            p.stroke(toColor( player.getToken().getColor()));
+            //TODO why pop before push?
             p.pop();
             p.stroke(0);
-            p.strokeWeight(10);
+            p.strokeWeight(5);
             p.circle(absoluteCoords.x(), absoluteCoords.y(), Token.TOKEN_RADIUS * 2);
             p.push();
         }
 
-        Button button = playerButtons.stream().filter(b -> b.getName().equals("" + player.getId())).toList().get(0);
+        Button button = playerButtons.get("" + player.getId());
         button.setPosition(absoluteCoords.x() - Token.TOKEN_RADIUS, absoluteCoords.y() - Token.TOKEN_RADIUS);
-
+        //TODO why pop before push?
         p.pop();
         p.fill(0);
         p.textFont(MonopolyApp.font30);
         p.text(player.getName(), absoluteCoords.x() + Token.TOKEN_RADIUS + MARGIN, absoluteCoords.y());
+        p.noFill();
         p.push();
     }
 
