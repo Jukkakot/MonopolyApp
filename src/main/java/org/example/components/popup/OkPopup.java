@@ -5,24 +5,27 @@ import lombok.Setter;
 import org.example.MonopolyApp;
 
 public class OkPopup extends Popup {
-    private final Button okButton;
+    private static OkPopup instance;
     @Setter
-    private ButtonAction onAccept;
+    private ButtonAction onOkAction;
+    private final Button okButton = new Button(MonopolyApp.self.p5, "ok")
+            .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
+            .addListener(e -> okAction())
+            .setLabel("Ok")
+            .setFont(MonopolyApp.font20)
+            .hide()
+            .setSize(100, 50);
 
-    public OkPopup() {
-        super();
-        okButton = new Button(p.p5, "ok")
-                .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
-                .addListener(e -> okAction())
-                .setLabel("Ok")
-                .setFont(MonopolyApp.font20)
-                .hide()
-                .setSize(100, 50);
+    public static OkPopup getInstance() {
+        if (instance == null) {
+            instance = new OkPopup();
+        }
+        return instance;
     }
 
     private void okAction() {
-        if (onAccept != null) {
-            onAccept.doAction();
+        if (onOkAction != null) {
+            onOkAction.doAction();
         }
         allButtonAction();
     }

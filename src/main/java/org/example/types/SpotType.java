@@ -15,10 +15,10 @@ public enum SpotType {
     DB1(StreetType.DARK_BLUE, 1), DB2(StreetType.DARK_BLUE, 2),
     RR1(StreetType.RAILROAD, 1), RR2(StreetType.RAILROAD, 2), RR3(StreetType.RAILROAD, 3), RR4(StreetType.RAILROAD, 4),
     U1(StreetType.UTILITY, 1), U2(StreetType.UTILITY, 2),
-    TAX1(StreetType.TAX1, 1), TAX2(StreetType.TAX2, 2),
+    TAX1(StreetType.TAX, 1), TAX2(StreetType.TAX, 2),
     COMMUNITY1(StreetType.COMMUNITY, 1), COMMUNITY2(StreetType.COMMUNITY, 2), COMMUNITY3(StreetType.COMMUNITY, 3),
-    CHANCE1(StreetType.CHANCE1, 1), CHANCE2(StreetType.CHANCE2, 2), CHANCE3(StreetType.CHANCE3, 3),
-    CORNER1(StreetType.CORNER1, 1), CORNER2(StreetType.CORNER2, 2), CORNER3(StreetType.CORNER3, 3), CORNER4(StreetType.CORNER4, 4);
+    CHANCE1(StreetType.CHANCE, 1), CHANCE2(StreetType.CHANCE, 2), CHANCE3(StreetType.CHANCE, 3),
+    CORNER1(StreetType.CORNER, 1), CORNER2(StreetType.CORNER, 2), CORNER3(StreetType.CORNER, 3), CORNER4(StreetType.CORNER, 4);
 
     public final StreetType streetType;
     public final int id;
@@ -26,7 +26,7 @@ public enum SpotType {
 
     static {
         try {
-            props.load(SpotType.class.getResourceAsStream("/SpotType.properties"));
+            props.load(SpotType.class.getResourceAsStream("/" + SpotType.class.getSimpleName() + ".properties"));
         } catch (Exception e) {
             System.err.println("Error loading SpotType properties: " + e.getMessage());
         }

@@ -3,6 +3,7 @@ package org.example.utils;
 import javafx.scene.paint.Color;
 import org.example.MonopolyApp;
 
+import static javafx.scene.paint.Color.color;
 import static processing.core.PApplet.map;
 
 public class Utils {
@@ -17,4 +18,9 @@ public class Utils {
     public static int toColor(Color color) {
         return MonopolyApp.self.color(toFloat(color.getRed()), toFloat(color.getGreen()), toFloat(color.getBlue()));
     }
+
+    public static Color toColor(int r, int g, int b) {
+        return color(toFloat(r), toFloat(g), toFloat(b));
+    }
+
 }

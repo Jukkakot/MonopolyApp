@@ -1,6 +1,8 @@
 package org.example.components;
 
 import lombok.Getter;
+import org.example.Drawable;
+import org.example.CallbackAction;
 import org.example.utils.Coordinates;
 
 import java.util.List;

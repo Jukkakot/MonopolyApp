@@ -5,42 +5,44 @@ import lombok.Setter;
 import org.example.MonopolyApp;
 
 public class ChoicePopup extends Popup {
-    private final Button acceptButton;
-    private final Button declineButton;
-    @Setter
-    private ButtonAction onAccept;
-    @Setter
-    private ButtonAction onDecline;
+    private static ChoicePopup instance;
 
-    public ChoicePopup() {
-        super();
-        acceptButton = new Button(p.p5, "accept")
-                .setPosition(coords.x() - 150, coords.y() + (float) height / 4)
-                .addListener(e -> acceptAction())
-                .setLabel("Accept")
-                .setFont(MonopolyApp.font20)
-                .hide()
-                .setSize(100, 50);
+    private final Button acceptButton = new Button(MonopolyApp.self.p5, "accept")
+            .setPosition(coords.x() - 150, coords.y() + (float) height / 4)
+            .addListener(e -> acceptAction())
+            .setLabel("Accept")
+            .setFont(MonopolyApp.font20)
+            .hide()
+            .setSize(100, 50);
+    private final Button declineButton = new Button(MonopolyApp.self.p5, "decline")
+            .setPosition(coords.x() + 50, coords.y() + (float) height / 4)
+            .addListener(e -> declineAction())
+            .setLabel("Decline")
+            .setFont(MonopolyApp.font20)
+            .hide()
+            .setSize(100, 50);
+    @Setter
+    private ButtonAction onAcceptAction;
+    @Setter
+    private ButtonAction onDeclineAction;
 
-        declineButton = new Button(p.p5, "decline")
-                .setPosition(coords.x() + 50, coords.y() + (float) height / 4)
-                .addListener(e -> declineAction())
-                .setLabel("Decline")
-                .setFont(MonopolyApp.font20)
-                .hide()
-                .setSize(100, 50);
+    public static ChoicePopup getInstance() {
+        if (instance == null) {
+            instance = new ChoicePopup();
+        }
+        return instance;
     }
 
     private void acceptAction() {
-        if (onAccept != null) {
-            onAccept.doAction();
+        if (onAcceptAction != null) {
+            onAcceptAction.doAction();
         }
         allButtonAction();
     }
 
     private void declineAction() {
-        if (onDecline != null) {
-            onDecline.doAction();
+        if (onDeclineAction != null) {
+            onDeclineAction.doAction();
         }
         allButtonAction();
     }

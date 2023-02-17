@@ -3,6 +3,7 @@ package org.example;
 import controlP5.ControlP5;
 import javafx.scene.paint.Color;
 import org.example.components.Token;
+import org.example.types.SpotType;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -51,7 +52,6 @@ public class MonopolyApp extends PApplet {
     public static PImage getImage(String name, Color color) {
         PImage image = IMAGES.get(name);
         if (image == null) {
-            System.out.println("No image found with name: " + name);
             return null;
         }
         if (color != null) {
@@ -73,6 +73,15 @@ public class MonopolyApp extends PApplet {
 
     public static PImage getImage(String name) {
         return getImage(name, null);
+    }
+
+    public static PImage getImage(SpotType spotType) {
+        PImage image = getImage(spotType.streetType.imgName, null);
+        if (image == null) {
+            String imgName = spotType.streetType.imgName;
+            image = getImage(imgName.substring(0, imgName.indexOf(".")) + spotType.id + imgName.substring(imgName.indexOf(".")), null);
+        }
+        return image;
     }
 
     private void initImages() {

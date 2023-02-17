@@ -17,6 +17,10 @@ public class SpotFactory {
             return new RailRoadPropertySpot(image);
         } else if (pt.equals(PlaceType.UTILITY)) {
             return new UtilityPropertySpot(image);
+        } else if (pt.equals(PlaceType.TAX)) {
+            return new TaxSpot(image);
+        } else if (pt.equals(PlaceType.PICK_CARD)){
+            return new PickCardSpot(image);
         } else {
             return new Spot(image);
         }

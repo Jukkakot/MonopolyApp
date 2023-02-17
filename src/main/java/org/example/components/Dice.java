@@ -1,5 +1,6 @@
 package org.example.components;
 
+import org.example.Drawable;
 import org.example.images.Image;
 import org.example.utils.Coordinates;
 import org.example.utils.SpotProps;

@@ -5,13 +5,19 @@ import javafx.scene.paint.Color;
 import org.example.components.*;
 import org.example.components.spots.Spot;
 import org.example.utils.DiceValue;
+import org.example.utils.GameTurnUtils;
 
 public class Game {
     Board board;
     Dices dices;
     Players players;
     Animations animations;
-    private final Button endRoundButton;
+    private static final Button endRoundButton = new Button(MonopolyApp.self.p5, "endRound")
+            .setPosition((int) (Spot.spotW * 5.4), MonopolyApp.self.height - Spot.spotW * 3)
+            .setLabel("End round")
+            .setFont(MonopolyApp.font20)
+            .setSize(100, 50)
+            .hide();
     float i = 0;
 
     public Game() {
@@ -36,13 +42,7 @@ public class Game {
 
         players.giveRandomDeeds(board);
 
-        endRoundButton = new Button(MonopolyApp.self.p5, "endRound")
-                .setPosition((int) (Spot.spotW * 5.4), MonopolyApp.self.height - Spot.spotW * 3)
-                .addListener(e -> endRound())
-                .setLabel("End round")
-                .setFont(MonopolyApp.font20)
-                .setSize(100, 50)
-                .hide();
+        endRoundButton.addListener(e -> endRound());
     }
 
     public void draw() {
@@ -92,17 +92,14 @@ public class Game {
     }
 
     private CallbackAction getRoundEndCallback(DiceState diceState) {
-        return () -> GameTurnUtils.getInstance().handleTurn(players, dices, () -> doRoundEvent(diceState));
+        return () -> GameTurnUtils.handleTurn(players, dices, () -> doRoundEvent(diceState));
     }
 
     private void doRoundEvent(DiceState diceState) {
-        if (diceState == null || diceState.equals(DiceState.NOREROLL)) {
-            endRoundButton.show();
-        } else if (diceState.equals(DiceState.JAIL)) {
-            //shouldn't go here anymore?
-            System.out.println("JAIL CASE, shouldn't happen?");
-        } else {
+        if (DiceState.REROLL.equals(diceState)) {
             dices.show();
+        } else {
+            endRoundButton.show();
         }
     }
 }

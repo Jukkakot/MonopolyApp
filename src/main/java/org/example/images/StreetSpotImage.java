@@ -2,7 +2,7 @@ package org.example.images;
 
 import javafx.scene.paint.Color;
 import org.example.MonopolyApp;
-import org.example.components.Drawable;
+import org.example.Drawable;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 

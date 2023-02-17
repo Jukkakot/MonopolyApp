@@ -10,17 +10,16 @@ import processing.core.PGraphics;
 
 import static processing.core.PConstants.CENTER;
 
-public class Popup extends Canvas {
+public abstract class Popup extends Canvas {
     @Setter
     protected String popupText;
-    protected final MonopolyApp p = MonopolyApp.self;
-    protected Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
-    protected int width = 500;
-    protected int height = 300;
+    protected static Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
+    protected static int width = 500;
+    protected static int height = 300;
     protected boolean isVisible = false;
 
     public Popup() {
-        p.p5.addCanvas(this);
+        MonopolyApp.self.p5.addCanvas(this);
     }
 
     public void show() {
@@ -51,9 +50,9 @@ public class Popup extends Canvas {
         p.rect(0, 0, width, height, 30);
 
         p.fill(0);
-        p.textSize(20);
+        p.textFont(MonopolyApp.font20);
         p.textAlign(CENTER);
-        p.text(popupText, 0, -20, width, 200);
+        p.text(popupText, 5, -20, width, 200);
 
         p.pop();
     }
@@ -63,8 +62,8 @@ public class Popup extends Canvas {
     }
 
     public static void showInfo(String text, ButtonAction onAccept) {
-        OkPopup okPopup = new OkPopup();
-        okPopup.setOnAccept(onAccept);
+        OkPopup okPopup = OkPopup.getInstance();
+        okPopup.setOnOkAction(onAccept);
         okPopup.setPopupText(text);
         okPopup.show();
     }
@@ -74,10 +73,10 @@ public class Popup extends Canvas {
     }
 
     public static void showChoice(String text, ButtonAction onAccept, ButtonAction onDecline) {
-        ChoicePopup choicePopup = new ChoicePopup();
+        ChoicePopup choicePopup = ChoicePopup.getInstance();
         choicePopup.setPopupText(text);
-        choicePopup.setOnAccept(onAccept);
-        choicePopup.setOnDecline(onDecline);
+        choicePopup.setOnAcceptAction(onAccept);
+        choicePopup.setOnDeclineAction(onDecline);
         choicePopup.show();
     }
 }

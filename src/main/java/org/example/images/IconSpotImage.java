@@ -1,9 +1,8 @@
 package org.example.images;
 
 import org.example.MonopolyApp;
-import org.example.components.Drawable;
+import org.example.Drawable;
 import org.example.types.SpotType;
-import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 import processing.core.PImage;
 
@@ -35,11 +34,7 @@ public class IconSpotImage extends SpotImage implements Drawable {
         p.translate(c.x(), c.y());
         p.rotate(MonopolyApp.radians((c.r())));
         p.imageMode(p.CENTER);
-        String imgName = spotType.streetType.imgName;
-        if (spotType.streetType.equals(StreetType.UTILITY)) {
-            imgName = "Utility" + spotType.id + ".png";
-        }
-        PImage img = MonopolyApp.getImage(imgName);
+        PImage img = MonopolyApp.getImage(spotType);
         img.resize((int) width, (int) height);
         p.image(img, 0, 0);
 
