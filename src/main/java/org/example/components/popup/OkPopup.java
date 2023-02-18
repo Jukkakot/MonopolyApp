@@ -51,15 +51,17 @@ public class OkPopup extends Popup {
     }
 
     @Override
-    public void onEvent(Event event) {
+    public boolean onEvent(Event event) {
         if (event instanceof KeyEvent keyEvent) {
             if (!isVisible()) {
-                return;
+                return false;
             }
             List<Character> charList = Arrays.asList('1', SPACE, ENTER);
             if (charList.contains(keyEvent.getKey())) {
                 okAction();
+                return true;
             }
         }
+        return false;
     }
 }

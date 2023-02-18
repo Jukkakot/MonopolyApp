@@ -11,9 +11,9 @@ public class UtilityPropertySpot extends PropertySpot {
 
     @Override
     public Integer getRent(Player player) {
+        System.err.println("Trying to get rent without dice value from " + getName());
         return null;
     }
-
     public Integer getRent(Player player, Dices dices) {
         if (hasOwner() && !isOwner(player)) {
             int multiplier = 4;
@@ -24,5 +24,8 @@ public class UtilityPropertySpot extends PropertySpot {
         }
         return 0;
 
+    }
+    public boolean payRent(Player player) {
+        return ownerPlayer.giveMoney(player, getRent(player));
     }
 }

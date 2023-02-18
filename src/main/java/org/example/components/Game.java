@@ -3,7 +3,6 @@ package org.example.components;
 import controlP5.Button;
 import javafx.scene.paint.Color;
 import org.example.MonopolyApp;
-import org.example.components.*;
 import org.example.components.animation.Animation;
 import org.example.components.animation.Animations;
 import org.example.types.DiceState;
@@ -108,16 +107,16 @@ public class Game implements MonopolyEventListener {
             endRoundButton.show();
         }
     }
-
-    @Override
-    public void onEvent(Event event) {
+    public boolean onEvent(Event event) {
         if(event instanceof KeyEvent keyEvent) {
             if(!endRoundButton.isVisible()) {
-                return;
+                return false;
             }
             if(keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
                 endRound();
+                return true;
             }
         }
+        return false;
     }
 }

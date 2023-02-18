@@ -72,7 +72,7 @@ public class GameTurnUtils {
         }
         String popupText = "Uh oh... you need to pay M" + rent + " rent to " + ps.getOwnerPlayer().getName();
         Popup.showInfo(popupText, () -> {
-            if (ps.payRent(turnPlayer)) {
+            if (ps.payRent(turnPlayer, rent)) {
                 callbackAction.doAction();
             } else {
                 //TODO: handle case if turn player has not enough money

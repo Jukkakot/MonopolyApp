@@ -84,5 +84,5 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     @Override
-    public void onEvent(Event event) {}
+    public boolean onEvent(Event event) {return false;}
 }

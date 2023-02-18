@@ -16,18 +16,12 @@ public class StreetSpotImage extends SpotImage implements Drawable {
 
     @Override
     public void draw(Coordinates c) {
-        draw(c, true);
-    }
-
-    @Override
-    public void draw(Coordinates c, boolean pushPop) {
+        super.draw(c);
         if (c == null) {
             c = coords;
         }
-        super.draw(c, pushPop);
-        if (pushPop) {
-            p.push();
-        }
+        p.push();
+
         p.noFill();
         p.strokeWeight(3);
         p.stroke(0);
@@ -48,8 +42,6 @@ public class StreetSpotImage extends SpotImage implements Drawable {
         p.textLeading(10);
         p.text(spotType.getProperty("name"), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
 
-        if (pushPop) {
-            p.pop();
-        }
+        p.pop();
     }
 }

@@ -95,12 +95,10 @@ public class Players {
      * @return Y-axel of where this function last drew something
      */
     private Coordinates drawDeeds(Coordinates startCoords) {
-        p.push();
-        translate(baseCoords);
-        translate(startCoords);
+        Coordinates absoluteCoods = new Coordinates(baseCoords.x() + startCoords.x(), baseCoords.y() + startCoords.y());
         int deedTotalHeight = Spot.spotH + MARGIN;
         //Offset by needed amounts...
-        p.translate((float) (Spot.spotW / 2 + MARGIN), (float) deedTotalHeight / 2);
+        absoluteCoods = absoluteCoods.move((float) (Spot.spotW / 2 + MARGIN), (float) deedTotalHeight / 2);
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
         Map<StreetType, List<PropertySpot>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
@@ -108,19 +106,18 @@ public class Players {
 
         for (StreetType pt : deedsMap.keySet()) {
             for (PropertySpot ps : deedsMap.get(pt)) {
-                ps.drawDeed(new Coordinates());
+                ps.draw(absoluteCoods);
                 index++;
                 if (index % DEEDS_PER_ROW == 0) {
-                    p.translate(-totalDX, deedTotalHeight);
+                    absoluteCoods = absoluteCoods.move(-totalDX, deedTotalHeight);
                     totalDX = 0;
                 } else {
                     int dX = Spot.spotW + MARGIN;
+                    absoluteCoods = absoluteCoods.move(dX, 0);
                     totalDX += dX;
-                    p.translate(dX, 0);
                 }
             }
         }
-        p.pop();
         int rowCount = (selectedPlayer.getAllDeeds().size() / DEEDS_PER_ROW);
         if (selectedPlayer.getAllDeeds().size() % DEEDS_PER_ROW != 0) {
             rowCount++;

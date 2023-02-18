@@ -1,11 +1,11 @@
 package org.example.utils;
 
-public record SpotProps(int x, int y, float width, float height, float rotation) {
-    public SpotProps(int x, int y, float width, float height) {
-        this(x, y, width, height, 0);
+public record SpotProps(int x, int y, float w, float h, float r) {
+    public SpotProps(int x, int y, float w, float h) {
+        this(x, y, w, h, 0);
     }
 
-    public SpotProps(Coordinates coords, float width, float height) {
-        this((int) coords.x(), (int) coords.y(), width, height, coords.r());
+    public SpotProps(Coordinates c, float w, float h) {
+        this((int) c.x(), (int) c.y(), w, h, c.r());
     }
 }

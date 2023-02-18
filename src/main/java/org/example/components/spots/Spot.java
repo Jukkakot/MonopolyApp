@@ -1,11 +1,8 @@
 package org.example.components.spots;
 
-import javafx.scene.paint.Color;
 import lombok.Getter;
 import org.example.components.Player;
 import org.example.components.Token;
-import org.example.images.Image;
-import org.example.images.ImageFactory;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
@@ -62,20 +59,7 @@ public class Spot {
     }
 
     public void draw(Coordinates c) {
-        if (image != null) {
-            image.draw(c);
-        } else {
-            Image.defaultDraw(c, 10, Color.BLACK);
-        }
+        image.draw(c);
         players.forEach(p -> p.draw(c));
-    }
-
-    public void drawDeed(Coordinates c) {
-        SpotImage newImg = ImageFactory.getImage(image.getCoords(), spotType);
-        newImg.draw(c, false);
-    }
-
-    public void draw() {
-        this.draw(null);
     }
 }

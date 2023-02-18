@@ -36,8 +36,8 @@ public abstract class PropertySpot extends Spot {
         return hasOwner() && ownerPlayer.equals(p);
     }
 
-    public boolean payRent(Player player) {
-        return ownerPlayer.giveMoney(player, getRent(player));
+    public boolean payRent(Player player, Integer rent) {
+        return ownerPlayer.giveMoney(player, rent);
     }
 
     public abstract Integer getRent(Player player);

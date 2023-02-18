@@ -64,17 +64,19 @@ public class ChoicePopup extends Popup {
     }
 
     @Override
-    public void onEvent(Event event) {
+    public boolean onEvent(Event event) {
         if (event instanceof KeyEvent keyEvent) {
             if (!isVisible()) {
-                return;
+                return false;
             }
             if (keyEvent.getKey() == '1') {
                 acceptAction();
+                return true;
             } else if (keyEvent.getKey() == '2') {
                 declineAction();
+                return true;
             }
         }
-
+        return false;
     }
 }

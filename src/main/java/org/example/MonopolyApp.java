@@ -4,14 +4,10 @@ import controlP5.ControlP5;
 import javafx.scene.paint.Color;
 import org.example.components.Game;
 import org.example.components.Token;
-import org.example.components.event.MonopolyEventListener;
+import org.example.components.event.EventObserver;
 import org.example.types.SpotType;
-import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
-import processing.event.Event;
-import processing.event.KeyEvent;
-import processing.event.MouseEvent;
 
 import java.io.File;
 import java.util.*;
@@ -19,13 +15,13 @@ import java.util.stream.Stream;
 
 import static org.example.utils.Utils.toColor;
 
-public class MonopolyApp extends PApplet {
+public class MonopolyApp extends EventObserver {
     public static MonopolyApp self;
+    public static boolean DEBUG_MODE = false;
     private Game game;
     public static ControlP5 p5;
     private static Map<String, PImage> IMAGES = new HashMap<>();
     public static PFont font10, font20, font30;
-    private static final Set<MonopolyEventListener> eventListeners = new HashSet<>();
     public static final char ENTER = '\n';
     public static final char SPACE = ' ';
 
@@ -50,6 +46,13 @@ public class MonopolyApp extends PApplet {
     public void draw() {
         background(205, 230, 209);
         game.draw();
+        if (DEBUG_MODE) {
+            push();
+            fill(255, 105, 180);
+            noStroke();
+            circle(MonopolyApp.self.mouseX, MonopolyApp.self.mouseY,20);
+            pop();
+        }
     }
 
     /**
@@ -109,24 +112,5 @@ public class MonopolyApp extends PApplet {
                 .filter(file -> !file.isDirectory())
                 .map(File::getName)
                 .toList();
-    }
-
-    public static void addListener(MonopolyEventListener listener) {
-        eventListeners.add(listener);
-    }
-    @Override
-    public void keyPressed(KeyEvent keyEvent) {
-        super.keyPressed(keyEvent);
-        sendEvent(keyEvent);
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent mouseEvent) {
-        super.mouseClicked(mouseEvent);
-        sendEvent(mouseEvent);
-    }
-
-    private void sendEvent(Event event) {
-        eventListeners.forEach(eventListener -> eventListener.onEvent(event));
     }
 }

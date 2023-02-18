@@ -30,7 +30,7 @@ public class Dices implements MonopolyEventListener {
     public Dices() {
         MonopolyApp.addListener(this);
         SpotProps sp1 = new SpotProps((int) (Spot.spotW * 5.7), (int) (Spot.spotW * 2.5), (float) Spot.spotW / 2, (float) Spot.spotW / 2);
-        SpotProps sp2 = new SpotProps((int) (Spot.spotW * 6.3), sp1.y(), sp1.width(), sp1.height());
+        SpotProps sp2 = new SpotProps((int) (Spot.spotW * 6.3), sp1.y(), sp1.w(), sp1.h());
         dices = new Pair<>(new Dice(sp1), new Dice(sp2));
 
         rollDiceButton.addListener(e -> rollDice());
@@ -78,15 +78,16 @@ public class Dices implements MonopolyEventListener {
     }
 
     @Override
-    public void onEvent(Event event) {
+    public boolean onEvent(Event event) {
         if (event instanceof KeyEvent keyEvent) {
             if (!rollDiceButton.isVisible()) {
-                return;
+                return false;
             }
             if (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
                 rollDice();
+                return true;
             }
         }
-
+        return true;
     }
 }

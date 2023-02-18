@@ -19,18 +19,12 @@ public class IconSpotImage extends SpotImage implements Drawable {
 
     @Override
     public void draw(Coordinates c) {
-        draw(c, true);
-    }
-
-    @Override
-    public void draw(Coordinates c, boolean pushPop) {
+        super.draw(c);
         if (c == null) {
             c = coords;
         }
-        super.draw(c, pushPop);
-        if (pushPop) {
-            p.push();
-        }
+        p.push();
+
         p.translate(c.x(), c.y());
         p.rotate(MonopolyApp.radians((c.r())));
         p.imageMode(p.CENTER);
@@ -44,8 +38,6 @@ public class IconSpotImage extends SpotImage implements Drawable {
         p.textLeading(10);
         p.text(spotType.getProperty("name"), (int) -(width * 0.37), (int) -(height * 0.42), (int) (width * 0.75), height / 2);
 
-        if (pushPop) {
-            p.pop();
-        }
+        p.pop();
     }
 }

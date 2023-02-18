@@ -6,10 +6,15 @@ import org.example.components.Drawable;
 import org.example.components.spots.Spot;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
+import org.example.utils.SpotProps;
+import org.example.utils.Utils;
+
+import static org.example.utils.Utils.isMouseInArea;
 
 public class SpotImage extends Image implements Drawable {
     @Getter
     protected SpotType spotType;
+    protected boolean isHovered = false;
 
     public SpotImage(Coordinates coords) {
         this(coords, false);
@@ -23,19 +28,15 @@ public class SpotImage extends Image implements Drawable {
 
     @Override
     public void draw(Coordinates c) {
-        draw(c, true);
-    }
-
-    public void draw(Coordinates c, boolean pushPop) {
         if (c == null) {
             c = coords;
         }
+        isHovered = isMouseInArea(new SpotProps(c, width, height));
 
-        if (pushPop) {
-            p.push();
-        }
+        p.push();
+
         p.noFill();
-        p.strokeWeight(3);
+        p.strokeWeight(isHovered ? 6 : 3);
         p.stroke(0);
 
         p.translate(c.x(), c.y());
@@ -43,12 +44,26 @@ public class SpotImage extends Image implements Drawable {
         //Outside border
         p.rotate(MonopolyApp.radians(c.r()));
         p.rect(-width / 2, -height / 2, width, height);
-
         if (!spotType.getProperty("price").trim().isEmpty()) {
             drawPrice();
         }
 
-        if (pushPop) {
+
+        p.pop();
+
+        if (MonopolyApp.DEBUG_MODE) {
+            p.push();
+            int[] rectCoords = Utils.getCoords(new SpotProps(c, width, height));
+            p.fill(255, 0, 0, 30);
+            p.noStroke();
+            if (c.r() == 0 || c.r() == 180) {
+                p.rect(rectCoords[0], rectCoords[3], width, height);
+            } else {
+                p.rect(rectCoords[0], rectCoords[3], height, width);
+            }
+//            p.stroke(255, 0, 0, 30);
+//            p.line(rectCoords[0], rectCoords[1], rectCoords[2], rectCoords[3]);
+//            p.line(rectCoords[0], rectCoords[3], rectCoords[2], rectCoords[1]);
             p.pop();
         }
     }

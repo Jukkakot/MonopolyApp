@@ -20,13 +20,12 @@ public class Image implements Drawable {
     @Setter
     @Getter
     protected String imgName;
-    protected MonopolyApp p;
+    protected MonopolyApp p = MonopolyApp.self;
 
     public Image(SpotProps sp) {
-        this.p = MonopolyApp.self;
-        this.coords = new Coordinates(sp.x(), sp.y(), sp.rotation());
-        this.width = sp.width();
-        this.height = sp.height();
+        this.coords = new Coordinates(sp.x(), sp.y(), sp.r());
+        this.width = sp.w();
+        this.height = sp.h();
     }
 
     public Image(SpotProps sp, String imgName) {
@@ -115,10 +114,10 @@ public class Image implements Drawable {
         }
 
         p.translate(sp.x(), sp.y());
-        p.rotate(MonopolyApp.radians(sp.rotation()));
+        p.rotate(MonopolyApp.radians(sp.r()));
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.getImage(imgName);
-        img.resize((int) sp.width(), (int) sp.height());
+        img.resize((int) sp.w(), (int) sp.h());
         p.image(img, 0, 0);
 
         if (pushPop) {
