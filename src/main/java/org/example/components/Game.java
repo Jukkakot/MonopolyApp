@@ -1,18 +1,29 @@
-package org.example;
+package org.example.components;
 
 import controlP5.Button;
 import javafx.scene.paint.Color;
+import org.example.MonopolyApp;
 import org.example.components.*;
+import org.example.components.animation.Animation;
+import org.example.components.animation.Animations;
+import org.example.types.DiceState;
+import org.example.components.dices.Dices;
+import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
-import org.example.utils.DiceValue;
+import org.example.components.dices.DiceValue;
 import org.example.utils.GameTurnUtils;
+import processing.event.Event;
+import processing.event.KeyEvent;
 
-public class Game {
+import static org.example.MonopolyApp.ENTER;
+import static org.example.MonopolyApp.SPACE;
+
+public class Game implements MonopolyEventListener {
     Board board;
     Dices dices;
     Players players;
     Animations animations;
-    private static final Button endRoundButton = new Button(MonopolyApp.self.p5, "endRound")
+    private static final Button endRoundButton = new Button(MonopolyApp.p5, "endRound")
             .setPosition((int) (Spot.spotW * 5.4), MonopolyApp.self.height - Spot.spotW * 3)
             .setLabel("End round")
             .setFont(MonopolyApp.font20)
@@ -21,14 +32,9 @@ public class Game {
     float i = 0;
 
     public Game() {
+        MonopolyApp.addListener(this);
         board = new Board();
-        dices = new Dices() {
-            @Override
-            public void rollDice() {
-                super.rollDice();
-                Game.this.rollDice();
-            }
-        };
+        dices = Dices.onRollDice(this::rollDice);
         players = new Players();
         animations = new Animations();
 
@@ -100,6 +106,18 @@ public class Game {
             dices.show();
         } else {
             endRoundButton.show();
+        }
+    }
+
+    @Override
+    public void onEvent(Event event) {
+        if(event instanceof KeyEvent keyEvent) {
+            if(!endRoundButton.isVisible()) {
+                return;
+            }
+            if(keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
+                endRound();
+            }
         }
     }
 }

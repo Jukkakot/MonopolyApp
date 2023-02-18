@@ -1,6 +1,6 @@
-package org.example.components;
+package org.example.components.dices;
 
-import org.example.Drawable;
+import org.example.components.Drawable;
 import org.example.images.Image;
 import org.example.utils.Coordinates;
 import org.example.utils.SpotProps;

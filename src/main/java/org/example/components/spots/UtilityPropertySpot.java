@@ -1,6 +1,6 @@
 package org.example.components.spots;
 
-import org.example.components.Dices;
+import org.example.components.dices.Dices;
 import org.example.components.Player;
 import org.example.images.SpotImage;
 

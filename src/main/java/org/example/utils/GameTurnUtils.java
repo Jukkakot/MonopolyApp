@@ -1,7 +1,7 @@
 package org.example.utils;
 
-import org.example.CallbackAction;
-import org.example.components.Dices;
+import org.example.components.CallbackAction;
+import org.example.components.dices.Dices;
 import org.example.components.Player;
 import org.example.components.Players;
 import org.example.components.popup.ButtonAction;
@@ -10,7 +10,8 @@ import org.example.components.spots.*;
 
 public class GameTurnUtils {
 
-    private GameTurnUtils() {}
+    private GameTurnUtils() {
+    }
 
     public static void handleTurn(Players players, Dices dices, CallbackAction callbackAction) {
         Player turnPlayer = players.getTurn();
@@ -19,8 +20,8 @@ public class GameTurnUtils {
             handlePropertySpot(propertySpot, turnPlayer, dices, callbackAction);
         } else if (turnPlayerSpot instanceof TaxSpot taxSpot) {
             handleTaxSpot(taxSpot, turnPlayer, callbackAction);
-        } else if(turnPlayerSpot instanceof PickCardSpot pickCardSpot) {
-          pickCardSpot.pickCard(callbackAction);
+        } else if (turnPlayerSpot instanceof PickCardSpot pickCardSpot) {
+            pickCardSpot.pickCard(callbackAction);
         } else {
             callbackAction.doAction();
         }
@@ -53,10 +54,13 @@ public class GameTurnUtils {
         String choiceText = "Arrived at " + ps.getName() + " do you want to buy it?";
         ButtonAction onAccept = () -> {
             if (!turnPlayer.buyProperty(ps)) {
+                //TODO better handling if player wants to sell stuff to afford buying this
                 Popup.showInfo("You don't have enough money to buy " + ps.getName(), callbackAction::doAction);
+            } else {
+                callbackAction.doAction();
             }
         };
-        Popup.showChoice(choiceText, onAccept);
+        Popup.showChoice(choiceText, onAccept, callbackAction::doAction);
     }
 
     private static void handlePayRent(PropertySpot ps, Player turnPlayer, Dices dices, CallbackAction callbackAction) {
@@ -68,7 +72,7 @@ public class GameTurnUtils {
         }
         String popupText = "Uh oh... you need to pay M" + rent + " rent to " + ps.getOwnerPlayer().getName();
         Popup.showInfo(popupText, () -> {
-            if (ps.getOwnerPlayer().giveMoney(turnPlayer, rent)) {
+            if (ps.payRent(turnPlayer)) {
                 callbackAction.doAction();
             } else {
                 //TODO: handle case if turn player has not enough money

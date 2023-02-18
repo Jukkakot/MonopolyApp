@@ -4,13 +4,15 @@ package org.example.components.popup;
 import controlP5.Canvas;
 import lombok.Setter;
 import org.example.MonopolyApp;
+import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
 import org.example.utils.Coordinates;
 import processing.core.PGraphics;
+import processing.event.Event;
 
 import static processing.core.PConstants.CENTER;
 
-public abstract class Popup extends Canvas {
+public abstract class Popup extends Canvas implements MonopolyEventListener {
     @Setter
     protected String popupText;
     protected static Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
@@ -19,7 +21,8 @@ public abstract class Popup extends Canvas {
     protected boolean isVisible = false;
 
     public Popup() {
-        MonopolyApp.self.p5.addCanvas(this);
+        MonopolyApp.p5.addCanvas(this);
+        MonopolyApp.addListener(this);
     }
 
     public void show() {
@@ -79,4 +82,7 @@ public abstract class Popup extends Canvas {
         choicePopup.setOnDeclineAction(onDecline);
         choicePopup.show();
     }
+
+    @Override
+    public void onEvent(Event event) {}
 }

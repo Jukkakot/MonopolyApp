@@ -1,5 +1,6 @@
-package org.example.components;
+package org.example.components.cards;
 
+import org.example.types.CardType;
 import org.example.types.StreetType;
 
 import java.util.*;

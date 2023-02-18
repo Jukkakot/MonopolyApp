@@ -1,4 +1,4 @@
-package org.example.components;
+package org.example.components.animation;
 
 import java.util.ArrayList;
 import java.util.List;

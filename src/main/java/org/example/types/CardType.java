@@ -1,4 +1,4 @@
-package org.example.components;
+package org.example.types;
 
 import java.util.Arrays;
 import java.util.List;

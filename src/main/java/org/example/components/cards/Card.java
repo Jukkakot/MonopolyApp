@@ -1,4 +1,4 @@
-package org.example.components;
+package org.example.components.cards;
 
 public class Card {
     private CardInfo cardInfo;
@@ -8,6 +8,6 @@ public class Card {
     }
 
     public String getText() {
-        return cardInfo.getText();
+        return cardInfo.text();
     }
 }

@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.example.utils.Utils.toColor;
-
 public class Players {
     private static final int PLAYERS_PER_ROW = 3;
     private final static int DEEDS_PER_ROW = 5;
@@ -29,7 +27,7 @@ public class Players {
     public void addPlayer(Player p, Spot spot) {
         playerList.add(p);
         p.setSpot(spot);
-        playerButtons.put("" + p.getId(), new Button(this.p.p5, "" + p.getId())
+        playerButtons.put("" + p.getId(), new Button(MonopolyApp.p5, "" + p.getId())
                 .setValue(p.getId())
                 .addListener(e -> selectedPlayer = playerList.get(playerList.indexOf(p)))
                 .setImages(MonopolyApp.getImage("BigToken.png", p.getColor()), MonopolyApp.getImage("BigTokenHover.png", p.getColor()), MonopolyApp.getImage("BigTokenPressed.png", p.getColor()))
@@ -39,7 +37,7 @@ public class Players {
 
     public void giveRandomDeeds(Board board) {
         List<Spot> propertySpots = new ArrayList<>(board.getSpots().stream().filter(spot -> spot instanceof PropertySpot).toList());
-        while (!propertySpots.isEmpty()) {
+        while (propertySpots.size() > 20) {
             PropertySpot spot = (PropertySpot) propertySpots.get(0);
             playerList.forEach(player -> {
                 if (Math.random() < 0.2) {

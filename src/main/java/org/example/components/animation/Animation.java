@@ -1,8 +1,8 @@
-package org.example.components;
+package org.example.components.animation;
 
 import lombok.Getter;
-import org.example.Drawable;
-import org.example.CallbackAction;
+import org.example.components.Drawable;
+import org.example.components.CallbackAction;
 import org.example.utils.Coordinates;
 
 import java.util.List;

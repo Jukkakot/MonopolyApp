@@ -1,4 +1,4 @@
-package org.example;
+package org.example.components;
 
 import org.example.utils.Coordinates;
 

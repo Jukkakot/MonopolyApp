@@ -1,8 +1,8 @@
 package org.example.components.spots;
 
-import org.example.CallbackAction;
-import org.example.components.Card;
-import org.example.components.Cards;
+import org.example.components.CallbackAction;
+import org.example.components.cards.Card;
+import org.example.components.cards.Cards;
 import org.example.components.popup.Popup;
 import org.example.images.SpotImage;
 
