@@ -34,13 +34,13 @@ public class StreetSpotImage extends SpotImage implements Drawable {
             Color color = spotType.streetType.color;
             p.fill(toColor(color));
         }
-        p.rect(-width / 2, -height / 2, width, height / 4);
+        p.rect(-getWidth() / 2, -getHeight() / 2, getWidth(), getHeight() / 4);
 
         p.fill(0);
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
         p.textLeading(10);
-        p.text(spotType.getProperty("name"), (int) -(width * 0.37), -height / 6, (int) (width * 0.75), height / 2);
+        p.text(spotType.getProperty("name"), (int) -(getWidth() * 0.37), -getHeight() / 6, (int) (getWidth() * 0.75), getHeight() / 2);
 
         p.pop();
     }

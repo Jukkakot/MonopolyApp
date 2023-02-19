@@ -6,7 +6,6 @@ import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
-import processing.core.PImage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,16 +71,18 @@ public class Board {
 
     public void draw(Coordinates c) {
         drawBackground(c);
-        spots.forEach(s -> s.draw(c));
     }
 
     private void drawBackground(Coordinates c) {
         p.push();
         p.imageMode(p.CENTER);
-        PImage img = MonopolyApp.getImage("Background.png");
-        img.resize(Spot.spotW * 9, Spot.spotW * 9);
-        p.image(MonopolyApp.getImage("Background.png"), (float) (Spot.spotW * 6), (float) (Spot.spotW * 6));
-        spots.forEach(s -> s.draw(c));
+        int imgSize = Spot.spotW * 9;
+        float middleRadius = (Spot.spotW * 6);
+        p.image(MonopolyApp.getImage("Background.png"), middleRadius, middleRadius, imgSize, imgSize);
+        // Drawing all non hovered spots
+        spots.stream().filter(spot -> !spot.isHovered()).forEach(s -> s.draw(c));
+        // Drawing all hovered spots last
+        spots.stream().filter(Spot::isHovered).forEach(spot -> spot.draw(c));
         p.pop();
     }
 

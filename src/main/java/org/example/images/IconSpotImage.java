@@ -29,14 +29,13 @@ public class IconSpotImage extends SpotImage implements Drawable {
         p.rotate(MonopolyApp.radians((c.r())));
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.getImage(spotType);
-        img.resize((int) width, (int) height);
-        p.image(img, 0, 0);
+        p.image(img, 0, 0, getWidth(), getHeight());
 
         p.fill(0);
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
         p.textLeading(10);
-        p.text(spotType.getProperty("name"), (int) -(width * 0.37), (int) -(height * 0.42), (int) (width * 0.75), height / 2);
+        p.text(spotType.getProperty("name"), (int) -(getWidth() * 0.37), (int) -(getHeight() * 0.42), (int) (getWidth() * 0.75), getHeight() / 2);
 
         p.pop();
     }

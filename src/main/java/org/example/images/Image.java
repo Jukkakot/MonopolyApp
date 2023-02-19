@@ -20,7 +20,10 @@ public class Image implements Drawable {
     @Setter
     @Getter
     protected String imgName;
-    protected MonopolyApp p = MonopolyApp.self;
+    @Getter
+    protected boolean isHovered = false;
+    protected static final MonopolyApp p = MonopolyApp.self;
+    protected static final float HOVER_SCALE = 1.1f;
 
     public Image(SpotProps sp) {
         this.coords = new Coordinates(sp.x(), sp.y(), sp.r());
@@ -34,7 +37,6 @@ public class Image implements Drawable {
     }
 
     public Image(Coordinates coords) {
-        this.p = MonopolyApp.self;
         this.coords = coords;
     }
 
@@ -44,6 +46,14 @@ public class Image implements Drawable {
 
         this.width = Token.TOKEN_RADIUS;
         this.height = Token.TOKEN_RADIUS;
+    }
+
+    public float getWidth() {
+        return getScaledLength(width);
+    }
+
+    public float getHeight() {
+        return getScaledLength(height);
     }
 
     public Coordinates getCoords() {
@@ -85,9 +95,8 @@ public class Image implements Drawable {
         p.rotate(MonopolyApp.radians((coords.r())));
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.getImage(imgName);
-        img.resize((int) width, (int) height);
         p.tint(toColor(color));
-        p.image(img, 0, 0);
+        p.image(img, 0, 0, getWidth(), getHeight());
 
         p.pop();
     }
@@ -101,8 +110,7 @@ public class Image implements Drawable {
         p.rotate(MonopolyApp.radians(coords.r() + rotation));
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.getImage(imgName);
-        img.resize((int) width, (int) height);
-        p.image(img, 0, 0);
+        p.image(img, 0, 0, getWidth(), getHeight());
 
         p.pop();
     }
@@ -117,12 +125,14 @@ public class Image implements Drawable {
         p.rotate(MonopolyApp.radians(sp.r()));
         p.imageMode(p.CENTER);
         PImage img = MonopolyApp.getImage(imgName);
-        img.resize((int) sp.w(), (int) sp.h());
-        p.image(img, 0, 0);
+        p.image(img, 0, 0, sp.w(),sp.h());
 
         if (pushPop) {
             p.pop();
         }
     }
 
+    protected float getScaledLength(float length) {
+        return isHovered ? length * HOVER_SCALE : length;
+    }
 }

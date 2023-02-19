@@ -62,4 +62,7 @@ public class Spot {
         image.draw(c);
         players.forEach(p -> p.draw(c));
     }
+    public boolean isHovered() {
+        return image.isHovered();
+    }
 }

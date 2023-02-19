@@ -14,7 +14,6 @@ import static org.example.utils.Utils.isMouseInArea;
 public class SpotImage extends Image implements Drawable {
     @Getter
     protected SpotType spotType;
-    protected boolean isHovered = false;
 
     public SpotImage(Coordinates coords) {
         this(coords, false);
@@ -31,19 +30,19 @@ public class SpotImage extends Image implements Drawable {
         if (c == null) {
             c = coords;
         }
-        isHovered = isMouseInArea(new SpotProps(c, width, height));
+        updateIsHovered(c);
 
         p.push();
 
-        p.noFill();
-        p.strokeWeight(isHovered ? 6 : 3);
+        p.fill(205, 230, 209);
+        p.strokeWeight(3);
         p.stroke(0);
 
         p.translate(c.x(), c.y());
 
         //Outside border
         p.rotate(MonopolyApp.radians(c.r()));
-        p.rect(-width / 2, -height / 2, width, height);
+        p.rect(-getWidth() / 2, -getHeight() / 2, getWidth(), getHeight());
         if (!spotType.getProperty("price").trim().isEmpty()) {
             drawPrice();
         }
@@ -53,26 +52,26 @@ public class SpotImage extends Image implements Drawable {
 
         if (MonopolyApp.DEBUG_MODE) {
             p.push();
-            int[] rectCoords = Utils.getCoords(new SpotProps(c, width, height));
+            int[] rectCoords = Utils.getCoords(new SpotProps(c, getWidth(), getHeight()));
             p.fill(255, 0, 0, 30);
             p.noStroke();
             if (c.r() == 0 || c.r() == 180) {
-                p.rect(rectCoords[0], rectCoords[3], width, height);
+                p.rect(rectCoords[0], rectCoords[3], getWidth(), getHeight());
             } else {
-                p.rect(rectCoords[0], rectCoords[3], height, width);
+                p.rect(rectCoords[0], rectCoords[3], getHeight(), getWidth());
             }
-//            p.stroke(255, 0, 0, 30);
-//            p.line(rectCoords[0], rectCoords[1], rectCoords[2], rectCoords[3]);
-//            p.line(rectCoords[0], rectCoords[3], rectCoords[2], rectCoords[1]);
             p.pop();
         }
+    }
+
+    private void updateIsHovered(Coordinates c) {
+        isHovered = isMouseInArea(new SpotProps(c, getWidth(), getHeight()));
     }
 
     private void drawPrice() {
         p.fill(0);
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
-
-        p.text("M" + spotType.getProperty("price"), (int) -(width * 0.37), height / 3, (int) (width * 0.75), height);
+        p.text("M" + spotType.getProperty("price"), (int) -(getWidth() * 0.37), getHeight() / 3, (int) (getWidth() * 0.75), getHeight());
     }
 }
