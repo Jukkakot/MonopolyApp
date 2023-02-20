@@ -6,62 +6,43 @@ import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
-import org.example.utils.Coordinates;
 
 import java.util.List;
 
-public class Player implements Drawable {
+public class Player extends PlayerToken {
+    private static int NEXT_ID = 0;
     @Getter
     private final int id;
     private final String name;
-    private final Token token;
     @Getter
     private Integer money;
     @Getter
-    private final int turnNumber;
+    private int turnNumber;
     @Getter
     private final Deeds deeds;
 
-    public Player(int id, String name, Token token, int turnNumber) {
-        this.id = id;
+    public Player(String name, Color color, Spot spot) {
+        super(spot, color);
+        this.id = NEXT_ID++;
         this.name = name;
-        this.token = token;
         this.money = 2000;
-        this.turnNumber = turnNumber;
+        // turn number is id by default. Later maybe implement so that this can change
+        this.turnNumber = id + 1; // Turn numbers starts from 1
         deeds = new Deeds();
+        setSpot(spot);
     }
 
     public String getName() {
-        return name.replace("ö", "o").replace("ä", "a").replace("Ö", "O").replace("Ä", "A");
+        return name.replace("ö", "o")
+                .replace("ä", "a")
+                .replace("Ö", "O")
+                .replace("Ä", "A");
     }
 
-    public void draw(Coordinates coords) {
-        token.draw(coords);
-    }
-
-    @Override
-    public Coordinates getCoords() {
-        return token.getCoords();
-    }
-
-    @Override
-    public void setCoords(Coordinates coords) {
-        token.setCoords(coords);
-    }
-
-    public Spot getSpot() {
-        return token.getSpot();
-    }
-
-    public void setSpot(Spot spot) {
-        token.getSpot().removePlayer(this);
+    public void setSpot(Spot newSpot) {
+        spot.removePlayer(this);
+        spot = newSpot;
         spot.addPlayer(this);
-        token.setSpot(spot);
-    }
-
-    @Override
-    public void draw() {
-        draw(null);
     }
 
     private void addDeed(PropertySpot ps) {
@@ -113,8 +94,5 @@ public class Player implements Drawable {
 
     public boolean ownsAllSpots(StreetType streetType) {
         return SpotType.getNumberOfSpots(streetType).equals(getOwnedSpots(streetType).size());
-    }
-    public Color getColor() {
-        return token.getColor();
     }
 }

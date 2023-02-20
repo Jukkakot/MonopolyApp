@@ -2,7 +2,6 @@ package org.example.images;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
-import org.example.components.Drawable;
 import org.example.components.spots.Spot;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
@@ -11,7 +10,7 @@ import org.example.utils.Utils;
 
 import static org.example.utils.Utils.isMouseInArea;
 
-public class SpotImage extends Image implements Drawable {
+public class SpotImage extends Image {
     @Getter
     protected SpotType spotType;
 
@@ -21,8 +20,8 @@ public class SpotImage extends Image implements Drawable {
 
     public SpotImage(Coordinates coords, boolean isCorner) {
         super(coords);
-        this.width = isCorner ? Spot.spotH : Spot.spotW;
-        this.height = Spot.spotH;
+        this.width = isCorner ? Spot.SPOT_H : Spot.SPOT_W;
+        this.height = Spot.SPOT_H;
     }
 
     @Override

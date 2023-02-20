@@ -3,7 +3,7 @@ package org.example;
 import controlP5.ControlP5;
 import javafx.scene.paint.Color;
 import org.example.components.Game;
-import org.example.components.Token;
+import org.example.components.PlayerToken;
 import org.example.components.event.EventObserver;
 import org.example.types.SpotType;
 import processing.core.PFont;
@@ -101,9 +101,9 @@ public class MonopolyApp extends EventObserver {
         for (String fileName : fileNames) {
             IMAGES.put(fileName, loadImage(dirPath + fileName));
         }
-        IMAGES.get("BigToken.png").resize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2);
-        IMAGES.get("BigTokenHover.png").resize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2);
-        IMAGES.get("BigTokenPressed.png").resize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2);
+        IMAGES.get("BigToken.png").resize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2);
+        IMAGES.get("BigTokenHover.png").resize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2);
+        IMAGES.get("BigTokenPressed.png").resize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2);
         println("Finished loading", IMAGES.size(), "images.");
     }
 

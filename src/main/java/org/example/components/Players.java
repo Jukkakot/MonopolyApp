@@ -17,21 +17,20 @@ public class Players {
     private final static int DEEDS_PER_ROW = 5;
     private final static int MARGIN = 10;
     private static final int TEXT_INFO_HEIGHT = 50;
-    private final Coordinates baseCoords = new Coordinates(Spot.spotW * 12, 0, 0);
+    private final Coordinates baseCoords = new Coordinates(Spot.SPOT_W * 12, 0, 0);
     private final List<Player> playerList = new ArrayList<>();
     private final Map<String, Button> playerButtons = new HashMap<>();
     private int turnNum = 1;
     private final MonopolyApp p = MonopolyApp.self;
     private Player selectedPlayer;
 
-    public void addPlayer(Player p, Spot spot) {
+    public void addPlayer(Player p) {
         playerList.add(p);
-        p.setSpot(spot);
         playerButtons.put("" + p.getId(), new Button(MonopolyApp.p5, "" + p.getId())
                 .setValue(p.getId())
                 .addListener(e -> selectedPlayer = playerList.get(playerList.indexOf(p)))
                 .setImages(MonopolyApp.getImage("BigToken.png", p.getColor()), MonopolyApp.getImage("BigTokenHover.png", p.getColor()), MonopolyApp.getImage("BigTokenPressed.png", p.getColor()))
-                .setSize(Token.TOKEN_RADIUS * 2, Token.TOKEN_RADIUS * 2)
+                .setSize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2)
         );
     }
 
@@ -78,7 +77,8 @@ public class Players {
     }
 
     public void draw() {
-        drawAll(this::drawPlayers, this::drawTextInfo, this::drawDeeds);
+        drawAll(this::drawPlayerButtons, this::drawTextInfo, this::drawDeeds);
+        drawTokens();
     }
 
     public void drawAll(Drawable... drawables) {
@@ -86,6 +86,10 @@ public class Players {
         for (Drawable drawable : drawables) {
             startCoords = drawable.draw(startCoords);
         }
+    }
+
+    public void drawTokens() {
+        playerList.forEach(PlayerToken::draw);
     }
 
     /**
@@ -96,9 +100,9 @@ public class Players {
      */
     private Coordinates drawDeeds(Coordinates startCoords) {
         Coordinates absoluteCoods = new Coordinates(baseCoords.x() + startCoords.x(), baseCoords.y() + startCoords.y());
-        int deedTotalHeight = Spot.spotH + MARGIN;
+        float deedTotalHeight = Spot.SPOT_H + MARGIN;
         //Offset by needed amounts...
-        absoluteCoods = absoluteCoods.move((float) (Spot.spotW / 2 + MARGIN), (float) deedTotalHeight / 2);
+        absoluteCoods = absoluteCoods.move(Spot.SPOT_W / 2 + MARGIN, deedTotalHeight / 2);
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
         Map<StreetType, List<PropertySpot>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
@@ -112,7 +116,7 @@ public class Players {
                     absoluteCoods = absoluteCoods.move(-totalDX, deedTotalHeight);
                     totalDX = 0;
                 } else {
-                    int dX = Spot.spotW + MARGIN;
+                    float dX = Spot.SPOT_W + MARGIN;
                     absoluteCoods = absoluteCoods.move(dX, 0);
                     totalDX += dX;
                 }
@@ -131,14 +135,14 @@ public class Players {
      * @param startCoords starting coordinates for drawing
      * @return Y-axel of where this function last drew something
      */
-    private Coordinates drawPlayers(Coordinates startCoords) {
+    private Coordinates drawPlayerButtons(Coordinates startCoords) {
         p.push();
         translate(baseCoords);
         Coordinates absoluteCoords = baseCoords.move(startCoords);
-        absoluteCoords = absoluteCoords.move((float) (Token.TOKEN_RADIUS * 1.5), (float) (Token.TOKEN_RADIUS * 1.5));
+        absoluteCoords = absoluteCoords.move((float) (PlayerToken.TOKEN_RADIUS * 1.5), (float) (PlayerToken.TOKEN_RADIUS * 1.5));
         translate(absoluteCoords);
         int totalDX = 0;
-        int tokenHeight = 3 * Token.TOKEN_RADIUS;
+        int tokenHeight = 3 * PlayerToken.TOKEN_RADIUS;
         for (Player player : playerList) {
             drawPlayerIcon(player, absoluteCoords);
             int index = playerList.indexOf(player);
@@ -149,7 +153,7 @@ public class Players {
                 translate(absoluteCoords);
                 totalDX = 0;
             } else {
-                int dX = MARGIN + Token.TOKEN_RADIUS * 2 + player.getName().length() * 17;
+                int dX = MARGIN + PlayerToken.TOKEN_RADIUS * 2 + player.getName().length() * 17;
                 totalDX += dX;
                 absoluteCoords = absoluteCoords.move(dX, 0);
                 p.translate(dX, 0);
@@ -193,17 +197,17 @@ public class Players {
             p.pop();
             p.stroke(0);
             p.strokeWeight(5);
-            p.circle(absoluteCoords.x(), absoluteCoords.y(), Token.TOKEN_RADIUS * 2);
+            p.circle(absoluteCoords.x(), absoluteCoords.y(), PlayerToken.TOKEN_RADIUS * 2);
             p.push();
         }
 
         Button button = playerButtons.get("" + player.getId());
-        button.setPosition(absoluteCoords.x() - Token.TOKEN_RADIUS, absoluteCoords.y() - Token.TOKEN_RADIUS);
+        button.setPosition(absoluteCoords.x() - PlayerToken.TOKEN_RADIUS, absoluteCoords.y() - PlayerToken.TOKEN_RADIUS);
         //TODO why pop before push?
         p.pop();
         p.fill(0);
         p.textFont(MonopolyApp.font30);
-        p.text(player.getName(), absoluteCoords.x() + Token.TOKEN_RADIUS + MARGIN, absoluteCoords.y());
+        p.text(player.getName(), absoluteCoords.x() + PlayerToken.TOKEN_RADIUS + MARGIN, absoluteCoords.y());
         p.noFill();
         p.push();
     }

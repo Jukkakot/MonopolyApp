@@ -19,7 +19,7 @@ import static org.example.MonopolyApp.SPACE;
 public class Dices implements MonopolyEventListener {
     private final Pair<Dice, Dice> dices;
     private static final Button rollDiceButton = new Button(MonopolyApp.p5, "rollDice")
-            .setPosition((int) (Spot.spotW * 5.4), Spot.spotW * 3)
+            .setPosition((int) (Spot.SPOT_W * 5.4), Spot.SPOT_W * 3)
             .setLabel("Roll dice")
             .setFont(MonopolyApp.font20)
             .setSize(100, 50);
@@ -29,8 +29,9 @@ public class Dices implements MonopolyEventListener {
 
     public Dices() {
         MonopolyApp.addListener(this);
-        SpotProps sp1 = new SpotProps((int) (Spot.spotW * 5.7), (int) (Spot.spotW * 2.5), (float) Spot.spotW / 2, (float) Spot.spotW / 2);
-        SpotProps sp2 = new SpotProps((int) (Spot.spotW * 6.3), sp1.y(), sp1.w(), sp1.h());
+        float diceSideLength = Spot.SPOT_W / 2;
+        SpotProps sp1 = new SpotProps((int) (Spot.SPOT_W * 5.7), (int) (Spot.SPOT_W * 2.5), diceSideLength, diceSideLength);
+        SpotProps sp2 = new SpotProps((int) (Spot.SPOT_W * 6.3), sp1.y(), sp1.w(), sp1.h());
         dices = new Pair<>(new Dice(sp1), new Dice(sp2));
 
         rollDiceButton.addListener(e -> rollDice());

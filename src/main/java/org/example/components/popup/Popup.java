@@ -15,7 +15,7 @@ import static processing.core.PConstants.CENTER;
 public abstract class Popup extends Canvas implements MonopolyEventListener {
     @Setter
     protected String popupText;
-    protected static Coordinates coords = new Coordinates(Spot.spotW * 6, Spot.spotW * 6);
+    protected static Coordinates coords = new Coordinates(Spot.SPOT_W * 6, Spot.SPOT_W * 6);
     protected static int width = 500;
     protected static int height = 300;
     protected boolean isVisible = false;

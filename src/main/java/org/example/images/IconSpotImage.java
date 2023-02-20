@@ -1,12 +1,11 @@
 package org.example.images;
 
 import org.example.MonopolyApp;
-import org.example.components.Drawable;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 import processing.core.PImage;
 
-public class IconSpotImage extends SpotImage implements Drawable {
+public class IconSpotImage extends SpotImage {
 
     public IconSpotImage(Coordinates coords, SpotType spotType) {
         this(coords, spotType, false);

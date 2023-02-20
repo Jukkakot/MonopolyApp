@@ -1,28 +1,28 @@
 package org.example.components.spots;
 
 import lombok.Getter;
+import org.example.components.Drawable;
 import org.example.components.Player;
-import org.example.components.Token;
+import org.example.components.PlayerToken;
+import org.example.images.Image;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 
-public class Spot {
-    public static final int spotW = 996 / 12;
-    public static final int spotH = (int) (spotW * 1.5);
+public class Spot implements Drawable {
+    public static final float SPOT_W = 996f / 12f;
+    public static final float SPOT_H = SPOT_W * 1.5f;
     private final SpotImage image;
     @Getter
     protected SpotType spotType;
     @Getter
     protected final String name;
-    List<Player> players = new ArrayList<>();
-    public static final List<Coordinates> tokenSpots = Arrays.asList(new Coordinates(0, 0), new Coordinates(-Token.TOKEN_RADIUS, 0), new Coordinates(Token.TOKEN_RADIUS, 0),
-            new Coordinates(0, Token.TOKEN_RADIUS), new Coordinates(-Token.TOKEN_RADIUS, Token.TOKEN_RADIUS), new Coordinates(Token.TOKEN_RADIUS, Token.TOKEN_RADIUS));
+    Set<Image> players = new HashSet<>();
+    private static final List<Coordinates> TOKEN_COORDS = Arrays.asList(new Coordinates(0, 0), new Coordinates(-PlayerToken.TOKEN_RADIUS, 0), new Coordinates(PlayerToken.TOKEN_RADIUS, 0),
+            new Coordinates(0, PlayerToken.TOKEN_RADIUS), new Coordinates(-PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS), new Coordinates(PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS));
 
     public Spot(SpotImage spotImage) {
         this.image = spotImage;
@@ -33,9 +33,7 @@ public class Spot {
     }
 
     public void addPlayer(Player p) {
-        if (!players.contains(p)) {
-            players.add(p);
-        }
+        players.add(p);
     }
 
     public void removePlayer(Player p) {
@@ -44,12 +42,12 @@ public class Spot {
 
     public Coordinates getTokenCoords(Player player) {
         int index = players.stream().filter(p -> !p.equals(player)).toList().size();
-        Coordinates tokenSpot = tokenSpots.get(index % tokenSpots.size());
+        Coordinates tokenSpot = TOKEN_COORDS.get(index % TOKEN_COORDS.size());
         return image.getCoords().move(tokenSpot);
     }
 
     public Coordinates getTokenCoords() {
-        Coordinates tokenSpot = tokenSpots.get(players.size() % tokenSpots.size());
+        Coordinates tokenSpot = TOKEN_COORDS.get(players.size() % TOKEN_COORDS.size());
         return image.getCoords().move(tokenSpot);
     }
 
@@ -58,10 +56,16 @@ public class Spot {
         return image.getCoords();
     }
 
+    @Override
+    public void setCoords(Coordinates coords) {
+        image.setCoords(coords);
+    }
+
+    @Override
     public void draw(Coordinates c) {
         image.draw(c);
-        players.forEach(p -> p.draw(c));
     }
+
     public boolean isHovered() {
         return image.isHovered();
     }

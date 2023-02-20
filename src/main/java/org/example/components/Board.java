@@ -22,67 +22,71 @@ public class Board {
     }
 
     private void initSpots() {
-        int currX = (Spot.spotH + 9 * Spot.spotW) + Spot.spotH / 2;
-        int currY = (Spot.spotH + 9 * Spot.spotW) + Spot.spotH / 2;
+        float currX = (Spot.SPOT_H + 9 * Spot.SPOT_W) + Spot.SPOT_H / 2;
+        float currY = (Spot.SPOT_H + 9 * Spot.SPOT_W) + Spot.SPOT_H / 2;
         int currRotation = 0;
 
         //BOTTOM ROW
         spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
-        currX -= Spot.spotH / 2 + Spot.spotW / 2;
+        currX -= Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
             spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
-            currX -= Spot.spotW;
+            currX -= Spot.SPOT_W;
 
         }
-        currX += Spot.spotW;
-        currX -= Spot.spotH / 2 + Spot.spotW / 2;
+        currX += Spot.SPOT_W;
+        currX -= Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //LEFT COLUMN
         currRotation += 90;
-        currY -= Spot.spotH / 2 + Spot.spotW / 2;
+        currY -= Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
             spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
-            currY -= Spot.spotW;
+            currY -= Spot.SPOT_W;
         }
-        currY += Spot.spotW;
-        currY -= Spot.spotH / 2 + Spot.spotW / 2;
+        currY += Spot.SPOT_W;
+        currY -= Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
 
         //TOP ROW
         currRotation += 90;
         spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
-        currX += Spot.spotH / 2 + Spot.spotW / 2;
+        currX += Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
             spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
-            currX += Spot.spotW;
+            currX += Spot.SPOT_W;
         }
-        currX -= Spot.spotW;
-        currX += Spot.spotH / 2 + Spot.spotW / 2;
+        currX -= Spot.SPOT_W;
+        currX += Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //RIGHT COLUMN
         currRotation += 90;
-        currY += Spot.spotH / 2 + Spot.spotW / 2;
+        currY += Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
             spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
-            currY += Spot.spotW;
+            currY += Spot.SPOT_W;
         }
     }
 
     public void draw(Coordinates c) {
-        drawBackground(c);
+        drawBackground();
+        drawSpots(c);
     }
 
-    private void drawBackground(Coordinates c) {
+    private void drawSpots(Coordinates c) {
+        // not hovered spots
+        spots.stream().filter(spot -> !spot.isHovered()).forEach(spot -> spot.draw(c));
+        // hovered spots
+        spots.stream().filter(Spot::isHovered).forEach(spot -> spot.draw(c));
+    }
+
+    private void drawBackground() {
         p.push();
         p.imageMode(p.CENTER);
-        int imgSize = Spot.spotW * 9;
-        float middleRadius = (Spot.spotW * 6);
+        float imgSize = Spot.SPOT_W * 9;
+        float middleRadius = Spot.SPOT_W * 6;
         p.image(MonopolyApp.getImage("Background.png"), middleRadius, middleRadius, imgSize, imgSize);
-        // Drawing all non hovered spots
-        spots.stream().filter(spot -> !spot.isHovered()).forEach(s -> s.draw(c));
-        // Drawing all hovered spots last
-        spots.stream().filter(Spot::isHovered).forEach(spot -> spot.draw(c));
         p.pop();
     }
 

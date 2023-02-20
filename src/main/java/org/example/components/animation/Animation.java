@@ -12,7 +12,7 @@ public class Animation {
     private final Drawable drawable;
     private final List<Coordinates> path;
     private final static float MIN_ANIM_DISTANCE = 2;
-    private final static double ANIMATION_SPEED = 0.4;
+    private final static float ANIMATION_SPEED = 0.4f;
     private final CallbackAction endCallback;
 
     public Animation(Drawable drawable, List<Coordinates> path, CallbackAction endCallback) {
@@ -68,6 +68,7 @@ public class Animation {
         Coordinates currCoords = drawable.getCoords();
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
-        drawable.setCoords(Coordinates.of(currCoords.x() + (dx * ANIMATION_SPEED), currCoords.y() + (dy * ANIMATION_SPEED)));
+        Coordinates newCoords = currCoords.move(dx * ANIMATION_SPEED, dy * ANIMATION_SPEED);
+        drawable.setCoords(newCoords);
     }
 }

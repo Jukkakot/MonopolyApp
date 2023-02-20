@@ -23,12 +23,11 @@ public class Game implements MonopolyEventListener {
     Players players;
     Animations animations;
     private static final Button endRoundButton = new Button(MonopolyApp.p5, "endRound")
-            .setPosition((int) (Spot.spotW * 5.4), MonopolyApp.self.height - Spot.spotW * 3)
+            .setPosition((int) (Spot.SPOT_W * 5.4), MonopolyApp.self.height - Spot.SPOT_W * 3)
             .setLabel("End round")
             .setFont(MonopolyApp.font20)
             .setSize(100, 50)
             .hide();
-    float i = 0;
 
     public Game() {
         MonopolyApp.addListener(this);
@@ -38,12 +37,12 @@ public class Game implements MonopolyEventListener {
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(1, "Eka", new Token(spot, Color.MEDIUMPURPLE), 1), spot);
-        players.addPlayer(new Player(2, "Toka", new Token(spot, Color.PINK), 2), spot);
-        players.addPlayer(new Player(3, "Kolmas", new Token(spot, Color.DARKOLIVEGREEN), 3), spot);
-//        players.addPlayer(new Player(4, "Neljäs", new Token(app, spot, Color.TURQUOISE), 4), spot);
-//        players.addPlayer(new Player(5, "Viides", new Token(app, spot, Color.MEDIUMPURPLE), 5), spot);
-//        players.addPlayer(new Player(6, "Kuudes", new Token(app, spot, Color.PINK), 6), spot);
+        players.addPlayer(new Player("Eka", Color.MEDIUMPURPLE, spot));
+        players.addPlayer(new Player("Toka", Color.PINK, spot));
+        players.addPlayer(new Player("Kolmas", Color.DARKOLIVEGREEN, spot));
+//        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
+//        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
+//        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
 
         players.giveRandomDeeds(board);
 
@@ -55,7 +54,6 @@ public class Game implements MonopolyEventListener {
         board.draw(null);
         dices.draw(null);
         players.draw();
-        i += 0.5;
     }
 
     private void rollDice() {
@@ -107,12 +105,13 @@ public class Game implements MonopolyEventListener {
             endRoundButton.show();
         }
     }
+
     public boolean onEvent(Event event) {
-        if(event instanceof KeyEvent keyEvent) {
-            if(!endRoundButton.isVisible()) {
+        if (event instanceof KeyEvent keyEvent) {
+            if (!endRoundButton.isVisible()) {
                 return false;
             }
-            if(keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
+            if (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
                 endRound();
                 return true;
             }
