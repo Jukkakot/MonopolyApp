@@ -3,6 +3,7 @@ package org.example.components.dices;
 import controlP5.Button;
 import javafx.util.Pair;
 import lombok.Getter;
+import lombok.Setter;
 import org.example.components.CallbackAction;
 import org.example.MonopolyApp;
 import org.example.components.event.MonopolyEventListener;
@@ -25,6 +26,7 @@ public class Dices implements MonopolyEventListener {
             .setSize(100, 50);
     private int pairCount = 0;
     @Getter
+    @Setter // Just for debugging can manually set dice value..
     private DiceValue value;
 
     public Dices() {
@@ -72,10 +74,18 @@ public class Dices implements MonopolyEventListener {
         rollDiceButton.show();
     }
 
+    public void hide() {
+        rollDiceButton.hide();
+    }
+
     public void reset() {
         pairCount = 0;
         value = null;
         show();
+    }
+
+    public boolean isVisible() {
+        return rollDiceButton.isVisible();
     }
 
     @Override

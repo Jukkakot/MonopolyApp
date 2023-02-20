@@ -4,6 +4,7 @@ import controlP5.Button;
 import org.example.MonopolyApp;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
+import org.example.images.SpotImage;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 
@@ -81,7 +82,7 @@ public class Players {
         drawTokens();
     }
 
-    public void drawAll(Drawable... drawables) {
+    private void drawAll(Drawable... drawables) {
         Coordinates startCoords = new Coordinates();
         for (Drawable drawable : drawables) {
             startCoords = drawable.draw(startCoords);
@@ -104,12 +105,13 @@ public class Players {
         //Offset by needed amounts...
         absoluteCoods = absoluteCoods.move(Spot.SPOT_W / 2 + MARGIN, deedTotalHeight / 2);
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
-        Map<StreetType, List<PropertySpot>> deedsMap = selectedPlayer.getDeeds().getDeeds();
+        Map<StreetType, List<SpotImage>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
         int totalDX = 0;
 
         for (StreetType pt : deedsMap.keySet()) {
-            for (PropertySpot ps : deedsMap.get(pt)) {
+            for (SpotImage ps : deedsMap.get(pt)) {
+                ps.setCoords(absoluteCoods);
                 ps.draw(absoluteCoods);
                 index++;
                 if (index % DEEDS_PER_ROW == 0) {

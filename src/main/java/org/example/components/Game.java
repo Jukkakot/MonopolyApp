@@ -13,9 +13,11 @@ import org.example.components.dices.DiceValue;
 import org.example.utils.GameTurnUtils;
 import processing.event.Event;
 import processing.event.KeyEvent;
+import processing.event.MouseEvent;
 
 import static org.example.MonopolyApp.ENTER;
 import static org.example.MonopolyApp.SPACE;
+import static processing.event.MouseEvent.CLICK;
 
 public class Game implements MonopolyEventListener {
     Board board;
@@ -82,16 +84,21 @@ public class Game implements MonopolyEventListener {
         return board.getNewSpot(oldSpot, diceValue.value());
     }
 
-    private void playRound(Spot newSpot, DiceState diceState) {
+    private boolean playRound(Spot newSpot, DiceState diceState) {
+        if (newSpot.equals(players.getTurn().getSpot())) {
+            System.out.println("Trying to move to same spot that player is in");
+            return false;
+        }
         CallbackAction roundEndCallback = getRoundEndCallback(diceState);
         addAnimation(newSpot, diceState, roundEndCallback);
         Player turn = players.getTurn();
         turn.setSpot(newSpot);
+        return true;
     }
 
     private void addAnimation(Spot newSpot, DiceState diceState, CallbackAction roundEndCallback) {
         Player turnPlayer = players.getTurn();
-        animations.addAnimation(new Animation(turnPlayer, board.getPath(turnPlayer.getSpot(), newSpot, turnPlayer, diceState == null), roundEndCallback));
+        animations.addAnimation(new Animation(turnPlayer, board.getPath(turnPlayer.getSpot(), newSpot, turnPlayer, diceState == null || MonopolyApp.DEBUG_MODE), roundEndCallback));
     }
 
     private CallbackAction getRoundEndCallback(DiceState diceState) {
@@ -114,6 +121,18 @@ public class Game implements MonopolyEventListener {
             if (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
                 endRound();
                 return true;
+            }
+        } else if (event instanceof MouseEvent mouseEvent) {
+            if (mouseEvent.getAction() == CLICK) {
+                if (MonopolyApp.DEBUG_MODE && dices.isVisible()) {
+                    Spot newSpot = board.getHoveredSpot();
+                    if (newSpot != null) {
+                        dices.setValue(new DiceValue(DiceState.REROLL, 8));
+                        if (playRound(newSpot, DiceState.REROLL)) {
+                            dices.hide();
+                        }
+                    }
+                }
             }
         }
         return false;

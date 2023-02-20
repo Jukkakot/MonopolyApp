@@ -4,6 +4,7 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
+import org.example.images.SpotImage;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 
@@ -63,7 +64,7 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public List<PropertySpot> getAllDeeds() {
+    public List<SpotImage> getAllDeeds() {
         return deeds.getAllDeeds();
     }
 
@@ -88,7 +89,7 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public List<PropertySpot> getOwnedSpots(StreetType streetType) {
+    public List<SpotImage> getOwnedSpots(StreetType streetType) {
         return deeds.getDeeds(streetType);
     }
 

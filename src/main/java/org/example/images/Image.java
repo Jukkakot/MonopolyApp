@@ -26,9 +26,14 @@ public abstract class Image implements Drawable {
     protected static final float HOVER_SCALE = 1.1f;
 
     public Image(SpotProps sp) {
+        this(sp, null);
+    }
+
+    public Image(SpotProps sp, String imgName) {
         this.coords = new Coordinates(sp.x(), sp.y(), sp.r());
         this.width = sp.w();
         this.height = sp.h();
+        this.imgName = imgName;
     }
 
     public Image(Coordinates coords) {

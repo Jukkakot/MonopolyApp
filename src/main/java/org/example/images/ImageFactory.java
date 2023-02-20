@@ -1,18 +1,28 @@
 package org.example.images;
 
+import org.example.components.spots.PropertySpot;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 
 public class ImageFactory {
-    public static SpotImage getImage(Coordinates coords, SpotType sp) {
-        if (sp.name().startsWith("CORNER")) {
-            return new IconSpotImage(coords, sp, true);
-        } else if (sp.streetType == null) {
+    public static SpotImage getImage(Coordinates coords, SpotType st) {
+        if (st.streetType == null) {
             return new SpotImage(coords);
-        } else if (sp.streetType.imgName != null) {
-            return new IconSpotImage(coords, sp);
+        } else if (st.streetType.imgName != null) {
+            return new IconSpotImage(coords, st);
         } else {
-            return new StreetSpotImage(coords, sp);
+            return new StreetSpotImage(coords, st);
+        }
+    }
+
+    public static SpotImage getImage(PropertySpot ps) {
+        SpotImage img = ps.getImage();
+        if (img instanceof IconSpotImage) {
+            return new IconSpotImage(ps);
+        } else if (img instanceof StreetSpotImage) {
+            return new StreetSpotImage(ps);
+        } else {
+            return new SpotImage(ps);
         }
     }
 }

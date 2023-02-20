@@ -24,7 +24,7 @@ public class EventObserver extends PApplet {
     @Override
     public void mouseClicked(MouseEvent mouseEvent) {
         super.mouseClicked(mouseEvent);
-        sendConsumableEvent(mouseEvent);
+        sendEventToALl(mouseEvent);
     }
 
 //    @Override

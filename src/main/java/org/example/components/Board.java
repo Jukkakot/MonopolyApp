@@ -81,6 +81,15 @@ public class Board {
         spots.stream().filter(Spot::isHovered).forEach(spot -> spot.draw(c));
     }
 
+    public Spot getHoveredSpot() {
+        List<Spot> hoveredSpots = spots.stream().filter(Spot::isHovered).toList();
+        if (hoveredSpots.size() == 1) {
+            return hoveredSpots.get(0);
+        } else {
+            return null;
+        }
+    }
+
     private void drawBackground() {
         p.push();
         p.imageMode(p.CENTER);

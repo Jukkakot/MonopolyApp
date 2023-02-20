@@ -1,19 +1,21 @@
 package org.example.images;
 
 import org.example.MonopolyApp;
+import org.example.components.spots.PropertySpot;
 import org.example.types.SpotType;
+import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 import processing.core.PImage;
 
 public class IconSpotImage extends SpotImage {
 
     public IconSpotImage(Coordinates coords, SpotType spotType) {
-        this(coords, spotType, false);
+        super(coords, StreetType.CORNER.equals(spotType.streetType));
+        this.spotType = spotType;
     }
 
-    public IconSpotImage(Coordinates coords, SpotType spotType, boolean isCorner) {
-        super(coords, isCorner);
-        this.spotType = spotType;
+    public IconSpotImage(PropertySpot ps) {
+        super(ps);
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.example.images;
 
 import javafx.scene.paint.Color;
 import org.example.MonopolyApp;
+import org.example.components.spots.PropertySpot;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 
@@ -11,6 +12,10 @@ public class StreetSpotImage extends SpotImage {
     public StreetSpotImage(Coordinates coords, SpotType spotType) {
         super(coords);
         this.spotType = spotType;
+    }
+
+    public StreetSpotImage(PropertySpot ps) {
+        super(ps);
     }
 
     @Override

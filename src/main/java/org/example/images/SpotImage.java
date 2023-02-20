@@ -2,6 +2,7 @@ package org.example.images;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
+import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
@@ -22,6 +23,11 @@ public class SpotImage extends Image {
         super(coords);
         this.width = isCorner ? Spot.SPOT_H : Spot.SPOT_W;
         this.height = Spot.SPOT_H;
+    }
+
+    public SpotImage(PropertySpot ps) {
+        super(new SpotProps(ps.getCoords(), Spot.SPOT_W, Spot.SPOT_H), ps.getSpotType().streetType.imgName);
+        this.spotType = ps.getSpotType();
     }
 
     @Override
@@ -46,13 +52,16 @@ public class SpotImage extends Image {
             drawPrice();
         }
 
-
         p.pop();
 
         if (MonopolyApp.DEBUG_MODE) {
             p.push();
             int[] rectCoords = Utils.getCoords(new SpotProps(c, getWidth(), getHeight()));
-            p.fill(255, 0, 0, 30);
+            if (isHovered) {
+                p.fill(0, 255, 0, 30);
+            } else {
+                p.fill(255, 0, 0, 30);
+            }
             p.noStroke();
             if (c.r() == 0 || c.r() == 180) {
                 p.rect(rectCoords[0], rectCoords[3], getWidth(), getHeight());
