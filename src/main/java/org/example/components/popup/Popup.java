@@ -8,7 +8,6 @@ import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
 import org.example.utils.Coordinates;
 import processing.core.PGraphics;
-import processing.event.Event;
 
 import static processing.core.PConstants.CENTER;
 
@@ -33,8 +32,13 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         isVisible = false;
     }
 
-    public boolean isVisible() {
-        return isVisible;
+    public static boolean isVisible() {
+        return ChoicePopup.getInstance().isVisible || OkPopup.getInstance().isVisible;
+    }
+
+    public static void initPopups() {
+        OkPopup.getInstance();
+        ChoicePopup.getInstance();
     }
 
     @Override
@@ -82,7 +86,4 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         choicePopup.setOnDeclineAction(onDecline);
         choicePopup.show();
     }
-
-    @Override
-    public boolean onEvent(Event event) {return false;}
 }

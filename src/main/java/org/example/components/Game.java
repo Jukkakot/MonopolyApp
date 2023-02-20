@@ -5,6 +5,7 @@ import javafx.scene.paint.Color;
 import org.example.MonopolyApp;
 import org.example.components.animation.Animation;
 import org.example.components.animation.Animations;
+import org.example.components.popup.Popup;
 import org.example.types.DiceState;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
@@ -114,13 +115,18 @@ public class Game implements MonopolyEventListener {
     }
 
     public boolean onEvent(Event event) {
+        boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
-            if (!endRoundButton.isVisible()) {
-                return false;
+            if (Popup.isVisible()) {
+                return consumedEvent;
             }
-            if (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
+            if (endRoundButton.isVisible() && (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER)) {
                 endRound();
-                return true;
+                consumedEvent = true;
+            }
+            if (MonopolyApp.DEBUG_MODE && keyEvent.getKey() == 'e') {
+                endRound();
+                consumedEvent = true;
             }
         } else if (event instanceof MouseEvent mouseEvent) {
             if (mouseEvent.getAction() == CLICK) {
@@ -129,12 +135,13 @@ public class Game implements MonopolyEventListener {
                     if (newSpot != null) {
                         dices.setValue(new DiceValue(DiceState.REROLL, 8));
                         if (playRound(newSpot, DiceState.REROLL)) {
+                            consumedEvent = true;
                             dices.hide();
                         }
                     }
                 }
             }
         }
-        return false;
+        return consumedEvent;
     }
 }

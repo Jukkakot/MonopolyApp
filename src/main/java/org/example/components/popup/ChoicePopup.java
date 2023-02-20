@@ -61,14 +61,17 @@ public class ChoicePopup extends Popup {
         super.allButtonAction();
         acceptButton.hide();
         declineButton.hide();
+        onAcceptAction = null;
+        onDeclineAction = null;
     }
 
     @Override
     public boolean onEvent(Event event) {
+        if (!isVisible()) {
+            return false;
+        }
         if (event instanceof KeyEvent keyEvent) {
-            if (!isVisible()) {
-                return false;
-            }
+
             if (keyEvent.getKey() == '1') {
                 acceptAction();
                 return true;

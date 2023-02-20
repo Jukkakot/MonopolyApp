@@ -48,14 +48,15 @@ public class OkPopup extends Popup {
     protected void allButtonAction() {
         super.allButtonAction();
         okButton.hide();
+        onOkAction = null;
     }
 
     @Override
     public boolean onEvent(Event event) {
+        if (!isVisible()) {
+            return false;
+        }
         if (event instanceof KeyEvent keyEvent) {
-            if (!isVisible()) {
-                return false;
-            }
             List<Character> charList = Arrays.asList('1', SPACE, ENTER);
             if (charList.contains(keyEvent.getKey())) {
                 okAction();

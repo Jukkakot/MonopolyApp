@@ -90,15 +90,15 @@ public class Dices implements MonopolyEventListener {
 
     @Override
     public boolean onEvent(Event event) {
+        if (!isVisible()) {
+            return false;
+        }
         if (event instanceof KeyEvent keyEvent) {
-            if (!rollDiceButton.isVisible()) {
-                return false;
-            }
             if (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
                 rollDice();
                 return true;
             }
         }
-        return true;
+        return false;
     }
 }

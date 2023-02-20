@@ -16,7 +16,7 @@ public class EventObserver extends PApplet {
     public void keyPressed(KeyEvent keyEvent) {
         super.keyPressed(keyEvent);
         sendConsumableEvent(keyEvent);
-        if(keyEvent.getKey() == 'd') {
+        if (keyEvent.getKey() == 'd') {
             MonopolyApp.DEBUG_MODE = !MonopolyApp.DEBUG_MODE;
         }
     }
@@ -27,7 +27,7 @@ public class EventObserver extends PApplet {
         sendEventToALl(mouseEvent);
     }
 
-//    @Override
+    //    @Override
 //    public void mouseMoved(MouseEvent mouseEvent) {
 //        super.mouseMoved(mouseEvent);
 //        sendEventToALl(mouseEvent);

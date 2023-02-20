@@ -5,6 +5,7 @@ import javafx.scene.paint.Color;
 import org.example.components.Game;
 import org.example.components.PlayerToken;
 import org.example.components.event.EventObserver;
+import org.example.components.popup.Popup;
 import org.example.types.SpotType;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -41,6 +42,7 @@ public class MonopolyApp extends EventObserver {
         font30 = createFont("Monopoly Regular.ttf", 30);
         textFont(font10);
         game = new Game();
+        Popup.initPopups();
     }
 
     public void draw() {
@@ -50,7 +52,7 @@ public class MonopolyApp extends EventObserver {
             push();
             fill(255, 105, 180);
             noStroke();
-            circle(MonopolyApp.self.mouseX, MonopolyApp.self.mouseY,20);
+            circle(mouseX, mouseY, 20);
             pop();
         }
     }
