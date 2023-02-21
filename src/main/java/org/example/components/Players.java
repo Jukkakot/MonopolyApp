@@ -2,6 +2,7 @@ package org.example.components;
 
 import controlP5.Button;
 import org.example.MonopolyApp;
+import org.example.components.board.Board;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.images.SpotImage;

@@ -18,7 +18,7 @@ public enum SpotType {
     TAX1(StreetType.TAX, 1), TAX2(StreetType.TAX, 2),
     COMMUNITY1(StreetType.COMMUNITY, 1), COMMUNITY2(StreetType.COMMUNITY, 2), COMMUNITY3(StreetType.COMMUNITY, 3),
     CHANCE1(StreetType.CHANCE, 1), CHANCE2(StreetType.CHANCE, 2), CHANCE3(StreetType.CHANCE, 3),
-    CORNER1(StreetType.CORNER, 1), CORNER2(StreetType.CORNER, 2), CORNER3(StreetType.CORNER, 3), CORNER4(StreetType.CORNER, 4);
+    GO_SPOT(StreetType.CORNER, 1), JAIL(StreetType.CORNER, 2), FREE_PARKING(StreetType.CORNER, 3), GO_TO_JAIL(StreetType.CORNER, 4);
 
     public final StreetType streetType;
     public final int id;
@@ -56,10 +56,10 @@ public enum SpotType {
         return SpotType.values()[randomIndex];
     }
 
-    public static final List<SpotType> SPOT_TYPES = Arrays.asList(SpotType.CORNER1, SpotType.B1, SpotType.COMMUNITY1, SpotType.B2,
-            SpotType.TAX1, SpotType.RR1, SpotType.LB1, SpotType.CHANCE1, SpotType.LB2, SpotType.LB3, SpotType.CORNER2,
-            SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.CORNER3,
-            SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.CORNER4,
+    public static final List<SpotType> SPOT_TYPES = Arrays.asList(SpotType.GO_SPOT, SpotType.B1, SpotType.COMMUNITY1, SpotType.B2,
+            SpotType.TAX1, SpotType.RR1, SpotType.LB1, SpotType.CHANCE1, SpotType.LB2, SpotType.LB3, SpotType.JAIL,
+            SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.FREE_PARKING,
+            SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.GO_TO_JAIL,
             SpotType.G1, SpotType.G2, SpotType.COMMUNITY3, SpotType.G3, SpotType.RR4, SpotType.CHANCE3, SpotType.DB1, SpotType.TAX2, SpotType.DB2);
 
     public static Integer getNumberOfSpots(StreetType streetType) {

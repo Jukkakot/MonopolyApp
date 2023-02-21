@@ -1,6 +1,7 @@
 package org.example.utils;
 
 import org.example.components.CallbackAction;
+import org.example.components.board.Path;
 import org.example.components.dices.Dices;
 import org.example.components.Player;
 import org.example.components.Players;
@@ -10,10 +11,12 @@ import org.example.components.spots.*;
 
 public class GameTurnUtils {
 
+    private static int GO_MONEY_AMOUNT = 200;
+
     private GameTurnUtils() {
     }
 
-    public static void handleTurn(Players players, Dices dices, CallbackAction callbackAction) {
+    public static void handleTurn(Players players, Dices dices, Path path, CallbackAction callbackAction) {
         Player turnPlayer = players.getTurn();
         Spot turnPlayerSpot = turnPlayer.getSpot();
         if (turnPlayerSpot instanceof PropertySpot propertySpot) {
@@ -24,6 +27,10 @@ public class GameTurnUtils {
             pickCardSpot.pickCard(callbackAction);
         } else {
             callbackAction.doAction();
+        }
+
+        if (path.containsGoSpot()) {
+            turnPlayer.updateMoney(GO_MONEY_AMOUNT);
         }
     }
 

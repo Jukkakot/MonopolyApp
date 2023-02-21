@@ -3,27 +3,26 @@ package org.example.components.animation;
 import lombok.Getter;
 import org.example.components.Drawable;
 import org.example.components.CallbackAction;
+import org.example.components.board.Path;
 import org.example.utils.Coordinates;
-
-import java.util.List;
 
 public class Animation {
     @Getter
     private final Drawable drawable;
-    private final List<Coordinates> path;
+    private final Path path;
     private final static float MIN_ANIM_DISTANCE = 2;
     private final static float ANIMATION_SPEED = 0.4f;
     private final CallbackAction endCallback;
 
-    public Animation(Drawable drawable, List<Coordinates> path, CallbackAction endCallback) {
+    public Animation(Drawable drawable, Path path, CallbackAction endCallback) {
         this.drawable = drawable;
         this.path = path;
         this.endCallback = endCallback;
     }
 
     public void finishAnimation() {
-        if (path.size() >= 1) {
-            drawable.setCoords(path.get(path.size() - 1));
+        if (!path.isEmpty()) {
+            drawable.setCoords(path.getLast());
         }
         if (endCallback != null) {
             endCallback.doAction();
@@ -50,7 +49,7 @@ public class Animation {
     private Coordinates getGoalCoords() {
         if (path.isEmpty()) return null;
 
-        Coordinates goalCoords = path.get(0);
+        Coordinates goalCoords = path.getNext();
 
         if (!isOverMinDistance(goalCoords)) {
             path.remove(goalCoords);

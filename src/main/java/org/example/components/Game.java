@@ -5,12 +5,16 @@ import javafx.scene.paint.Color;
 import org.example.MonopolyApp;
 import org.example.components.animation.Animation;
 import org.example.components.animation.Animations;
+import org.example.components.board.Board;
+import org.example.components.board.Path;
 import org.example.components.popup.Popup;
 import org.example.types.DiceState;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
 import org.example.components.dices.DiceValue;
+import org.example.types.PathMode;
+import org.example.types.SpotType;
 import org.example.utils.GameTurnUtils;
 import processing.event.Event;
 import processing.event.KeyEvent;
@@ -73,7 +77,7 @@ public class Game implements MonopolyEventListener {
         Spot newSpot = getNewSpot(diceValue);
         DiceState diceState = diceValue.diceState();
         if (DiceState.JAIL.equals(diceState)) {
-            playRound(board.getJailSpot(), null);
+            playRound(board.getSpot(SpotType.JAIL), null);
         } else {
             playRound(newSpot, diceState);
         }
@@ -82,7 +86,7 @@ public class Game implements MonopolyEventListener {
     private Spot getNewSpot(DiceValue diceValue) {
         Player turn = players.getTurn();
         Spot oldSpot = turn.getSpot();
-        return board.getNewSpot(oldSpot, diceValue.value());
+        return board.getNewSpot(oldSpot, diceValue.value(), PathMode.NORMAL);
     }
 
     private boolean playRound(Spot newSpot, DiceState diceState) {
@@ -90,20 +94,23 @@ public class Game implements MonopolyEventListener {
             System.out.println("Trying to move to same spot that player is in");
             return false;
         }
-        CallbackAction roundEndCallback = getRoundEndCallback(diceState);
-        addAnimation(newSpot, diceState, roundEndCallback);
+        Player turnPlayer = players.getTurn();
+        PathMode pathMode = diceState == null || MonopolyApp.DEBUG_MODE ? PathMode.FLY : PathMode.NORMAL;
+        Path path = board.getPath(turnPlayer.getSpot(), newSpot, pathMode);
+        CallbackAction roundEndCallback = getRoundEndCallback(diceState, path);
+        addAnimation(path, roundEndCallback);
         Player turn = players.getTurn();
         turn.setSpot(newSpot);
         return true;
     }
 
-    private void addAnimation(Spot newSpot, DiceState diceState, CallbackAction roundEndCallback) {
-        Player turnPlayer = players.getTurn();
-        animations.addAnimation(new Animation(turnPlayer, board.getPath(turnPlayer.getSpot(), newSpot, turnPlayer, diceState == null || MonopolyApp.DEBUG_MODE), roundEndCallback));
+    private void addAnimation(Path path, CallbackAction roundEndCallback) {
+        PlayerToken turnPlayer = players.getTurn();
+        animations.addAnimation(new Animation(turnPlayer, path, roundEndCallback));
     }
 
-    private CallbackAction getRoundEndCallback(DiceState diceState) {
-        return () -> GameTurnUtils.handleTurn(players, dices, () -> doRoundEvent(diceState));
+    private CallbackAction getRoundEndCallback(DiceState diceState, Path path) {
+        return () -> GameTurnUtils.handleTurn(players, dices, path, () -> doRoundEvent(diceState));
     }
 
     private void doRoundEvent(DiceState diceState) {

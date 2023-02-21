@@ -1,16 +1,14 @@
-package org.example.components;
+package org.example.components.board;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
 import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
+import org.example.types.PathMode;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class Board {
     @Getter
@@ -99,44 +97,46 @@ public class Board {
         p.pop();
     }
 
-    public Spot getNewSpot(Spot spot, int diceValue) {
+    public Spot getNewSpot(Spot spot, int diceValue, PathMode pathMode) {
         int currSpot = spots.indexOf(spot);
-        return spots.get((currSpot + diceValue) % spots.size());
+        int nextSpotIndex = currSpot + diceValue;
+        if (PathMode.BACKWARDS.equals(pathMode)) {
+            nextSpotIndex = currSpot - diceValue;
+        }
+        int index = nextSpotIndex < 0 ? spots.size() + nextSpotIndex : nextSpotIndex;
+        return spots.get(index % spots.size());
     }
 
-    public List<Coordinates> getPath(Spot start, int value, Player player) {
+    public Path getPath(Spot start, int value, PathMode pathMode) {
         List<Spot> result = new ArrayList<>();
-        Spot nextSpot = getNewSpot(start, 1);
+        Spot nextSpot = getNewSpot(start, 1, pathMode);
         for (int i = 0; i < value; i++) {
             result.add(nextSpot);
-            nextSpot = getNewSpot(nextSpot, 1);
+            nextSpot = getNewSpot(nextSpot, 1, pathMode);
         }
-        return result.stream().map(spot -> spot.getTokenCoords(player)).collect(Collectors.toList());
+        return new Path(result);
     }
 
-    public List<Coordinates> getPath(Spot start, Spot end, Player player, boolean flyOverSpots) {
-        if (flyOverSpots) {
+    public Path getPath(Spot start, Spot end, PathMode pathMode) {
+        if (PathMode.FLY.equals(pathMode)) {
             List<Spot> result = Arrays.asList(start, end);
-            return result.stream().map(spot -> spot.getTokenCoords(player)).collect(Collectors.toList());
+            return new Path(result);
         }
-        return getPath(start, getDistance(start, end), player);
+        return getPath(start, getDistance(start, end, pathMode), pathMode);
     }
 
-    public List<Coordinates> getPath(Spot start, Spot end, Player player) {
-        return getPath(start, end, player, false);
-    }
-
-    private int getDistance(Spot start, Spot end) {
-        int result = 0;
-        Spot nextSpot = start;
-        while (!nextSpot.equals(end)) {
-            result++;
-            nextSpot = getNewSpot(nextSpot, 1);
+    private int getDistance(Spot start, Spot end, PathMode pathMode) {
+        int startIndex = spots.indexOf(start);
+        int endIndex = spots.indexOf(end);
+        int distance = endIndex - startIndex;
+        if (pathMode.equals(PathMode.BACKWARDS)) {
+            distance = startIndex - endIndex;
         }
-        return result;
+        distance = distance < 0 ? spots.size() + distance : distance;
+        return distance % spots.size();
     }
 
-    public Spot getJailSpot() {
-        return spots.get(10);
+    public Spot getSpot(SpotType spotType) {
+        return spots.stream().filter(spot -> spot.getSpotType().equals(spotType)).toList().get(0);
     }
 }
