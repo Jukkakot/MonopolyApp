@@ -2,6 +2,7 @@ package org.example.components;
 
 import javafx.scene.paint.Color;
 import lombok.Getter;
+import lombok.Setter;
 import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.images.SpotImage;
@@ -21,6 +22,9 @@ public class Player extends PlayerToken {
     private int turnNumber;
     @Getter
     private final Deeds deeds;
+    @Getter
+    @Setter
+    private int getOutOfJailCardCount = 0;
 
     public Player(String name, Color color, Spot spot) {
         super(spot, color);
@@ -95,5 +99,25 @@ public class Player extends PlayerToken {
 
     public boolean ownsAllSpots(StreetType streetType) {
         return SpotType.getNumberOfSpots(streetType).equals(getOwnedSpots(streetType).size());
+    }
+
+    public void addOutOfJailCard() {
+        getOutOfJailCardCount++;
+    }
+
+    public boolean useGetOutOfJailCard() {
+        if (getOutOfJailCardCount > 0) {
+            getOutOfJailCardCount--;
+            return true;
+        }
+        return false;
+    }
+
+    public int getHouseCount() {
+        return deeds.getHouseCount();
+    }
+
+    public int getHotelCount() {
+        return deeds.getHotelCount();
     }
 }

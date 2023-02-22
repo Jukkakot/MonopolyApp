@@ -1,11 +1,13 @@
 package org.example.components.spots;
 
+import lombok.Getter;
 import org.example.components.Player;
 import org.example.images.SpotImage;
 
 public class StreetPropertySpot extends PropertySpot {
     private final int housePrice;
-    private int houseCount = 0;
+    @Getter
+    private int houseCount = 0, hotelCount = 0;
 
     public StreetPropertySpot(SpotImage spotImage) {
         super(spotImage);

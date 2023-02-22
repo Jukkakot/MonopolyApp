@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Players {
     private static final int PLAYERS_PER_ROW = 3;
@@ -49,6 +50,15 @@ public class Players {
                 }
             });
         }
+    }
+
+    public int count() {
+        return playerList.size();
+    }
+
+    public void forEachOtherPLayer(Player turnPlayer, Consumer<Player> update) {
+        //TODO what if cant do this update to all players? like all players cant afford giving money
+        playerList.stream().filter(player -> !turnPlayer.equals(player)).forEach(update);
     }
 
     public boolean removePlayer(Player p) {
@@ -142,10 +152,10 @@ public class Players {
         p.push();
         translate(baseCoords);
         Coordinates absoluteCoords = baseCoords.move(startCoords);
-        absoluteCoords = absoluteCoords.move((float) (PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2 * 1.5), (float) (PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2 * 1.5));
+        absoluteCoords = absoluteCoords.move((float) (PlayerToken.PLAYER_TOKEN_BIG_DIAMETER / 2 * 1.5), (float) (PlayerToken.PLAYER_TOKEN_BIG_DIAMETER / 2 * 1.5));
         translate(absoluteCoords);
         int totalDX = 0;
-        int tokenHeight = 3 * PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2;
+        int tokenHeight = 3 * PlayerToken.PLAYER_TOKEN_BIG_DIAMETER / 2;
         for (Player player : playerList) {
             drawPlayerIcon(player, absoluteCoords);
             int index = playerList.indexOf(player);
@@ -205,12 +215,12 @@ public class Players {
         }
 
         Button button = playerButtons.get("" + player.getId());
-        button.setPosition(absoluteCoords.x() - PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2, absoluteCoords.y() - PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2);
+        button.setPosition(absoluteCoords.x() - PlayerToken.PLAYER_TOKEN_BIG_DIAMETER / 2, absoluteCoords.y() - PlayerToken.PLAYER_TOKEN_BIG_DIAMETER / 2);
         //TODO why pop before push?
         p.pop();
         p.fill(0);
         p.textFont(MonopolyApp.font30);
-        p.text(player.getName(), absoluteCoords.x() + PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2 + MARGIN, absoluteCoords.y());
+        p.text(player.getName(), absoluteCoords.x() + PlayerToken.PLAYER_TOKEN_BIG_DIAMETER / 2 + MARGIN, absoluteCoords.y());
         p.noFill();
         p.push();
     }

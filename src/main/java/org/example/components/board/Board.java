@@ -119,7 +119,7 @@ public class Board {
 
     public Path getPath(Spot start, Spot end, PathMode pathMode) {
         if (PathMode.FLY.equals(pathMode)) {
-            List<Spot> result = Arrays.asList(start, end);
+            List<Spot> result = Collections.singletonList(end);
             return new Path(result);
         }
         return getPath(start, getDistance(start, end, pathMode), pathMode);

@@ -2,12 +2,15 @@ package org.example.utils;
 
 import org.example.components.CallbackAction;
 import org.example.components.board.Path;
+import org.example.components.cards.Card;
 import org.example.components.dices.Dices;
 import org.example.components.Player;
 import org.example.components.Players;
 import org.example.components.popup.ButtonAction;
 import org.example.components.popup.Popup;
 import org.example.components.spots.*;
+
+import java.util.List;
 
 public class GameTurnUtils {
 
@@ -24,13 +27,47 @@ public class GameTurnUtils {
         } else if (turnPlayerSpot instanceof TaxSpot taxSpot) {
             handleTaxSpot(taxSpot, turnPlayer, callbackAction);
         } else if (turnPlayerSpot instanceof PickCardSpot pickCardSpot) {
-            pickCardSpot.pickCard(callbackAction);
+            handlePickCardSpot(pickCardSpot, players, callbackAction);
         } else {
             callbackAction.doAction();
         }
 
+        //TODO handle case when this shouldnt be taken?
         if (path.containsGoSpot()) {
             turnPlayer.updateMoney(GO_MONEY_AMOUNT);
+        }
+    }
+
+    private static void handlePickCardSpot(PickCardSpot pickCardSpot, Players players, CallbackAction callbackAction) {
+        Player turnPlayer = players.getTurn();
+        Card card = pickCardSpot.pickCard();
+        switch (card.cardType()) {
+            case MONEY -> updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
+            case OUT_OF_JAIL -> {
+                turnPlayer.addOutOfJailCard();
+                Popup.showInfo(card.text(), callbackAction::doAction);
+            }
+            case ALL_PLAYERS_MONEY -> {
+                // Amount is negative if turnplayer gives money to others
+                // Amount is positive if turnplayer gets money from others
+                int amount = Integer.parseInt(card.values().get(0));
+                updateMoney(turnPlayer, amount * (players.count() - 1), card.text(), () -> {
+                    players.forEachOtherPLayer(turnPlayer, player -> player.updateMoney(-amount));
+                    callbackAction.doAction();
+                });
+            }
+            case REPAIR_PROPERTIES -> {
+                List<Integer> repairPrices = card.values().stream().map(Integer::valueOf).toList();
+                int housePrice = repairPrices.get(0);
+                int hotelPrice = repairPrices.get(1);
+                int totalCost = turnPlayer.getHouseCount() * housePrice + turnPlayer.getHotelCount() * hotelPrice;
+                updateMoney(turnPlayer, -totalCost, card.text(), callbackAction);
+            }
+            default -> {
+                handlePickCardSpot(pickCardSpot, players, callbackAction);
+//                System.out.println("Default card behaviour");
+//                callbackAction.doAction();
+            }
         }
     }
 
@@ -47,8 +84,12 @@ public class GameTurnUtils {
     private static void handleTaxSpot(TaxSpot ts, Player turnPlayer, CallbackAction callbackAction) {
         Integer taxAmount = ts.getPrice();
         String popupText = "You need to pay M" + taxAmount + " tax.";
+        updateMoney(turnPlayer, -taxAmount, popupText, callbackAction);
+    }
+
+    private static void updateMoney(Player player, Integer amount, String popupText, CallbackAction callbackAction) {
         Popup.showInfo(popupText, () -> {
-            if (turnPlayer.updateMoney(-taxAmount)) {
+            if (player.updateMoney(amount)) {
                 callbackAction.doAction();
             } else {
                 //TODO what if not enough money

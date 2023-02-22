@@ -1,13 +1,7 @@
 package org.example.components.cards;
 
-public class Card {
-    private CardInfo cardInfo;
+import org.example.types.CardType;
 
-    public Card(CardInfo cardInfo) {
-        this.cardInfo = cardInfo;
-    }
+import java.util.List;
 
-    public String getText() {
-        return cardInfo.text();
-    }
-}
+public record Card(CardType cardType, String text, List<String> values){}

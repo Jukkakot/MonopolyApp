@@ -30,8 +30,7 @@ public class Cards {
                     List<String> propParts = new ArrayList<>(Arrays.asList(propSingleText.split(PROP_VALUES_DELIMITER)));
                     String text = propParts.get(0);
                     propParts.remove(0);
-                    CardInfo cardInfo = new CardInfo(ct, text, propParts);
-                    cardList.add(new Card(cardInfo));
+                    cardList.add(new Card(ct, text, propParts));
                 }
             }
         }

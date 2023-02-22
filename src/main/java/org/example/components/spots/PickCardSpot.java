@@ -1,9 +1,7 @@
 package org.example.components.spots;
 
-import org.example.components.CallbackAction;
 import org.example.components.cards.Card;
 import org.example.components.cards.Cards;
-import org.example.components.popup.Popup;
 import org.example.images.SpotImage;
 
 public class PickCardSpot extends Spot {
@@ -14,8 +12,7 @@ public class PickCardSpot extends Spot {
         cards = new Cards(image.getSpotType().streetType);
     }
 
-    public void pickCard(CallbackAction callbackAction) {
-        Card card = cards.getCard();
-        Popup.showInfo(card.getText(), callbackAction::doAction);
+    public Card pickCard() {
+       return cards.getCard();
     }
 }
