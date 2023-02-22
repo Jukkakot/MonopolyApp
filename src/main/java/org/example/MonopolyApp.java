@@ -103,9 +103,9 @@ public class MonopolyApp extends EventObserver {
         for (String fileName : fileNames) {
             IMAGES.put(fileName, loadImage(dirPath + fileName));
         }
-        IMAGES.get("BigToken.png").resize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2);
-        IMAGES.get("BigTokenHover.png").resize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2);
-        IMAGES.get("BigTokenPressed.png").resize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2);
+        IMAGES.get("BigToken.png").resize(PlayerToken.PLAYER_TOKEN_BIG_DIAMETER, PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
+        IMAGES.get("BigTokenHover.png").resize(PlayerToken.PLAYER_TOKEN_BIG_DIAMETER, PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
+        IMAGES.get("BigTokenPressed.png").resize(PlayerToken.PLAYER_TOKEN_BIG_DIAMETER, PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
         println("Finished loading", IMAGES.size(), "images.");
     }
 

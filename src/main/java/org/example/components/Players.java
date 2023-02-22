@@ -32,7 +32,7 @@ public class Players {
                 .setValue(p.getId())
                 .addListener(e -> selectedPlayer = playerList.get(playerList.indexOf(p)))
                 .setImages(MonopolyApp.getImage("BigToken.png", p.getColor()), MonopolyApp.getImage("BigTokenHover.png", p.getColor()), MonopolyApp.getImage("BigTokenPressed.png", p.getColor()))
-                .setSize(PlayerToken.TOKEN_RADIUS * 2, PlayerToken.TOKEN_RADIUS * 2)
+                .setSize(PlayerToken.PLAYER_TOKEN_BIG_DIAMETER, PlayerToken.PLAYER_TOKEN_BIG_DIAMETER)
         );
     }
 
@@ -142,10 +142,10 @@ public class Players {
         p.push();
         translate(baseCoords);
         Coordinates absoluteCoords = baseCoords.move(startCoords);
-        absoluteCoords = absoluteCoords.move((float) (PlayerToken.TOKEN_RADIUS * 1.5), (float) (PlayerToken.TOKEN_RADIUS * 1.5));
+        absoluteCoords = absoluteCoords.move((float) (PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2 * 1.5), (float) (PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2 * 1.5));
         translate(absoluteCoords);
         int totalDX = 0;
-        int tokenHeight = 3 * PlayerToken.TOKEN_RADIUS;
+        int tokenHeight = 3 * PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2;
         for (Player player : playerList) {
             drawPlayerIcon(player, absoluteCoords);
             int index = playerList.indexOf(player);
@@ -156,7 +156,7 @@ public class Players {
                 translate(absoluteCoords);
                 totalDX = 0;
             } else {
-                int dX = MARGIN + PlayerToken.TOKEN_RADIUS * 2 + player.getName().length() * 17;
+                int dX = MARGIN + PlayerToken.PLAYER_TOKEN_BIG_DIAMETER + player.getName().length() * 17;
                 totalDX += dX;
                 absoluteCoords = absoluteCoords.move(dX, 0);
                 p.translate(dX, 0);
@@ -200,17 +200,17 @@ public class Players {
             p.pop();
             p.stroke(0);
             p.strokeWeight(5);
-            p.circle(absoluteCoords.x(), absoluteCoords.y(), PlayerToken.TOKEN_RADIUS * 2);
+            p.circle(absoluteCoords.x(), absoluteCoords.y(), PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
             p.push();
         }
 
         Button button = playerButtons.get("" + player.getId());
-        button.setPosition(absoluteCoords.x() - PlayerToken.TOKEN_RADIUS, absoluteCoords.y() - PlayerToken.TOKEN_RADIUS);
+        button.setPosition(absoluteCoords.x() - PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2, absoluteCoords.y() - PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2);
         //TODO why pop before push?
         p.pop();
         p.fill(0);
         p.textFont(MonopolyApp.font30);
-        p.text(player.getName(), absoluteCoords.x() + PlayerToken.TOKEN_RADIUS + MARGIN, absoluteCoords.y());
+        p.text(player.getName(), absoluteCoords.x() + PlayerToken.PLAYER_TOKEN_BIG_DIAMETER/2 + MARGIN, absoluteCoords.y());
         p.noFill();
         p.push();
     }
