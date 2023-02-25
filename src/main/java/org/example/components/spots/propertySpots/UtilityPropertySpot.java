@@ -15,7 +15,7 @@ public class UtilityPropertySpot extends PropertySpot {
     }
 
     public Integer getRent(Player player, Dices dices) {
-        if (hasOwner() && !isOwner(player)) {
+        if (hasOwner() && isNotOwner(player)) {
             int multiplier = 4;
             if (getOwnerPlayer().ownsAllSpots(spotType.streetType)) {
                 multiplier = 10;

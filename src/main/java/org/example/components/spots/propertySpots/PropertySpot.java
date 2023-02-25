@@ -46,6 +46,10 @@ public abstract class PropertySpot extends Spot {
         return hasOwner() && ownerPlayer.equals(p);
     }
 
+    public boolean isNotOwner(Player p) {
+        return !isOwner(p);
+    }
+
     public boolean payRent(Player player, Integer rent) {
         return ownerPlayer.giveMoney(player, rent);
     }
@@ -57,7 +61,7 @@ public abstract class PropertySpot extends Spot {
         Player turnPlayer = gameState.getPlayers().getTurn();
         if (!hasOwner()) {
             handleEmptyProperty(gameState, callbackAction);
-        } else if (!isOwner(turnPlayer)) {
+        } else if (isNotOwner(turnPlayer)) {
             handlePayRent(gameState, callbackAction);
         } else {
             callbackAction.doAction();

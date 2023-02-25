@@ -10,7 +10,7 @@ public class RailRoadPropertySpot extends PropertySpot {
 
     @Override
     public Integer getRent(Player player) {
-        if (hasOwner() && !isOwner(player)) {
+        if (hasOwner() && isNotOwner(player)) {
             int ownedRailRoadsCount = getOwnerPlayer().getOwnedSpots(spotType.streetType).size();
             return rentPrices.get(ownedRailRoadsCount);
         }

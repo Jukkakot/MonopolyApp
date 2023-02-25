@@ -16,7 +16,7 @@ public class StreetPropertySpot extends PropertySpot {
 
     @Override
     public Integer getRent(Player player) {
-        if (hasOwner() && !isOwner(player)) {
+        if (hasOwner() && isNotOwner(player)) {
             Integer rentAmount = rentPrices.get(houseCount);
             if (getOwnerPlayer().ownsAllSpots(spotType.streetType)) {
                 return rentAmount * 2;
