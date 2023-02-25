@@ -116,7 +116,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void handleTurn(DiceState diceState, Path path) {
-        GameState gameState = new GameState(players, dices, board, path);
+        GameState gameState = new GameState(players, dices, board, path, prevTurnResult);
         prevTurnResult = GameTurnUtils.handleTurn(gameState, () -> doTurnEndEvent(diceState));
     }
 

@@ -1,8 +1,0 @@
-Starting order by rolling dice
-+200 money if going over starting spot
-handle cases if cant afford paying rent
-
-Pick card rules todo:
-nearest utility = 10x rent
-nearest railroad = more rent
-
