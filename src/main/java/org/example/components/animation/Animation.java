@@ -12,20 +12,20 @@ public class Animation {
     private final Path path;
     private final static float MIN_ANIM_DISTANCE = 2;
     private final static float ANIMATION_SPEED = 0.4f;
-    private final CallbackAction endCallback;
+    private final CallbackAction onAnimationEnd;
 
-    public Animation(Drawable drawable, Path path, CallbackAction endCallback) {
+    public Animation(Drawable drawable, Path path, CallbackAction onAnimationEnd) {
         this.drawable = drawable;
         this.path = path;
-        this.endCallback = endCallback;
+        this.onAnimationEnd = onAnimationEnd;
     }
 
     public void finishAnimation() {
         if (!path.isEmpty()) {
             drawable.setCoords(path.getLast());
         }
-        if (endCallback != null) {
-            endCallback.doAction();
+        if (onAnimationEnd != null) {
+            onAnimationEnd.doAction();
         }
     }
 

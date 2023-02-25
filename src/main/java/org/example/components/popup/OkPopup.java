@@ -53,7 +53,7 @@ public class OkPopup extends Popup {
 
     @Override
     public boolean onEvent(Event event) {
-        if (!isVisible()) {
+        if (!OkPopup.getInstance().isVisible) {
             return false;
         }
         if (event instanceof KeyEvent keyEvent) {

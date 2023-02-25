@@ -32,7 +32,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         isVisible = false;
     }
 
-    public static boolean isVisible() {
+    public static boolean isAnyVisible() {
         return ChoicePopup.getInstance().isVisible || OkPopup.getInstance().isVisible;
     }
 

@@ -1,8 +1,8 @@
 package org.example.components;
 
 
-import org.example.components.spots.PropertySpot;
-import org.example.components.spots.StreetPropertySpot;
+import org.example.components.spots.propertySpots.PropertySpot;
+import org.example.components.spots.propertySpots.StreetPropertySpot;
 import org.example.images.ImageFactory;
 import org.example.images.SpotImage;
 import org.example.types.PlaceType;

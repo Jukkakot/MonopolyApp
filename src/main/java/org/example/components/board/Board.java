@@ -6,6 +6,8 @@ import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
 import org.example.types.PathMode;
 import org.example.types.SpotType;
+import org.example.types.StreetType;
+import org.example.types.TurnResult;
 import org.example.utils.Coordinates;
 
 import java.util.*;
@@ -136,7 +138,29 @@ public class Board {
         return distance % spots.size();
     }
 
-    public Spot getSpot(SpotType spotType) {
+    public Spot getPathWithCriteria(SpotType spotType) {
         return spots.stream().filter(spot -> spot.getSpotType().equals(spotType)).toList().get(0);
+    }
+
+    public Spot getNextSpot(StreetType streetType, Spot currSpot, PathMode pathMode) {
+        Spot result = currSpot;
+        while (!result.getSpotType().streetType.equals(streetType)) {
+            result = getNewSpot(result, 1, pathMode);
+        }
+        return result;
+    }
+
+    public Path getPathWithCriteria(TurnResult turnResult, Spot currSpot) {
+        Object spotCriteria = turnResult.nextSpotCriteria();
+        PathMode pathMode = turnResult.pathMode();
+        Spot newSpot;
+        if (spotCriteria instanceof SpotType spotType) {
+            newSpot = getPathWithCriteria(spotType);
+        } else if (spotCriteria instanceof StreetType streetType) {
+            newSpot = getNextSpot(streetType, currSpot, pathMode);
+        } else {
+            newSpot = getNewSpot(currSpot, (int) spotCriteria, pathMode);
+        }
+        return getPath(currSpot, newSpot, pathMode);
     }
 }

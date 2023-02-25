@@ -3,7 +3,7 @@ package org.example.components;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.components.spots.PropertySpot;
+import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;

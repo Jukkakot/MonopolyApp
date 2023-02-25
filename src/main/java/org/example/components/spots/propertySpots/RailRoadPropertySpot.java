@@ -1,4 +1,4 @@
-package org.example.components.spots;
+package org.example.components.spots.propertySpots;
 
 import org.example.components.Player;
 import org.example.images.SpotImage;

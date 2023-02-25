@@ -3,16 +3,13 @@ package org.example.components;
 import controlP5.Button;
 import org.example.MonopolyApp;
 import org.example.components.board.Board;
-import org.example.components.spots.PropertySpot;
+import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.images.SpotImage;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class Players {
@@ -39,6 +36,7 @@ public class Players {
 
     public void giveRandomDeeds(Board board) {
         List<Spot> propertySpots = new ArrayList<>(board.getSpots().stream().filter(spot -> spot instanceof PropertySpot).toList());
+        Collections.shuffle(propertySpots);
         while (propertySpots.size() > 20) {
             PropertySpot spot = (PropertySpot) propertySpots.get(0);
             playerList.forEach(player -> {

@@ -1,7 +1,7 @@
 package org.example.types;
 
 public enum DiceState {
-    NOREROLL, REROLL, JAIL;
+    NOREROLL, REROLL, JAIL, DEBUG_REROLL;
 
     public static DiceState valueOf(int pairCount) {
         if (pairCount == 0) {

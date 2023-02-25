@@ -1,5 +1,8 @@
 package org.example.components.spots;
 
+import org.example.components.spots.propertySpots.RailRoadPropertySpot;
+import org.example.components.spots.propertySpots.StreetPropertySpot;
+import org.example.components.spots.propertySpots.UtilityPropertySpot;
 import org.example.images.ImageFactory;
 import org.example.images.SpotImage;
 import org.example.types.PlaceType;
@@ -22,7 +25,7 @@ public class SpotFactory {
         } else if (pt.equals(PlaceType.PICK_CARD)){
             return new PickCardSpot(image);
         } else {
-            return new Spot(image);
+            return new CornerSpot(image);
         }
     }
 }

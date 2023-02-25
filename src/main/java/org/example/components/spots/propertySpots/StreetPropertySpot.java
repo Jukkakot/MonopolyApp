@@ -1,4 +1,4 @@
-package org.example.components.spots;
+package org.example.components.spots.propertySpots;
 
 import lombok.Getter;
 import org.example.components.Player;

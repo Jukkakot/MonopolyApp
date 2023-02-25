@@ -67,7 +67,7 @@ public class ChoicePopup extends Popup {
 
     @Override
     public boolean onEvent(Event event) {
-        if (!isVisible()) {
+        if (!ChoicePopup.getInstance().isVisible) {
             return false;
         }
         if (event instanceof KeyEvent keyEvent) {

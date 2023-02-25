@@ -8,13 +8,11 @@ import org.example.components.animation.Animations;
 import org.example.components.board.Board;
 import org.example.components.board.Path;
 import org.example.components.popup.Popup;
-import org.example.types.DiceState;
+import org.example.types.*;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
 import org.example.components.dices.DiceValue;
-import org.example.types.PathMode;
-import org.example.types.SpotType;
 import org.example.utils.GameTurnUtils;
 import processing.event.Event;
 import processing.event.KeyEvent;
@@ -29,6 +27,7 @@ public class Game implements MonopolyEventListener {
     Dices dices;
     Players players;
     Animations animations;
+    TurnResult prevTurnResult;
     private static final Button endRoundButton = new Button(MonopolyApp.p5, "endRound")
             .setPosition((int) (Spot.SPOT_W * 5.4), MonopolyApp.self.height - Spot.SPOT_W * 3)
             .setLabel("End round")
@@ -68,19 +67,10 @@ public class Game implements MonopolyEventListener {
     }
 
     private void endRound() {
+        prevTurnResult = null;
         players.switchTurn();
         dices.reset();
         endRoundButton.hide();
-    }
-
-    private void playRound(DiceValue diceValue) {
-        Spot newSpot = getNewSpot(diceValue);
-        DiceState diceState = diceValue.diceState();
-        if (DiceState.JAIL.equals(diceState)) {
-            playRound(board.getSpot(SpotType.JAIL), null);
-        } else {
-            playRound(newSpot, diceState);
-        }
     }
 
     private Spot getNewSpot(DiceValue diceValue) {
@@ -89,32 +79,52 @@ public class Game implements MonopolyEventListener {
         return board.getNewSpot(oldSpot, diceValue.value(), PathMode.NORMAL);
     }
 
+    private void playRound(DiceValue diceValue) {
+        Spot newSpot = getNewSpot(diceValue);
+        DiceState diceState = diceValue.diceState();
+        if (DiceState.JAIL.equals(diceState)) {
+            playRound(board.getPathWithCriteria(SpotType.JAIL), null);
+        } else {
+            playRound(newSpot, diceState);
+        }
+    }
+
     private boolean playRound(Spot newSpot, DiceState diceState) {
         if (newSpot.equals(players.getTurn().getSpot())) {
             System.out.println("Trying to move to same spot that player is in");
             return false;
         }
         Player turnPlayer = players.getTurn();
-        PathMode pathMode = diceState == null || MonopolyApp.DEBUG_MODE ? PathMode.FLY : PathMode.NORMAL;
+        PathMode pathMode = diceState == null || DiceState.DEBUG_REROLL.equals(diceState) ? PathMode.FLY : PathMode.NORMAL;
         Path path = board.getPath(turnPlayer.getSpot(), newSpot, pathMode);
-        CallbackAction roundEndCallback = getRoundEndCallback(diceState, path);
-        addAnimation(path, roundEndCallback);
-        Player turn = players.getTurn();
-        turn.setSpot(newSpot);
+        return playRound(path, diceState);
+    }
+
+    private boolean playRound(Path path, DiceState diceState) {
+        prevTurnResult = null;
+        Player turnPlayer = players.getTurn();
+        addAnimation(path, () -> {
+            turnPlayer.setSpot(path.getLastSpot());
+            handleTurn(diceState, path);
+        });
         return true;
     }
 
-    private void addAnimation(Path path, CallbackAction roundEndCallback) {
+    private void addAnimation(Path path, CallbackAction onAnimationEnd) {
         PlayerToken turnPlayer = players.getTurn();
-        animations.addAnimation(new Animation(turnPlayer, path, roundEndCallback));
+        animations.addAnimation(new Animation(turnPlayer, path, onAnimationEnd));
     }
 
-    private CallbackAction getRoundEndCallback(DiceState diceState, Path path) {
-        return () -> GameTurnUtils.handleTurn(players, dices, path, () -> doRoundEvent(diceState));
+    private void handleTurn(DiceState diceState, Path path) {
+        GameState gameState = new GameState(players, dices, board, path);
+        prevTurnResult = GameTurnUtils.handleTurn(gameState, () -> doTurnEndEvent(diceState));
     }
 
-    private void doRoundEvent(DiceState diceState) {
-        if (DiceState.REROLL.equals(diceState)) {
+    private void doTurnEndEvent(DiceState diceState) {
+        if (prevTurnResult != null) {
+            Path path = board.getPathWithCriteria(prevTurnResult, players.getTurn().getSpot());
+            playRound(path, diceState);
+        } else if (DiceState.REROLL.equals(diceState) || DiceState.DEBUG_REROLL.equals(diceState)) {
             dices.show();
         } else {
             endRoundButton.show();
@@ -124,7 +134,7 @@ public class Game implements MonopolyEventListener {
     public boolean onEvent(Event event) {
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
-            if (Popup.isVisible()) {
+            if (Popup.isAnyVisible()) {
                 return consumedEvent;
             }
             if (endRoundButton.isVisible() && (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER)) {
@@ -140,8 +150,8 @@ public class Game implements MonopolyEventListener {
                 if (MonopolyApp.DEBUG_MODE && dices.isVisible()) {
                     Spot newSpot = board.getHoveredSpot();
                     if (newSpot != null) {
-                        dices.setValue(new DiceValue(DiceState.REROLL, 8));
-                        if (playRound(newSpot, DiceState.REROLL)) {
+                        dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
+                        if (playRound(newSpot, DiceState.DEBUG_REROLL)) {
                             consumedEvent = true;
                             dices.hide();
                         }

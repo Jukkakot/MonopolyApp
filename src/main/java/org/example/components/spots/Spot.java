@@ -1,18 +1,20 @@
 package org.example.components.spots;
 
 import lombok.Getter;
-import org.example.components.Drawable;
-import org.example.components.Player;
-import org.example.components.PlayerToken;
+import org.example.components.*;
 import org.example.images.Image;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
+import org.example.types.TurnResult;
 import org.example.utils.Coordinates;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
-public class Spot implements Drawable {
+public abstract class Spot implements Drawable {
     public static final float SPOT_W = 996f / 12f;
     public static final float SPOT_H = SPOT_W * 1.5f;
     @Getter
@@ -70,4 +72,5 @@ public class Spot implements Drawable {
     public boolean isHovered() {
         return image.isHovered();
     }
+    public abstract TurnResult handleTurn(GameState gameState, CallbackAction callbackAction);
 }

@@ -1,7 +1,7 @@
-package org.example.components.spots;
+package org.example.components.spots.propertySpots;
 
-import org.example.components.dices.Dices;
 import org.example.components.Player;
+import org.example.components.dices.Dices;
 import org.example.images.SpotImage;
 
 public class UtilityPropertySpot extends PropertySpot {
@@ -11,9 +11,9 @@ public class UtilityPropertySpot extends PropertySpot {
 
     @Override
     public Integer getRent(Player player) {
-        System.err.println("Trying to get rent without dice value from " + getName());
-        return null;
+        throw new RuntimeException("Trying to get rent without dice value from " + name);
     }
+
     public Integer getRent(Player player, Dices dices) {
         if (hasOwner() && !isOwner(player)) {
             int multiplier = 4;
@@ -24,8 +24,5 @@ public class UtilityPropertySpot extends PropertySpot {
         }
         return 0;
 
-    }
-    public boolean payRent(Player player) {
-        return ownerPlayer.giveMoney(player, getRent(player));
     }
 }
