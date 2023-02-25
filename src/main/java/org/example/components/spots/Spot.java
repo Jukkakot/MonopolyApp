@@ -18,7 +18,7 @@ public abstract class Spot implements Drawable {
     public static final float SPOT_W = 996f / 12f;
     public static final float SPOT_H = SPOT_W * 1.5f;
     @Getter
-    private final SpotImage image;
+    protected final SpotImage image;
     @Getter
     protected SpotType spotType;
     @Getter

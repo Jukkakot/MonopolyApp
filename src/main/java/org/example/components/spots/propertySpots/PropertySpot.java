@@ -88,7 +88,7 @@ public abstract class PropertySpot extends Spot {
         Integer rent;
         TurnResult prevTurnResult = gameState.getPrevTurnResult();
         // MOVE_NEAREST cards will only provide StreetType next spot criteria -> different calc rule
-        boolean wasMoveNearestCardLast = prevTurnResult != null && prevTurnResult.nextSpotCriteria() instanceof StreetType;
+        boolean wasMoveNearestCardLast = prevTurnResult != null && prevTurnResult.getNextSpotCriteria() instanceof StreetType;
         if (this instanceof UtilityPropertySpot utilityPropertySpot) {
             Dices dices = gameState.getDices();
             if (wasMoveNearestCardLast) {

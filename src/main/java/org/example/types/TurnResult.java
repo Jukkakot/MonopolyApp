@@ -1,4 +1,12 @@
 package org.example.types;
 
-public record TurnResult(Object nextSpotCriteria, PathMode pathMode) {
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@Getter
+public class TurnResult {
+    Object nextSpotCriteria;
+    PathMode pathMode;
+    boolean shouldGoToJail;
 }

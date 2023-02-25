@@ -57,20 +57,33 @@ public class PickCardSpot extends Spot {
             case MOVE -> {
                 SpotType moveToSpotType = SpotType.valueOf(card.values().get(0));
                 Popup.showInfo(card.text(), callbackAction::doAction);
-                return new TurnResult(moveToSpotType, PathMode.NORMAL);
+                return TurnResult.builder()
+                        .nextSpotCriteria(moveToSpotType)
+                        .pathMode(PathMode.NORMAL)
+                        .build();
             }
             case MOVE_NEAREST -> {
                 StreetType moveToStreetType = StreetType.valueOf(card.values().get(0));
                 Popup.showInfo(card.text(), callbackAction::doAction);
-                return new TurnResult(moveToStreetType, PathMode.NORMAL);
+                return TurnResult.builder()
+                        .nextSpotCriteria(moveToStreetType)
+                        .pathMode(PathMode.NORMAL)
+                        .build();
             }
             case MOVE_BACK_3 -> {
                 Popup.showInfo(card.text(), callbackAction::doAction);
-                return new TurnResult(3, PathMode.BACKWARDS);
+                return TurnResult.builder()
+                        .nextSpotCriteria(3)
+                        .pathMode(PathMode.BACKWARDS)
+                        .build();
             }
             case GO_JAIL -> {
                 Popup.showInfo(card.text(), callbackAction::doAction);
-                return new TurnResult(SpotType.JAIL, PathMode.FLY);
+                return TurnResult.builder()
+                        .nextSpotCriteria(SpotType.JAIL)
+                        .pathMode(PathMode.FLY)
+                        .shouldGoToJail(true)
+                        .build();
             }
             default -> {
                 System.out.println("Default card behaviour, shouldnt happen");

@@ -1,5 +1,6 @@
 package org.example.components.board;
 
+import org.example.components.Player;
 import org.example.components.spots.Spot;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
@@ -11,9 +12,9 @@ public class Path {
     final List<Spot> spots;
     List<Coordinates> waypoints;
 
-    public Path(List<Spot> spots) {
+    public Path(List<Spot> spots, Player player) {
         this.spots = spots;
-        waypoints = spots.stream().map(Spot::getTokenCoords).collect(Collectors.toList());
+        waypoints = spots.stream().map(spot -> spot.getTokenCoords(player)).collect(Collectors.toList());
     }
 
     public boolean remove(Coordinates coordinates) {

@@ -2,6 +2,7 @@ package org.example.components.board;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
+import org.example.components.Player;
 import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
 import org.example.types.PathMode;
@@ -10,7 +11,9 @@ import org.example.types.StreetType;
 import org.example.types.TurnResult;
 import org.example.utils.Coordinates;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Board {
     @Getter
@@ -109,22 +112,24 @@ public class Board {
         return spots.get(index % spots.size());
     }
 
-    public Path getPath(Spot start, int value, PathMode pathMode) {
+    public Path getPath(Player turnPlayer, int value, PathMode pathMode) {
+        Spot start = turnPlayer.getSpot();
         List<Spot> result = new ArrayList<>();
         Spot nextSpot = getNewSpot(start, 1, pathMode);
         for (int i = 0; i < value; i++) {
             result.add(nextSpot);
             nextSpot = getNewSpot(nextSpot, 1, pathMode);
         }
-        return new Path(result);
+        return new Path(result, turnPlayer);
     }
 
-    public Path getPath(Spot start, Spot end, PathMode pathMode) {
+    public Path getPath(Player turnPlayer, Spot end, PathMode pathMode) {
+        Spot start = turnPlayer.getSpot();
         if (PathMode.FLY.equals(pathMode)) {
             List<Spot> result = Collections.singletonList(end);
-            return new Path(result);
+            return new Path(result, turnPlayer);
         }
-        return getPath(start, getDistance(start, end, pathMode), pathMode);
+        return getPath(turnPlayer, getDistance(start, end, pathMode), pathMode);
     }
 
     private int getDistance(Spot start, Spot end, PathMode pathMode) {
@@ -150,9 +155,10 @@ public class Board {
         return result;
     }
 
-    public Path getPathWithCriteria(TurnResult turnResult, Spot currSpot) {
-        Object spotCriteria = turnResult.nextSpotCriteria();
-        PathMode pathMode = turnResult.pathMode();
+    public Path getPathWithCriteria(TurnResult turnResult, Player turnPlayer) {
+        Spot currSpot = turnPlayer.getSpot();
+        Object spotCriteria = turnResult.getNextSpotCriteria();
+        PathMode pathMode = turnResult.getPathMode();
         Spot newSpot;
         if (spotCriteria instanceof SpotType spotType) {
             newSpot = getPathWithCriteria(spotType);
@@ -161,6 +167,6 @@ public class Board {
         } else {
             newSpot = getNewSpot(currSpot, (int) spotCriteria, pathMode);
         }
-        return getPath(currSpot, newSpot, pathMode);
+        return getPath(turnPlayer, newSpot, pathMode);
     }
 }

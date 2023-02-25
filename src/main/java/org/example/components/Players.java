@@ -202,13 +202,16 @@ public class Players {
 
     private void drawPlayerIcon(Player player, Coordinates absoluteCoords) {
 
-        if (player.equals(selectedPlayer)) {
+        if (player.equals(selectedPlayer) || player.isInJail()) {
 //            p.stroke(toColor( player.getToken().getColor()));
             //TODO why pop before push?
             p.pop();
-            p.stroke(0);
-            p.strokeWeight(5);
-            p.circle(absoluteCoords.x(), absoluteCoords.y(), PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
+            if (player.isInJail()) {
+                drawCircle(absoluteCoords, true);
+            }
+            if (player.equals(selectedPlayer)) {
+                drawCircle(absoluteCoords, false);
+            }
             p.push();
         }
 
@@ -221,6 +224,16 @@ public class Players {
         p.text(player.getName(), absoluteCoords.x() + PlayerToken.PLAYER_TOKEN_BIG_DIAMETER / 2 + MARGIN, absoluteCoords.y());
         p.noFill();
         p.push();
+    }
+
+    private void drawCircle(Coordinates absoluteCoords, boolean jailCircle) {
+        if (jailCircle) {
+            p.stroke(255, 0, 0);
+        } else {
+            p.stroke(0);
+        }
+        p.strokeWeight(5);
+        p.circle(absoluteCoords.x(), absoluteCoords.y(), jailCircle ? PlayerToken.PLAYER_TOKEN_BIG_DIAMETER * 1.1f : PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
     }
 
     private void translate(Coordinates c) {

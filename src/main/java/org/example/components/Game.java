@@ -8,6 +8,7 @@ import org.example.components.animation.Animations;
 import org.example.components.board.Board;
 import org.example.components.board.Path;
 import org.example.components.popup.Popup;
+import org.example.components.spots.JailSpot;
 import org.example.types.*;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
@@ -84,9 +85,28 @@ public class Game implements MonopolyEventListener {
     }
 
     private void playRound(DiceValue diceValue) {
+        Player turn = players.getTurn();
+        CallbackAction onGetOutOfJail = () -> {
+            //Almost like End round, but don't switch player.
+            prevTurnResult = null;
+            dices.reset();
+            endRoundButton.hide();
+        };
+        if (turn.isInJail()) {
+            if (diceValue.diceState().equals(DiceState.DOUBLES)) {
+                JailSpot.releaseFromJail(turn, () -> playRound(diceValue));
+                turn.setCoords(turn.getSpot().getTokenCoords(turn));
+            } else {
+                JailSpot.tryToGetOufOfJail(turn, diceValue, onGetOutOfJail, this::endRound);
+                turn.setCoords(turn.getSpot().getTokenCoords(turn));
+            }
+            return;
+        }
         Spot newSpot = getNewSpot(diceValue);
         DiceState diceState = diceValue.diceState();
         if (DiceState.JAIL.equals(diceState)) {
+            //This is not used?
+            prevTurnResult = TurnResult.builder().shouldGoToJail(true).build();
             playRound(board.getPathWithCriteria(SpotType.JAIL), null);
         } else {
             playRound(newSpot, diceState);
@@ -100,12 +120,11 @@ public class Game implements MonopolyEventListener {
         }
         Player turnPlayer = players.getTurn();
         PathMode pathMode = diceState == null || DiceState.DEBUG_REROLL.equals(diceState) ? PathMode.FLY : PathMode.NORMAL;
-        Path path = board.getPath(turnPlayer.getSpot(), newSpot, pathMode);
+        Path path = board.getPath(turnPlayer, newSpot, pathMode);
         return playRound(path, diceState);
     }
 
     private boolean playRound(Path path, DiceState diceState) {
-        prevTurnResult = null;
         Player turnPlayer = players.getTurn();
         addAnimation(path, () -> {
             turnPlayer.setSpot(path.getLastSpot());
@@ -125,10 +144,13 @@ public class Game implements MonopolyEventListener {
     }
 
     private void doTurnEndEvent(DiceState diceState) {
+        //TODO any better way to check if player went to jail?
+        Integer jailRoundCount = JailSpot.playersRoundsLeftMap.get(players.getTurn());
+        boolean wentToJail = jailRoundCount != null && jailRoundCount == JailSpot.JAIL_ROUND_NUMBER;
         if (prevTurnResult != null) {
-            Path path = board.getPathWithCriteria(prevTurnResult, players.getTurn().getSpot());
+            Path path = board.getPathWithCriteria(prevTurnResult, players.getTurn());
             playRound(path, diceState);
-        } else if (DiceState.REROLL.equals(diceState) || DiceState.DEBUG_REROLL.equals(diceState)) {
+        } else if (!wentToJail && (DiceState.DOUBLES.equals(diceState) || DiceState.DEBUG_REROLL.equals(diceState))) {
             dices.show();
         } else {
             endRoundButton.show();
@@ -146,6 +168,7 @@ public class Game implements MonopolyEventListener {
                 consumedEvent = true;
             }
             if (MonopolyApp.DEBUG_MODE && keyEvent.getKey() == 'e') {
+                animations.finishAllAnimations();
                 endRound();
                 consumedEvent = true;
             }

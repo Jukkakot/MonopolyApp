@@ -3,6 +3,7 @@ package org.example.components;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.components.spots.JailSpot;
 import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
 import org.example.images.SpotImage;
@@ -30,7 +31,7 @@ public class Player extends PlayerToken {
         super(spot, color);
         this.id = NEXT_ID++;
         this.name = name;
-        this.money = 2000;
+        this.money = 1500;
         // turn number is id by default. Later maybe implement so that this can change
         this.turnNumber = id + 1; // Turn numbers starts from 1
         deeds = new Deeds();
@@ -105,8 +106,12 @@ public class Player extends PlayerToken {
         getOutOfJailCardCount++;
     }
 
+    public boolean hasGetOutOfJailCard() {
+        return getOutOfJailCardCount > 0;
+    }
+
     public boolean useGetOutOfJailCard() {
-        if (getOutOfJailCardCount > 0) {
+        if (hasGetOutOfJailCard()) {
             getOutOfJailCardCount--;
             return true;
         }
@@ -119,5 +124,9 @@ public class Player extends PlayerToken {
 
     public int getHotelCount() {
         return deeds.getHotelCount();
+    }
+
+    public boolean isInJail() {
+        return JailSpot.playersRoundsLeftMap.get(this) != null;
     }
 }

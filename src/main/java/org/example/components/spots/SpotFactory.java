@@ -24,6 +24,10 @@ public class SpotFactory {
             return new TaxSpot(image);
         } else if (pt.equals(PlaceType.PICK_CARD)){
             return new PickCardSpot(image);
+        } else if(sp.equals(SpotType.GO_TO_JAIL)) {
+            return new GoToJailSpot(image);
+        } else if(sp.equals(SpotType.JAIL)) {
+            return new JailSpot(image);
         } else {
             return new CornerSpot(image);
         }
