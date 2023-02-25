@@ -28,6 +28,7 @@ public class Game implements MonopolyEventListener {
     Players players;
     Animations animations;
     TurnResult prevTurnResult;
+    boolean skipAnimations = false;
     private static final Button endRoundButton = new Button(MonopolyApp.p5, "endRound")
             .setPosition((int) (Spot.SPOT_W * 5.4), MonopolyApp.self.height - Spot.SPOT_W * 3)
             .setLabel("End round")
@@ -56,6 +57,9 @@ public class Game implements MonopolyEventListener {
     }
 
     public void draw() {
+        if (skipAnimations) {
+            animations.finishAllAnimations();
+        }
         animations.updateAnimations();
         board.draw(null);
         dices.draw(null);
@@ -143,6 +147,10 @@ public class Game implements MonopolyEventListener {
             }
             if (MonopolyApp.DEBUG_MODE && keyEvent.getKey() == 'e') {
                 endRound();
+                consumedEvent = true;
+            }
+            if (keyEvent.getKey() == 'a') {
+                skipAnimations = !skipAnimations;
                 consumedEvent = true;
             }
         } else if (event instanceof MouseEvent mouseEvent) {

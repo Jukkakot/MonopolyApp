@@ -22,6 +22,11 @@ public class Animations {
         animationList.removeIf(a -> !a.updateAnimation());
     }
 
+    public void finishAllAnimations() {
+        animationList.forEach(Animation::finishAnimation);
+        animationList.clear();
+    }
+
     public boolean isRunning() {
         return animationList.size() > 0;
     }

@@ -41,6 +41,7 @@ public class Cards {
             previousCard = cardList.get(0);
         } else if (cardList.indexOf(previousCard) == cardList.size() - 1) {
             Collections.shuffle(cardList);
+            System.out.println("Shuffling cards...");
             previousCard = cardList.get(0);
         } else {
             int prevCardIndex = cardList.indexOf(previousCard);
