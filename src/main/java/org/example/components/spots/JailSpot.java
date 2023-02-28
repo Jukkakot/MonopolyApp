@@ -66,6 +66,8 @@ public class JailSpot extends Spot {
                 };
                 String text = "Do you want to pay M50 or use get out of jail card to get out of jail?";
                 ChoicePopup.showChoice(text, onAccept, () -> sendToJail(turnPlayer, callbackAction));
+            } else {
+                sendToJail(turnPlayer, callbackAction);
             }
         }
         return null;

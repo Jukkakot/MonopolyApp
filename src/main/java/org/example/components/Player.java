@@ -3,6 +3,7 @@ package org.example.components;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.components.popup.OkPopup;
 import org.example.components.spots.JailSpot;
 import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
@@ -90,7 +91,7 @@ public class Player extends PlayerToken {
             updateMoney(amount);
             return true;
         }
-        System.out.println(from.getName() + " Didn't have enough money to give");
+        OkPopup.showInfo(from.getName() + " Didn't have enough money to give to " + name);
         return false;
     }
 

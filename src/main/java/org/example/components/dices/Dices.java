@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.example.components.CallbackAction;
 import org.example.MonopolyApp;
 import org.example.components.event.MonopolyEventListener;
+import org.example.components.popup.Popup;
 import org.example.components.spots.Spot;
 import org.example.types.DiceState;
 import org.example.utils.Coordinates;
@@ -43,6 +44,9 @@ public class Dices implements MonopolyEventListener {
         return new Dices() {
             @Override
             public void rollDice() {
+                if(Popup.isAnyVisible()) {
+                    return;
+                }
                 super.rollDice();
                 onRollAction.doAction();
             }
@@ -66,6 +70,9 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void rollDice() {
+        if(Popup.isAnyVisible()) {
+            return;
+        }
         roll();
         rollDiceButton.hide();
     }
@@ -90,7 +97,7 @@ public class Dices implements MonopolyEventListener {
 
     @Override
     public boolean onEvent(Event event) {
-        if (!isVisible()) {
+        if (!isVisible() || Popup.isAnyVisible()) {
             return false;
         }
         if (event instanceof KeyEvent keyEvent) {
