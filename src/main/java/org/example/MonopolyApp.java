@@ -53,6 +53,8 @@ public class MonopolyApp extends EventObserver {
             fill(255, 105, 180);
             noStroke();
             circle(mouseX, mouseY, 20);
+            textFont(font20);
+            text(mouseX + " , " + mouseY, mouseX - 40, mouseY + 30);
             pop();
         }
     }

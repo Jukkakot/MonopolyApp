@@ -12,7 +12,7 @@ import processing.core.PImage;
 
 import static org.example.utils.Utils.toColor;
 
-public abstract class Image implements Drawable {
+public class Image implements Drawable {
     @Setter
     @Getter
     protected Coordinates coords;

@@ -5,9 +5,11 @@ import org.example.MonopolyApp;
 import org.example.components.board.Board;
 import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
+import org.example.images.Image;
 import org.example.images.SpotImage;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
+import org.example.utils.SpotProps;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -23,6 +25,7 @@ public class Players {
     private int turnNum = 1;
     private final MonopolyApp p = MonopolyApp.self;
     private Player selectedPlayer;
+    private final Image getOutOFJailImg = new Image(new SpotProps(0, 0, Spot.SPOT_H / 2, Spot.SPOT_W / 2), "GetOutOfJail.png");
 
     public void addPlayer(Player p) {
         playerList.add(p);
@@ -76,7 +79,9 @@ public class Players {
     }
 
     public Player getTurn() {
-        if (playerList.isEmpty()) return null;
+        if (playerList.isEmpty()) {
+            return null;
+        }
         List<Player> players = playerList.stream().filter(p -> p.getTurnNumber() == turnNum).toList();
         if (players.size() == 1) {
             return players.get(0);
@@ -194,7 +199,15 @@ public class Players {
         p.fill(0);
         p.textFont(MonopolyApp.font30);
         int moneyAmount = selectedPlayer != null ? selectedPlayer.getMoney() : 0;
-        p.text("M" + moneyAmount, MARGIN, textYAxel);
+        p.translate(MARGIN, textYAxel);
+        p.text("M" + moneyAmount, 0, 0);
+        p.translate(MARGIN + getOutOFJailImg.getWidth() / 2, -MARGIN);
+
+        int getOutOfJailCardCount = selectedPlayer != null ? selectedPlayer.getGetOutOfJailCardCount() : 0;
+        for (int i = 0; i < getOutOfJailCardCount; i++) {
+            p.translate(MARGIN + getOutOFJailImg.getWidth(), 0);
+            getOutOFJailImg.draw(null);
+        }
 
         p.pop();
         return new Coordinates(0, startCoords.y() + TEXT_INFO_HEIGHT);
