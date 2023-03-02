@@ -73,7 +73,7 @@ public class SpotImage extends Image {
     }
 
     private void updateIsHovered(Coordinates c) {
-        isHovered = isMouseInArea(new SpotProps(c, getWidth(), getHeight()));
+        isHovered = isMouseInArea(new SpotProps(c, width, height));
     }
 
     private void drawPrice() {
