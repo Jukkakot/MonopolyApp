@@ -3,10 +3,10 @@ package org.example.components;
 import controlP5.Button;
 import org.example.MonopolyApp;
 import org.example.components.board.Board;
-import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
+import org.example.components.spots.propertySpots.PropertySpot;
+import org.example.images.DeedImage;
 import org.example.images.Image;
-import org.example.images.SpotImage;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 import org.example.utils.SpotProps;
@@ -51,6 +51,14 @@ public class Players {
                 }
             });
         }
+    }
+
+    public DeedImage getHoveredDeed() {
+        List<DeedImage> hoveredDeeds = selectedPlayer.getAllDeeds().stream().filter(DeedImage::isHovered).toList();
+        if (hoveredDeeds.size() == 1) {
+            return hoveredDeeds.get(0);
+        }
+        return null;
     }
 
     public int count() {
@@ -119,13 +127,12 @@ public class Players {
         //Offset by needed amounts...
         absoluteCoods = absoluteCoods.move(Spot.SPOT_W / 2 + MARGIN, deedTotalHeight / 2);
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
-        Map<StreetType, List<SpotImage>> deedsMap = selectedPlayer.getDeeds().getDeeds();
+        Map<StreetType, List<DeedImage>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
         int totalDX = 0;
 
         for (StreetType pt : deedsMap.keySet()) {
-            for (SpotImage ps : deedsMap.get(pt)) {
-                ps.setCoords(absoluteCoods);
+            for (DeedImage ps : deedsMap.get(pt)) {
                 ps.draw(absoluteCoods);
                 index++;
                 if (index % DEEDS_PER_ROW == 0) {

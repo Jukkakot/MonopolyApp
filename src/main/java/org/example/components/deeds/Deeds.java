@@ -1,17 +1,16 @@
-package org.example.components;
+package org.example.components.deeds;
 
 
 import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.propertySpots.StreetPropertySpot;
-import org.example.images.ImageFactory;
-import org.example.images.SpotImage;
+import org.example.images.DeedImage;
 import org.example.types.PlaceType;
 import org.example.types.StreetType;
 
 import java.util.*;
 
 public class Deeds {
-    private final Map<StreetType, List<SpotImage>> deedList = new HashMap<>();
+    private final Map<StreetType, List<DeedImage>> deedList = new HashMap<>();
     private final Set<PropertySpot> spotList = new HashSet<>();
 
     public void addDeed(PropertySpot propertySpot) {
@@ -20,18 +19,18 @@ public class Deeds {
             deedList.put(st, new ArrayList<>());
         }
         spotList.add(propertySpot);
-        deedList.get(st).add(ImageFactory.getImage(propertySpot));
+        deedList.get(st).add(new DeedImage(propertySpot.getImage()));
     }
 
-    public List<SpotImage> getDeeds(StreetType pt) {
+    public List<DeedImage> getDeeds(StreetType pt) {
         return deedList.get(pt);
     }
 
-    public List<SpotImage> getAllDeeds() {
+    public List<DeedImage> getAllDeeds() {
         return deedList.values().stream().flatMap(Collection::stream).toList();
     }
 
-    public Map<StreetType, List<SpotImage>> getDeeds() {
+    public Map<StreetType, List<DeedImage>> getDeeds() {
         return deedList;
     }
     private List<StreetPropertySpot> getPlaceTypes(PlaceType placeType) {

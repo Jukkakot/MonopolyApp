@@ -10,6 +10,7 @@ import org.example.components.board.Path;
 import org.example.components.popup.OkPopup;
 import org.example.components.popup.Popup;
 import org.example.components.spots.JailSpot;
+import org.example.images.DeedImage;
 import org.example.types.*;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
@@ -69,7 +70,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void rollDice() {
-        if(Popup.isAnyVisible()) {
+        if (Popup.isAnyVisible()) {
             return;
         }
         playRound(dices.getValue());
@@ -121,7 +122,7 @@ public class Game implements MonopolyEventListener {
             OkPopup.showInfo("Can't move to same spot that player is in");
             return false;
         }
-        if(players.getTurn().isInJail()) {
+        if (players.getTurn().isInJail()) {
             OkPopup.showInfo("Can't move out when player is in jail");
             return false;
         }
@@ -186,21 +187,29 @@ public class Game implements MonopolyEventListener {
             }
         } else if (event instanceof MouseEvent mouseEvent) {
             if (mouseEvent.getAction() == CLICK) {
-                if(Popup.isAnyVisible()) {
+                if (Popup.isAnyVisible()) {
                     return consumedEvent;
                 }
-                if (MonopolyApp.DEBUG_MODE && dices.isVisible()) {
-                    Spot newSpot = board.getHoveredSpot();
-                    if (newSpot != null) {
-                        dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
-                        if (playRound(newSpot, DiceState.DEBUG_REROLL)) {
-                            consumedEvent = true;
-                            dices.hide();
-                        }
+                Drawable hoveredImage = getHoveredImage();
+                if (hoveredImage instanceof Spot hoveredSpot && MonopolyApp.DEBUG_MODE && dices.isVisible()) {
+                    dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
+                    if (playRound(hoveredSpot, DiceState.DEBUG_REROLL)) {
+                        consumedEvent = true;
+                        dices.hide();
                     }
+                } else if (hoveredImage instanceof DeedImage deedImage) {
+                    deedImage.click();
                 }
             }
         }
         return consumedEvent;
+    }
+
+    private Drawable getHoveredImage() {
+        Drawable result = players.getHoveredDeed();
+        if (result == null) {
+            result = board.getHoveredSpot();
+        }
+        return result;
     }
 }

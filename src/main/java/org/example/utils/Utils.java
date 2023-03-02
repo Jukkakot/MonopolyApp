@@ -27,6 +27,10 @@ public class Utils {
         return isPointInArea(MonopolyApp.self.mouseX, MonopolyApp.self.mouseY, areaProps);
     }
 
+    public static boolean isMouseInArea(Coordinates coords, float width, float height) {
+        return isMouseInArea(new SpotProps(coords, width, height));
+    }
+
     public static boolean isPointInArea(int pX, int pY, SpotProps spotProps) {
         return isInsideArea(getCoords(spotProps), pX, pY);
     }

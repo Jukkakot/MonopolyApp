@@ -21,6 +21,7 @@ public class Image implements Drawable {
     @Setter
     protected String imgName;
     @Getter
+    @Setter
     protected boolean isHovered = false;
     protected static final MonopolyApp p = MonopolyApp.self;
     protected static final float HOVER_SCALE = 1.1f;

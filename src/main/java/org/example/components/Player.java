@@ -3,11 +3,12 @@ package org.example.components;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.components.deeds.Deeds;
 import org.example.components.popup.OkPopup;
 import org.example.components.spots.JailSpot;
-import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
-import org.example.images.SpotImage;
+import org.example.components.spots.propertySpots.PropertySpot;
+import org.example.images.DeedImage;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 
@@ -70,7 +71,7 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public List<SpotImage> getAllDeeds() {
+    public List<DeedImage> getAllDeeds() {
         return deeds.getAllDeeds();
     }
 
@@ -95,7 +96,7 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public List<SpotImage> getOwnedSpots(StreetType streetType) {
+    public List<DeedImage> getOwnedSpots(StreetType streetType) {
         return deeds.getDeeds(streetType);
     }
 
