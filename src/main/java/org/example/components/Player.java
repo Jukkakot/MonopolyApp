@@ -8,7 +8,7 @@ import org.example.components.popup.OkPopup;
 import org.example.components.spots.JailSpot;
 import org.example.components.spots.Spot;
 import org.example.components.spots.propertySpots.PropertySpot;
-import org.example.images.DeedImage;
+import org.example.images.Deed;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 
@@ -71,7 +71,7 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public List<DeedImage> getAllDeeds() {
+    public List<Deed> getAllDeeds() {
         return deeds.getAllDeeds();
     }
 
@@ -96,7 +96,7 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public List<DeedImage> getOwnedSpots(StreetType streetType) {
+    public List<Deed> getOwnedSpots(StreetType streetType) {
         return deeds.getDeeds(streetType);
     }
 

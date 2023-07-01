@@ -1,7 +1,11 @@
 package org.example.components.spots;
 
 import lombok.Getter;
-import org.example.components.*;
+import org.example.components.CallbackAction;
+import org.example.components.Drawable;
+import org.example.components.GameState;
+import org.example.components.Player;
+import org.example.components.PlayerToken;
 import org.example.images.Image;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
@@ -20,19 +24,17 @@ public abstract class Spot implements Drawable {
     @Getter
     protected final SpotImage image;
     @Getter
-    protected SpotType spotType;
+    protected final SpotType spotType;
     @Getter
     protected final String name;
     Set<Image> players = new HashSet<>();
     private static final List<Coordinates> TOKEN_COORDS = Arrays.asList(new Coordinates(0, 0), new Coordinates(-PlayerToken.TOKEN_RADIUS, 0), new Coordinates(PlayerToken.TOKEN_RADIUS, 0),
             new Coordinates(0, PlayerToken.TOKEN_RADIUS), new Coordinates(-PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS), new Coordinates(PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS));
 
-    public Spot(SpotImage spotImage) {
-        this.image = spotImage;
-        this.spotType = spotImage.getSpotType();
-        this.image.setCoords(getTokenCoords());
-
-        name = spotType.getProperty("name");
+    public Spot(SpotImage image) {
+        this.image = image;
+        this.spotType = image.getSpotType();
+        this.name = spotType.getStringProperty("name");
     }
 
     public void addPlayer(Player p) {
@@ -69,8 +71,15 @@ public abstract class Spot implements Drawable {
         image.draw(c);
     }
 
+    @Override
     public boolean isHovered() {
         return image.isHovered();
     }
+
+    @Override
+    public void setHovered(boolean isHovered) {
+        image.setHovered(isHovered);
+    }
+
     public abstract TurnResult handleTurn(GameState gameState, CallbackAction callbackAction);
 }

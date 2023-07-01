@@ -6,6 +6,7 @@ import processing.event.Event;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,12 +28,6 @@ public class EventObserver extends PApplet {
         sendEventToALl(mouseEvent);
     }
 
-    //    @Override
-//    public void mouseMoved(MouseEvent mouseEvent) {
-//        super.mouseMoved(mouseEvent);
-//        sendEventToALl(mouseEvent);
-////        sendConsumableEvent(mouseEvent);
-//    }
     @Override
     public void mousePressed(MouseEvent mouseEvent) {
         super.mousePressed(mouseEvent);
@@ -40,10 +35,21 @@ public class EventObserver extends PApplet {
     }
 
     private void sendConsumableEvent(Event event) {
-        eventListeners.stream().anyMatch(listener -> listener.onEvent(event));
+        try {
+            eventListeners.stream().anyMatch(listener -> listener.onEvent(event));
+        } catch (ConcurrentModificationException e) {
+            //Ignore for now..
+            System.err.println("Concurrent error... " + e);
+        }
     }
+
     private void sendEventToALl(Event event) {
-        eventListeners.forEach(eventListener -> eventListener.onEvent(event));
+        try {
+            eventListeners.forEach(eventListener -> eventListener.onEvent(event));
+        } catch (ConcurrentModificationException e) {
+            //Ignore for now..
+            System.err.println("Concurrent error... " + e);
+        }
     }
 
     public static void addListener(MonopolyEventListener listener) {

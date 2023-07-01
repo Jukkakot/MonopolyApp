@@ -5,14 +5,19 @@ import org.example.MonopolyApp;
 import org.example.components.board.Board;
 import org.example.components.spots.Spot;
 import org.example.components.spots.propertySpots.PropertySpot;
-import org.example.images.DeedImage;
+import org.example.images.Deed;
 import org.example.images.Image;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 import org.example.utils.SpotProps;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Players {
     private static final int PLAYERS_PER_ROW = 3;
@@ -53,8 +58,8 @@ public class Players {
         }
     }
 
-    public DeedImage getHoveredDeed() {
-        List<DeedImage> hoveredDeeds = selectedPlayer.getAllDeeds().stream().filter(DeedImage::isHovered).toList();
+    public Deed getHoveredDeed() {
+        List<Deed> hoveredDeeds = selectedPlayer.getAllDeeds().stream().filter(Drawable::isHovered).toList();
         if (hoveredDeeds.size() == 1) {
             return hoveredDeeds.get(0);
         }
@@ -104,10 +109,11 @@ public class Players {
         drawTokens();
     }
 
-    private void drawAll(Drawable... drawables) {
+    @SafeVarargs
+    private void drawAll(Function<Coordinates, Coordinates>... drawables) {
         Coordinates startCoords = new Coordinates();
-        for (Drawable drawable : drawables) {
-            startCoords = drawable.draw(startCoords);
+        for (Function<Coordinates, Coordinates> drawable : drawables) {
+            startCoords = drawable.apply(startCoords);
         }
     }
 
@@ -127,13 +133,13 @@ public class Players {
         //Offset by needed amounts...
         absoluteCoods = absoluteCoods.move(Spot.SPOT_W / 2 + MARGIN, deedTotalHeight / 2);
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
-        Map<StreetType, List<DeedImage>> deedsMap = selectedPlayer.getDeeds().getDeeds();
+        Map<StreetType, List<Deed>> deedsMap = selectedPlayer.getDeeds().getDeeds();
         int index = 0;
         int totalDX = 0;
 
         for (StreetType pt : deedsMap.keySet()) {
-            for (DeedImage ps : deedsMap.get(pt)) {
-                ps.draw(absoluteCoods);
+            for (Deed deed : deedsMap.get(pt)) {
+                deed.draw(absoluteCoods);
                 index++;
                 if (index % DEEDS_PER_ROW == 0) {
                     absoluteCoods = absoluteCoods.move(-totalDX, deedTotalHeight);
@@ -258,15 +264,5 @@ public class Players {
 
     private void translate(Coordinates c) {
         p.translate(c.x(), c.y());
-    }
-
-    private interface Drawable {
-        /**
-         * Draws some player info
-         *
-         * @param startCoords starting coordinates for drawing
-         * @return Y-axel of where this function last drew something
-         */
-        Coordinates draw(Coordinates startCoords);
     }
 }

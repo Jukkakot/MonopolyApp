@@ -35,18 +35,31 @@ public enum SpotType {
     SpotType(StreetType sType, int id) {
         this.streetType = sType;
         this.id = id;
-
     }
 
-    public String getProperty(String propName) {
-        String result = "";
+    public boolean hasProperty(String propName) {
+        return getProperty(propName) != null;
+    }
+
+    public String getStringProperty(String propName) {
+        String result = getProperty(propName);
+        return result != null ? result : "";
+    }
+
+    private String getProperty(String propName) {
+        String result = props.getProperty(name() + "." + propName);
+        if (result == null || result.isBlank()) {
+            result = props.getProperty(name().substring(0, name().length() - 1) + "." + propName);
+        }
+        return result;
+    }
+
+    public int getIntegerProperty(String propName) {
+        int result = 0;
         try {
-            result = props.getProperty(name() + "." + propName, "");
-            if (result.isBlank() || result.isEmpty()) {
-                result = props.getProperty(name().substring(0, name().length() - 1) + "." + propName, "");
-            }
-        } catch (Exception e) {
-            System.err.println(propName + " missing for " + name());
+            result = Integer.parseInt(getProperty(propName));
+        } catch (NumberFormatException e) {
+            System.err.println("Error getting integer property " + propName + " for property: " + name());
         }
         return result;
     }

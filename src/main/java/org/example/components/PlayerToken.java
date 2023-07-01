@@ -15,7 +15,7 @@ public class PlayerToken extends Image {
     public static final int PLAYER_TOKEN_BIG_DIAMETER = (int) (TOKEN_RADIUS * 1.5);
 
     public PlayerToken(Spot spot, Color color) {
-        super(spot.getTokenCoords(), "Token.png");
+        super(spot.getTokenCoords(), "Token.png", PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS);
         this.color = color;
         this.spot = spot;
     }

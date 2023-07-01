@@ -2,6 +2,7 @@ package org.example.components.board;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
+import org.example.components.Drawable;
 import org.example.components.Player;
 import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
@@ -85,7 +86,7 @@ public class Board {
     }
 
     public Spot getHoveredSpot() {
-        List<Spot> hoveredSpots = spots.stream().filter(Spot::isHovered).toList();
+        List<Spot> hoveredSpots = spots.stream().filter(Drawable::isHovered).toList();
         if (hoveredSpots.size() == 1) {
             return hoveredSpots.get(0);
         } else {

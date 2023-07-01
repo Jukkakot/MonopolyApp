@@ -1,6 +1,7 @@
 package org.example.images;
 
 import lombok.Getter;
+import lombok.ToString;
 import org.example.MonopolyApp;
 import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.components.spots.Spot;
@@ -11,23 +12,33 @@ import org.example.utils.Utils;
 
 import static org.example.utils.Utils.isMouseInArea;
 
+@ToString(callSuper = true)
 public class SpotImage extends Image {
     @Getter
     protected SpotType spotType;
 
-    public SpotImage(Coordinates coords) {
-        this(coords, false);
+    public SpotImage(Coordinates coords, SpotType spotType) {
+        this(coords, spotType, false);
     }
 
-    public SpotImage(Coordinates coords, boolean isCorner) {
+    public SpotImage(SpotType spotType) {
+        this(null, spotType);
+    }
+
+    public SpotImage(Coordinates coords, SpotType spotType, boolean isCorner) {
         super(coords);
+        this.spotType = spotType;
         this.width = isCorner ? Spot.SPOT_H : Spot.SPOT_W;
         this.height = Spot.SPOT_H;
     }
 
     public SpotImage(PropertySpot ps) {
-        super(new SpotProps(ps.getCoords(), Spot.SPOT_W, Spot.SPOT_H), ps.getSpotType().streetType.imgName);
-        this.spotType = ps.getSpotType();
+        this(ps.getImage());
+    }
+
+    public SpotImage(SpotImage bsi) {
+        super(new SpotProps(bsi.getCoords(), Spot.SPOT_W, Spot.SPOT_H), bsi.getSpotType().streetType.imgName);
+        this.spotType = bsi.getSpotType();
     }
 
     @Override
@@ -48,7 +59,7 @@ public class SpotImage extends Image {
         //Outside border
         p.rotate(MonopolyApp.radians(c.r()));
         p.rect(-getWidth() / 2, -getHeight() / 2, getWidth(), getHeight());
-        if (!spotType.getProperty("price").trim().isEmpty()) {
+        if (spotType != null && spotType.hasProperty("price")) {
             drawPrice();
         }
 
@@ -80,6 +91,6 @@ public class SpotImage extends Image {
         p.fill(0);
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
-        p.text("M" + spotType.getProperty("price"), (int) -(getWidth() * 0.37), getHeight() / 3, (int) (getWidth() * 0.75), getHeight());
+        p.text("M" + spotType.getStringProperty("price"), (int) -(getWidth() * 0.37), getHeight() / 3, (int) (getWidth() * 0.75), getHeight());
     }
 }

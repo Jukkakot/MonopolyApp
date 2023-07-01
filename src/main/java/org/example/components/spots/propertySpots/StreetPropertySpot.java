@@ -11,7 +11,7 @@ public class StreetPropertySpot extends PropertySpot {
 
     public StreetPropertySpot(SpotImage spotImage) {
         super(spotImage);
-        housePrice = Integer.parseInt(spotType.getProperty("housePrice"));
+        housePrice = spotType.getIntegerProperty("housePrice");
     }
 
     @Override

@@ -7,7 +7,7 @@ public class Dice extends Image {
     private int value = 1;
 
     public Dice(SpotProps sp) {
-        super(sp);
+        super(sp, null);
         setImgName(getDiceImgName());
     }
 

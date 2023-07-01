@@ -36,4 +36,8 @@ public record Coordinates(float x, float y, float r) {
     public Coordinates move(Coordinates coords) {
         return move(coords.x, coords.y, coords.r);
     }
+
+    public static Coordinates of(SpotProps sp) {
+        return new Coordinates(sp.x(), sp.y(), sp.r());
+    }
 }

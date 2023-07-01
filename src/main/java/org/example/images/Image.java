@@ -3,16 +3,21 @@ package org.example.images;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.example.MonopolyApp;
+import org.example.components.Clickable;
 import org.example.components.Drawable;
-import org.example.components.PlayerToken;
+import org.example.components.event.MonopolyEventListener;
 import org.example.utils.Coordinates;
 import org.example.utils.SpotProps;
 import processing.core.PImage;
+import processing.event.Event;
+import processing.event.MouseEvent;
 
 import static org.example.utils.Utils.toColor;
 
-public class Image implements Drawable {
+@ToString(includeFieldNames = false)
+public class Image implements Drawable, Clickable, MonopolyEventListener {
     @Setter
     @Getter
     protected Coordinates coords;
@@ -26,27 +31,20 @@ public class Image implements Drawable {
     protected static final MonopolyApp p = MonopolyApp.self;
     protected static final float HOVER_SCALE = 1.1f;
 
-    public Image(SpotProps sp) {
-        this(sp, null);
-    }
-
     public Image(SpotProps sp, String imgName) {
-        this.coords = new Coordinates(sp.x(), sp.y(), sp.r());
-        this.width = sp.w();
-        this.height = sp.h();
-        this.imgName = imgName;
+        this(Coordinates.of(sp), imgName, sp.w(), sp.h());
     }
 
     public Image(Coordinates coords) {
-        this.coords = coords;
+        this(coords, null, 0, 0);
     }
 
-    public Image(Coordinates coords, String imgName) {
-        this(coords);
+    public Image(Coordinates coords, String imgName, float width, float height) {
+        MonopolyApp.addListener(this);
+        this.coords = coords;
         this.imgName = imgName;
-
-        this.width = PlayerToken.TOKEN_RADIUS;
-        this.height = PlayerToken.TOKEN_RADIUS;
+        this.width = width;
+        this.height = height;
     }
 
     public float getWidth() {
@@ -85,5 +83,22 @@ public class Image implements Drawable {
 
     protected float getScaledLength(float length) {
         return isHovered ? length * HOVER_SCALE : length;
+    }
+
+    @Override
+    public void onClick() {
+        System.out.println("Clicked " + this);
+    }
+
+    @Override
+    public boolean onEvent(Event event) {
+        boolean eventConsumed = false;
+        if (isHovered() && event instanceof MouseEvent mouseEvent) {
+            if (MouseEvent.CLICK == mouseEvent.getAction()) {
+                onClick();
+                eventConsumed = true;
+            }
+        }
+        return eventConsumed;
     }
 }

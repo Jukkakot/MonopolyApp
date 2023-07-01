@@ -10,12 +10,14 @@ import org.example.components.board.Path;
 import org.example.components.popup.OkPopup;
 import org.example.components.popup.Popup;
 import org.example.components.spots.JailSpot;
-import org.example.images.DeedImage;
-import org.example.types.*;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
 import org.example.components.dices.DiceValue;
+import org.example.types.DiceState;
+import org.example.types.PathMode;
+import org.example.types.SpotType;
+import org.example.types.TurnResult;
 import org.example.utils.GameTurnUtils;
 import processing.event.Event;
 import processing.event.KeyEvent;
@@ -191,14 +193,13 @@ public class Game implements MonopolyEventListener {
                     return consumedEvent;
                 }
                 Drawable hoveredImage = getHoveredImage();
+                //Debugging "flying mechanic"
                 if (hoveredImage instanceof Spot hoveredSpot && MonopolyApp.DEBUG_MODE && dices.isVisible()) {
                     dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
                     if (playRound(hoveredSpot, DiceState.DEBUG_REROLL)) {
                         consumedEvent = true;
                         dices.hide();
                     }
-                } else if (hoveredImage instanceof DeedImage deedImage) {
-                    deedImage.click();
                 }
             }
         }

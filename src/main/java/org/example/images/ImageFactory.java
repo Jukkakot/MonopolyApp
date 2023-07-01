@@ -7,7 +7,7 @@ import org.example.utils.Coordinates;
 public class ImageFactory {
     public static SpotImage getImage(Coordinates coords, SpotType st) {
         if (st.streetType == null) {
-            return new SpotImage(coords);
+            return new SpotImage(coords, st);
         } else if (st.streetType.imgName != null) {
             return new IconSpotImage(coords, st);
         } else {

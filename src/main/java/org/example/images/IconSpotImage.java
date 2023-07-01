@@ -10,8 +10,7 @@ import processing.core.PImage;
 public class IconSpotImage extends SpotImage {
 
     public IconSpotImage(Coordinates coords, SpotType spotType) {
-        super(coords, StreetType.CORNER.equals(spotType.streetType));
-        this.spotType = spotType;
+        super(coords, spotType, StreetType.CORNER.equals(spotType.streetType));
     }
 
     public IconSpotImage(PropertySpot ps) {
@@ -36,7 +35,11 @@ public class IconSpotImage extends SpotImage {
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
         p.textLeading(10);
-        p.text(spotType.getProperty("name"), (int) -(getWidth() * 0.37), (int) -(getHeight() * 0.42), (int) (getWidth() * 0.75), getHeight() / 2);
+        if (spotType.hasProperty("name")) {
+            p.text(spotType.getStringProperty("name"),
+                    (int) -(getWidth() * 0.37), (int) -(getHeight() * 0.42),
+                    (int) (getWidth() * 0.75), getHeight() / 2);
+        }
 
         p.pop();
     }

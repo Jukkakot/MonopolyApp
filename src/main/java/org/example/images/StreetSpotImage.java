@@ -10,8 +10,7 @@ import static org.example.utils.Utils.toColor;
 
 public class StreetSpotImage extends SpotImage {
     public StreetSpotImage(Coordinates coords, SpotType spotType) {
-        super(coords);
-        this.spotType = spotType;
+        super(coords, spotType);
     }
 
     public StreetSpotImage(PropertySpot ps) {
@@ -44,7 +43,7 @@ public class StreetSpotImage extends SpotImage {
         p.textAlign(p.CENTER);
         p.textFont(MonopolyApp.font10);
         p.textLeading(10);
-        p.text(spotType.getProperty("name"), (int) -(getWidth() * 0.37), -getHeight() / 6, (int) (getWidth() * 0.75), getHeight() / 2);
+        p.text(spotType.getStringProperty("name"), (int) -(getWidth() * 0.37), -getHeight() / 6, (int) (getWidth() * 0.75), getHeight() / 2);
 
         p.pop();
     }

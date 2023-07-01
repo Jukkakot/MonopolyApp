@@ -14,7 +14,7 @@ public class TaxSpot extends Spot {
 
     public TaxSpot(SpotImage image) {
         super(image);
-        price = Integer.parseInt(spotType.getProperty("price"));
+        price = spotType.getIntegerProperty("price");
     }
 
     @Override

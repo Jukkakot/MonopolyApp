@@ -31,9 +31,9 @@ public abstract class PropertySpot extends Spot {
 
     public PropertySpot(SpotImage sp) {
         super(sp);
-        price = Integer.parseInt(spotType.getProperty("price"));
-        String rentStr = spotType.getProperty("rents");
-        if (rentStr != null && !rentStr.equals("")) {
+        price = spotType.getIntegerProperty("price");
+        String rentStr = spotType.getStringProperty("rents");
+        if (rentStr.contains(",")) {
             rentPrices = Arrays.stream(rentStr.split(",")).map(Integer::valueOf).toList();
         }
     }

@@ -3,7 +3,12 @@ package org.example.components.cards;
 import org.example.types.CardType;
 import org.example.types.StreetType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
 
 public class Cards {
     private Properties props = new Properties();
