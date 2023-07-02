@@ -192,9 +192,9 @@ public class Game implements MonopolyEventListener {
                 if (Popup.isAnyVisible()) {
                     return consumedEvent;
                 }
-                Drawable hoveredImage = getHoveredImage();
+                Spot hoveredSpot = board.getHoveredSpot();
                 //Debugging "flying mechanic"
-                if (hoveredImage instanceof Spot hoveredSpot && MonopolyApp.DEBUG_MODE && dices.isVisible()) {
+                if (hoveredSpot != null && MonopolyApp.DEBUG_MODE && dices.isVisible()) {
                     dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
                     if (playRound(hoveredSpot, DiceState.DEBUG_REROLL)) {
                         consumedEvent = true;
@@ -204,13 +204,5 @@ public class Game implements MonopolyEventListener {
             }
         }
         return consumedEvent;
-    }
-
-    private Drawable getHoveredImage() {
-        Drawable result = players.getHoveredDeed();
-        if (result == null) {
-            result = board.getHoveredSpot();
-        }
-        return result;
     }
 }

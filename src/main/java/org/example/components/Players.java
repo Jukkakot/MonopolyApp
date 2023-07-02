@@ -59,7 +59,7 @@ public class Players {
     }
 
     public Deed getHoveredDeed() {
-        List<Deed> hoveredDeeds = selectedPlayer.getAllDeeds().stream().filter(Drawable::isHovered).toList();
+        List<Deed> hoveredDeeds = selectedPlayer.getAllDeeds().stream().filter(deed -> deed.getSpotImage().isHovered()).toList();
         if (hoveredDeeds.size() == 1) {
             return hoveredDeeds.get(0);
         }
@@ -110,10 +110,10 @@ public class Players {
     }
 
     @SafeVarargs
-    private void drawAll(Function<Coordinates, Coordinates>... drawables) {
+    private void drawAll(Function<Coordinates, Coordinates>... functions) {
         Coordinates startCoords = new Coordinates();
-        for (Function<Coordinates, Coordinates> drawable : drawables) {
-            startCoords = drawable.apply(startCoords);
+        for (Function<Coordinates, Coordinates> function : functions) {
+            startCoords = function.apply(startCoords);
         }
     }
 
@@ -139,7 +139,7 @@ public class Players {
 
         for (StreetType pt : deedsMap.keySet()) {
             for (Deed deed : deedsMap.get(pt)) {
-                deed.draw(absoluteCoods);
+                deed.getSpotImage().draw(absoluteCoods);
                 index++;
                 if (index % DEEDS_PER_ROW == 0) {
                     absoluteCoods = absoluteCoods.move(-totalDX, deedTotalHeight);

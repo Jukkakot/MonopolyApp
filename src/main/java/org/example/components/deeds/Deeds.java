@@ -27,7 +27,7 @@ public class Deeds {
             deedList.put(st, new ArrayList<>());
         }
         spotList.add(propertySpot);
-        deedList.get(st).add(new Deed(ImageFactory.getImage(propertySpot)));
+        deedList.get(st).add(new Deed(propertySpot.getSpotType()));
     }
 
     public List<Deed> getDeeds(StreetType pt) {

@@ -1,39 +1,17 @@
 package org.example.images;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import org.example.components.Drawable;
-import org.example.utils.Coordinates;
+import org.example.types.SpotType;
 
 @ToString(callSuper = true)
 @RequiredArgsConstructor
-public class Deed implements Drawable {
-    private boolean isDeedHovered = false;
+public class Deed {
+    @Getter
     private final SpotImage spotImage;
 
-    @Override
-    public void draw(Coordinates c) {
-        setCoords(c);
-        spotImage.draw(c);
-    }
-
-    @Override
-    public void setHovered(boolean isHovered) {
-       this.isDeedHovered = isHovered;
-    }
-
-    @Override
-    public boolean isHovered() {
-        return isDeedHovered;
-    }
-
-    @Override
-    public Coordinates getCoords() {
-        return spotImage.getCoords();
-    }
-
-    @Override
-    public void setCoords(Coordinates coords) {
-        spotImage.setCoords(coords);
+    public Deed(SpotType spotType) {
+        this.spotImage = ImageFactory.getImage(null, spotType);
     }
 }

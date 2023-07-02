@@ -2,7 +2,6 @@ package org.example.components.board;
 
 import lombok.Getter;
 import org.example.MonopolyApp;
-import org.example.components.Drawable;
 import org.example.components.Player;
 import org.example.components.spots.Spot;
 import org.example.components.spots.SpotFactory;
@@ -80,13 +79,13 @@ public class Board {
 
     private void drawSpots(Coordinates c) {
         // not hovered spots
-        spots.stream().filter(spot -> !spot.isHovered()).forEach(spot -> spot.draw(c));
+        spots.stream().filter(spot -> !spot.getImage().isHovered()).forEach(spot -> spot.getImage().draw(c));
         // hovered spots
-        spots.stream().filter(Spot::isHovered).forEach(spot -> spot.draw(c));
+        spots.stream().filter(spot -> spot.getImage().isHovered()).forEach(spot -> spot.getImage().draw(c));
     }
 
     public Spot getHoveredSpot() {
-        List<Spot> hoveredSpots = spots.stream().filter(Drawable::isHovered).toList();
+        List<Spot> hoveredSpots = spots.stream().filter(spot -> spot.getImage().isHovered()).toList();
         if (hoveredSpots.size() == 1) {
             return hoveredSpots.get(0);
         } else {
