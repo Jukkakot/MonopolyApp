@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.example.components.Player;
 import org.example.types.SpotType;
+import org.example.types.StreetType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -52,6 +53,10 @@ public abstract class Property {
             throw new RuntimeException("Property has no owner to pay rent to");
         }
         return ownerPlayer.giveMoney(fromPlayer, rent);
+    }
+
+    public boolean isSameStreetType(StreetType streetType) {
+        return spotType.streetType.equals(streetType);
     }
 
     public abstract Integer getRent(Player player);

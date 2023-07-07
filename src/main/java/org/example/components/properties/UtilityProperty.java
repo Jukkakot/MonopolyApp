@@ -18,7 +18,7 @@ public class UtilityProperty extends Property {
     public Integer getRent(Player player) {
         if (hasOwner() && isNotOwner(player)) {
             int multiplier = 4;
-            if (getOwnerPlayer().ownsAllSpots(spotType.streetType)) {
+            if (getOwnerPlayer().ownsAllStreetProperties(spotType.streetType)) {
                 multiplier = 10;
             }
             return Game.DICES.getValue().value() * multiplier;

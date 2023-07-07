@@ -4,12 +4,11 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.example.components.deeds.Deeds;
 import org.example.components.popup.OkPopup;
+import org.example.components.properties.Properties;
 import org.example.components.properties.Property;
 import org.example.components.spots.JailSpot;
 import org.example.components.spots.Spot;
-import org.example.images.Deed;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 
@@ -26,7 +25,7 @@ public class Player extends PlayerToken {
     @Getter
     private int turnNumber;
     @Getter
-    private final Deeds deeds;
+    private final Properties ownedProperties = new Properties();
     @Getter
     @Setter
     private int getOutOfJailCardCount = 0;
@@ -38,7 +37,6 @@ public class Player extends PlayerToken {
         this.money = 1500;
         // turn number is id by default. Later maybe implement so that this can change
         this.turnNumber = id + 1; // Turn numbers starts from 1
-        deeds = new Deeds();
         setSpot(spot);
     }
 
@@ -57,7 +55,9 @@ public class Player extends PlayerToken {
 
     private void giveProperty(Property property) {
         property.setOwnerPlayer(this);
-        deeds.addDeed(property);
+        if (!ownedProperties.addProperty(property)) {
+            System.err.println("Player already owned property " + property);
+        }
     }
 
     public boolean canBuyProperty(Property ps) {
@@ -71,14 +71,6 @@ public class Player extends PlayerToken {
             return true;
         }
         return false;
-    }
-
-    public List<Deed> getAllDeeds() {
-        return deeds.getAllDeeds();
-    }
-
-    public List<Deed> getHoveredDeeds() {
-        return getAllDeeds().stream().filter(deed -> deed.getImage().isHovered()).toList();
     }
 
     public boolean updateMoney(Integer amount) {
@@ -102,12 +94,16 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public List<Deed> getOwnedSpots(StreetType streetType) {
-        return deeds.getDeeds(streetType);
+    public boolean ownsAllStreetProperties(StreetType streetType) {
+        return SpotType.getNumberOfSpots(streetType).equals(getOwnedProperties(streetType).size());
     }
 
-    public boolean ownsAllSpots(StreetType streetType) {
-        return SpotType.getNumberOfSpots(streetType).equals(getOwnedSpots(streetType).size());
+    public List<Property> getOwnedProperties(StreetType streetType) {
+        return getOwnedProperties().stream().filter(property -> property.isSameStreetType(streetType)).toList();
+    }
+
+    public List<Property> getOwnedProperties() {
+        return ownedProperties.getProperties();
     }
 
     public void addOutOfJailCard() {
@@ -127,11 +123,11 @@ public class Player extends PlayerToken {
     }
 
     public int getHouseCount() {
-        return deeds.getHouseCount();
+        return ownedProperties.getHouseCount();
     }
 
     public int getHotelCount() {
-        return deeds.getHotelCount();
+        return ownedProperties.getHotelCount();
     }
 
     public boolean isInJail() {

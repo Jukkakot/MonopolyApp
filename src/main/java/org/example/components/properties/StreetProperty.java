@@ -20,7 +20,7 @@ public class StreetProperty extends Property {
     public Integer getRent(Player player) {
         if (hasOwner() && isNotOwner(player)) {
             Integer rentAmount = getRentPrices().get(houseCount);
-            if (getOwnerPlayer().ownsAllSpots(spotType.streetType)) {
+            if (getOwnerPlayer().ownsAllStreetProperties(spotType.streetType)) {
                 return rentAmount * 2;
             } else {
                 return rentAmount;

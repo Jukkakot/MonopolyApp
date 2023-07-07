@@ -1,5 +1,6 @@
 package org.example.components.spots;
 
+import lombok.experimental.UtilityClass;
 import org.example.images.ImageFactory;
 import org.example.images.SpotImage;
 import org.example.types.PlaceType;
@@ -9,10 +10,11 @@ import org.example.utils.Coordinates;
 import java.util.Arrays;
 import java.util.List;
 
+@UtilityClass
 public class SpotFactory {
-    private static final List<PlaceType> PROPERTY_PLACE_TYPES = Arrays.asList(PlaceType.STREET, PlaceType.RAILROAD, PlaceType.UTILITY);
+    private final List<PlaceType> PROPERTY_PLACE_TYPES = Arrays.asList(PlaceType.STREET, PlaceType.RAILROAD, PlaceType.UTILITY);
 
-    public static Spot getSpot(Coordinates coords, SpotType spotType) {
+    public Spot getSpot(Coordinates coords, SpotType spotType) {
         PlaceType pt = spotType.streetType.placeType;
         SpotImage image = ImageFactory.getImage(coords, spotType);
         if (PROPERTY_PLACE_TYPES.contains(pt)) {

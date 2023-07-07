@@ -58,7 +58,8 @@ public class JailSpot extends Spot {
             if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoney() >= GET_OUT_OF_JAIL_FEE) {
                 ButtonAction onAccept = () -> {
                     if (turnPlayer.useGetOutOfJailCard() || turnPlayer.updateMoney(-GET_OUT_OF_JAIL_FEE)) {
-                        OkPopup.showInfo("You were not sent to jail", callbackAction::doAction);
+                        String text = "You were not sent to jail";
+                        OkPopup.showInfo(text, callbackAction::doAction);
                     } else {
                         String text = "You didn't have get out of jail card or didin't have M50 to pay";
                         OkPopup.showInfo(text, () -> sendToJail(turnPlayer, callbackAction));
