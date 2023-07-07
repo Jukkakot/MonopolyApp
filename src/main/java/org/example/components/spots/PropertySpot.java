@@ -29,16 +29,16 @@ public class PropertySpot extends Spot {
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
         Player turnPlayer = gameState.getPlayers().getTurn();
         if (!property.hasOwner()) {
-            handleEmptyProperty(gameState, callbackAction);
-        } else if (property.isNotOwner(turnPlayer)) {
-            handlePayRent(gameState, callbackAction);
+            handleNoOwnersTurn(gameState, callbackAction);
+        } else if (property.hasOwner() && property.isNotOwner(turnPlayer)) {
+            handleNotOwnerTurn(gameState, callbackAction);
         } else {
             callbackAction.doAction();
         }
         return null;
     }
 
-    private void handleEmptyProperty(GameState gameState, CallbackAction callbackAction) {
+    private void handleNoOwnersTurn(GameState gameState, CallbackAction callbackAction) {
         Player turnPlayer = gameState.getPlayers().getTurn();
         String choiceText = "Arrived at " + name + " do you want to buy it?";
         ButtonAction onAccept = () -> {
@@ -52,7 +52,7 @@ public class PropertySpot extends Spot {
         Popup.showChoice(choiceText, onAccept, callbackAction::doAction);
     }
 
-    private void handlePayRent(GameState gameState, CallbackAction callbackAction) {
+    private void handleNotOwnerTurn(GameState gameState, CallbackAction callbackAction) {
         Player turnPlayer = gameState.getPlayers().getTurn();
         Integer rent;
         TurnResult prevTurnResult = gameState.getPrevTurnResult();
@@ -70,17 +70,13 @@ public class PropertySpot extends Spot {
         }
         String popupText = "Uh oh... you need to pay M" + rent + " rent to " + property.getOwnerPlayer().getName();
         Popup.showInfo(popupText, () -> {
-            if (payRent(turnPlayer, rent)) {
+            if (property.payRent(turnPlayer, rent)) {
                 callbackAction.doAction();
             } else {
                 //TODO: handle case if turn player has not enough money
                 callbackAction.doAction();
             }
         });
-    }
-
-    public boolean payRent(Player fromPlayer, Integer rent) {
-        return property.getOwnerPlayer().giveMoney(fromPlayer, rent);
     }
 
     @Override
