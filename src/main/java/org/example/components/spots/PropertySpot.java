@@ -1,67 +1,36 @@
-package org.example.components.spots.propertySpots;
+package org.example.components.spots;
 
 import lombok.Getter;
-import lombok.Setter;
+import lombok.ToString;
 import org.example.components.CallbackAction;
 import org.example.components.GameState;
 import org.example.components.Player;
 import org.example.components.dices.Dices;
 import org.example.components.popup.ButtonAction;
 import org.example.components.popup.Popup;
-import org.example.components.spots.Spot;
+import org.example.components.properties.Property;
+import org.example.components.properties.PropertyFactory;
+import org.example.components.properties.UtilityProperty;
 import org.example.images.SpotImage;
 import org.example.types.StreetType;
 import org.example.types.TurnResult;
 
-import java.util.Arrays;
-import java.util.List;
-
-public abstract class PropertySpot extends Spot {
+@ToString(callSuper = true)
+public class PropertySpot extends Spot {
     @Getter
-    protected int price;
-    @Getter
-    @Setter
-    protected boolean isMortgaged = false;
-    @Getter
-    @Setter
-    protected Player ownerPlayer;
-    protected List<Integer> rentPrices;
-    private static final int MOVE_NEAREST_CARD_UTIL_MULTIPLIER = 10;
-    private static final int MOVE_NEAREST_CARD_RAILROAD_MULTIPLIER = 2;
+    private final Property property;
 
-    public PropertySpot(SpotImage sp) {
-        super(sp);
-        price = spotType.getIntegerProperty("price");
-        String rentStr = spotType.getStringProperty("rents");
-        if (rentStr.contains(",")) {
-            rentPrices = Arrays.stream(rentStr.split(",")).map(Integer::valueOf).toList();
-        }
+    public PropertySpot(SpotImage spotImage) {
+        super(spotImage);
+        this.property = PropertyFactory.getProperty(spotImage.getSpotType());
     }
-
-    public boolean hasOwner() {
-        return ownerPlayer != null;
-    }
-
-    public boolean isOwner(Player p) {
-        return hasOwner() && ownerPlayer.equals(p);
-    }
-
-    public boolean isNotOwner(Player p) {
-        return !isOwner(p);
-    }
-
-    public boolean payRent(Player player, Integer rent) {
-        return ownerPlayer.giveMoney(player, rent);
-    }
-
-    public abstract Integer getRent(Player player);
 
     @Override
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
         Player turnPlayer = gameState.getPlayers().getTurn();
-        if (!hasOwner()) {
+        if (!property.hasOwner()) {
             handleEmptyProperty(gameState, callbackAction);
-        } else if (isNotOwner(turnPlayer)) {
+        } else if (property.isNotOwner(turnPlayer)) {
             handlePayRent(gameState, callbackAction);
         } else {
             callbackAction.doAction();
@@ -73,7 +42,7 @@ public abstract class PropertySpot extends Spot {
         Player turnPlayer = gameState.getPlayers().getTurn();
         String choiceText = "Arrived at " + name + " do you want to buy it?";
         ButtonAction onAccept = () -> {
-            if (!turnPlayer.buyProperty(this)) {
+            if (!turnPlayer.buyProperty(property)) {
                 //TODO better handling if player wants to sell stuff to afford buying this
                 Popup.showInfo("You don't have enough money to buy " + name, callbackAction::doAction);
             } else {
@@ -89,21 +58,17 @@ public abstract class PropertySpot extends Spot {
         TurnResult prevTurnResult = gameState.getPrevTurnResult();
         // MOVE_NEAREST cards will only provide StreetType next spot criteria -> different calc rule
         boolean wasMoveNearestCardLast = prevTurnResult != null && prevTurnResult.getNextSpotCriteria() instanceof StreetType;
-        if (this instanceof UtilityPropertySpot utilityPropertySpot) {
-            Dices dices = gameState.getDices();
-            if (wasMoveNearestCardLast) {
-                rent = MOVE_NEAREST_CARD_UTIL_MULTIPLIER * dices.getValue().value();
+        if (wasMoveNearestCardLast) {
+            if (property instanceof UtilityProperty utilityProperty) {
+                Dices dices = gameState.getDices();
+                rent = utilityProperty.getMultiplierRent(dices);
             } else {
-                rent = utilityPropertySpot.getRent(turnPlayer, dices);
+                rent = Property.MOVE_NEAREST_CARD_MULTIPLIER * property.getRent(turnPlayer);
             }
         } else {
-            if (wasMoveNearestCardLast) {
-                rent = MOVE_NEAREST_CARD_RAILROAD_MULTIPLIER * getRent(turnPlayer);
-            } else {
-                rent = getRent(turnPlayer);
-            }
+            rent = property.getRent(turnPlayer);
         }
-        String popupText = "Uh oh... you need to pay M" + rent + " rent to " + getOwnerPlayer().getName();
+        String popupText = "Uh oh... you need to pay M" + rent + " rent to " + property.getOwnerPlayer().getName();
         Popup.showInfo(popupText, () -> {
             if (payRent(turnPlayer, rent)) {
                 callbackAction.doAction();
@@ -114,4 +79,12 @@ public abstract class PropertySpot extends Spot {
         });
     }
 
+    public boolean payRent(Player fromPlayer, Integer rent) {
+        return property.getOwnerPlayer().giveMoney(fromPlayer, rent);
+    }
+
+    @Override
+    public void onClick() {
+        System.out.println("Clicked property spot " + this);
+    }
 }

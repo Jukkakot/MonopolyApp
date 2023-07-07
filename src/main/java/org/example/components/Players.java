@@ -3,19 +3,15 @@ package org.example.components;
 import controlP5.Button;
 import org.example.MonopolyApp;
 import org.example.components.board.Board;
+import org.example.components.spots.PropertySpot;
 import org.example.components.spots.Spot;
-import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.images.Deed;
 import org.example.images.Image;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
 import org.example.utils.SpotProps;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -49,7 +45,7 @@ public class Players {
             PropertySpot spot = (PropertySpot) propertySpots.get(0);
             playerList.forEach(player -> {
                 if (Math.random() < 0.2) {
-                    boolean couldBuyProperty = player.buyProperty(spot);
+                    boolean couldBuyProperty = player.buyProperty(spot.getProperty());
                     if (couldBuyProperty) {
                         propertySpots.remove(spot);
                     }
@@ -59,10 +55,11 @@ public class Players {
     }
 
     public Deed getHoveredDeed() {
-        List<Deed> hoveredDeeds = selectedPlayer.getAllDeeds().stream().filter(deed -> deed.getSpotImage().isHovered()).toList();
+        List<Deed> hoveredDeeds = selectedPlayer.getHoveredDeeds();
         if (hoveredDeeds.size() == 1) {
             return hoveredDeeds.get(0);
         }
+        System.err.println("Multiple hovered deeds?");
         return null;
     }
 
@@ -139,7 +136,7 @@ public class Players {
 
         for (StreetType pt : deedsMap.keySet()) {
             for (Deed deed : deedsMap.get(pt)) {
-                deed.getSpotImage().draw(absoluteCoods);
+                deed.getImage().draw(absoluteCoods);
                 index++;
                 if (index % DEEDS_PER_ROW == 0) {
                     absoluteCoods = absoluteCoods.move(-totalDX, deedTotalHeight);

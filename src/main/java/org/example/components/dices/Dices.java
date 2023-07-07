@@ -4,8 +4,8 @@ import controlP5.Button;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.components.CallbackAction;
 import org.example.MonopolyApp;
+import org.example.components.CallbackAction;
 import org.example.components.event.MonopolyEventListener;
 import org.example.components.popup.Popup;
 import org.example.components.spots.Spot;
@@ -44,7 +44,7 @@ public class Dices implements MonopolyEventListener {
         return new Dices() {
             @Override
             public void rollDice() {
-                if(Popup.isAnyVisible()) {
+                if (Popup.isAnyVisible()) {
                     return;
                 }
                 super.rollDice();
@@ -70,7 +70,7 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void rollDice() {
-        if(Popup.isAnyVisible()) {
+        if (Popup.isAnyVisible()) {
             return;
         }
         roll();

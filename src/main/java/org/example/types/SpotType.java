@@ -1,9 +1,12 @@
 package org.example.types;
 
+import lombok.ToString;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+@ToString(onlyExplicitlyIncluded = true)
 public enum SpotType {
     B1(StreetType.BROWN, 1), B2(StreetType.BROWN, 2),
     LB1(StreetType.LIGHT_BLUE, 1), LB2(StreetType.LIGHT_BLUE, 2), LB3(StreetType.LIGHT_BLUE, 3),

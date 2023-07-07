@@ -5,24 +5,20 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.example.MonopolyApp;
-import org.example.components.Clickable;
 import org.example.components.Drawable;
-import org.example.components.event.MonopolyEventListener;
 import org.example.utils.Coordinates;
 import org.example.utils.SpotProps;
 import processing.core.PImage;
-import processing.event.Event;
-import processing.event.MouseEvent;
 
 import static org.example.utils.Utils.toColor;
 
-@ToString(includeFieldNames = false)
-public class Image implements Drawable, Clickable, MonopolyEventListener {
+@ToString(onlyExplicitlyIncluded = true)
+public class Image implements Drawable {
     @Setter
     @Getter
     protected Coordinates coords;
-    protected float width;
-    protected float height;
+    protected final float width;
+    protected final float height;
     @Setter
     protected String imgName;
     @Getter
@@ -35,12 +31,7 @@ public class Image implements Drawable, Clickable, MonopolyEventListener {
         this(Coordinates.of(sp), imgName, sp.w(), sp.h());
     }
 
-    public Image(Coordinates coords) {
-        this(coords, null, 0, 0);
-    }
-
     public Image(Coordinates coords, String imgName, float width, float height) {
-        MonopolyApp.addListener(this);
         this.coords = coords;
         this.imgName = imgName;
         this.width = width;
@@ -60,6 +51,7 @@ public class Image implements Drawable, Clickable, MonopolyEventListener {
         if (c == null) {
             c = coords;
         }
+        setCoords(c);
         p.push();
 
         p.translate(c.x(), c.y());
@@ -83,22 +75,5 @@ public class Image implements Drawable, Clickable, MonopolyEventListener {
 
     protected float getScaledLength(float length) {
         return isHovered ? length * HOVER_SCALE : length;
-    }
-
-    @Override
-    public void onClick() {
-        System.out.println("Clicked " + this);
-    }
-
-    @Override
-    public boolean onEvent(Event event) {
-        boolean eventConsumed = false;
-        if (isHovered() && event instanceof MouseEvent mouseEvent) {
-            if (MouseEvent.CLICK == mouseEvent.getAction()) {
-                onClick();
-                eventConsumed = true;
-            }
-        }
-        return eventConsumed;
     }
 }

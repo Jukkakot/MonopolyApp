@@ -1,17 +1,21 @@
 package org.example.images;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import org.example.types.SpotType;
+import org.example.components.properties.Property;
 
 @ToString(callSuper = true)
-@RequiredArgsConstructor
-public class Deed {
-    @Getter
-    private final SpotImage spotImage;
+public class Deed extends Clickable {
+    private Property property;
 
-    public Deed(SpotType spotType) {
-        this.spotImage = ImageFactory.getImage(null, spotType);
+    public Deed(Property property) {
+        super(property.getSpotType());
+        this.property = property;
     }
+
+    @Override
+    public void onClick() {
+        //Mortgaging
+        System.out.println("Clicked deed " + this);
+    }
+
 }

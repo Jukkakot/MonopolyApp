@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Board {
-    @Getter
+    @Getter //For debugging
     private final List<Spot> spots = new ArrayList<>();
     MonopolyApp p = MonopolyApp.self;
 

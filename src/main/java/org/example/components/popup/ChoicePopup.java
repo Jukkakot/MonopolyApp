@@ -3,8 +3,6 @@ package org.example.components.popup;
 import controlP5.Button;
 import lombok.Setter;
 import org.example.MonopolyApp;
-import processing.event.Event;
-import processing.event.KeyEvent;
 
 public class ChoicePopup extends Popup {
     private static ChoicePopup instance;
@@ -66,19 +64,13 @@ public class ChoicePopup extends Popup {
     }
 
     @Override
-    public boolean onEvent(Event event) {
-        if (!ChoicePopup.getInstance().isVisible) {
-            return false;
-        }
-        if (event instanceof KeyEvent keyEvent) {
-
-            if (keyEvent.getKey() == '1') {
-                acceptAction();
-                return true;
-            } else if (keyEvent.getKey() == '2') {
-                declineAction();
-                return true;
-            }
+    public boolean onKeyAction(char key) {
+        if (key == '1' || (MonopolyApp.SKIP_ANNIMATIONS && key == ' ')) {
+            acceptAction();
+            return true;
+        } else if (key == '2') {
+            declineAction();
+            return true;
         }
         return false;
     }

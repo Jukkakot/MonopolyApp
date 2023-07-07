@@ -1,8 +1,8 @@
 package org.example.components.animation;
 
 import lombok.Getter;
-import org.example.components.Drawable;
 import org.example.components.CallbackAction;
+import org.example.components.Drawable;
 import org.example.components.board.Path;
 import org.example.utils.Coordinates;
 

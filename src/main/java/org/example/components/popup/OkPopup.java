@@ -3,8 +3,6 @@ package org.example.components.popup;
 import controlP5.Button;
 import lombok.Setter;
 import org.example.MonopolyApp;
-import processing.event.Event;
-import processing.event.KeyEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +11,7 @@ import static org.example.MonopolyApp.ENTER;
 import static org.example.MonopolyApp.SPACE;
 
 public class OkPopup extends Popup {
+    private static final List<Character> OK_ACTION_CHAR_LIST = Arrays.asList('1', SPACE, ENTER);
     private static OkPopup instance;
     @Setter
     private ButtonAction onOkAction;
@@ -52,16 +51,10 @@ public class OkPopup extends Popup {
     }
 
     @Override
-    public boolean onEvent(Event event) {
-        if (!OkPopup.getInstance().isVisible) {
-            return false;
-        }
-        if (event instanceof KeyEvent keyEvent) {
-            List<Character> charList = Arrays.asList('1', SPACE, ENTER);
-            if (charList.contains(keyEvent.getKey())) {
-                okAction();
-                return true;
-            }
+    public boolean onKeyAction(char key) {
+        if (OK_ACTION_CHAR_LIST.contains(key)) {
+            okAction();
+            return true;
         }
         return false;
     }

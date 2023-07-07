@@ -3,11 +3,7 @@ package org.example.components.cards;
 import org.example.types.CardType;
 import org.example.types.StreetType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 
 public class Cards {

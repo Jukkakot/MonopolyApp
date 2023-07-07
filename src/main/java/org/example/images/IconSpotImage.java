@@ -1,7 +1,6 @@
 package org.example.images;
 
 import org.example.MonopolyApp;
-import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 import org.example.utils.Coordinates;
@@ -11,10 +10,6 @@ public class IconSpotImage extends SpotImage {
 
     public IconSpotImage(Coordinates coords, SpotType spotType) {
         super(coords, spotType, StreetType.CORNER.equals(spotType.streetType));
-    }
-
-    public IconSpotImage(PropertySpot ps) {
-        super(ps);
     }
 
     @Override

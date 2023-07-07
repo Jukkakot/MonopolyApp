@@ -1,32 +1,29 @@
 package org.example.components.spots;
 
-import org.example.components.spots.propertySpots.RailRoadPropertySpot;
-import org.example.components.spots.propertySpots.StreetPropertySpot;
-import org.example.components.spots.propertySpots.UtilityPropertySpot;
 import org.example.images.ImageFactory;
 import org.example.images.SpotImage;
 import org.example.types.PlaceType;
 import org.example.types.SpotType;
 import org.example.utils.Coordinates;
 
-public class SpotFactory {
+import java.util.Arrays;
+import java.util.List;
 
-    public static Spot getSpot(Coordinates coords, SpotType sp) {
-        PlaceType pt = sp.streetType.placeType;
-        SpotImage image = ImageFactory.getImage(coords, sp);
-        if (pt.equals(PlaceType.STREET)) {
-            return new StreetPropertySpot(image);
-        } else if (pt.equals(PlaceType.RAILROAD)) {
-            return new RailRoadPropertySpot(image);
-        } else if (pt.equals(PlaceType.UTILITY)) {
-            return new UtilityPropertySpot(image);
+public class SpotFactory {
+    private static final List<PlaceType> PROPERTY_PLACE_TYPES = Arrays.asList(PlaceType.STREET, PlaceType.RAILROAD, PlaceType.UTILITY);
+
+    public static Spot getSpot(Coordinates coords, SpotType spotType) {
+        PlaceType pt = spotType.streetType.placeType;
+        SpotImage image = ImageFactory.getImage(coords, spotType);
+        if (PROPERTY_PLACE_TYPES.contains(pt)) {
+            return new PropertySpot(image);
         } else if (pt.equals(PlaceType.TAX)) {
             return new TaxSpot(image);
-        } else if (pt.equals(PlaceType.PICK_CARD)){
+        } else if (pt.equals(PlaceType.PICK_CARD)) {
             return new PickCardSpot(image);
-        } else if(sp.equals(SpotType.GO_TO_JAIL)) {
+        } else if (spotType.equals(SpotType.GO_TO_JAIL)) {
             return new GoToJailSpot(image);
-        } else if(sp.equals(SpotType.JAIL)) {
+        } else if (spotType.equals(SpotType.JAIL)) {
             return new JailSpot(image);
         } else {
             return new CornerSpot(image);

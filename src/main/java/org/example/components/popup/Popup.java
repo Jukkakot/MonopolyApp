@@ -8,6 +8,10 @@ import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
 import org.example.utils.Coordinates;
 import processing.core.PGraphics;
+import processing.event.Event;
+import processing.event.KeyEvent;
+
+import java.sql.Timestamp;
 
 import static processing.core.PConstants.CENTER;
 
@@ -26,6 +30,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
 
     public void show() {
         isVisible = true;
+        System.out.println(new Timestamp(System.currentTimeMillis()) + " " + popupText);
     }
 
     protected void allButtonAction() {
@@ -85,5 +90,18 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         choicePopup.setOnAcceptAction(onAccept);
         choicePopup.setOnDeclineAction(onDecline);
         choicePopup.show();
+    }
+
+    public abstract boolean onKeyAction(char key);
+
+    @Override
+    public final boolean onEvent(Event event) {
+        if (!isVisible) {
+            return false;
+        }
+        if (event instanceof KeyEvent keyEvent) {
+            return onKeyAction(keyEvent.getKey());
+        }
+        return false;
     }
 }

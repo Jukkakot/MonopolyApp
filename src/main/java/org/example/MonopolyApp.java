@@ -22,6 +22,7 @@ import static org.example.utils.Utils.toColor;
 public class MonopolyApp extends EventObserver {
     public static MonopolyApp self;
     public static boolean DEBUG_MODE = false;
+    public static boolean SKIP_ANNIMATIONS = false;
     private Game game;
     public static ControlP5 p5;
     private static Map<String, PImage> IMAGES = new HashMap<>();

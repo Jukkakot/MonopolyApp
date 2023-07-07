@@ -3,17 +3,19 @@ package org.example.components;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.example.components.deeds.Deeds;
 import org.example.components.popup.OkPopup;
+import org.example.components.properties.Property;
 import org.example.components.spots.JailSpot;
 import org.example.components.spots.Spot;
-import org.example.components.spots.propertySpots.PropertySpot;
 import org.example.images.Deed;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 
 import java.util.List;
 
+@ToString
 public class Player extends PlayerToken {
     private static int NEXT_ID = 0;
     @Getter
@@ -53,19 +55,19 @@ public class Player extends PlayerToken {
         spot.addPlayer(this);
     }
 
-    private void addDeed(PropertySpot ps) {
-        ps.setOwnerPlayer(this);
-        deeds.addDeed(ps);
+    private void giveProperty(Property property) {
+        property.setOwnerPlayer(this);
+        deeds.addDeed(property);
     }
 
-    public boolean canBuyProperty(PropertySpot ps) {
+    public boolean canBuyProperty(Property ps) {
         return ps.getOwnerPlayer() == null && money >= ps.getPrice();
     }
 
-    public boolean buyProperty(PropertySpot ps) {
-        if (canBuyProperty(ps)) {
-            money -= ps.getPrice();
-            addDeed(ps);
+    public boolean buyProperty(Property property) {
+        if (canBuyProperty(property)) {
+            money -= property.getPrice();
+            giveProperty(property);
             return true;
         }
         return false;
@@ -73,6 +75,10 @@ public class Player extends PlayerToken {
 
     public List<Deed> getAllDeeds() {
         return deeds.getAllDeeds();
+    }
+
+    public List<Deed> getHoveredDeeds() {
+        return getAllDeeds().stream().filter(deed -> deed.getImage().isHovered()).toList();
     }
 
     public boolean updateMoney(Integer amount) {
@@ -83,16 +89,16 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public boolean giveMoney(Player from, Integer amount) {
+    public boolean giveMoney(Player fromPlayer, Integer amount) {
         if (amount < 0) {
             System.out.println("Not possible to give negative amount of money.");
             return false;
         }
-        if (from.updateMoney(-amount)) {
+        if (fromPlayer.updateMoney(-amount)) {
             updateMoney(amount);
             return true;
         }
-        OkPopup.showInfo(from.getName() + " Didn't have enough money to give to " + name);
+        OkPopup.showInfo(fromPlayer.getName() + " Didn't have enough money to give to " + name);
         return false;
     }
 

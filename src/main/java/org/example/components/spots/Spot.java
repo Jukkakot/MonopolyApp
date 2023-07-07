@@ -1,10 +1,12 @@
 package org.example.components.spots;
 
 import lombok.Getter;
+import lombok.ToString;
 import org.example.components.CallbackAction;
 import org.example.components.GameState;
 import org.example.components.Player;
 import org.example.components.PlayerToken;
+import org.example.images.Clickable;
 import org.example.images.Image;
 import org.example.images.SpotImage;
 import org.example.types.SpotType;
@@ -16,12 +18,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
-public abstract class Spot {
+@ToString(onlyExplicitlyIncluded = true)
+public abstract class Spot extends Clickable {
     public static final float SPOT_W = 996f / 12f;
     public static final float SPOT_H = SPOT_W * 1.5f;
-    @Getter
-    protected final SpotImage image;
     @Getter
     protected final SpotType spotType;
     @Getter
@@ -31,7 +31,7 @@ public abstract class Spot {
             new Coordinates(0, PlayerToken.TOKEN_RADIUS), new Coordinates(-PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS), new Coordinates(PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS));
 
     public Spot(SpotImage image) {
-        this.image = image;
+        super(image);
         this.spotType = image.getSpotType();
         this.name = spotType.getStringProperty("name");
     }
@@ -56,4 +56,10 @@ public abstract class Spot {
     }
 
     public abstract TurnResult handleTurn(GameState gameState, CallbackAction callbackAction);
+
+    @Override
+    public void onClick() {
+        //Buying properties if players turn
+        System.out.println("Clicked spot " + this);
+    }
 }

@@ -7,13 +7,13 @@ import org.example.components.animation.Animation;
 import org.example.components.animation.Animations;
 import org.example.components.board.Board;
 import org.example.components.board.Path;
+import org.example.components.dices.DiceValue;
+import org.example.components.dices.Dices;
+import org.example.components.event.MonopolyEventListener;
 import org.example.components.popup.OkPopup;
 import org.example.components.popup.Popup;
 import org.example.components.spots.JailSpot;
-import org.example.components.dices.Dices;
-import org.example.components.event.MonopolyEventListener;
 import org.example.components.spots.Spot;
-import org.example.components.dices.DiceValue;
 import org.example.types.DiceState;
 import org.example.types.PathMode;
 import org.example.types.SpotType;
@@ -28,12 +28,11 @@ import static org.example.MonopolyApp.SPACE;
 import static processing.event.MouseEvent.CLICK;
 
 public class Game implements MonopolyEventListener {
+    public static Dices DICES;
     Board board;
-    Dices dices;
     Players players;
     Animations animations;
     TurnResult prevTurnResult;
-    boolean skipAnimations = false;
     private static final Button endRoundButton = new Button(MonopolyApp.p5, "endRound")
             .setPosition((int) (Spot.SPOT_W * 5.4), MonopolyApp.self.height - Spot.SPOT_W * 3)
             .setLabel("End round")
@@ -44,7 +43,7 @@ public class Game implements MonopolyEventListener {
     public Game() {
         MonopolyApp.addListener(this);
         board = new Board();
-        dices = Dices.onRollDice(this::rollDice);
+        DICES = Dices.onRollDice(this::rollDice);
         players = new Players();
         animations = new Animations();
 
@@ -62,12 +61,12 @@ public class Game implements MonopolyEventListener {
     }
 
     public void draw() {
-        if (skipAnimations) {
+        if (MonopolyApp.SKIP_ANNIMATIONS) {
             animations.finishAllAnimations();
         }
         animations.updateAnimations();
         board.draw(null);
-        dices.draw(null);
+        DICES.draw(null);
         players.draw();
     }
 
@@ -75,13 +74,13 @@ public class Game implements MonopolyEventListener {
         if (Popup.isAnyVisible()) {
             return;
         }
-        playRound(dices.getValue());
+        playRound(DICES.getValue());
     }
 
     private void endRound() {
         prevTurnResult = null;
         players.switchTurn();
-        dices.reset();
+        DICES.reset();
         endRoundButton.hide();
     }
 
@@ -97,7 +96,7 @@ public class Game implements MonopolyEventListener {
             CallbackAction onGetOutOfJail = () -> {
                 //Almost like End round, but don't switch player.
                 prevTurnResult = null;
-                dices.reset();
+                DICES.reset();
                 endRoundButton.hide();
             };
             if (diceValue.diceState().equals(DiceState.DOUBLES)) {
@@ -149,7 +148,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void handleTurn(DiceState diceState, Path path) {
-        GameState gameState = new GameState(players, dices, board, path, TurnResult.copyOf(prevTurnResult));
+        GameState gameState = new GameState(players, DICES, board, path, TurnResult.copyOf(prevTurnResult));
         prevTurnResult = null; //Important to clear previous turn result before getting next one!
         prevTurnResult = GameTurnUtils.handleTurn(gameState, () -> doTurnEndEvent(diceState));
     }
@@ -162,7 +161,7 @@ public class Game implements MonopolyEventListener {
             Path path = board.getPathWithCriteria(prevTurnResult, players.getTurn());
             playRound(path, diceState);
         } else if (DiceState.DOUBLES.equals(diceState)) {
-            dices.show();
+            DICES.show();
         } else {
             endRoundButton.show();
         }
@@ -184,7 +183,7 @@ public class Game implements MonopolyEventListener {
                 consumedEvent = true;
             }
             if (keyEvent.getKey() == 'a') {
-                skipAnimations = !skipAnimations;
+                MonopolyApp.SKIP_ANNIMATIONS = !MonopolyApp.SKIP_ANNIMATIONS;
                 consumedEvent = true;
             }
         } else if (event instanceof MouseEvent mouseEvent) {
@@ -194,11 +193,11 @@ public class Game implements MonopolyEventListener {
                 }
                 Spot hoveredSpot = board.getHoveredSpot();
                 //Debugging "flying mechanic"
-                if (hoveredSpot != null && MonopolyApp.DEBUG_MODE && dices.isVisible()) {
-                    dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
+                if (hoveredSpot != null && MonopolyApp.DEBUG_MODE && DICES.isVisible()) {
+                    DICES.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
                     if (playRound(hoveredSpot, DiceState.DEBUG_REROLL)) {
                         consumedEvent = true;
-                        dices.hide();
+                        DICES.hide();
                     }
                 }
             }

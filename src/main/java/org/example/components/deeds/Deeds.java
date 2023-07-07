@@ -1,33 +1,26 @@
 package org.example.components.deeds;
 
 
-import org.example.components.spots.propertySpots.PropertySpot;
-import org.example.components.spots.propertySpots.StreetPropertySpot;
+import org.example.components.properties.Property;
+import org.example.components.properties.StreetProperty;
 import org.example.images.Deed;
-import org.example.images.ImageFactory;
 import org.example.types.PlaceType;
 import org.example.types.StreetType;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class Deeds {
     private final Map<StreetType, List<Deed>> deedList = new HashMap<>();
-    private final Set<PropertySpot> spotList = new HashSet<>();
+    private final Set<Property> propertySet = new HashSet<>();
 
-    public void addDeed(PropertySpot propertySpot) {
-        StreetType st = propertySpot.getSpotType().streetType;
+    public void addDeed(Property property) {
+        StreetType st = property.getSpotType().streetType;
         if (!deedList.containsKey(st)) {
             deedList.put(st, new ArrayList<>());
         }
-        spotList.add(propertySpot);
-        deedList.get(st).add(new Deed(propertySpot.getSpotType()));
+        propertySet.add(property);
+        deedList.get(st).add(new Deed(property));
     }
 
     public List<Deed> getDeeds(StreetType pt) {
@@ -41,15 +34,18 @@ public class Deeds {
     public Map<StreetType, List<Deed>> getDeeds() {
         return deedList;
     }
-    private List<StreetPropertySpot> getPlaceTypes(PlaceType placeType) {
-        return spotList.stream().filter(ps -> ps.getSpotType().streetType.placeType.equals(placeType))
-                .map(propertySpot -> (StreetPropertySpot) propertySpot)
+
+    private List<StreetProperty> getPropertyTypes(PlaceType placeType) {
+        return propertySet.stream().filter(ps -> ps.getSpotType().streetType.placeType.equals(placeType))
+                .map(property -> (StreetProperty) property)
                 .toList();
     }
+
     public int getHouseCount() {
-        return getPlaceTypes(PlaceType.STREET).stream().mapToInt(StreetPropertySpot::getHouseCount).sum();
+        return getPropertyTypes(PlaceType.STREET).stream().mapToInt(StreetProperty::getHouseCount).sum();
     }
+
     public int getHotelCount() {
-        return getPlaceTypes(PlaceType.STREET).stream().mapToInt(StreetPropertySpot::getHotelCount).sum();
+        return getPropertyTypes(PlaceType.STREET).stream().mapToInt(StreetProperty::getHotelCount).sum();
     }
 }
