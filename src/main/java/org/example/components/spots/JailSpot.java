@@ -12,14 +12,11 @@ import org.example.types.DiceState;
 import org.example.types.TurnResult;
 import org.example.utils.Coordinates;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class JailSpot extends Spot {
     //Player,turn counts left
-    public static final Map<Player, Integer> playersRoundsLeftMap = new HashMap<>();
+    public static final Map<Player, Integer> jailTimeLeftMap = new HashMap<>();
     public static final int JAIL_ROUND_NUMBER = 3;
     private static final int GET_OUT_OF_JAIL_FEE = 50;
     private static final float BASE_INDEX = SPOT_W / 2;
@@ -33,17 +30,27 @@ public class JailSpot extends Spot {
 
     @Override
     public Coordinates getTokenCoords(Player player) {
-        int index;
-        Coordinates tokenSpot;
+        Coordinates tokenCoords;
         if (player.isInJail()) {
-            index = playersRoundsLeftMap.keySet().stream().filter(p -> !p.equals(player)).toList().size();
-            tokenSpot = IN_JAIL_COORDS.get(index % IN_JAIL_COORDS.size());
+            tokenCoords = getInJailCoords();
         } else {
-            index = playersRoundsLeftMap.keySet().stream().filter(p -> !p.equals(player)).toList().size();
-            index = players.size() - index;
-            tokenSpot = JUST_VISIT_COORDS.get(index % JUST_VISIT_COORDS.size());
+            tokenCoords = getPassingByCoords();
         }
-        return image.getCoords().move(tokenSpot);
+        return image.move(tokenCoords);
+    }
+
+    private Coordinates getPassingByCoords() {
+        int index = playersOnSpot.size() - getPlayersInJail().size();
+        return JUST_VISIT_COORDS.get(index % JUST_VISIT_COORDS.size());
+    }
+
+    private static Set<Player> getPlayersInJail() {
+        return jailTimeLeftMap.keySet();
+    }
+
+    private static Coordinates getInJailCoords() {
+        int index = getPlayersInJail().size() - 1;
+        return IN_JAIL_COORDS.get(index % IN_JAIL_COORDS.size());
     }
 
     @Override
@@ -75,13 +82,14 @@ public class JailSpot extends Spot {
     }
 
     private void sendToJail(Player turnPlayer, CallbackAction callbackAction) {
-        playersRoundsLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
+        jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
+        turnPlayer.setInJail(true);
         turnPlayer.setCoords(getTokenCoords(turnPlayer));
         OkPopup.showInfo("You were sent to jail", callbackAction::doAction);
     }
 
     public static void tryToGetOufOfJail(Player player, DiceValue diceValue, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
-        Integer roundCount = playersRoundsLeftMap.get(player);
+        Integer roundCount = jailTimeLeftMap.get(player);
         if (!player.isInJail() || roundCount < 0) {
             throw new RuntimeException("Error with jail handling!");
         }
@@ -92,13 +100,14 @@ public class JailSpot extends Spot {
             //TODO have to pay M50 fine?
             releaseFromJail(player, onGetOufOfJail);
         } else {
-            playersRoundsLeftMap.put(player, playersRoundsLeftMap.get(player) - 1);
-            OkPopup.showInfo("You still have " + playersRoundsLeftMap.get(player) + " rounds left in jail", onStayInjail::doAction);
+            jailTimeLeftMap.put(player, jailTimeLeftMap.get(player) - 1);
+            OkPopup.showInfo("You still have " + jailTimeLeftMap.get(player) + " rounds left in jail", onStayInjail::doAction);
         }
     }
 
     public static void releaseFromJail(Player player, CallbackAction onGetOufOfJail) {
-        playersRoundsLeftMap.remove(player);
+        jailTimeLeftMap.remove(player);
+        player.setInJail(false);
         OkPopup.showInfo("You got out of jail", onGetOufOfJail::doAction);
     }
 }

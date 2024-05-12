@@ -7,7 +7,6 @@ import lombok.ToString;
 import org.example.components.popup.OkPopup;
 import org.example.components.properties.Properties;
 import org.example.components.properties.Property;
-import org.example.components.spots.JailSpot;
 import org.example.components.spots.Spot;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
@@ -24,11 +23,13 @@ public class Player extends PlayerToken {
     private Integer money;
     @Getter
     private int turnNumber;
-    @Getter
     private final Properties ownedProperties = new Properties();
     @Getter
     @Setter
     private int getOutOfJailCardCount = 0;
+    @Getter
+    @Setter
+    private boolean isInJail = false;
 
     public Player(String name, Color color, Spot spot) {
         super(spot, color);
@@ -83,8 +84,7 @@ public class Player extends PlayerToken {
 
     public boolean giveMoney(Player fromPlayer, Integer amount) {
         if (amount < 0) {
-            System.out.println("Not possible to give negative amount of money.");
-            return false;
+            throw new RuntimeException("Not possible to give negative amount of money.");
         }
         if (fromPlayer.updateMoney(-amount)) {
             updateMoney(amount);
@@ -115,6 +115,10 @@ public class Player extends PlayerToken {
     }
 
     public boolean useGetOutOfJailCard() {
+        if (isInJail()) {
+            System.err.println("Tried to use get out of jail when already in jail");
+            return false;
+        }
         if (hasGetOutOfJailCard()) {
             getOutOfJailCardCount--;
             return true;
@@ -128,9 +132,5 @@ public class Player extends PlayerToken {
 
     public int getHotelCount() {
         return ownedProperties.getHotelCount();
-    }
-
-    public boolean isInJail() {
-        return JailSpot.playersRoundsLeftMap.get(this) != null;
     }
 }

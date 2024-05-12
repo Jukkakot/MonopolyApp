@@ -17,6 +17,7 @@ public class Deed extends Clickable {
     @Override
     public void onClick() {
         //Mortgaging
+        //Buying houses/hotels (also in spot?)
         System.out.println("Clicked deed " + this);
     }
 

@@ -11,7 +11,6 @@ import org.example.types.PathMode;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
 import org.example.types.TurnResult;
-import org.example.utils.GameTurnUtils;
 
 import java.util.List;
 
@@ -33,7 +32,7 @@ public class PickCardSpot extends Spot {
         Card card = pickCard();
         switch (card.cardType()) {
             case MONEY ->
-                    GameTurnUtils.updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
+                    updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
             case OUT_OF_JAIL -> {
                 turnPlayer.addOutOfJailCard();
                 Popup.showInfo(card.text(), callbackAction::doAction);
@@ -42,7 +41,7 @@ public class PickCardSpot extends Spot {
                 // Amount is negative if turnplayer gives money to others
                 // Amount is positive if turnplayer gets money from others
                 int amount = Integer.parseInt(card.values().get(0));
-                GameTurnUtils.updateMoney(turnPlayer, amount * (gameState.getPlayers().count() - 1), card.text(), () -> {
+                updateMoney(turnPlayer, amount * (gameState.getPlayers().count() - 1), card.text(), () -> {
                     gameState.getPlayers().forEachOtherPLayer(turnPlayer, player -> player.updateMoney(-amount));
                     callbackAction.doAction();
                 });
@@ -52,7 +51,7 @@ public class PickCardSpot extends Spot {
                 int housePrice = repairPrices.get(0);
                 int hotelPrice = repairPrices.get(1);
                 int totalCost = turnPlayer.getHouseCount() * housePrice + turnPlayer.getHotelCount() * hotelPrice;
-                GameTurnUtils.updateMoney(turnPlayer, -totalCost, card.text(), callbackAction);
+                updateMoney(turnPlayer, -totalCost, card.text(), callbackAction);
             }
             case MOVE -> {
                 SpotType moveToSpotType = SpotType.valueOf(card.values().get(0));
@@ -86,7 +85,7 @@ public class PickCardSpot extends Spot {
                         .build();
             }
             default -> {
-                System.out.println("Default card behaviour, shouldnt happen");
+                System.err.println("Default card behaviour, shouldnt happen");
                 handleTurn(gameState, callbackAction);
             }
         }

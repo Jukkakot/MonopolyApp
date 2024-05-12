@@ -76,4 +76,9 @@ public class Image implements Drawable {
     protected float getScaledLength(float length) {
         return isHovered ? length * HOVER_SCALE : length;
     }
+
+    @Override
+    public Coordinates move(Coordinates coords) {
+        return this.coords.move(coords);
+    }
 }

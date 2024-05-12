@@ -6,6 +6,7 @@ import org.example.components.CallbackAction;
 import org.example.components.GameState;
 import org.example.components.Player;
 import org.example.components.PlayerToken;
+import org.example.components.popup.Popup;
 import org.example.images.Clickable;
 import org.example.images.Image;
 import org.example.images.SpotImage;
@@ -26,7 +27,7 @@ public abstract class Spot extends Clickable {
     protected final SpotType spotType;
     @Getter
     protected final String name;
-    Set<Image> players = new HashSet<>();
+    Set<Image> playersOnSpot = new HashSet<>();
     private static final List<Coordinates> TOKEN_COORDS = Arrays.asList(new Coordinates(0, 0), new Coordinates(-PlayerToken.TOKEN_RADIUS, 0), new Coordinates(PlayerToken.TOKEN_RADIUS, 0),
             new Coordinates(0, PlayerToken.TOKEN_RADIUS), new Coordinates(-PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS), new Coordinates(PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS));
 
@@ -37,21 +38,21 @@ public abstract class Spot extends Clickable {
     }
 
     public void addPlayer(Player p) {
-        players.add(p);
+        playersOnSpot.add(p);
     }
 
     public void removePlayer(Player p) {
-        players.remove(p);
+        playersOnSpot.remove(p);
     }
 
     public Coordinates getTokenCoords(Player player) {
-        int index = players.stream().filter(p -> !p.equals(player)).toList().size();
+        int index = playersOnSpot.stream().filter(p -> !p.equals(player)).toList().size();
         Coordinates tokenSpot = TOKEN_COORDS.get(index % TOKEN_COORDS.size());
         return image.getCoords().move(tokenSpot);
     }
 
     public Coordinates getTokenCoords() {
-        Coordinates tokenSpot = TOKEN_COORDS.get(players.size() % TOKEN_COORDS.size());
+        Coordinates tokenSpot = TOKEN_COORDS.get(playersOnSpot.size() % TOKEN_COORDS.size());
         return image.getCoords().move(tokenSpot);
     }
 
@@ -61,5 +62,17 @@ public abstract class Spot extends Clickable {
     public void onClick() {
         //Buying properties if players turn
         System.out.println("Clicked spot " + this);
+    }
+
+    //TODO move elsewhere?
+    protected static void updateMoney(Player player, Integer amount, String popupText, CallbackAction callbackAction) {
+        Popup.showInfo(popupText, () -> {
+            if (player.updateMoney(amount)) {
+                callbackAction.doAction();
+            } else {
+                //TODO what if not enough money
+                callbackAction.doAction();
+            }
+        });
     }
 }

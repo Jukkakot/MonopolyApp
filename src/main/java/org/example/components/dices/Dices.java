@@ -54,13 +54,9 @@ public class Dices implements MonopolyEventListener {
     }
 
     private void roll() {
-        int dice1 = dices.getKey().roll();
-        int dice2 = dices.getValue().roll();
-        if (dice1 == dice2) {
-            pairCount++;
-        } else {
-            pairCount = 0;
-        }
+        int dice1 = dices.getKey().roll(), dice2 = dices.getValue().roll();
+        if (dice1 == dice2) pairCount++;
+        else pairCount = 0;
         value = new DiceValue(DiceState.valueOf(pairCount), dice1 + dice2);
     }
 
@@ -70,11 +66,10 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void rollDice() {
-        if (Popup.isAnyVisible()) {
-            return;
+        if (!Popup.isAnyVisible()) {
+            roll();
+            rollDiceButton.hide();
         }
-        roll();
-        rollDiceButton.hide();
     }
 
     public void show() {
@@ -97,14 +92,10 @@ public class Dices implements MonopolyEventListener {
 
     @Override
     public boolean onEvent(Event event) {
-        if (!isVisible() || Popup.isAnyVisible()) {
-            return false;
-        }
-        if (event instanceof KeyEvent keyEvent) {
-            if (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER) {
-                rollDice();
-                return true;
-            }
+        if (!isVisible() || Popup.isAnyVisible()) return false;
+        if (event instanceof KeyEvent keyEvent && (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER)) {
+            rollDice();
+            return true;
         }
         return false;
     }

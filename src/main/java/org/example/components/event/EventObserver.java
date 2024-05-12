@@ -20,6 +20,14 @@ public class EventObserver extends PApplet {
         if (keyEvent.getKey() == 'd') {
             MonopolyApp.DEBUG_MODE = !MonopolyApp.DEBUG_MODE;
         }
+        if (keyEvent.getKey() == 'h') {
+            System.out.println("----HELP----");
+            System.out.println("H = end round");
+            System.out.println("E = end round");
+            System.out.println("A = skip animations");
+            System.out.println("D = debug mode");
+            System.out.println("----HELP----");
+        }
     }
 
     @Override

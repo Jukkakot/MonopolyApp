@@ -18,7 +18,6 @@ import org.example.types.DiceState;
 import org.example.types.PathMode;
 import org.example.types.SpotType;
 import org.example.types.TurnResult;
-import org.example.utils.GameTurnUtils;
 import processing.event.Event;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
@@ -33,6 +32,8 @@ public class Game implements MonopolyEventListener {
     Players players;
     Animations animations;
     TurnResult prevTurnResult;
+
+    public static int GO_MONEY_AMOUNT = 200;
     private static final Button endRoundButton = new Button(MonopolyApp.p5, "endRound")
             .setPosition((int) (Spot.SPOT_W * 5.4), MonopolyApp.self.height - Spot.SPOT_W * 3)
             .setLabel("End round")
@@ -93,6 +94,7 @@ public class Game implements MonopolyEventListener {
     private void playRound(DiceValue diceValue) {
         Player turn = players.getTurn();
         if (turn.isInJail()) {
+            //What to do if player gets out of jail
             CallbackAction onGetOutOfJail = () -> {
                 //Almost like End round, but don't switch player.
                 prevTurnResult = null;
@@ -135,22 +137,25 @@ public class Game implements MonopolyEventListener {
 
     private boolean playRound(Path path, DiceState diceState) {
         Player turnPlayer = players.getTurn();
-        addAnimation(path, () -> {
+        addAnimationAndHandleSpot(path, () -> {
             turnPlayer.setSpot(path.getLastSpot());
-            handleTurn(diceState, path);
+            if (path.containsGoSpot()) {
+                turnPlayer.updateMoney(GO_MONEY_AMOUNT);
+            }
+            handleSpotLogic(diceState, path.getLastSpot());
         });
         return true;
     }
 
-    private void addAnimation(Path path, CallbackAction onAnimationEnd) {
+    private void addAnimationAndHandleSpot(Path path, CallbackAction onAnimationEnd) {
         PlayerToken turnPlayer = players.getTurn();
         animations.addAnimation(new Animation(turnPlayer, path, onAnimationEnd));
     }
 
-    private void handleTurn(DiceState diceState, Path path) {
-        GameState gameState = new GameState(players, DICES, board, path, TurnResult.copyOf(prevTurnResult));
+    private void handleSpotLogic(DiceState diceState, Spot spot) {
+        GameState gameState = new GameState(players, DICES, board, TurnResult.copyOf(prevTurnResult));
         prevTurnResult = null; //Important to clear previous turn result before getting next one!
-        prevTurnResult = GameTurnUtils.handleTurn(gameState, () -> doTurnEndEvent(diceState));
+        prevTurnResult = spot.handleTurn(gameState, () -> doTurnEndEvent(diceState));
     }
 
     private void doTurnEndEvent(DiceState diceState) {
@@ -158,6 +163,7 @@ public class Game implements MonopolyEventListener {
 //        Integer jailRoundCount = JailSpot.playersRoundsLeftMap.get(players.getTurn());
 //        boolean wentToJail = jailRoundCount != null && jailRoundCount == JailSpot.JAIL_ROUND_NUMBER;
         if (prevTurnResult != null) {
+            //Go to jail, go to next railway station etc...
             Path path = board.getPathWithCriteria(prevTurnResult, players.getTurn());
             playRound(path, diceState);
         } else if (DiceState.DOUBLES.equals(diceState)) {

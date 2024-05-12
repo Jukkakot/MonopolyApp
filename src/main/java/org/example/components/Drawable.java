@@ -12,4 +12,5 @@ public interface Drawable {
     Coordinates getCoords();
 
     void setCoords(Coordinates coords);
+    Coordinates move(Coordinates coords);
 }
