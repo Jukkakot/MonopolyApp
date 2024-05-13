@@ -81,6 +81,20 @@ public class JailSpot extends Spot {
         return null;
     }
 
+    public void handleInJailTurn(Player player, DiceValue diceValue, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
+        if (player.isInJail()) {
+            if (diceValue.diceState().equals(DiceState.DOUBLES)) {
+                releaseFromJail(player, onGetOufOfJail);
+                player.setCoords(player.getSpot().getTokenCoords(player));
+            } else {
+                tryToGetOufOfJail(player, diceValue, onGetOufOfJail, onStayInjail);
+                player.setCoords(player.getSpot().getTokenCoords(player));
+            }
+        } else {
+            throw new RuntimeException("Player not in jail?");
+        }
+    }
+
     private void sendToJail(Player turnPlayer, CallbackAction callbackAction) {
         jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
         turnPlayer.setInJail(true);
