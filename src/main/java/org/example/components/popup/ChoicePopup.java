@@ -4,7 +4,7 @@ import controlP5.Button;
 import lombok.Setter;
 import org.example.MonopolyApp;
 
-public class ChoicePopup extends Popup {
+class ChoicePopup extends Popup {
     private static ChoicePopup instance;
 
     private final Button acceptButton = new Button(MonopolyApp.p5, "accept")
@@ -26,7 +26,7 @@ public class ChoicePopup extends Popup {
     @Setter
     private ButtonAction onDeclineAction;
 
-    public static ChoicePopup getInstance() {
+    protected static ChoicePopup getInstance() {
         if (instance == null) {
             instance = new ChoicePopup();
         }

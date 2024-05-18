@@ -4,7 +4,7 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.example.components.popup.OkPopup;
+import org.example.components.popup.Popup;
 import org.example.components.properties.Properties;
 import org.example.components.properties.Property;
 import org.example.components.spots.Spot;
@@ -19,6 +19,7 @@ public class Player extends PlayerToken {
     @Getter
     private final int id;
     private final String name;
+    private final int STARTING_MONEY_AMOUNT = 1500;
     @Getter
     private Integer money;
     @Getter
@@ -35,7 +36,7 @@ public class Player extends PlayerToken {
         super(spot, color);
         this.id = NEXT_ID++;
         this.name = name;
-        this.money = 1500;
+        this.money = STARTING_MONEY_AMOUNT;
         // turn number is id by default. Later maybe implement so that this can change
         this.turnNumber = id + 1; // Turn numbers starts from 1
         setSpot(spot);
@@ -74,9 +75,10 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public boolean updateMoney(Integer amount) {
+    public boolean addMoney(Integer amount) {
         if (money + amount >= 0) {
             money += amount;
+            System.out.println("Added " + amount + " money to " + name);
             return true;
         }
         return false;
@@ -86,11 +88,11 @@ public class Player extends PlayerToken {
         if (amount < 0) {
             throw new RuntimeException("Not possible to give negative amount of money.");
         }
-        if (fromPlayer.updateMoney(-amount)) {
-            updateMoney(amount);
+        if (fromPlayer.addMoney(-amount)) {
+            addMoney(amount);
             return true;
         }
-        OkPopup.showInfo(fromPlayer.getName() + " Didn't have enough money to give to " + name);
+        Popup.show(fromPlayer.getName() + " Didn't have enough money to give to " + name);
         return false;
     }
 

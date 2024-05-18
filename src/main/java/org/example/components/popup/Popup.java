@@ -28,20 +28,20 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         MonopolyApp.addListener(this);
     }
 
-    public void show() {
+    protected void show() {
         isVisible = true;
-        System.out.println(new Timestamp(System.currentTimeMillis()) + " " + popupText);
+        System.out.println("[" + new Timestamp(System.currentTimeMillis()) + "] - " + popupText);
     }
 
     protected void allButtonAction() {
         isVisible = false;
     }
 
-    public static boolean isAnyVisible() {
+    public static boolean isVisible() {
         return ChoicePopup.getInstance().isVisible || OkPopup.getInstance().isVisible;
     }
 
-    public static void initPopups() {
+    public static void init() {
         OkPopup.getInstance();
         ChoicePopup.getInstance();
     }
@@ -69,22 +69,28 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         p.pop();
     }
 
-    public static void showInfo(String text) {
-        showInfo(text, null);
+    public static void show(String text) {
+        if(isVisible()) {
+            return;
+        }
+        show(text, null);
     }
 
-    public static void showInfo(String text, ButtonAction onAccept) {
+    public static void show(String text, ButtonAction onAccept) {
+        if(isVisible()) {
+            return;
+        }
         OkPopup okPopup = OkPopup.getInstance();
         okPopup.setOnOkAction(onAccept);
         okPopup.setPopupText(text);
         okPopup.show();
     }
 
-    public static void showChoice(String text, ButtonAction onAccept) {
-        showChoice(text, onAccept, null);
-    }
 
-    public static void showChoice(String text, ButtonAction onAccept, ButtonAction onDecline) {
+    public static void show(String text, ButtonAction onAccept, ButtonAction onDecline) {
+        if(isVisible()) {
+            return;
+        }
         ChoicePopup choicePopup = ChoicePopup.getInstance();
         choicePopup.setPopupText(text);
         choicePopup.setOnAcceptAction(onAccept);

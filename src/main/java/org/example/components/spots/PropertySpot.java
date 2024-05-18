@@ -12,6 +12,7 @@ import org.example.components.properties.Property;
 import org.example.components.properties.PropertyFactory;
 import org.example.components.properties.UtilityProperty;
 import org.example.images.SpotImage;
+import org.example.types.SpotType;
 import org.example.types.StreetType;
 import org.example.types.TurnResult;
 
@@ -20,9 +21,9 @@ public class PropertySpot extends Spot {
     @Getter
     private final Property property;
 
-    public PropertySpot(SpotImage spotImage) {
+    public PropertySpot(SpotImage spotImage, SpotType spotType) {
         super(spotImage);
-        this.property = PropertyFactory.getProperty(spotImage.getSpotType());
+        this.property = PropertyFactory.getProperty(spotType);
     }
 
     @Override
@@ -42,14 +43,14 @@ public class PropertySpot extends Spot {
         Player turnPlayer = gameState.getPlayers().getTurn();
         String choiceText = "Arrived at " + name + " do you want to buy it?";
         ButtonAction onAccept = () -> {
-            if (!turnPlayer.buyProperty(property)) {
+            if (!turnPlayer.buyProperty(this.property)) {
                 //TODO better handling if player wants to sell stuff to afford buying this
-                Popup.showInfo("You don't have enough money to buy " + name, callbackAction::doAction);
+                Popup.show("You don't have enough money to buy " + name, callbackAction::doAction);
             } else {
                 callbackAction.doAction();
             }
         };
-        Popup.showChoice(choiceText, onAccept, callbackAction::doAction);
+        Popup.show(choiceText, onAccept, callbackAction::doAction);
     }
 
     private void handleNotOwnerTurn(GameState gameState, CallbackAction callbackAction) {
@@ -69,7 +70,7 @@ public class PropertySpot extends Spot {
             rent = property.getRent(turnPlayer);
         }
         String popupText = "Uh oh... you need to pay M" + rent + " rent to " + property.getOwnerPlayer().getName();
-        Popup.showInfo(popupText, () -> {
+        Popup.show(popupText, () -> {
             if (property.payRent(turnPlayer, rent)) {
                 callbackAction.doAction();
             } else {
@@ -81,6 +82,7 @@ public class PropertySpot extends Spot {
 
     @Override
     public void onClick() {
-        System.out.println("Clicked property spot " + this);
+        //TODO Buying houses/hotels
+        System.out.println("Clicked property spot " + name);
     }
 }

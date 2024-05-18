@@ -34,7 +34,8 @@ public abstract class Spot extends Clickable {
     public Spot(SpotImage image) {
         super(image);
         this.spotType = image.getSpotType();
-        this.name = spotType.getStringProperty("name");
+        String spotName = spotType.getStringProperty("name");
+        this.name = spotName.isBlank() ? spotType.name() : spotName;
     }
 
     public void addPlayer(Player p) {
@@ -61,13 +62,13 @@ public abstract class Spot extends Clickable {
     @Override
     public void onClick() {
         //Buying properties if players turn
-        System.out.println("Clicked spot " + this);
+        System.out.println("Clicked spot " + name);
     }
 
     //TODO move elsewhere?
     protected static void updateMoney(Player player, Integer amount, String popupText, CallbackAction callbackAction) {
-        Popup.showInfo(popupText, () -> {
-            if (player.updateMoney(amount)) {
+        Popup.show(popupText, () -> {
+            if (player.addMoney(amount)) {
                 callbackAction.doAction();
             } else {
                 //TODO what if not enough money

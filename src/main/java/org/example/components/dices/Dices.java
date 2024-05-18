@@ -44,7 +44,7 @@ public class Dices implements MonopolyEventListener {
         return new Dices() {
             @Override
             public void rollDice() {
-                if (Popup.isAnyVisible()) {
+                if (Popup.isVisible()) {
                     return;
                 }
                 super.rollDice();
@@ -66,7 +66,7 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void rollDice() {
-        if (!Popup.isAnyVisible()) {
+        if (!Popup.isVisible()) {
             roll();
             rollDiceButton.hide();
         }
@@ -92,7 +92,7 @@ public class Dices implements MonopolyEventListener {
 
     @Override
     public boolean onEvent(Event event) {
-        if (!isVisible() || Popup.isAnyVisible()) return false;
+        if (!isVisible() || Popup.isVisible()) return false;
         if (event instanceof KeyEvent keyEvent && (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER)) {
             rollDice();
             return true;

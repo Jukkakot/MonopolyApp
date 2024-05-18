@@ -46,7 +46,7 @@ public class MonopolyApp extends EventObserver {
         font30 = createFont("Monopoly Regular.ttf", 30);
         textFont(font10);
         game = new Game();
-        Popup.initPopups();
+        Popup.init();
     }
 
     public void draw() {
@@ -98,7 +98,9 @@ public class MonopolyApp extends EventObserver {
         PImage image = getImage(spotType.streetType.imgName, null);
         if (image == null) {
             String imgName = spotType.streetType.imgName;
-            image = getImage(imgName.substring(0, imgName.indexOf(".")) + spotType.id + imgName.substring(imgName.indexOf(".")), null);
+            if(imgName != null) {
+                image = getImage(imgName.substring(0, imgName.indexOf(".")) + spotType.id + imgName.substring(imgName.indexOf(".")), null);
+            }
         }
         return image;
     }

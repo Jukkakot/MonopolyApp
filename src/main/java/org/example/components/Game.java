@@ -10,7 +10,6 @@ import org.example.components.board.Path;
 import org.example.components.dices.DiceValue;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
-import org.example.components.popup.OkPopup;
 import org.example.components.popup.Popup;
 import org.example.components.spots.JailSpot;
 import org.example.components.spots.Spot;
@@ -29,7 +28,7 @@ import static processing.event.MouseEvent.CLICK;
 public class Game implements MonopolyEventListener {
     public static Dices DICES;
     Board board;
-    Players players;
+    public static Players players;
     Animations animations;
     TurnResult prevTurnResult;
 
@@ -72,13 +71,16 @@ public class Game implements MonopolyEventListener {
     }
 
     private void rollDice() {
-        if (Popup.isAnyVisible()) {
+        if (Popup.isVisible()) {
             return;
         }
         playRound(DICES.getValue());
     }
 
     private void endRound(boolean switchTurns) {
+        if(Popup.isVisible()) {
+            return;
+        }
         prevTurnResult = null;
         if (switchTurns) {
             players.switchTurn();
@@ -112,11 +114,11 @@ public class Game implements MonopolyEventListener {
     private boolean playRound(Spot newSpot, DiceState diceState) {
         Player turnPlayer = players.getTurn();
         if (newSpot.equals(turnPlayer.getSpot())) {
-            OkPopup.showInfo("Can't move to same spot that player is in");
+            Popup.show("Can't move to same spot that player is in");
             return false;
         }
         if (turnPlayer.isInJail()) {
-            OkPopup.showInfo("Can't move out when player is in jail");
+            Popup.show("Can't move out when player is in jail");
             return false;
         }
         PathMode pathMode = DiceState.DEBUG_REROLL.equals(diceState) || DiceState.JAIL.equals(diceState) ? PathMode.FLY : PathMode.NORMAL;
@@ -129,7 +131,7 @@ public class Game implements MonopolyEventListener {
         addAnimationAndHandleSpot(path, () -> {
             turnPlayer.setSpot(path.getLastSpot());
             if (path.containsGoSpot()) {
-                turnPlayer.updateMoney(GO_MONEY_AMOUNT);
+                turnPlayer.addMoney(GO_MONEY_AMOUNT);
             }
             handleSpotLogic(diceState, path.getLastSpot());
         });
@@ -165,7 +167,7 @@ public class Game implements MonopolyEventListener {
     public boolean onEvent(Event event) {
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
-            if (Popup.isAnyVisible()) {
+            if (Popup.isVisible()) {
                 return consumedEvent;
             }
             if (endRoundButton.isVisible() && (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER)) {
@@ -183,7 +185,7 @@ public class Game implements MonopolyEventListener {
             }
         } else if (event instanceof MouseEvent mouseEvent) {
             if (mouseEvent.getAction() == CLICK) {
-                if (Popup.isAnyVisible()) {
+                if (Popup.isVisible()) {
                     return consumedEvent;
                 }
                 Spot hoveredSpot = board.getHoveredSpot();

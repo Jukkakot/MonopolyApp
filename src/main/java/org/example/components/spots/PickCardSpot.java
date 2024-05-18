@@ -35,14 +35,14 @@ public class PickCardSpot extends Spot {
                     updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
             case OUT_OF_JAIL -> {
                 turnPlayer.addOutOfJailCard();
-                Popup.showInfo(card.text(), callbackAction::doAction);
+                Popup.show(card.text(), callbackAction::doAction);
             }
             case ALL_PLAYERS_MONEY -> {
                 // Amount is negative if turnplayer gives money to others
                 // Amount is positive if turnplayer gets money from others
                 int amount = Integer.parseInt(card.values().get(0));
                 updateMoney(turnPlayer, amount * (gameState.getPlayers().count() - 1), card.text(), () -> {
-                    gameState.getPlayers().forEachOtherPLayer(turnPlayer, player -> player.updateMoney(-amount));
+                    gameState.getPlayers().forEachOtherPLayer(turnPlayer, player -> player.addMoney(-amount));
                     callbackAction.doAction();
                 });
             }
@@ -55,7 +55,7 @@ public class PickCardSpot extends Spot {
             }
             case MOVE -> {
                 SpotType moveToSpotType = SpotType.valueOf(card.values().get(0));
-                Popup.showInfo(card.text(), callbackAction::doAction);
+                Popup.show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(moveToSpotType)
                         .pathMode(PathMode.NORMAL)
@@ -63,21 +63,21 @@ public class PickCardSpot extends Spot {
             }
             case MOVE_NEAREST -> {
                 StreetType moveToStreetType = StreetType.valueOf(card.values().get(0));
-                Popup.showInfo(card.text(), callbackAction::doAction);
+                Popup.show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(moveToStreetType)
                         .pathMode(PathMode.NORMAL)
                         .build();
             }
             case MOVE_BACK_3 -> {
-                Popup.showInfo(card.text(), callbackAction::doAction);
+                Popup.show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(3)
                         .pathMode(PathMode.BACKWARDS)
                         .build();
             }
             case GO_JAIL -> {
-                Popup.showInfo(card.text(), callbackAction::doAction);
+                Popup.show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(SpotType.JAIL)
                         .pathMode(PathMode.FLY)

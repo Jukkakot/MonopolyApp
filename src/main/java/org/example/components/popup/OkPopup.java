@@ -23,7 +23,7 @@ public class OkPopup extends Popup {
             .hide()
             .setSize(100, 50);
 
-    public static OkPopup getInstance() {
+    protected static OkPopup getInstance() {
         if (instance == null) {
             instance = new OkPopup();
         }

@@ -17,8 +17,8 @@ public class Image implements Drawable {
     @Setter
     @Getter
     protected Coordinates coords;
-    protected final float width;
-    protected final float height;
+    private final float width;
+    private final float height;
     @Setter
     protected String imgName;
     @Getter
@@ -44,6 +44,14 @@ public class Image implements Drawable {
 
     public float getHeight() {
         return getScaledLength(height);
+    }
+
+    public float getUnScaledWidth() {
+        return width;
+    }
+
+    public float getUnScaledHeight() {
+        return height;
     }
 
     public void draw(Coordinates c, Color color) {

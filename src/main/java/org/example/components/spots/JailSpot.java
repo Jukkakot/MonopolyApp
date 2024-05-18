@@ -5,8 +5,7 @@ import org.example.components.GameState;
 import org.example.components.Player;
 import org.example.components.dices.DiceValue;
 import org.example.components.popup.ButtonAction;
-import org.example.components.popup.ChoicePopup;
-import org.example.components.popup.OkPopup;
+import org.example.components.popup.Popup;
 import org.example.images.SpotImage;
 import org.example.types.DiceState;
 import org.example.types.TurnResult;
@@ -64,16 +63,16 @@ public class JailSpot extends Spot {
         } else {
             if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoney() >= GET_OUT_OF_JAIL_FEE) {
                 ButtonAction onAccept = () -> {
-                    if (turnPlayer.useGetOutOfJailCard() || turnPlayer.updateMoney(-GET_OUT_OF_JAIL_FEE)) {
+                    if (turnPlayer.useGetOutOfJailCard() || turnPlayer.addMoney(-GET_OUT_OF_JAIL_FEE)) {
                         String text = "You were not sent to jail";
-                        OkPopup.showInfo(text, callbackAction::doAction);
+                        Popup.show(text, callbackAction::doAction);
                     } else {
                         String text = "You didn't have get out of jail card or didin't have M50 to pay";
-                        OkPopup.showInfo(text, () -> sendToJail(turnPlayer, callbackAction));
+                        Popup.show(text, () -> sendToJail(turnPlayer, callbackAction));
                     }
                 };
                 String text = "Do you want to pay M50 or use get out of jail card to get out of jail?";
-                ChoicePopup.showChoice(text, onAccept, () -> sendToJail(turnPlayer, callbackAction));
+                Popup.show(text, onAccept, () -> sendToJail(turnPlayer, callbackAction));
             } else {
                 sendToJail(turnPlayer, callbackAction);
             }
@@ -85,11 +84,10 @@ public class JailSpot extends Spot {
         if (player.isInJail()) {
             if (diceValue.diceState().equals(DiceState.DOUBLES)) {
                 releaseFromJail(player, onGetOufOfJail);
-                player.setCoords(player.getSpot().getTokenCoords(player));
             } else {
                 tryToGetOufOfJail(player, diceValue, onGetOufOfJail, onStayInjail);
-                player.setCoords(player.getSpot().getTokenCoords(player));
             }
+            player.setCoords(getTokenCoords(player));
         } else {
             throw new RuntimeException("Player not in jail?");
         }
@@ -99,7 +97,7 @@ public class JailSpot extends Spot {
         jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
         turnPlayer.setInJail(true);
         turnPlayer.setCoords(getTokenCoords(turnPlayer));
-        OkPopup.showInfo("You were sent to jail", callbackAction::doAction);
+        Popup.show("You were sent to jail", callbackAction::doAction);
     }
 
     public static void tryToGetOufOfJail(Player player, DiceValue diceValue, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
@@ -111,17 +109,20 @@ public class JailSpot extends Spot {
         if (diceValue.diceState().equals(DiceState.DOUBLES)) {
             releaseFromJail(player, onGetOufOfJail);
         } else if (roundCount == 1) {
-            //TODO have to pay M50 fine?
+            if(!player.addMoney(-GET_OUT_OF_JAIL_FEE)) {
+                System.out.println("Player could not afford paying M50 fine");
+                //TODO what if cant afford paying fine?
+            }
             releaseFromJail(player, onGetOufOfJail);
         } else {
             jailTimeLeftMap.put(player, jailTimeLeftMap.get(player) - 1);
-            OkPopup.showInfo("You still have " + jailTimeLeftMap.get(player) + " rounds left in jail", onStayInjail::doAction);
+            Popup.show("You still have " + jailTimeLeftMap.get(player) + " rounds left in jail", onStayInjail::doAction);
         }
     }
 
     public static void releaseFromJail(Player player, CallbackAction onGetOufOfJail) {
         jailTimeLeftMap.remove(player);
         player.setInJail(false);
-        OkPopup.showInfo("You got out of jail", onGetOufOfJail::doAction);
+        Popup.show("You got out of jail", onGetOufOfJail::doAction);
     }
 }

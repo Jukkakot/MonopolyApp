@@ -10,7 +10,7 @@ import org.example.types.StreetType;
 import java.util.Arrays;
 import java.util.List;
 
-@ToString
+@ToString(exclude = "ownerPlayer")
 public abstract class Property {
 
     @Getter
@@ -60,4 +60,27 @@ public abstract class Property {
     }
 
     public abstract Integer getRent(Player player);
+
+    public boolean handleMortgaging() {
+        if (!hasOwner()) {
+            System.err.println("Property does not have a owner.");
+            return false;
+        }
+
+        int mortgageAmount = getPrice() / 2;
+        if (isMortgaged()) {
+            int interest = (int) (mortgageAmount * 0.1);
+            int unMortageAmount = mortgageAmount + interest;
+            if(ownerPlayer.addMoney(-unMortageAmount)) {
+                setMortgaged(false);
+            } else {
+                //Not enough money to unmortgage
+                return false;
+            }
+        } else {
+            setMortgaged(true);
+            ownerPlayer.addMoney(mortgageAmount);
+        }
+        return true;
+    }
 }

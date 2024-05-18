@@ -42,6 +42,7 @@ public class Players {
     public void giveRandomDeeds(Board board) {
         List<Spot> propertySpots = new ArrayList<>(board.getSpots().stream().filter(spot -> spot instanceof PropertySpot).toList());
         Collections.shuffle(propertySpots);
+        int loopCount = 0;
         while (propertySpots.size() > 20) {
             PropertySpot spot = (PropertySpot) propertySpots.get(0);
             playerList.forEach(player -> {
@@ -52,6 +53,9 @@ public class Players {
                     }
                 }
             });
+            if(loopCount++ >= 100) {
+                break;
+            }
         }
     }
 
