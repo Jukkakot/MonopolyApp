@@ -3,6 +3,7 @@ package org.example.images;
 import lombok.Getter;
 import lombok.ToString;
 import org.example.MonopolyApp;
+import org.example.components.Game;
 import org.example.components.event.MonopolyEventListener;
 import org.example.types.SpotType;
 import processing.event.Event;
@@ -24,6 +25,9 @@ public abstract class Clickable implements MonopolyEventListener {
 
     @Override
     public final boolean onEvent(Event event) {
+        if (Game.animations.isRunning()) {
+            return false;
+        }
         boolean eventConsumed = false;
         if (image.isHovered() && event instanceof MouseEvent mouseEvent) {
             if (MouseEvent.CLICK == mouseEvent.getAction()) {

@@ -29,7 +29,7 @@ public class Game implements MonopolyEventListener {
     public static Dices DICES;
     Board board;
     public static Players players;
-    Animations animations;
+    public static Animations animations;
     TurnResult prevTurnResult;
 
     public static int GO_MONEY_AMOUNT = 200;
