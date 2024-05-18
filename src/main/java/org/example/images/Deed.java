@@ -31,6 +31,7 @@ public class Deed extends Clickable {
         if (property.isMortgaged()) {
             ButtonAction onAccept = () -> {
                 if (!property.handleMortgaging()) {
+                    Popup.hide();
                     Popup.show("Player does not have enough money to unmortgage this property");
                 }
             };

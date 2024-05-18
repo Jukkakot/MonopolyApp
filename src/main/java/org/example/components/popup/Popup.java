@@ -21,6 +21,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     protected static Coordinates coords = new Coordinates(Spot.SPOT_W * 6, Spot.SPOT_W * 6);
     protected static int width = 500;
     protected static int height = 300;
+    @Setter
     protected boolean isVisible = false;
 
     public Popup() {
@@ -31,6 +32,11 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     protected void show() {
         isVisible = true;
         System.out.println("[" + new Timestamp(System.currentTimeMillis()) + "] - " + popupText);
+    }
+
+    public static void hide() {
+        ChoicePopup.getInstance().setVisible(false);
+        OkPopup.getInstance().setVisible(false);
     }
 
     protected void allButtonAction() {
@@ -70,14 +76,14 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     public static void show(String text) {
-        if(isVisible()) {
+        if (isVisible()) {
             return;
         }
         show(text, null);
     }
 
     public static void show(String text, ButtonAction onAccept) {
-        if(isVisible()) {
+        if (isVisible()) {
             return;
         }
         OkPopup okPopup = OkPopup.getInstance();
@@ -88,7 +94,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
 
 
     public static void show(String text, ButtonAction onAccept, ButtonAction onDecline) {
-        if(isVisible()) {
+        if (isVisible()) {
             return;
         }
         ChoicePopup choicePopup = ChoicePopup.getInstance();
