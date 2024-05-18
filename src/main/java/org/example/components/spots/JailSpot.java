@@ -64,9 +64,11 @@ public class JailSpot extends Spot {
             if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoney() >= GET_OUT_OF_JAIL_FEE) {
                 ButtonAction onAccept = () -> {
                     if (turnPlayer.useGetOutOfJailCard() || turnPlayer.addMoney(-GET_OUT_OF_JAIL_FEE)) {
+                        Popup.hide();
                         String text = "You were not sent to jail";
                         Popup.show(text, callbackAction::doAction);
                     } else {
+                        Popup.hide();
                         String text = "You didn't have get out of jail card or didin't have M50 to pay";
                         Popup.show(text, () -> sendToJail(turnPlayer, callbackAction));
                     }
@@ -97,6 +99,7 @@ public class JailSpot extends Spot {
         jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
         turnPlayer.setInJail(true);
         turnPlayer.setCoords(getTokenCoords(turnPlayer));
+        Popup.hide();
         Popup.show("You were sent to jail", callbackAction::doAction);
     }
 

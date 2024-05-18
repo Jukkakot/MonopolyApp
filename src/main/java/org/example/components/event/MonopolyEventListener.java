@@ -2,9 +2,7 @@ package org.example.components.event;
 
 import processing.event.Event;
 
-import java.util.EventListener;
-
-public interface MonopolyEventListener extends EventListener {
+public interface MonopolyEventListener {
     /**
      * Listens to mouse and keyboard events
      *
