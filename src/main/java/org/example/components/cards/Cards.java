@@ -1,11 +1,12 @@
 package org.example.components.cards;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.types.CardType;
 import org.example.types.StreetType;
 
 import java.util.*;
 
-
+@Slf4j
 public class Cards {
     private Properties props = new Properties();
     private List<Card> cardList = new ArrayList<>();
@@ -18,7 +19,7 @@ public class Cards {
             props.load(Cards.class.getResourceAsStream("/" + streetType.name() + ".properties"));
             initCards();
         } catch (Exception e) {
-            System.err.println("Error loading card properties! " + e.getMessage());
+            log.error("Error loading card properties! {}", e.getMessage());
         }
         Collections.shuffle(cardList);
     }
@@ -42,7 +43,7 @@ public class Cards {
             previousCard = cardList.get(0);
         } else if (cardList.indexOf(previousCard) == cardList.size() - 1) {
             Collections.shuffle(cardList);
-            System.out.println("Shuffling cards...");
+            log.info("Shuffling cards...");
             previousCard = cardList.get(0);
         } else {
             int prevCardIndex = cardList.indexOf(previousCard);

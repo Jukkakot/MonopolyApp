@@ -1,6 +1,7 @@
 package org.example.components;
 
 import controlP5.Button;
+import lombok.extern.slf4j.Slf4j;
 import org.example.MonopolyApp;
 import org.example.components.board.Board;
 import org.example.components.properties.Property;
@@ -16,6 +17,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Players {
     private static final int PLAYERS_PER_ROW = 3;
     private final static int DEEDS_PER_ROW = 5;
@@ -31,7 +33,7 @@ public class Players {
 
     public void addPlayer(Player p) {
         playerList.add(p);
-        playerButtons.put("" + p.getId(), new Button(MonopolyApp.p5, "" + p.getId())
+        playerButtons.put("" + p.getId(), new MonopolyButton("" + p.getId())
                 .setValue(p.getId())
                 .addListener(e -> selectedPlayer = playerList.get(playerList.indexOf(p)))
                 .setImages(MonopolyApp.getImage("BigToken.png", p.getColor()), MonopolyApp.getImage("BigTokenHover.png", p.getColor()), MonopolyApp.getImage("BigTokenPressed.png", p.getColor()))
@@ -79,7 +81,7 @@ public class Players {
             selectedPlayer = players.get(0);
             return players.get(0);
         } else {
-            System.out.println("Player not found, trying again " + turnNum);
+            log.info("Player not found, trying again {}", turnNum);
             return switchTurn();
         }
     }
@@ -92,7 +94,7 @@ public class Players {
         if (players.size() == 1) {
             return players.get(0);
         } else {
-            System.out.println("Player not found");
+            log.error("Turn player not found");
             return null;
         }
     }
@@ -134,7 +136,7 @@ public class Players {
 
         for (StreetType streetType : propertyMap.keySet()) {
             for (Property property : propertyMap.get(streetType)) {
-                Deeds.getDeed(property).getImage().draw(absoluteCoods);
+                DeedFactor.getDeed(property).getImage().draw(absoluteCoods);
                 index++;
                 if (index % DEEDS_PER_ROW == 0) {
                     absoluteCoods = absoluteCoods.move(-totalDX, deedTotalHeight);

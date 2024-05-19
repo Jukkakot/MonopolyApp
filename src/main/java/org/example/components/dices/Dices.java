@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.example.MonopolyApp;
 import org.example.components.CallbackAction;
+import org.example.components.MonopolyButton;
 import org.example.components.event.MonopolyEventListener;
 import org.example.components.popup.Popup;
 import org.example.components.spots.Spot;
@@ -20,10 +21,9 @@ import static org.example.MonopolyApp.SPACE;
 
 public class Dices implements MonopolyEventListener {
     private final Pair<Dice, Dice> dices;
-    private static final Button rollDiceButton = new Button(MonopolyApp.p5, "rollDice")
+    private static final Button rollDiceButton = new MonopolyButton( "rollDice")
             .setPosition((int) (Spot.SPOT_W * 5.4), Spot.SPOT_W * 3)
             .setLabel("Roll dice")
-            .setFont(MonopolyApp.font20)
             .setSize(100, 50);
     private int pairCount = 0;
     @Getter
@@ -40,11 +40,11 @@ public class Dices implements MonopolyEventListener {
         rollDiceButton.addListener(e -> rollDice());
     }
 
-    public static Dices onRollDice(CallbackAction onRollAction) {
+    public static Dices setRollDice(CallbackAction onRollAction) {
         return new Dices() {
             @Override
             public void rollDice() {
-                if (Popup.isVisible()) {
+                if (Popup.isAnyVisible()) {
                     return;
                 }
                 super.rollDice();
@@ -66,7 +66,7 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void rollDice() {
-        if (!Popup.isVisible()) {
+        if (!Popup.isAnyVisible()) {
             roll();
             rollDiceButton.hide();
         }
@@ -92,7 +92,7 @@ public class Dices implements MonopolyEventListener {
 
     @Override
     public boolean onEvent(Event event) {
-        if (!isVisible() || Popup.isVisible()) return false;
+        if (!isVisible() || Popup.isAnyVisible()) return false;
         if (event instanceof KeyEvent keyEvent && (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER)) {
             rollDice();
             return true;

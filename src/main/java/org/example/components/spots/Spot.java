@@ -2,6 +2,7 @@ package org.example.components.spots;
 
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.example.components.CallbackAction;
 import org.example.components.GameState;
 import org.example.components.Player;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @ToString(onlyExplicitlyIncluded = true)
 public abstract class Spot extends Clickable {
     public static final float SPOT_W = 996f / 12f;
@@ -58,12 +60,6 @@ public abstract class Spot extends Clickable {
     }
 
     public abstract TurnResult handleTurn(GameState gameState, CallbackAction callbackAction);
-
-    @Override
-    public void onClick() {
-        //Buying properties if players turn
-        System.out.println("Clicked spot " + name);
-    }
 
     //TODO move elsewhere?
     protected static void updateMoney(Player player, Integer amount, String popupText, CallbackAction callbackAction) {

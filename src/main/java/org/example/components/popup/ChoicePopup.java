@@ -1,37 +1,31 @@
 package org.example.components.popup;
 
 import controlP5.Button;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.MonopolyApp;
+import org.example.components.MonopolyButton;
 
-class ChoicePopup extends Popup {
-    private static ChoicePopup instance;
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ChoicePopup extends Popup {
 
-    private final Button acceptButton = new Button(MonopolyApp.p5, "accept")
+    private final Button acceptButton = new MonopolyButton("accept")
             .setPosition(coords.x() - 150, coords.y() + (float) height / 4)
             .addListener(e -> acceptAction())
             .setLabel("Accept")
-            .setFont(MonopolyApp.font20)
             .hide()
             .setSize(100, 50);
-    private final Button declineButton = new Button(MonopolyApp.p5, "decline")
+    private final Button declineButton = new MonopolyButton("decline")
             .setPosition(coords.x() + 50, coords.y() + (float) height / 4)
             .addListener(e -> declineAction())
             .setLabel("Decline")
-            .setFont(MonopolyApp.font20)
             .hide()
             .setSize(100, 50);
     @Setter
     private ButtonAction onAcceptAction;
     @Setter
     private ButtonAction onDeclineAction;
-
-    protected static ChoicePopup getInstance() {
-        if (instance == null) {
-            instance = new ChoicePopup();
-        }
-        return instance;
-    }
 
     private void acceptAction() {
         if (onAcceptAction != null) {
@@ -55,8 +49,8 @@ class ChoicePopup extends Popup {
     }
 
     @Override
-    protected void allButtonAction() {
-        super.allButtonAction();
+    protected void hide() {
+        super.hide();
         acceptButton.hide();
         declineButton.hide();
         onAcceptAction = null;
@@ -64,7 +58,7 @@ class ChoicePopup extends Popup {
     }
 
     @Override
-    public boolean onKeyAction(char key) {
+    protected boolean onKeyAction(char key) {
         if (key == '1' || (MonopolyApp.SKIP_ANNIMATIONS && key == ' ')) {
             acceptAction();
             return true;
@@ -72,6 +66,6 @@ class ChoicePopup extends Popup {
             declineAction();
             return true;
         }
-        return false;
+        return super.onKeyAction(key);
     }
 }

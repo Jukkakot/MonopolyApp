@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @UtilityClass
-public class Deeds {
+public class DeedFactor {
     Map<Property, Deed> deedMap = new HashMap<>();
 
     public Deed getDeed(Property property) {

@@ -3,6 +3,7 @@ package org.example.components.properties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.example.components.Player;
 import org.example.types.SpotType;
 import org.example.types.StreetType;
@@ -10,6 +11,7 @@ import org.example.types.StreetType;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @ToString(exclude = "ownerPlayer")
 public abstract class Property {
 
@@ -63,7 +65,7 @@ public abstract class Property {
 
     public boolean handleMortgaging() {
         if (!hasOwner()) {
-            System.err.println("Property does not have a owner.");
+            log.error("Property does not have a owner.");
             return false;
         }
 
@@ -71,7 +73,7 @@ public abstract class Property {
         if (isMortgaged()) {
             int interest = (int) (mortgageAmount * 0.1);
             int unMortageAmount = mortgageAmount + interest;
-            if(ownerPlayer.addMoney(-unMortageAmount)) {
+            if (ownerPlayer.addMoney(-unMortageAmount)) {
                 setMortgaged(false);
             } else {
                 //Not enough money to unmortgage

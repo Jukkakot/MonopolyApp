@@ -11,6 +11,7 @@ import org.example.components.dices.DiceValue;
 import org.example.components.dices.Dices;
 import org.example.components.event.MonopolyEventListener;
 import org.example.components.popup.Popup;
+import org.example.components.properties.PropertyFactory;
 import org.example.components.spots.JailSpot;
 import org.example.components.spots.Spot;
 import org.example.types.DiceState;
@@ -33,17 +34,16 @@ public class Game implements MonopolyEventListener {
     TurnResult prevTurnResult;
 
     public static int GO_MONEY_AMOUNT = 200;
-    private static final Button endRoundButton = new Button(MonopolyApp.p5, "endRound")
+    private static final Button endRoundButton = new MonopolyButton("endRound")
             .setPosition((int) (Spot.SPOT_W * 5.4), MonopolyApp.self.height - Spot.SPOT_W * 3)
             .setLabel("End round")
-            .setFont(MonopolyApp.font20)
             .setSize(100, 50)
             .hide();
 
     public Game() {
         MonopolyApp.addListener(this);
         board = new Board();
-        DICES = Dices.onRollDice(this::rollDice);
+        DICES = Dices.setRollDice(this::rollDice);
         players = new Players();
         animations = new Animations();
 
@@ -55,6 +55,8 @@ public class Game implements MonopolyEventListener {
 //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
 //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
 
+        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B1));
+        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B2));
         players.giveRandomDeeds(board);
 
         endRoundButton.addListener(e -> endRound(true));
@@ -71,14 +73,14 @@ public class Game implements MonopolyEventListener {
     }
 
     private void rollDice() {
-        if (Popup.isVisible()) {
+        if (Popup.isAnyVisible()) {
             return;
         }
         playRound(DICES.getValue());
     }
 
     private void endRound(boolean switchTurns) {
-        if(Popup.isVisible()) {
+        if(Popup.isAnyVisible()) {
             return;
         }
         prevTurnResult = null;
@@ -167,7 +169,7 @@ public class Game implements MonopolyEventListener {
     public boolean onEvent(Event event) {
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
-            if (Popup.isVisible()) {
+            if (Popup.isAnyVisible()) {
                 return consumedEvent;
             }
             if (endRoundButton.isVisible() && (keyEvent.getKey() == SPACE || keyEvent.getKey() == ENTER)) {
@@ -185,7 +187,7 @@ public class Game implements MonopolyEventListener {
             }
         } else if (event instanceof MouseEvent mouseEvent) {
             if (mouseEvent.getAction() == CLICK) {
-                if (Popup.isVisible()) {
+                if (Popup.isAnyVisible()) {
                     return consumedEvent;
                 }
                 Spot hoveredSpot = board.getHoveredSpot();

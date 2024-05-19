@@ -2,11 +2,13 @@ package org.example.images;
 
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.example.components.Game;
 import org.example.components.popup.ButtonAction;
 import org.example.components.popup.Popup;
 import org.example.components.properties.Property;
 
+@Slf4j
 @ToString(callSuper = true)
 public class Deed extends Clickable {
     @Getter
@@ -21,7 +23,7 @@ public class Deed extends Clickable {
 
     @Override
     public void onClick() {
-        System.out.println("Clicked deed " + name);
+        super.onClick();
         if (property.isOwner(Game.players.getTurn())) {
             handleMortgaging();
         }
@@ -31,7 +33,6 @@ public class Deed extends Clickable {
         if (property.isMortgaged()) {
             ButtonAction onAccept = () -> {
                 if (!property.handleMortgaging()) {
-                    Popup.hide();
                     Popup.show("Player does not have enough money to unmortgage this property");
                 }
             };

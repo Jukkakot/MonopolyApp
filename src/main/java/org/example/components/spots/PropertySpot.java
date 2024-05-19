@@ -2,12 +2,15 @@ package org.example.components.spots;
 
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.example.components.CallbackAction;
+import org.example.components.Game;
 import org.example.components.GameState;
 import org.example.components.Player;
 import org.example.components.dices.Dices;
 import org.example.components.popup.ButtonAction;
 import org.example.components.popup.Popup;
+import org.example.components.popup.components.ButtonProps;
 import org.example.components.properties.Property;
 import org.example.components.properties.PropertyFactory;
 import org.example.components.properties.UtilityProperty;
@@ -16,6 +19,7 @@ import org.example.types.SpotType;
 import org.example.types.StreetType;
 import org.example.types.TurnResult;
 
+@Slf4j
 @ToString(callSuper = true)
 public class PropertySpot extends Spot {
     @Getter
@@ -31,7 +35,7 @@ public class PropertySpot extends Spot {
         Player turnPlayer = gameState.getPlayers().getTurn();
         if (!property.hasOwner()) {
             handleNoOwnersTurn(gameState, callbackAction);
-        } else if (property.hasOwner() && property.isNotOwner(turnPlayer)) {
+        } else if (property.hasOwner() && property.isNotOwner(turnPlayer) && !property.isMortgaged()) {
             handleNotOwnerTurn(gameState, callbackAction);
         } else {
             callbackAction.doAction();
@@ -82,7 +86,19 @@ public class PropertySpot extends Spot {
 
     @Override
     public void onClick() {
-        //TODO Buying houses/hotels
-        System.out.println("Clicked property spot " + name);
+        super.onClick();
+        if (!property.isOwner(Game.players.getTurn())) {
+            return;
+        }
+        if (Game.players.getTurn().ownsAllStreetProperties(spotType.streetType)) {
+            Popup.show("Do you want to buy houses bro",
+                    new ButtonProps("Eka", null),
+                    new ButtonProps("Toka", null),
+                    new ButtonProps("Kolmas", null),
+                    new ButtonProps("Neljäs", null));
+        } else {
+            Popup.show("You can't buy houses unless you own all same street properties");
+        }
+
     }
 }

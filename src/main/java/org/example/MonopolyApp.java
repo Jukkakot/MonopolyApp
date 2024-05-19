@@ -4,8 +4,7 @@ import controlP5.ControlP5;
 import javafx.scene.paint.Color;
 import org.example.components.Game;
 import org.example.components.PlayerToken;
-import org.example.components.event.EventObserver;
-import org.example.components.popup.Popup;
+import org.example.components.event.MonopolyEventObserver;
 import org.example.types.SpotType;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -19,7 +18,7 @@ import java.util.stream.Stream;
 
 import static org.example.utils.Utils.toColor;
 
-public class MonopolyApp extends EventObserver {
+public class MonopolyApp extends MonopolyEventObserver {
     public static MonopolyApp self;
     public static boolean DEBUG_MODE = false;
     public static boolean SKIP_ANNIMATIONS = false;
@@ -46,7 +45,6 @@ public class MonopolyApp extends EventObserver {
         font30 = createFont("Monopoly Regular.ttf", 30);
         textFont(font10);
         game = new Game();
-        Popup.init();
     }
 
     public void draw() {

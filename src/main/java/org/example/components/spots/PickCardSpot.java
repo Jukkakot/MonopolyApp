@@ -85,8 +85,7 @@ public class PickCardSpot extends Spot {
                         .build();
             }
             default -> {
-                System.err.println("Default card behaviour, shouldnt happen");
-                handleTurn(gameState, callbackAction);
+                throw new RuntimeException("Default card behaviour, shouldnt happen");
             }
         }
         return null;

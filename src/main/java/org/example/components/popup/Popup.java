@@ -2,54 +2,74 @@ package org.example.components.popup;
 
 
 import controlP5.Canvas;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.example.MonopolyApp;
 import org.example.components.event.MonopolyEventListener;
+import org.example.components.popup.components.ButtonProps;
 import org.example.components.spots.Spot;
 import org.example.utils.Coordinates;
 import processing.core.PGraphics;
 import processing.event.Event;
 import processing.event.KeyEvent;
 
-import java.sql.Timestamp;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static processing.core.PConstants.CENTER;
 
+@Slf4j
 public abstract class Popup extends Canvas implements MonopolyEventListener {
+    protected static final Map<Class<? extends Popup>, Popup> popupInstances = new HashMap<>();
     @Setter
     protected String popupText;
     protected static Coordinates coords = new Coordinates(Spot.SPOT_W * 6, Spot.SPOT_W * 6);
     protected static int width = 500;
     protected static int height = 300;
-    @Setter
+    @Getter(AccessLevel.PROTECTED)
     protected boolean isVisible = false;
 
-    public Popup() {
+    protected Popup() {
         MonopolyApp.p5.addCanvas(this);
-        MonopolyApp.addListener(this);
+    }
+
+    private static <T extends Popup> T getInstance(Class<T> clazz) {
+        if (popupInstances.get(clazz) == null) {
+            try {
+                popupInstances.put(clazz, clazz.getDeclaredConstructor().newInstance());
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                     InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return (T) popupInstances.get(clazz);
     }
 
     protected void show() {
         isVisible = true;
-        System.out.println("[" + new Timestamp(System.currentTimeMillis()) + "] - " + popupText);
+        MonopolyApp.addListener(this);
+        log.info(popupText);
     }
 
-    public static void hide() {
-        ChoicePopup.getInstance().setVisible(false);
-        OkPopup.getInstance().setVisible(false);
+    public static void hideAll() {
+        popupInstances.values().forEach(Popup::hide);
+    }
+
+    protected void hide() {
+        isVisible = false;
+        MonopolyApp.removeListener(this);
     }
 
     protected void allButtonAction() {
         isVisible = false;
+        hide();
     }
 
-    public static boolean isVisible() {
-        return ChoicePopup.getInstance().isVisible || OkPopup.getInstance().isVisible;
-    }
-
-    public static void init() {
-        OkPopup.getInstance();
-        ChoicePopup.getInstance();
+    public static boolean isAnyVisible() {
+        return popupInstances.values().stream().anyMatch(Popup::isVisible);
     }
 
     @Override
@@ -76,17 +96,14 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     public static void show(String text) {
-        if (isVisible()) {
-            return;
-        }
-        show(text, null);
+        OkPopup okPopup = Popup.getInstance(OkPopup.class);
+        okPopup.setOnOkAction(null);
+        okPopup.setPopupText(text);
+        okPopup.show();
     }
 
     public static void show(String text, ButtonAction onAccept) {
-        if (isVisible()) {
-            return;
-        }
-        OkPopup okPopup = OkPopup.getInstance();
+        OkPopup okPopup = Popup.getInstance(OkPopup.class);
         okPopup.setOnOkAction(onAccept);
         okPopup.setPopupText(text);
         okPopup.show();
@@ -94,17 +111,23 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
 
 
     public static void show(String text, ButtonAction onAccept, ButtonAction onDecline) {
-        if (isVisible()) {
-            return;
-        }
-        ChoicePopup choicePopup = ChoicePopup.getInstance();
+        ChoicePopup choicePopup = Popup.getInstance(ChoicePopup.class);
         choicePopup.setPopupText(text);
         choicePopup.setOnAcceptAction(onAccept);
         choicePopup.setOnDeclineAction(onDecline);
         choicePopup.show();
     }
 
-    public abstract boolean onKeyAction(char key);
+    public static void show(String text, ButtonProps... buttonProps) {
+        CustomPopup customPopup = Popup.getInstance(CustomPopup.class);
+        customPopup.setPopupText(text);
+        customPopup.setButtons(buttonProps);
+        customPopup.show();
+    }
+
+    protected boolean onKeyAction(char key) {
+        return false;
+    }
 
     @Override
     public final boolean onEvent(Event event) {

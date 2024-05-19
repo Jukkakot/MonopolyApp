@@ -1,5 +1,6 @@
 package org.example.components.spots;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.components.CallbackAction;
 import org.example.components.GameState;
 import org.example.components.Player;
@@ -13,6 +14,7 @@ import org.example.utils.Coordinates;
 
 import java.util.*;
 
+@Slf4j
 public class JailSpot extends Spot {
     //Player,turn counts left
     public static final Map<Player, Integer> jailTimeLeftMap = new HashMap<>();
@@ -64,11 +66,9 @@ public class JailSpot extends Spot {
             if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoney() >= GET_OUT_OF_JAIL_FEE) {
                 ButtonAction onAccept = () -> {
                     if (turnPlayer.useGetOutOfJailCard() || turnPlayer.addMoney(-GET_OUT_OF_JAIL_FEE)) {
-                        Popup.hide();
                         String text = "You were not sent to jail";
                         Popup.show(text, callbackAction::doAction);
                     } else {
-                        Popup.hide();
                         String text = "You didn't have get out of jail card or didin't have M50 to pay";
                         Popup.show(text, () -> sendToJail(turnPlayer, callbackAction));
                     }
@@ -99,7 +99,6 @@ public class JailSpot extends Spot {
         jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
         turnPlayer.setInJail(true);
         turnPlayer.setCoords(getTokenCoords(turnPlayer));
-        Popup.hide();
         Popup.show("You were sent to jail", callbackAction::doAction);
     }
 
@@ -112,8 +111,8 @@ public class JailSpot extends Spot {
         if (diceValue.diceState().equals(DiceState.DOUBLES)) {
             releaseFromJail(player, onGetOufOfJail);
         } else if (roundCount == 1) {
-            if(!player.addMoney(-GET_OUT_OF_JAIL_FEE)) {
-                System.out.println("Player could not afford paying M50 fine");
+            if (!player.addMoney(-GET_OUT_OF_JAIL_FEE)) {
+                log.info("Player could not afford paying M{} fine", GET_OUT_OF_JAIL_FEE);
                 //TODO what if cant afford paying fine?
             }
             releaseFromJail(player, onGetOufOfJail);

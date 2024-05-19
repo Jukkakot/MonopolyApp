@@ -4,6 +4,7 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.example.components.popup.Popup;
 import org.example.components.properties.Properties;
 import org.example.components.properties.Property;
@@ -14,6 +15,7 @@ import org.example.types.StreetType;
 import java.util.List;
 
 @ToString
+@Slf4j
 public class Player extends PlayerToken {
     private static int NEXT_ID = 0;
     @Getter
@@ -58,7 +60,7 @@ public class Player extends PlayerToken {
     private void giveProperty(Property property) {
         property.setOwnerPlayer(this);
         if (!ownedProperties.addProperty(property)) {
-            System.err.println("Player already owned property " + property);
+            log.error("Player already owned property {}", property);
         }
     }
 
@@ -78,7 +80,7 @@ public class Player extends PlayerToken {
     public boolean addMoney(Integer amount) {
         if (money + amount >= 0) {
             money += amount;
-            System.out.println("Added " + amount + " money to " + name);
+            log.info("Added {} money to {}", amount, name);
             return true;
         }
         return false;
@@ -118,7 +120,7 @@ public class Player extends PlayerToken {
 
     public boolean useGetOutOfJailCard() {
         if (isInJail()) {
-            System.err.println("Tried to use get out of jail when already in jail");
+            log.error("Tried to use get out of jail when already in jail");
             return false;
         }
         if (hasGetOutOfJailCard()) {

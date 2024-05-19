@@ -1,6 +1,8 @@
 package org.example.types;
 
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,11 +20,12 @@ public enum SpotType {
     DB1(StreetType.DARK_BLUE, 1), DB2(StreetType.DARK_BLUE, 2),
     RR1(StreetType.RAILROAD, 1), RR2(StreetType.RAILROAD, 2), RR3(StreetType.RAILROAD, 3), RR4(StreetType.RAILROAD, 4),
     U1(StreetType.UTILITY, 1), U2(StreetType.UTILITY, 2),
-    TAX1(StreetType.TAX, 1, false), TAX2(StreetType.TAX, 2,false),
-    COMMUNITY1(StreetType.COMMUNITY, 1,false), COMMUNITY2(StreetType.COMMUNITY, 2,false), COMMUNITY3(StreetType.COMMUNITY, 3,false),
-    CHANCE1(StreetType.CHANCE, 1,false), CHANCE2(StreetType.CHANCE, 2,false), CHANCE3(StreetType.CHANCE, 3,false),
-    GO_SPOT(StreetType.CORNER, 1,false), JAIL(StreetType.CORNER, 2,false), FREE_PARKING(StreetType.CORNER, 3,false), GO_TO_JAIL(StreetType.CORNER, 4,false);
+    TAX1(StreetType.TAX, 1, false), TAX2(StreetType.TAX, 2, false),
+    COMMUNITY1(StreetType.COMMUNITY, 1, false), COMMUNITY2(StreetType.COMMUNITY, 2, false), COMMUNITY3(StreetType.COMMUNITY, 3, false),
+    CHANCE1(StreetType.CHANCE, 1, false), CHANCE2(StreetType.CHANCE, 2, false), CHANCE3(StreetType.CHANCE, 3, false),
+    GO_SPOT(StreetType.CORNER, 1, false), JAIL(StreetType.CORNER, 2, false), FREE_PARKING(StreetType.CORNER, 3, false), GO_TO_JAIL(StreetType.CORNER, 4, false);
 
+    private static final Logger log = LoggerFactory.getLogger(SpotType.class);
     public final StreetType streetType;
     public final int id;
     public final boolean isProperty;
@@ -32,7 +35,7 @@ public enum SpotType {
         try {
             props.load(SpotType.class.getResourceAsStream("/" + SpotType.class.getSimpleName() + ".properties"));
         } catch (Exception e) {
-            System.err.println("Error loading SpotType properties: " + e.getMessage());
+            log.error("Error loading SpotType properties: {}", e.getMessage());
         }
     }
 
@@ -69,7 +72,7 @@ public enum SpotType {
         try {
             result = Integer.parseInt(getProperty(propName));
         } catch (NumberFormatException e) {
-            System.err.println("Error getting integer property " + propName + " for property: " + name());
+            log.error("Error getting integer property {} for property: {}", propName, name());
         }
         return result;
     }
