@@ -1,4 +1,4 @@
-import org.example.MonopolyApp;
+import fi.monopoly.MonopolyApp;
 import processing.core.PApplet;
 
 public class StartMonopolyApp {
