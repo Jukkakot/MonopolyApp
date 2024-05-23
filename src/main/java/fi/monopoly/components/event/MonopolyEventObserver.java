@@ -37,6 +37,7 @@ public class MonopolyEventObserver extends PApplet {
         sendConsumableEvent(keyEvent);
         if (keyEvent.getKey() == 'd') {
             MonopolyApp.DEBUG_MODE = !MonopolyApp.DEBUG_MODE;
+            log.debug("Debug mode {},", MonopolyApp.DEBUG_MODE);
         }
         if (keyEvent.getKey() == 'h') {
             log.info("""

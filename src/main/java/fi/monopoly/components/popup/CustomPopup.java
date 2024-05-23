@@ -18,11 +18,11 @@ public class CustomPopup extends Popup {
     private List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
     private final Button closeButton = new MonopolyButton("close")
-            .setPosition(coords.x() + (float) width / 2 - (float) width / 10, coords.y() - (float) height / 2 + (float) height / 20)
+            .setPosition(coords.x() + (float) width / 2 - 30, coords.y() - (float) height / 2 + 10)
             .addListener(e -> allButtonAction())
             .setLabel("X")
             .hide()
-            .setSize(30, 30);
+            .setSize(20, 20);
     private static final int BUTTON_WIDTH = 100;
     private static final int BUTTON_HEIGHT = 50;
 

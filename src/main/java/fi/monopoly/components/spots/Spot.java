@@ -1,12 +1,5 @@
 package fi.monopoly.components.spots;
 
-import fi.monopoly.types.SpotType;
-import fi.monopoly.types.TurnResult;
-import fi.monopoly.utils.Coordinates;
-import fi.monopoly.utils.MonopolyUtils;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
@@ -15,6 +8,13 @@ import fi.monopoly.components.popup.Popup;
 import fi.monopoly.images.Clickable;
 import fi.monopoly.images.Image;
 import fi.monopoly.images.SpotImage;
+import fi.monopoly.types.SpotType;
+import fi.monopoly.types.TurnResult;
+import fi.monopoly.utils.Coordinates;
+import fi.monopoly.utils.MonopolyUtils;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -60,7 +60,10 @@ public abstract class Spot extends Clickable {
         return image.getCoords().move(tokenSpot);
     }
 
-    public abstract TurnResult handleTurn(GameState gameState, CallbackAction callbackAction);
+    public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
+        callbackAction.doAction();
+        return null;
+    }
 
     //TODO move elsewhere?
     protected static void updateMoney(Player player, Integer amount, String popupText, CallbackAction callbackAction) {
@@ -72,5 +75,9 @@ public abstract class Spot extends Clickable {
                 callbackAction.doAction();
             }
         });
+    }
+
+    public boolean isSpotType(SpotType spotType) {
+        return this.spotType.equals(spotType);
     }
 }

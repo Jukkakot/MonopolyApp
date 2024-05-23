@@ -62,7 +62,7 @@ public class SpotImage extends Image {
     private void drawSpot() {
         p.push();
 
-//        p.fill(205, 230, 209);
+        p.fill(205, 230, 209);
         p.strokeWeight(3);
         p.stroke(0);
 

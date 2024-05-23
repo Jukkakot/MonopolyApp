@@ -22,7 +22,7 @@ public class PropertySpotImage extends SpotImage {
         }
     }
 
-    private void drawMortgaged() {
+    protected void drawMortgaged() {
         p.push();
 
         p.strokeWeight(3);

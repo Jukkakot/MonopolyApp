@@ -1,11 +1,5 @@
 package fi.monopoly.components.spots;
 
-import fi.monopoly.types.SpotType;
-import fi.monopoly.types.StreetType;
-import fi.monopoly.types.TurnResult;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
@@ -16,6 +10,12 @@ import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.UtilityProperty;
 import fi.monopoly.images.SpotImage;
+import fi.monopoly.types.SpotType;
+import fi.monopoly.types.StreetType;
+import fi.monopoly.types.TurnResult;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ToString(callSuper = true)
@@ -73,10 +73,11 @@ public class PropertySpot extends Spot {
         }
         String popupText = "Uh oh... you need to pay M" + rent + " rent to " + property.getOwnerPlayer().getName();
         Popup.show(popupText, () -> {
-            if (property.payRent(turnPlayer, rent)) {
+            if (property.getOwnerPlayer().giveMoney(turnPlayer, rent)) {
                 callbackAction.doAction();
             } else {
                 //TODO: handle case if turn player has not enough money
+                log.warn(turnPlayer.getName() + " did not have enough money to pay M" + rent + " rent");
                 callbackAction.doAction();
             }
         });

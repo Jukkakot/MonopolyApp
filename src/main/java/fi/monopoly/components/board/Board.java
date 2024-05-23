@@ -1,18 +1,17 @@
 package fi.monopoly.components.board;
 
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.components.Player;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.components.spots.SpotFactory;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
 import fi.monopoly.types.TurnResult;
 import fi.monopoly.utils.Coordinates;
 import lombok.Getter;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.spots.SpotFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class Board {
@@ -126,7 +125,8 @@ public class Board {
     public Path getPath(Player turnPlayer, Spot end, PathMode pathMode) {
         Spot start = turnPlayer.getSpot();
         if (PathMode.FLY.equals(pathMode)) {
-            List<Spot> result = Collections.singletonList(end);
+            List<Spot> result = new ArrayList<>();
+            result.add(end);
             return new Path(result, turnPlayer);
         }
         return getPath(turnPlayer, getDistance(start, end, pathMode), pathMode);

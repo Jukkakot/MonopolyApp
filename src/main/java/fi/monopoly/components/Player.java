@@ -128,11 +128,11 @@ public class Player extends PlayerToken {
         return false;
     }
 
-    public int getHouseCount() {
+    public int getTotalHouseCount() {
         return ownedProperties.getTotalHouseCount();
     }
 
-    public int getHotelCount() {
+    public int getTotalHotelCount() {
         return ownedProperties.getTotalHotelCount();
     }
 }

@@ -6,7 +6,11 @@ import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.board.Path;
+import fi.monopoly.components.dices.DiceValue;
+import fi.monopoly.components.dices.Dices;
+import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.popup.Popup;
+import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.DiceState;
@@ -14,16 +18,14 @@ import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.TurnResult;
 import javafx.scene.paint.Color;
-import fi.monopoly.components.dices.DiceValue;
-import fi.monopoly.components.dices.Dices;
-import fi.monopoly.components.event.MonopolyEventListener;
-import fi.monopoly.components.properties.PropertyFactory;
+import lombok.extern.slf4j.Slf4j;
 import processing.event.Event;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
 import static processing.event.MouseEvent.CLICK;
 
+@Slf4j
 public class Game implements MonopolyEventListener {
     public static Dices DICES;
     Board board;
@@ -64,7 +66,9 @@ public class Game implements MonopolyEventListener {
         if (MonopolyApp.SKIP_ANNIMATIONS) {
             animations.finishAllAnimations();
         }
-        animations.updateAnimations();
+        if (!Popup.isAnyVisible()) {
+            animations.updateAnimations();
+        }
         board.draw(null);
         DICES.draw(null);
         players.draw();
@@ -78,7 +82,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void endRound(boolean switchTurns) {
-        if(Popup.isAnyVisible()) {
+        if (Popup.isAnyVisible()) {
             return;
         }
         prevTurnResult = null;
@@ -130,9 +134,6 @@ public class Game implements MonopolyEventListener {
         Player turnPlayer = players.getTurn();
         addAnimationAndHandleSpot(path, () -> {
             turnPlayer.setSpot(path.getLastSpot());
-            if (path.containsGoSpot()) {
-                turnPlayer.addMoney(GO_MONEY_AMOUNT);
-            }
             handleSpotLogic(diceState, path.getLastSpot());
         });
         return true;
@@ -175,12 +176,14 @@ public class Game implements MonopolyEventListener {
                 consumedEvent = true;
             }
             if (MonopolyApp.DEBUG_MODE && keyEvent.getKey() == 'e') {
+                log.debug("Ending round");
                 animations.finishAllAnimations();
                 endRound(true);
                 consumedEvent = true;
             }
             if (keyEvent.getKey() == 'a') {
                 MonopolyApp.SKIP_ANNIMATIONS = !MonopolyApp.SKIP_ANNIMATIONS;
+                log.debug("Skip animations: {}", MonopolyApp.SKIP_ANNIMATIONS);
                 consumedEvent = true;
             }
         } else if (event instanceof MouseEvent mouseEvent) {

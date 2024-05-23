@@ -1,11 +1,13 @@
 package fi.monopoly.components.animation;
 
-import fi.monopoly.utils.Coordinates;
-import lombok.Getter;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Drawable;
 import fi.monopoly.components.board.Path;
+import fi.monopoly.utils.Coordinates;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Animation {
     @Getter
     private final Drawable drawable;
@@ -47,12 +49,13 @@ public class Animation {
     }
 
     private Coordinates getGoalCoords() {
-        if (path.isEmpty()) return null;
+        if (path.isEmpty()) {
+            return null;
+        }
 
         Coordinates goalCoords = path.getNext();
-
         if (!isOverMinDistance(goalCoords)) {
-            path.remove(goalCoords);
+            path.removePrevious();
             goalCoords = getGoalCoords();
         }
 
@@ -67,6 +70,9 @@ public class Animation {
         Coordinates currCoords = drawable.getCoords();
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
+        if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
+            log.warn("No movement?");
+        }
         Coordinates newCoords = currCoords.move(dx * ANIMATION_SPEED, dy * ANIMATION_SPEED);
         drawable.setCoords(newCoords);
     }

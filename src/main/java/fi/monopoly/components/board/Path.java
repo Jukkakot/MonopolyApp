@@ -1,51 +1,58 @@
 package fi.monopoly.components.board;
 
+import fi.monopoly.components.Player;
+import fi.monopoly.components.popup.Popup;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.Coordinates;
-import fi.monopoly.components.Player;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+import static fi.monopoly.components.Game.GO_MONEY_AMOUNT;
+
+@Slf4j
 public class Path {
     final List<Spot> spots;
-    List<Coordinates> waypoints;
+    final Player player;
+    @Getter
+    final Spot lastSpot;
+    private boolean hasShownPopupForGoSpot = false;
 
     public Path(List<Spot> spots, Player player) {
         this.spots = spots;
-        waypoints = spots.stream().map(spot -> spot.getTokenCoords(player)).collect(Collectors.toList());
+        this.player = player;
+        this.lastSpot = spots.get(spots.size() - 1);
     }
 
-    public boolean remove(Coordinates coordinates) {
-        return waypoints.remove(coordinates);
+    public void removePrevious() {
+        if (spots == null || spots.isEmpty()) {
+            return;
+        }
+        spots.remove(0);
     }
 
     public boolean isEmpty() {
-        return waypoints.isEmpty();
+        return spots.isEmpty();
     }
 
     public Coordinates getLast() {
-        return waypoints.get(waypoints.size() - 1);
+        return this.lastSpot.getTokenCoords(player);
     }
 
     public Coordinates getNext() {
-        return waypoints.get(0);
+        Spot nextSpot = getNextSpot();
+        if (nextSpot.isSpotType(SpotType.GO_SPOT) && !hasShownPopupForGoSpot) {
+            Popup.show("Player gets M" + GO_MONEY_AMOUNT, () -> {
+                player.addMoney(GO_MONEY_AMOUNT);
+            });
+            hasShownPopupForGoSpot = true;
+        }
+        return nextSpot.getTokenCoords(player);
     }
 
-    public Spot getLastSpot() {
-        return spots.get(spots.size() - 1);
-    }
-
-    private Spot getFirstSpot() {
+    private Spot getNextSpot() {
         return spots.get(0);
-    }
-
-    public boolean containsGoSpot() {
-        return contains(SpotType.GO_SPOT) && getFirstSpot().getSpotType() != SpotType.GO_SPOT;
-    }
-
-    private boolean contains(SpotType spotType) {
-        return spots.stream().anyMatch(spot -> spotType.equals(spot.getSpotType()));
     }
 }

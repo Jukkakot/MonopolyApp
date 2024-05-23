@@ -1,14 +1,13 @@
 package fi.monopoly.images;
 
-import fi.monopoly.utils.Coordinates;
-import fi.monopoly.utils.MonopolyUtils;
-import javafx.scene.paint.Color;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.types.SpotType;
+import fi.monopoly.utils.Coordinates;
+import fi.monopoly.utils.MonopolyUtils;
+import javafx.scene.paint.Color;
 
-import static fi.monopoly.utils.MonopolyUtils.toColor;
 import static processing.core.PConstants.CORNER;
 
 public class StreetPropertySpotImage extends PropertySpotImage {
@@ -21,9 +20,11 @@ public class StreetPropertySpotImage extends PropertySpotImage {
 
     @Override
     public void draw(Coordinates c) {
-        drawStreetSpot(c);
         super.draw(c);
-
+        drawStreetSpot(c);
+        if (streetProperty.isMortgaged()) {
+            drawMortgaged();
+        }
     }
 
     private void drawStreetSpot(Coordinates c) {

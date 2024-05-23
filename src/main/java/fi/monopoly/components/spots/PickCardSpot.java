@@ -2,7 +2,6 @@ package fi.monopoly.components.spots;
 
 import fi.monopoly.components.cards.Card;
 import fi.monopoly.components.cards.Cards;
-import fi.monopoly.types.*;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
@@ -51,7 +50,7 @@ public class PickCardSpot extends Spot {
                 List<Integer> repairPrices = card.values().stream().map(Integer::valueOf).toList();
                 int housePrice = repairPrices.get(0);
                 int hotelPrice = repairPrices.get(1);
-                int totalCost = turnPlayer.getHouseCount() * housePrice + turnPlayer.getHotelCount() * hotelPrice;
+                int totalCost = turnPlayer.getTotalHouseCount() * housePrice + turnPlayer.getTotalHotelCount() * hotelPrice;
                 updateMoney(turnPlayer, -totalCost, card.text(), callbackAction);
             }
             case MOVE -> {

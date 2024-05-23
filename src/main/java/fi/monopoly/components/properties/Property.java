@@ -50,13 +50,6 @@ public abstract class Property {
         return !isOwner(p);
     }
 
-    public boolean payRent(Player fromPlayer, Integer rent) {
-        if (!hasOwner()) {
-            throw new RuntimeException("Property has no owner to pay rent to");
-        }
-        return ownerPlayer.giveMoney(fromPlayer, rent);
-    }
-
     public boolean isSameStreetType(StreetType streetType) {
         return spotType.streetType.equals(streetType);
     }

@@ -2,6 +2,7 @@ package fi.monopoly.components.properties;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.types.SpotType;
+import fi.monopoly.types.StreetType;
 import lombok.ToString;
 
 @ToString(callSuper = true)
@@ -13,7 +14,7 @@ public class RailRoadProperty extends Property {
     @Override
     public Integer getRent(Player player) {
         if (hasOwner() && isNotOwner(player)) {
-            int ownedRailRoadsCount = getOwnerPlayer().getOwnedProperties(spotType.streetType).size();
+            int ownedRailRoadsCount = getOwnerPlayer().getOwnedProperties(StreetType.RAILROAD).size();
             return getRentPrices().get(ownedRailRoadsCount);
         }
         return 0;
