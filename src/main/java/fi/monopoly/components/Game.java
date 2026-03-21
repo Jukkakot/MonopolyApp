@@ -59,7 +59,11 @@ public class Game implements MonopolyEventListener {
         players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B2));
         players.giveRandomDeeds(board);
 
-        endRoundButton.addListener(e -> endRound(true));
+        endRoundButton.addListener(e -> {
+            if (!Popup.isAnyVisible()) {
+                endRound(true);
+            }
+        });
     }
 
     public void draw() {
@@ -82,9 +86,6 @@ public class Game implements MonopolyEventListener {
     }
 
     private void endRound(boolean switchTurns) {
-        if (Popup.isAnyVisible()) {
-            return;
-        }
         prevTurnResult = null;
         if (switchTurns) {
             players.switchTurn();

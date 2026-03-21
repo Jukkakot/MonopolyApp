@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ToString(callSuper = true)
-public class Deed extends Clickable {
+public class Deed extends AbstractClickable {
     @Getter
     private final Property property;
     private String name;

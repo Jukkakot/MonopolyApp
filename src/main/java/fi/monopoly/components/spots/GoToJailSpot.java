@@ -8,7 +8,7 @@ import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.TurnResult;
 
-public class GoToJailSpot extends Spot {
+public class GoToJailSpot extends CornerSpot {
 
     public GoToJailSpot(SpotImage spotImage) {
         super(spotImage);

@@ -5,7 +5,7 @@ import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.popup.Popup;
-import fi.monopoly.images.Clickable;
+import fi.monopoly.images.AbstractClickable;
 import fi.monopoly.images.Image;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.SpotType;
@@ -23,7 +23,7 @@ import java.util.Set;
 
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true)
-public abstract class Spot extends Clickable {
+public abstract class Spot extends AbstractClickable {
     public static final float SPOT_W = 996f / 12f;
     public static final float SPOT_H = SPOT_W * 1.5f;
     @Getter

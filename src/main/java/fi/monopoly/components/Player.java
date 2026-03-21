@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import fi.monopoly.components.popup.Popup;
+import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
@@ -24,22 +25,19 @@ public class Player extends PlayerToken {
     private final String name;
     private final int STARTING_MONEY_AMOUNT = 1500;
     @Getter
-    private Integer money;
+    private Integer moneyAmounnt;
     @Getter
     private int turnNumber;
     private final Properties ownedProperties = new Properties();
     @Getter
     @Setter
     private int getOutOfJailCardCount = 0;
-    @Getter
-    @Setter
-    private boolean isInJail = false;
 
     public Player(String name, Color color, Spot spot) {
         super(spot, color);
         this.id = NEXT_ID++;
         this.name = name;
-        this.money = STARTING_MONEY_AMOUNT;
+        this.moneyAmounnt = STARTING_MONEY_AMOUNT;
         // turn number is id by default. Later maybe implement so that this can change
         this.turnNumber = id + 1; // Turn numbers starts from 1
         setSpot(spot);
@@ -63,12 +61,12 @@ public class Player extends PlayerToken {
     }
 
     public boolean canBuyProperty(Property ps) {
-        return ps.getOwnerPlayer() == null && money >= ps.getPrice();
+        return ps.getOwnerPlayer() == null && moneyAmounnt >= ps.getPrice();
     }
 
     public boolean buyProperty(Property property) {
         if (canBuyProperty(property)) {
-            money -= property.getPrice();
+            addMoney(-property.getPrice());
             giveProperty(property);
             return true;
         }
@@ -76,9 +74,9 @@ public class Player extends PlayerToken {
     }
 
     public boolean addMoney(Integer amount) {
-        if (money + amount >= 0) {
-            money += amount;
-            log.info("Added {} money to {}", amount, name);
+        if (moneyAmounnt + amount >= 0) {
+            moneyAmounnt += amount;
+            log.trace("Added {} money to {}", amount, name);
             return true;
         }
         return false;
@@ -134,5 +132,8 @@ public class Player extends PlayerToken {
 
     public int getTotalHotelCount() {
         return ownedProperties.getTotalHotelCount();
+    }
+    public boolean isInJail() {
+        return JailSpot.jailTimeLeftMap.get(this) != null;
     }
 }

@@ -78,7 +78,7 @@ public class StreetPropertySpot extends PropertySpot {
         //How many houses can property fit still
         int maxHouseCountToBuy = 5 - property.getHouseCount();
         //How many houses can player afford
-        int maxHouseCountAfford = Game.players.getTurn().getMoney() / property.getHousePrice();
+        int maxHouseCountAfford = Game.players.getTurn().getMoneyAmounnt() / property.getHousePrice();
 
         int maxHouseCount = Math.min(maxHouseCountToBuy, maxHouseCountAfford);
         return maxHouseCount;

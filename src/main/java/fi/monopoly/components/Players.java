@@ -209,7 +209,7 @@ public class Players {
 
         p.fill(0);
         p.textFont(MonopolyApp.font30);
-        int moneyAmount = selectedPlayer != null ? selectedPlayer.getMoney() : 0;
+        int moneyAmount = selectedPlayer != null ? selectedPlayer.getMoneyAmounnt() : 0;
         p.translate(MARGIN, textYAxel);
         p.text("M" + moneyAmount, 0, 0);
         p.translate(MARGIN + getOutOFJailImg.getWidth() / 2, -MARGIN);

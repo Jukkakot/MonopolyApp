@@ -71,7 +71,7 @@ public class Animation {
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
         if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
-            log.warn("No movement?");
+//            log.warn("No movement?");
         }
         Coordinates newCoords = currCoords.move(dx * ANIMATION_SPEED, dy * ANIMATION_SPEED);
         drawable.setCoords(newCoords);

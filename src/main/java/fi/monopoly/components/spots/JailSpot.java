@@ -15,7 +15,7 @@ import fi.monopoly.images.SpotImage;
 import java.util.*;
 
 @Slf4j
-public class JailSpot extends Spot {
+public class JailSpot extends CornerSpot {
     //Player,turn counts left
     public static final Map<Player, Integer> jailTimeLeftMap = new HashMap<>();
     public static final int JAIL_ROUND_NUMBER = 3;
@@ -63,7 +63,7 @@ public class JailSpot extends Spot {
         if (shouldNotGoToJail) {
             callbackAction.doAction();
         } else {
-            if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoney() >= GET_OUT_OF_JAIL_FEE) {
+            if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoneyAmounnt() >= GET_OUT_OF_JAIL_FEE) {
                 ButtonAction onAccept = () -> {
                     if (turnPlayer.useGetOutOfJailCard() || turnPlayer.addMoney(-GET_OUT_OF_JAIL_FEE)) {
                         String text = "You were not sent to jail";
@@ -97,7 +97,6 @@ public class JailSpot extends Spot {
 
     private void sendToJail(Player turnPlayer, CallbackAction callbackAction) {
         jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
-        turnPlayer.setInJail(true);
         turnPlayer.setCoords(getTokenCoords(turnPlayer));
         Popup.show("You were sent to jail", callbackAction::doAction);
     }
@@ -124,7 +123,6 @@ public class JailSpot extends Spot {
 
     public static void releaseFromJail(Player player, CallbackAction onGetOufOfJail) {
         jailTimeLeftMap.remove(player);
-        player.setInJail(false);
         Popup.show("You got out of jail", onGetOufOfJail::doAction);
     }
 }
