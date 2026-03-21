@@ -1,5 +1,6 @@
 package fi.monopoly.images;
 
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.components.properties.Property;
@@ -9,8 +10,8 @@ import fi.monopoly.types.SpotType;
 public class PropertySpotImage extends SpotImage {
     private final Property property;
 
-    public PropertySpotImage(Coordinates coords, SpotType spotType) {
-        super(coords, spotType);
+    public PropertySpotImage(MonopolyRuntime runtime, Coordinates coords, SpotType spotType) {
+        super(runtime, coords, spotType);
         this.property = PropertyFactory.getProperty(spotType);
     }
 
@@ -23,6 +24,7 @@ public class PropertySpotImage extends SpotImage {
     }
 
     protected void drawMortgaged() {
+        MonopolyApp p = runtime.app();
         p.push();
 
         p.strokeWeight(3);

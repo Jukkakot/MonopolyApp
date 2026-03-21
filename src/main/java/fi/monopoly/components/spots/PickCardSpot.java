@@ -5,7 +5,6 @@ import fi.monopoly.components.cards.Cards;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
@@ -35,7 +34,7 @@ public class PickCardSpot extends Spot {
                     updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
             case OUT_OF_JAIL -> {
                 turnPlayer.addOutOfJailCard();
-                Popup.show(card.text(), callbackAction::doAction);
+                runtime.popupService().show(card.text(), callbackAction::doAction);
             }
             case ALL_PLAYERS_MONEY -> {
                 // Amount is negative if turnplayer gives money to others
@@ -55,7 +54,7 @@ public class PickCardSpot extends Spot {
             }
             case MOVE -> {
                 SpotType moveToSpotType = SpotType.valueOf(card.values().get(0));
-                Popup.show(card.text(), callbackAction::doAction);
+                runtime.popupService().show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(moveToSpotType)
                         .pathMode(PathMode.NORMAL)
@@ -63,21 +62,21 @@ public class PickCardSpot extends Spot {
             }
             case MOVE_NEAREST -> {
                 StreetType moveToStreetType = StreetType.valueOf(card.values().get(0));
-                Popup.show(card.text(), callbackAction::doAction);
+                runtime.popupService().show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(moveToStreetType)
                         .pathMode(PathMode.NORMAL)
                         .build();
             }
             case MOVE_BACK_3 -> {
-                Popup.show(card.text(), callbackAction::doAction);
+                runtime.popupService().show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(3)
                         .pathMode(PathMode.BACKWARDS)
                         .build();
             }
             case GO_JAIL -> {
-                Popup.show(card.text(), callbackAction::doAction);
+                runtime.popupService().show(card.text(), callbackAction::doAction);
                 return TurnResult.builder()
                         .nextSpotCriteria(SpotType.JAIL)
                         .pathMode(PathMode.FLY)

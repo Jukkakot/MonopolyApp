@@ -1,6 +1,7 @@
 package fi.monopoly.components.board;
 
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.spots.SpotFactory;
@@ -15,11 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Board {
+    private final MonopolyRuntime runtime;
     @Getter //For debugging
     private final List<Spot> spots = new ArrayList<>();
-    MonopolyApp p = MonopolyApp.self;
 
-    public Board() {
+    public Board(MonopolyRuntime runtime) {
+        this.runtime = runtime;
         initSpots();
     }
 
@@ -29,22 +31,22 @@ public class Board {
         int currRotation = 0;
 
         //BOTTOM ROW
-        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
         currX -= Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currX -= Spot.SPOT_W;
 
         }
         currX += Spot.SPOT_W;
         currX -= Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
-        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //LEFT COLUMN
         currRotation += 90;
         currY -= Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currY -= Spot.SPOT_W;
         }
         currY += Spot.SPOT_W;
@@ -52,21 +54,21 @@ public class Board {
 
         //TOP ROW
         currRotation += 90;
-        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
         currX += Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currX += Spot.SPOT_W;
         }
         currX -= Spot.SPOT_W;
         currX += Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
-        spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+        spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
 
         //RIGHT COLUMN
         currRotation += 90;
         currY += Spot.SPOT_H / 2 + Spot.SPOT_W / 2;
         for (int i = 0; i < 9; i++) {
-            spots.add(SpotFactory.getSpot(new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
+            spots.add(SpotFactory.getSpot(runtime, new Coordinates(currX, currY, currRotation), SpotType.SPOT_TYPES.get(spots.size())));
             currY += Spot.SPOT_W;
         }
     }
@@ -93,6 +95,7 @@ public class Board {
     }
 
     private void drawBackground() {
+        MonopolyApp p = runtime.app();
         p.push();
         p.imageMode(p.CENTER);
         float imgSize = Spot.SPOT_W * 9;

@@ -1,7 +1,7 @@
 package fi.monopoly.components.board;
 
+import fi.monopoly.components.animation.AnimationPath;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.Coordinates;
@@ -10,15 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import static fi.monopoly.components.Game.GO_MONEY_AMOUNT;
-
 @Slf4j
-public class Path {
+public class Path implements AnimationPath {
     final List<Spot> spots;
     final Player player;
     @Getter
     final Spot lastSpot;
-    private boolean hasShownPopupForGoSpot = false;
 
     public Path(List<Spot> spots, Player player) {
         this.spots = spots;
@@ -42,17 +39,14 @@ public class Path {
     }
 
     public Coordinates getNext() {
-        Spot nextSpot = getNextSpot();
-        if (nextSpot.isSpotType(SpotType.GO_SPOT) && !hasShownPopupForGoSpot) {
-            Popup.show("Player gets M" + GO_MONEY_AMOUNT, () -> {
-                player.addMoney(GO_MONEY_AMOUNT);
-            });
-            hasShownPopupForGoSpot = true;
-        }
-        return nextSpot.getTokenCoords(player);
+        return getNextSpot().getTokenCoords(player);
     }
 
     private Spot getNextSpot() {
         return spots.get(0);
+    }
+
+    public boolean passesGoSpot() {
+        return spots.stream().anyMatch(spot -> spot.isSpotType(SpotType.GO_SPOT));
     }
 }

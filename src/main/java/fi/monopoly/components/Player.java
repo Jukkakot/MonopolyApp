@@ -1,6 +1,6 @@
 package fi.monopoly.components;
 
-import fi.monopoly.components.popup.Popup;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
@@ -15,6 +15,7 @@ import fi.monopoly.components.properties.Properties;
 import fi.monopoly.components.properties.Property;
 
 import java.util.List;
+import fi.monopoly.utils.Coordinates;
 
 @ToString
 @Slf4j
@@ -33,14 +34,22 @@ public class Player extends PlayerToken {
     @Setter
     private int getOutOfJailCardCount = 0;
 
-    public Player(String name, Color color, Spot spot) {
-        super(spot, color);
+    public Player(MonopolyRuntime runtime, String name, Color color, Spot spot) {
+        super(runtime, spot, color);
         this.id = NEXT_ID++;
         this.name = name;
         this.moneyAmounnt = STARTING_MONEY_AMOUNT;
         // turn number is id by default. Later maybe implement so that this can change
         this.turnNumber = id + 1; // Turn numbers starts from 1
         setSpot(spot);
+    }
+
+    public Player(String name, Color color, int moneyAmount, int turnNumber) {
+        super(null, new Coordinates(), color);
+        this.id = turnNumber - 1;
+        this.name = name;
+        this.moneyAmounnt = moneyAmount;
+        this.turnNumber = turnNumber;
     }
 
     public String getName() {
@@ -90,7 +99,9 @@ public class Player extends PlayerToken {
             addMoney(amount);
             return true;
         }
-        Popup.show(fromPlayer.getName() + " Didn't have enough money to give to " + name);
+        if (runtime != null) {
+            runtime.popupService().show(fromPlayer.getName() + " Didn't have enough money to give to " + name);
+        }
         return false;
     }
 

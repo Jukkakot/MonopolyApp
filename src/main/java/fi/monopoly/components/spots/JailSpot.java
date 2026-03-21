@@ -1,5 +1,6 @@
 package fi.monopoly.components.spots;
 
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.TurnResult;
 import fi.monopoly.utils.Coordinates;
@@ -9,7 +10,6 @@ import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.popup.ButtonAction;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.images.SpotImage;
 
 import java.util.*;
@@ -67,14 +67,14 @@ public class JailSpot extends CornerSpot {
                 ButtonAction onAccept = () -> {
                     if (turnPlayer.useGetOutOfJailCard() || turnPlayer.addMoney(-GET_OUT_OF_JAIL_FEE)) {
                         String text = "You were not sent to jail";
-                        Popup.show(text, callbackAction::doAction);
+                        runtime.popupService().show(text, callbackAction::doAction);
                     } else {
                         String text = "You didn't have get out of jail card or didin't have M50 to pay";
-                        Popup.show(text, () -> sendToJail(turnPlayer, callbackAction));
+                        runtime.popupService().show(text, () -> sendToJail(turnPlayer, callbackAction));
                     }
                 };
                 String text = "Do you want to pay M50 or use get out of jail card to get out of jail?";
-                Popup.show(text, onAccept, () -> sendToJail(turnPlayer, callbackAction));
+                runtime.popupService().show(text, onAccept, () -> sendToJail(turnPlayer, callbackAction));
             } else {
                 sendToJail(turnPlayer, callbackAction);
             }
@@ -98,10 +98,10 @@ public class JailSpot extends CornerSpot {
     private void sendToJail(Player turnPlayer, CallbackAction callbackAction) {
         jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
         turnPlayer.setCoords(getTokenCoords(turnPlayer));
-        Popup.show("You were sent to jail", callbackAction::doAction);
+        runtime.popupService().show("You were sent to jail", callbackAction::doAction);
     }
 
-    public static void tryToGetOufOfJail(Player player, DiceValue diceValue, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
+    public void tryToGetOufOfJail(Player player, DiceValue diceValue, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
         Integer roundCount = jailTimeLeftMap.get(player);
         if (!player.isInJail() || roundCount < 0) {
             throw new RuntimeException("Error with jail handling!");
@@ -117,12 +117,12 @@ public class JailSpot extends CornerSpot {
             releaseFromJail(player, onGetOufOfJail);
         } else {
             jailTimeLeftMap.put(player, jailTimeLeftMap.get(player) - 1);
-            Popup.show("You still have " + jailTimeLeftMap.get(player) + " rounds left in jail", onStayInjail::doAction);
+            runtime.popupService().show("You still have " + jailTimeLeftMap.get(player) + " rounds left in jail", onStayInjail::doAction);
         }
     }
 
-    public static void releaseFromJail(Player player, CallbackAction onGetOufOfJail) {
+    public void releaseFromJail(Player player, CallbackAction onGetOufOfJail) {
         jailTimeLeftMap.remove(player);
-        Popup.show("You got out of jail", onGetOufOfJail::doAction);
+        runtime.popupService().show("You got out of jail", onGetOufOfJail::doAction);
     }
 }

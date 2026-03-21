@@ -1,9 +1,8 @@
 package fi.monopoly.images;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.event.MonopolyEventListener;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.types.SpotType;
 import lombok.Getter;
 import lombok.ToString;
@@ -14,15 +13,21 @@ import processing.event.MouseEvent;
 @Slf4j
 @ToString(callSuper = true)
 public abstract class AbstractClickable implements MonopolyEventListener, Clickable {
+    protected final MonopolyRuntime runtime;
     @Getter
     protected final Image image;
 
-    public AbstractClickable(SpotType spotType) {
-        this(ImageFactory.getImage(null, spotType));
+    public AbstractClickable(MonopolyRuntime runtime, SpotType spotType) {
+        this(runtime, ImageFactory.getImage(runtime, null, spotType));
     }
 
     public AbstractClickable(Image image) {
-        MonopolyApp.addListener(this);
+        this(image.runtime, image);
+    }
+
+    public AbstractClickable(MonopolyRuntime runtime, Image image) {
+        this.runtime = runtime;
+        runtime.eventBus().addListener(this);
         this.image = image;
     }
 
@@ -31,7 +36,7 @@ public abstract class AbstractClickable implements MonopolyEventListener, Clicka
         if (Game.animations.isRunning()) {
             return false;
         }
-        if (Popup.isAnyVisible()) {
+        if (runtime.popupService().isAnyVisible()) {
             return false;
         }
         boolean eventConsumed = false;

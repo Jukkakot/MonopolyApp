@@ -4,7 +4,6 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.PlayerToken;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.images.AbstractClickable;
 import fi.monopoly.images.Image;
 import fi.monopoly.images.SpotImage;
@@ -66,8 +65,8 @@ public abstract class Spot extends AbstractClickable {
     }
 
     //TODO move elsewhere?
-    protected static void updateMoney(Player player, Integer amount, String popupText, CallbackAction callbackAction) {
-        Popup.show(popupText, () -> {
+    protected void updateMoney(Player player, Integer amount, String popupText, CallbackAction callbackAction) {
+        runtime.popupService().show(popupText, () -> {
             if (player.addMoney(amount)) {
                 callbackAction.doAction();
             } else {

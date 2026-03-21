@@ -1,17 +1,17 @@
 package fi.monopoly.components;
 
 import controlP5.Button;
+import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.MonopolyUtils;
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.components.popup.ButtonAction;
 
 public class MonopolyButton extends Button {
     private ButtonAction buttonAction;
 
-    public MonopolyButton(String id) {
-        super(MonopolyApp.p5, id);
-        setFont(MonopolyApp.font20);
+    public MonopolyButton(MonopolyRuntime runtime, String id) {
+        super(runtime.controlP5(), id);
+        setFont(runtime.font20());
     }
 
     public MonopolyButton setPosition(Coordinates coordinates) {

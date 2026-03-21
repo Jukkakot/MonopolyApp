@@ -2,10 +2,10 @@ package fi.monopoly.components.dices;
 
 import controlP5.Button;
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.event.MonopolyEventListener;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.utils.Coordinates;
@@ -17,31 +17,34 @@ import processing.event.Event;
 import processing.event.KeyEvent;
 
 public class Dices implements MonopolyEventListener {
+    private final MonopolyRuntime runtime;
     private final Pair<Dice, Dice> dices;
-    private static final Button rollDiceButton = new MonopolyButton( "rollDice")
-            .setPosition((int) (Spot.SPOT_W * 5.4), Spot.SPOT_W * 3)
-            .setLabel("Roll dice")
-            .setSize(100, 50);
+    private final Button rollDiceButton;
     private int pairCount = 0;
     @Getter
     @Setter // Just for debugging can manually set dice value..
     private DiceValue value;
 
-    public Dices() {
-        MonopolyApp.addListener(this);
+    public Dices(MonopolyRuntime runtime) {
+        this.runtime = runtime;
+        this.rollDiceButton = new MonopolyButton(runtime, "rollDice")
+                .setPosition((int) (Spot.SPOT_W * 5.4), Spot.SPOT_W * 3)
+                .setLabel("Roll dice")
+                .setSize(100, 50);
+        runtime.eventBus().addListener(this);
         float diceSideLength = Spot.SPOT_W / 2;
         SpotProps sp1 = new SpotProps((int) (Spot.SPOT_W * 5.7), (int) (Spot.SPOT_W * 2.5), diceSideLength, diceSideLength);
         SpotProps sp2 = new SpotProps((int) (Spot.SPOT_W * 6.3), sp1.y(), sp1.w(), sp1.h());
-        dices = new Pair<>(new Dice(sp1), new Dice(sp2));
+        dices = new Pair<>(new Dice(runtime, sp1), new Dice(runtime, sp2));
 
         rollDiceButton.addListener(e -> rollDice());
     }
 
-    public static Dices setRollDice(CallbackAction onRollAction) {
-        return new Dices() {
+    public static Dices setRollDice(MonopolyRuntime runtime, CallbackAction onRollAction) {
+        return new Dices(runtime) {
             @Override
             public void rollDice() {
-                if (Popup.isAnyVisible()) {
+                if (runtime.popupService().isAnyVisible()) {
                     return;
                 }
                 super.rollDice();
@@ -63,7 +66,7 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void rollDice() {
-        if (!Popup.isAnyVisible()) {
+        if (!runtime.popupService().isAnyVisible()) {
             roll();
             rollDiceButton.hide();
         }
@@ -89,7 +92,7 @@ public class Dices implements MonopolyEventListener {
 
     @Override
     public boolean onEvent(Event event) {
-        if (!isVisible() || Popup.isAnyVisible()) return false;
+        if (!isVisible() || runtime.popupService().isAnyVisible()) return false;
         if (event instanceof KeyEvent keyEvent && (keyEvent.getKey() == MonopolyApp.SPACE || keyEvent.getKey() == MonopolyApp.ENTER)) {
             rollDice();
             return true;

@@ -18,7 +18,11 @@ public class MonopolyUtils {
     }
 
     public static int toColor(Color color) {
-        return MonopolyApp.self.color(toFloat(color.getRed()), toFloat(color.getGreen()), toFloat(color.getBlue()));
+        return toColor(MonopolyApp.self, color);
+    }
+
+    public static int toColor(MonopolyApp app, Color color) {
+        return app.color(toFloat(color.getRed()), toFloat(color.getGreen()), toFloat(color.getBlue()));
     }
 
     public static Color toColor(int r, int g, int b) {
@@ -26,7 +30,12 @@ public class MonopolyUtils {
     }
 
     public static boolean isMouseInArea(SpotProps areaProps) {
-        return isPointInArea(MonopolyApp.self.mouseX, MonopolyApp.self.mouseY, areaProps);
+        MonopolyApp app = MonopolyApp.self;
+        return isMouseInArea(app, areaProps);
+    }
+
+    public static boolean isMouseInArea(MonopolyApp app, SpotProps areaProps) {
+        return isPointInArea(app.mouseX, app.mouseY, areaProps);
     }
 
     public static boolean isMouseInArea(Coordinates coords, float width, float height) {

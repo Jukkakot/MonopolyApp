@@ -2,43 +2,41 @@ package fi.monopoly.components.popup;
 
 import controlP5.Button;
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChoicePopup extends Popup {
+    private final Button acceptButton;
+    private final Button declineButton;
 
-    private final Button acceptButton = new MonopolyButton("accept")
-            .setPosition(coords.x() - 150, coords.y() + (float) height / 4)
-            .addListener(e -> acceptAction())
-            .setLabel("Accept")
-            .hide()
-            .setSize(100, 50);
-    private final Button declineButton = new MonopolyButton("decline")
-            .setPosition(coords.x() + 50, coords.y() + (float) height / 4)
-            .addListener(e -> declineAction())
-            .setLabel("Decline")
-            .hide()
-            .setSize(100, 50);
     @Setter
     private ButtonAction onAcceptAction;
     @Setter
     private ButtonAction onDeclineAction;
 
+    protected ChoicePopup(MonopolyRuntime runtime) {
+        super(runtime);
+        this.acceptButton = new MonopolyButton(runtime, "accept")
+                .setPosition(coords.x() - 150, coords.y() + (float) height / 4)
+                .addListener(e -> acceptAction())
+                .setLabel("Accept")
+                .hide()
+                .setSize(100, 50);
+        this.declineButton = new MonopolyButton(runtime, "decline")
+                .setPosition(coords.x() + 50, coords.y() + (float) height / 4)
+                .addListener(e -> declineAction())
+                .setLabel("Decline")
+                .hide()
+                .setSize(100, 50);
+    }
+
     private void acceptAction() {
-        if (onAcceptAction != null) {
-            onAcceptAction.doAction();
-        }
-        allButtonAction();
+        completeAction(onAcceptAction);
     }
 
     private void declineAction() {
-        if (onDeclineAction != null) {
-            onDeclineAction.doAction();
-        }
-        allButtonAction();
+        completeAction(onDeclineAction);
     }
 
     @Override

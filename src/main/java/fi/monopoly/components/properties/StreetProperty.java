@@ -1,7 +1,6 @@
 package fi.monopoly.components.properties;
 
 import fi.monopoly.components.Player;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.types.SpotType;
 import lombok.Getter;
 import lombok.ToString;
@@ -45,7 +44,9 @@ public class StreetProperty extends Property {
         if (ownerPlayer.addMoney(-count * housePrice)) {
             houseCount += count;
         } else {
-            Popup.show("You dont have enough money to buy " + count + " houses");
+            if (ownerPlayer != null && ownerPlayer.getRuntime() != null) {
+                ownerPlayer.getRuntime().popupService().show("You dont have enough money to buy " + count + " houses");
+            }
             return false;
         }
         updateHotelCount();

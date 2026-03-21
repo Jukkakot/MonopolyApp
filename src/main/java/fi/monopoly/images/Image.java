@@ -1,6 +1,7 @@
 package fi.monopoly.images;
 
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Drawable;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.MonopolyUtils;
@@ -15,6 +16,7 @@ import static fi.monopoly.utils.MonopolyUtils.toColor;
 
 @ToString(onlyExplicitlyIncluded = true)
 public class Image implements Drawable {
+    protected final MonopolyRuntime runtime;
     @Setter
     @Getter
     protected Coordinates coords;
@@ -25,14 +27,14 @@ public class Image implements Drawable {
     @Getter
     @Setter
     protected boolean isHovered = false;
-    protected static final MonopolyApp p = MonopolyApp.self;
     protected static final float HOVER_SCALE = 1.1f;
 
-    public Image(SpotProps sp, String imgName) {
-        this(Coordinates.of(sp), imgName, sp.w(), sp.h());
+    public Image(MonopolyRuntime runtime, SpotProps sp, String imgName) {
+        this(runtime, Coordinates.of(sp), imgName, sp.w(), sp.h());
     }
 
-    public Image(Coordinates coords, String imgName, float width, float height) {
+    public Image(MonopolyRuntime runtime, Coordinates coords, String imgName, float width, float height) {
+        this.runtime = runtime;
         this.coords = coords;
         this.imgName = imgName;
         this.width = width;
@@ -61,6 +63,7 @@ public class Image implements Drawable {
             c = coords;
         }
         setCoords(c);
+        MonopolyApp p = runtime.app();
         p.push();
 
         p.translate(c.x(), c.y());
@@ -69,7 +72,7 @@ public class Image implements Drawable {
         PImage img = MonopolyApp.getImage(imgName);
         if (img != null) {
             if (color != null) {
-                p.tint(MonopolyUtils.toColor(color));
+                p.tint(MonopolyUtils.toColor(p, color));
             }
             p.image(img, 0, 0, getWidth(), getHeight());
         }

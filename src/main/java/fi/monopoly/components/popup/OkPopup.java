@@ -2,31 +2,31 @@ package fi.monopoly.components.popup;
 
 import controlP5.Button;
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.List;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OkPopup extends Popup {
     private static final List<Character> OK_ACTION_CHAR_LIST = Arrays.asList('1', MonopolyApp.SPACE, MonopolyApp.ENTER);
     @Setter
     private ButtonAction onOkAction;
-    private final Button okButton = new MonopolyButton("ok")
-            .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
-            .addListener(e -> okAction())
-            .setLabel("Ok")
-            .hide()
-            .setSize(100, 50);
+    private final Button okButton;
+
+    protected OkPopup(MonopolyRuntime runtime) {
+        super(runtime);
+        this.okButton = new MonopolyButton(runtime, "ok")
+                .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
+                .addListener(e -> okAction())
+                .setLabel("Ok")
+                .hide()
+                .setSize(100, 50);
+    }
 
     private void okAction() {
-        if (onOkAction != null) {
-            onOkAction.doAction();
-        }
-        allButtonAction();
+        completeAction(onOkAction);
     }
 
     @Override

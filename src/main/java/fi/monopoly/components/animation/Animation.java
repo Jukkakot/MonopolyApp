@@ -2,7 +2,6 @@ package fi.monopoly.components.animation;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Drawable;
-import fi.monopoly.components.board.Path;
 import fi.monopoly.utils.Coordinates;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -11,12 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 public class Animation {
     @Getter
     private final Drawable drawable;
-    private final Path path;
+    private final AnimationPath path;
     private final static float MIN_ANIM_DISTANCE = 2;
     private final static float ANIMATION_SPEED = 0.4f;
     private final CallbackAction onAnimationEnd;
 
-    public Animation(Drawable drawable, Path path, CallbackAction onAnimationEnd) {
+    public Animation(Drawable drawable, AnimationPath path, CallbackAction onAnimationEnd) {
         this.drawable = drawable;
         this.path = path;
         this.onAnimationEnd = onAnimationEnd;
@@ -67,13 +66,16 @@ public class Animation {
     }
 
     private void moveTowardsCoords(Coordinates goalCoords) {
-        Coordinates currCoords = drawable.getCoords();
+        Coordinates newCoords = getNextAnimationCoords(drawable.getCoords(), goalCoords);
+        drawable.setCoords(newCoords);
+    }
+
+    static Coordinates getNextAnimationCoords(Coordinates currCoords, Coordinates goalCoords) {
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
         if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
 //            log.warn("No movement?");
         }
-        Coordinates newCoords = currCoords.move(dx * ANIMATION_SPEED, dy * ANIMATION_SPEED);
-        drawable.setCoords(newCoords);
+        return currCoords.move(dx * ANIMATION_SPEED, dy * ANIMATION_SPEED);
     }
 }

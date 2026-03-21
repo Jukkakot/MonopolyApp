@@ -2,6 +2,7 @@ package fi.monopoly.components;
 
 import controlP5.Button;
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -9,10 +10,16 @@ import fi.monopoly.components.board.Path;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.components.turn.EndTurnEffect;
+import fi.monopoly.components.turn.MovePlayerEffect;
+import fi.monopoly.components.turn.ShowDiceEffect;
+import fi.monopoly.components.turn.ShowEndTurnEffect;
+import fi.monopoly.components.turn.TurnEffect;
+import fi.monopoly.components.turn.TurnEngine;
+import fi.monopoly.components.turn.TurnPlan;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
@@ -27,30 +34,34 @@ import static processing.event.MouseEvent.CLICK;
 
 @Slf4j
 public class Game implements MonopolyEventListener {
+    private final MonopolyRuntime runtime;
     public static Dices DICES;
     Board board;
     public static Players players;
     public static Animations animations;
     TurnResult prevTurnResult;
+    private final TurnEngine turnEngine = new TurnEngine();
+    private final Button endRoundButton;
 
     public static int GO_MONEY_AMOUNT = 200;
-    private static final Button endRoundButton = new MonopolyButton("endRound")
-            .setPosition((int) (Spot.SPOT_W * 5.4), MonopolyApp.self.height - Spot.SPOT_W * 3)
-            .setLabel("End round")
-            .setSize(100, 50)
-            .hide();
 
-    public Game() {
-        MonopolyApp.addListener(this);
-        board = new Board();
-        DICES = Dices.setRollDice(this::rollDice);
-        players = new Players();
+    public Game(MonopolyRuntime runtime) {
+        this.runtime = runtime;
+        this.endRoundButton = new MonopolyButton(runtime, "endRound")
+                .setPosition((int) (Spot.SPOT_W * 5.4), runtime.app().height - Spot.SPOT_W * 3)
+                .setLabel("End round")
+                .setSize(100, 50)
+                .hide();
+        runtime.eventBus().addListener(this);
+        board = new Board(runtime);
+        DICES = Dices.setRollDice(runtime, this::rollDice);
+        players = new Players(runtime);
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player("Eka", Color.MEDIUMPURPLE, spot));
-        players.addPlayer(new Player("Toka", Color.PINK, spot));
-        players.addPlayer(new Player("Kolmas", Color.DARKOLIVEGREEN, spot));
+        players.addPlayer(new Player(runtime, "Eka", Color.MEDIUMPURPLE, spot));
+        players.addPlayer(new Player(runtime, "Toka", Color.PINK, spot));
+        players.addPlayer(new Player(runtime, "Kolmas", Color.DARKOLIVEGREEN, spot));
 //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
 //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
 //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
@@ -60,7 +71,7 @@ public class Game implements MonopolyEventListener {
         players.giveRandomDeeds(board);
 
         endRoundButton.addListener(e -> {
-            if (!Popup.isAnyVisible()) {
+            if (!runtime.popupService().isAnyVisible()) {
                 endRound(true);
             }
         });
@@ -70,7 +81,7 @@ public class Game implements MonopolyEventListener {
         if (MonopolyApp.SKIP_ANNIMATIONS) {
             animations.finishAllAnimations();
         }
-        if (!Popup.isAnyVisible()) {
+        if (!runtime.popupService().isAnyVisible()) {
             animations.updateAnimations();
         }
         board.draw(null);
@@ -79,7 +90,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void rollDice() {
-        if (Popup.isAnyVisible()) {
+        if (runtime.popupService().isAnyVisible()) {
             return;
         }
         playRound(DICES.getValue());
@@ -103,27 +114,23 @@ public class Game implements MonopolyEventListener {
     private void playRound(DiceValue diceValue) {
         Player turnPlayer = players.getTurn();
         if (turnPlayer.isInJail()) {
-            ((JailSpot) turnPlayer.getSpot()).handleInJailTurn(turnPlayer, diceValue, () -> endRound(false), () -> endRound(true));
+            ((JailSpot) turnPlayer.getSpot()).handleInJailTurn(turnPlayer, diceValue, () -> applyTurnPlan(turnEngine.endTurn(false)), () -> applyTurnPlan(turnEngine.endTurn(true)));
             return;
         }
-        Spot newSpot = getNewSpot(diceValue);
-        DiceState diceState = diceValue.diceState();
-        if (DiceState.JAIL.equals(diceState)) {
+        if (DiceState.JAIL.equals(diceValue.diceState())) {
             prevTurnResult = TurnResult.builder().shouldGoToJail(true).build();
-            playRound(board.getPathWithCriteria(SpotType.JAIL), diceState);
-        } else {
-            playRound(newSpot, diceState);
         }
+        applyTurnPlan(turnEngine.createMovementPlan(turnPlayer, board, diceValue));
     }
 
     private boolean playRound(Spot newSpot, DiceState diceState) {
         Player turnPlayer = players.getTurn();
         if (newSpot.equals(turnPlayer.getSpot())) {
-            Popup.show("Can't move to same spot that player is in");
+            runtime.popupService().show("Can't move to same spot that player is in");
             return false;
         }
         if (turnPlayer.isInJail()) {
-            Popup.show("Can't move out when player is in jail");
+            runtime.popupService().show("Can't move out when player is in jail");
             return false;
         }
         PathMode pathMode = DiceState.DEBUG_REROLL.equals(diceState) || DiceState.JAIL.equals(diceState) ? PathMode.FLY : PathMode.NORMAL;
@@ -134,8 +141,18 @@ public class Game implements MonopolyEventListener {
     private boolean playRound(Path path, DiceState diceState) {
         Player turnPlayer = players.getTurn();
         addAnimationAndHandleSpot(path, () -> {
-            turnPlayer.setSpot(path.getLastSpot());
-            handleSpotLogic(diceState, path.getLastSpot());
+            CallbackAction completeTurnMove = () -> {
+                turnPlayer.setSpot(path.getLastSpot());
+                handleSpotLogic(diceState, path.getLastSpot());
+            };
+            if (path.passesGoSpot()) {
+                runtime.popupService().show("Player gets M" + GO_MONEY_AMOUNT, () -> {
+                    turnPlayer.addMoney(GO_MONEY_AMOUNT);
+                    completeTurnMove.doAction();
+                });
+                return;
+            }
+            completeTurnMove.doAction();
         });
         return true;
     }
@@ -152,24 +169,29 @@ public class Game implements MonopolyEventListener {
     }
 
     private void doTurnEndEvent(DiceState diceState) {
-        //TODO any better way to check if player went to jail?
-//        Integer jailRoundCount = JailSpot.playersRoundsLeftMap.get(players.getTurn());
-//        boolean wentToJail = jailRoundCount != null && jailRoundCount == JailSpot.JAIL_ROUND_NUMBER;
-        if (prevTurnResult != null) {
-            //Go to jail, go to next railway station etc...
-            Path path = board.getPathWithCriteria(prevTurnResult, players.getTurn());
-            playRound(path, diceState);
-        } else if (DiceState.DOUBLES.equals(diceState)) {
-            DICES.show();
-        } else {
-            endRoundButton.show();
+        applyTurnPlan(turnEngine.createFollowUpPlan(players.getTurn(), board, prevTurnResult, diceState));
+    }
+
+    private void applyTurnPlan(TurnPlan turnPlan) {
+        for (TurnEffect effect : turnPlan.effects()) {
+            if (effect instanceof MovePlayerEffect movePlayerEffect) {
+                playRound(movePlayerEffect.path(), movePlayerEffect.diceState());
+            } else if (effect instanceof ShowDiceEffect) {
+                DICES.show();
+            } else if (effect instanceof ShowEndTurnEffect) {
+                endRoundButton.show();
+            } else if (effect instanceof EndTurnEffect endTurnEffect) {
+                endRound(endTurnEffect.switchTurns());
+            } else {
+                throw new IllegalStateException("Unhandled turn effect: " + effect.getClass().getSimpleName());
+            }
         }
     }
 
     public boolean onEvent(Event event) {
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
-            if (Popup.isAnyVisible()) {
+            if (runtime.popupService().isAnyVisible()) {
                 return consumedEvent;
             }
             if (endRoundButton.isVisible() && (keyEvent.getKey() == MonopolyApp.SPACE || keyEvent.getKey() == MonopolyApp.ENTER)) {
@@ -189,7 +211,7 @@ public class Game implements MonopolyEventListener {
             }
         } else if (event instanceof MouseEvent mouseEvent) {
             if (mouseEvent.getAction() == CLICK) {
-                if (Popup.isAnyVisible()) {
+                if (runtime.popupService().isAnyVisible()) {
                     return consumedEvent;
                 }
                 Spot hoveredSpot = board.getHoveredSpot();

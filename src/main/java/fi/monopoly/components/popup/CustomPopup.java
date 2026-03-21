@@ -2,29 +2,32 @@ package fi.monopoly.components.popup;
 
 import controlP5.Button;
 import controlP5.Controller;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.utils.Coordinates;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CustomPopup extends Popup {
     private List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
-    private final Button closeButton = new MonopolyButton("close")
-            .setPosition(coords.x() + (float) width / 2 - 30, coords.y() - (float) height / 2 + 10)
-            .addListener(e -> allButtonAction())
-            .setLabel("X")
-            .hide()
-            .setSize(20, 20);
+    private final Button closeButton;
     private static final int BUTTON_WIDTH = 100;
     private static final int BUTTON_HEIGHT = 50;
+
+    protected CustomPopup(MonopolyRuntime runtime) {
+        super(runtime);
+        this.closeButton = new MonopolyButton(runtime, "close")
+                .setPosition(coords.x() + (float) width / 2 - 30, coords.y() - (float) height / 2 + 10)
+                .addListener(e -> completeAction(null))
+                .setLabel("X")
+                .hide()
+                .setSize(20, 20);
+    }
 
     public void setButtons(ButtonProps... buttonProps) {
         totalButtonCount = buttonProps.length;
@@ -35,7 +38,7 @@ public class CustomPopup extends Popup {
     }
 
     private MonopolyButton getButton(ButtonProps buttonProps) {
-        MonopolyButton button = new MonopolyButton("customButton" + customButtons.size())
+        MonopolyButton button = new MonopolyButton(runtime, "customButton" + customButtons.size())
                 .setLabel(buttonProps.name())
                 .setPosition(getButtonCoords())
                 .addListener(() -> getButtonAction(buttonProps.buttonAction()));
@@ -77,10 +80,7 @@ public class CustomPopup extends Popup {
     }
 
     private void getButtonAction(ButtonAction buttonAction) {
-        allButtonAction();
-        if (buttonAction != null) {
-            buttonAction.doAction();
-        }
+        completeAction(buttonAction);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class CustomPopup extends Popup {
 
     protected boolean onKeyAction(char key) {
         if (key == 'x') {
-            allButtonAction();
+            completeAction(null);
             return true;
         }
         try {

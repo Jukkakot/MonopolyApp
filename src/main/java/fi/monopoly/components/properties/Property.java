@@ -3,6 +3,7 @@ package fi.monopoly.components.properties;
 import fi.monopoly.components.Player;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
+import fi.monopoly.utils.MonopolyUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -52,6 +53,11 @@ public abstract class Property {
 
     public boolean isSameStreetType(StreetType streetType) {
         return spotType.streetType.equals(streetType);
+    }
+
+    public String getDisplayName() {
+        String spotName = spotType.getStringProperty("name");
+        return spotName.isBlank() ? spotType.name() : MonopolyUtils.parseIllegalCharacters(spotName);
     }
 
     public abstract Integer getRent(Player player);

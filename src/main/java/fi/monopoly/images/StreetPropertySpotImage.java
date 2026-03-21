@@ -1,6 +1,7 @@
 package fi.monopoly.images;
 
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.types.SpotType;
@@ -13,8 +14,8 @@ import static processing.core.PConstants.CORNER;
 public class StreetPropertySpotImage extends PropertySpotImage {
     private final StreetProperty streetProperty;
 
-    public StreetPropertySpotImage(Coordinates coords, SpotType spotType) {
-        super(coords, spotType);
+    public StreetPropertySpotImage(MonopolyRuntime runtime, Coordinates coords, SpotType spotType) {
+        super(runtime, coords, spotType);
         this.streetProperty = (StreetProperty) PropertyFactory.getProperty(spotType);
     }
 
@@ -31,6 +32,7 @@ public class StreetPropertySpotImage extends PropertySpotImage {
         if (c != null) {
             coords = c;
         }
+        MonopolyApp p = runtime.app();
         p.push();
 
         p.noFill();
@@ -42,14 +44,14 @@ public class StreetPropertySpotImage extends PropertySpotImage {
         //Property color
         p.rotate(MonopolyApp.radians((coords.r())));
         Color color = spotType.streetType.color;
-        p.fill(MonopolyUtils.toColor(color));
+        p.fill(MonopolyUtils.toColor(p, color));
 
         p.rect(-getWidth() / 2, -getHeight() / 2, getWidth(), getHeight() / 4);
 
 
         p.fill(0);
         p.textAlign(p.CENTER);
-        p.textFont(MonopolyApp.font10);
+        p.textFont(runtime.font10());
         p.textLeading(10);
         p.text(spotType.getStringProperty("name"), (int) -(getWidth() * 0.37), -getHeight() / 6, (int) (getWidth() * 0.75), getHeight() / 2);
 

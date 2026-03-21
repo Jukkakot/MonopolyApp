@@ -1,13 +1,14 @@
 package fi.monopoly.components.dices;
 
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.utils.SpotProps;
 import fi.monopoly.images.Image;
 
 public class Dice extends Image {
     private int value = 1;
 
-    public Dice(SpotProps sp) {
-        super(sp, null);
+    public Dice(MonopolyRuntime runtime, SpotProps sp) {
+        super(runtime, sp, null);
         setImgName(getDiceImgName());
     }
 

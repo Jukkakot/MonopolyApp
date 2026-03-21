@@ -1,5 +1,6 @@
 package fi.monopoly.components.spots;
 
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.Coordinates;
@@ -10,9 +11,9 @@ import fi.monopoly.images.SpotImage;
 @UtilityClass
 public class SpotFactory {
 
-    public Spot getSpot(Coordinates coords, SpotType spotType) {
+    public Spot getSpot(MonopolyRuntime runtime, Coordinates coords, SpotType spotType) {
         PlaceType pt = spotType.streetType.placeType;
-        SpotImage image = ImageFactory.getImage(coords, spotType);
+        SpotImage image = ImageFactory.getImage(runtime, coords, spotType);
         if (spotType.isProperty) {
             if (PlaceType.STREET.equals(pt)) {
                 return new StreetPropertySpot(image, spotType);

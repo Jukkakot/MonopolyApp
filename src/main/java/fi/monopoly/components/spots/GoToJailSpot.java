@@ -2,7 +2,6 @@ package fi.monopoly.components.spots;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
@@ -16,7 +15,7 @@ public class GoToJailSpot extends CornerSpot {
 
     @Override
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
-        Popup.show("Go to jail", callbackAction::doAction);
+        runtime.popupService().show("Go to jail", callbackAction::doAction);
         return TurnResult.builder()
                 .nextSpotCriteria(SpotType.JAIL)
                 .pathMode(PathMode.FLY)

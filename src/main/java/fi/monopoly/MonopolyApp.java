@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static fi.monopoly.utils.MonopolyUtils.toColor;
-
 public class MonopolyApp extends MonopolyEventObserver {
     public static MonopolyApp self;
     public static boolean DEBUG_MODE = false;
@@ -32,6 +30,7 @@ public class MonopolyApp extends MonopolyEventObserver {
 
     public MonopolyApp() {
         self = this;
+        MonopolyRuntime.initialize(this, null, null, null, null);
     }
 
     public void settings() {
@@ -44,8 +43,9 @@ public class MonopolyApp extends MonopolyEventObserver {
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
         font30 = createFont("Monopoly Regular.ttf", 30);
+        MonopolyRuntime.initialize(this, p5, font10, font20, font30);
         textFont(font10);
-        game = new Game();
+        game = new Game(MonopolyRuntime.get());
     }
 
     public void draw() {
@@ -73,7 +73,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             return null;
         }
         if (color != null) {
-            return getColoredCopy(image, MonopolyUtils.toColor(color));
+            return getColoredCopy(image, MonopolyUtils.toColor(self, color));
         }
         return image;
     }

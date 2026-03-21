@@ -17,16 +17,27 @@ public class UtilityProperty extends Property {
     @Override
     public Integer getRent(Player player) {
         if (hasOwner() && isNotOwner(player)) {
-            int multiplier = 4;
-            if (getOwnerPlayer().ownsAllStreetProperties(spotType.streetType)) {
-                multiplier = 10;
-            }
-            return Game.DICES.getValue().value() * multiplier;
+            return getRentForDiceValue(player, Game.DICES.getValue().value());
         }
         return 0;
     }
 
     public Integer getMultiplierRent(Dices dices) {
-        return dices.getValue().value() * MOVE_NEAREST_CARD_UTIL_MULTIPLIER;
+        return getMultiplierRent(dices.getValue().value());
+    }
+
+    public Integer getRentForDiceValue(Player player, int diceValue) {
+        if (hasOwner() && isNotOwner(player)) {
+            int multiplier = 4;
+            if (getOwnerPlayer().ownsAllStreetProperties(spotType.streetType)) {
+                multiplier = 10;
+            }
+            return diceValue * multiplier;
+        }
+        return 0;
+    }
+
+    public Integer getMultiplierRent(int diceValue) {
+        return diceValue * MOVE_NEAREST_CARD_UTIL_MULTIPLIER;
     }
 }

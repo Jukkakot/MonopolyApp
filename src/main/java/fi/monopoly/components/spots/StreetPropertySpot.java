@@ -2,7 +2,6 @@ package fi.monopoly.components.spots;
 
 import fi.monopoly.components.Game;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
@@ -31,18 +30,18 @@ public class StreetPropertySpot extends PropertySpot {
             return;
         }
         if(turnPlayer.getOwnedProperties(spotType.streetType).stream().anyMatch(Property::isMortgaged)) {
-            Popup.show("Cannot buy buildings when some of the properties are mortgaged");
+            runtime.popupService().show("Cannot buy buildings when some of the properties are mortgaged");
             return;
         }
         if (!turnPlayer.ownsAllStreetProperties(spotType.streetType)) {
-            Popup.show("You can't buy houses unless you own all same street properties");
+            runtime.popupService().show("You can't buy houses unless you own all same street properties");
             return;
         }
         if (property.hasBuildings()) {
             if (property.getHotelCount() == 1) {
                 handleSellBuildings();
             } else {
-                Popup.show("Do you want to buy or sell houses?",
+                runtime.popupService().show("Do you want to buy or sell houses?",
                         new ButtonProps("Buy", this::handleBuyBuildings),
                         new ButtonProps("Sell", this::handleSellBuildings));
             }
@@ -55,14 +54,14 @@ public class StreetPropertySpot extends PropertySpot {
     private void handleBuyBuildings() {
         int maxHouseCount = getMaxHouseCountToBuy();
         if (maxHouseCount > 0) {
-            Popup.show("How many houses do you want to buy? Houses cost M" + property.getHousePrice() + " each.", getBuyHousesButtons(maxHouseCount));
+            runtime.popupService().show("How many houses do you want to buy? Houses cost M" + property.getHousePrice() + " each.", getBuyHousesButtons(maxHouseCount));
         } else {
-            Popup.show("You cannot afford buying houses");
+            runtime.popupService().show("You cannot afford buying houses");
         }
     }
 
     private void handleSellBuildings() {
-        Popup.show("How many houses do you want to sell?", getSellHousesButtons());
+        runtime.popupService().show("How many houses do you want to sell?", getSellHousesButtons());
     }
 
     private ButtonProps[] getBuyHousesButtons(int maxHouseCount) {

@@ -1,8 +1,8 @@
 package fi.monopoly.images;
 
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.popup.ButtonAction;
-import fi.monopoly.components.popup.Popup;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.StreetProperty;
 import lombok.Getter;
@@ -16,8 +16,8 @@ public class Deed extends AbstractClickable {
     private final Property property;
     private String name;
 
-    public Deed(Property property) {
-        super(property.getSpotType());
+    public Deed(MonopolyRuntime runtime, Property property) {
+        super(runtime, property.getSpotType());
         this.property = property;
         this.name = property.getSpotType().getStringProperty("name");
     }
@@ -34,7 +34,7 @@ public class Deed extends AbstractClickable {
                 handleMortgaging();
             } else {
                 //Assuming that mortgaged property should never have buildings on it.
-                Popup.show("Cannot mortgage a property with buildings on it.");
+                runtime.popupService().show("Cannot mortgage a property with buildings on it.");
                 if (property.isMortgaged()) {
                     log.warn("Mortgaged property with buildings? " + name);
                 }
@@ -48,12 +48,12 @@ public class Deed extends AbstractClickable {
         if (property.isMortgaged()) {
             ButtonAction onAccept = () -> {
                 if (!property.handleMortgaging()) {
-                    Popup.show("Player does not have enough money to unmortgage this property");
+                    runtime.popupService().show("Player does not have enough money to unmortgage this property");
                 }
             };
-            Popup.show("Do you want to mortgage " + name + " property?", onAccept, null);
+            runtime.popupService().show("Do you want to mortgage " + name + " property?", onAccept, null);
         } else {
-            Popup.show("Do you want to unmortgage " + name + " property?", property::handleMortgaging, null);
+            runtime.popupService().show("Do you want to unmortgage " + name + " property?", property::handleMortgaging, null);
         }
     }
 
