@@ -1,8 +1,41 @@
+CORE RULES
 Starting order by rolling dice
-handle cases if cant afford paying rent
+Remove bankrupt player from game and detect winner / game over
 
 JAIL
-have to pay fine eventually once you get out of jail on 3rd try
+Have to pay fine eventually once you get out of jail on 3rd try
+Handle case where player cannot afford tax or jail fine
+Get out of jail free card should return to deck after use
 
+ECONOMY / BANKRUPTCY / TRADING
+Handle cases if cant afford paying rent
 Bankruptcy
+Transfer deeds/money/get out of jail cards correctly on bankruptcy
 Trading between players
+Trading flow for money + property + get out of jail card offers
+Auction property when player declines to buy
+Auction property when player cannot afford to buy
+
+PROPERTIES / BUILDING / MORTGAGES
+Even building rule for streets in same color group
+Hotel / house bank supply limits
+Selling houses evenly across a color group
+Cannot mortgage property set while any property in the color group has buildings
+Unmortgage flow as part of turn / before forced payments
+
+CARDS / DECKS
+Chance / community chest deck reshuffle when empty
+
+GAME SETUP / FLOW
+Player setup screen: names, player count, colors
+
+UI / UX
+Turn / action log visible in UI instead of console only
+Use right-side empty area for a proper game info / actions panel
+Show current player and current turn phase clearly in UI
+Show all players money balances all the time
+Move roll / end turn controls into a dedicated controls panel
+Show latest game event / status message in UI
+Show monopoly / mortgage / building status more clearly on deeds
+Show houses and hotels more clearly on owned properties / board
+Improve token stacking / visibility when multiple players share a spot
