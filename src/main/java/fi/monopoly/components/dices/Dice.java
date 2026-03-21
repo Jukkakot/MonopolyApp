@@ -1,8 +1,8 @@
 package fi.monopoly.components.dices;
 
 import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.utils.SpotProps;
 import fi.monopoly.images.Image;
+import fi.monopoly.utils.SpotProps;
 
 public class Dice extends Image {
     private int value = 1;

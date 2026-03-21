@@ -1,21 +1,21 @@
 package fi.monopoly.components;
 
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.properties.Properties;
+import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
+import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.MonopolyUtils;
 import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import fi.monopoly.components.properties.Properties;
-import fi.monopoly.components.properties.Property;
 
 import java.util.List;
-import fi.monopoly.utils.Coordinates;
 
 @ToString
 @Slf4j
@@ -25,11 +25,11 @@ public class Player extends PlayerToken {
     private final int id;
     private final String name;
     private final int STARTING_MONEY_AMOUNT = 1500;
+    private final Properties ownedProperties = new Properties();
     @Getter
     private Integer moneyAmounnt;
     @Getter
     private int turnNumber;
-    private final Properties ownedProperties = new Properties();
     @Getter
     @Setter
     private int getOutOfJailCardCount = 0;
@@ -144,6 +144,7 @@ public class Player extends PlayerToken {
     public int getTotalHotelCount() {
         return ownedProperties.getTotalHotelCount();
     }
+
     public boolean isInJail() {
         return JailSpot.jailTimeLeftMap.get(this) != null;
     }

@@ -12,10 +12,7 @@ import javafx.scene.paint.Color;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class BoardTest {
 
@@ -88,7 +85,7 @@ class BoardTest {
                 .build(), player);
 
         assertEquals(SpotType.JAIL, toSpotType.getLastSpot().getSpotType());
-        assertTrue(toStreetType.getLastSpot().getSpotType().streetType.equals(StreetType.RAILROAD));
+        assertEquals(toStreetType.getLastSpot().getSpotType().streetType, StreetType.RAILROAD);
         assertEquals(SpotType.B2, byStepCount.getLastSpot().getSpotType());
     }
 
@@ -101,10 +98,10 @@ class BoardTest {
         assertSame(first, board.getHoveredSpot());
 
         second.getImage().setHovered(true);
-        assertEquals(null, board.getHoveredSpot());
+        assertNull(board.getHoveredSpot());
 
         first.getImage().setHovered(false);
         second.getImage().setHovered(false);
-        assertFalse(board.getHoveredSpot() != null);
+        assertNull(board.getHoveredSpot());
     }
 }

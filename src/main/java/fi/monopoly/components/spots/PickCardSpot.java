@@ -1,10 +1,10 @@
 package fi.monopoly.components.spots;
 
-import fi.monopoly.components.cards.Card;
-import fi.monopoly.components.cards.Cards;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.cards.Card;
+import fi.monopoly.components.cards.Cards;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
@@ -30,8 +30,7 @@ public class PickCardSpot extends Spot {
         Player turnPlayer = gameState.getPlayers().getTurn();
         Card card = pickCard();
         switch (card.cardType()) {
-            case MONEY ->
-                    updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
+            case MONEY -> updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
             case OUT_OF_JAIL -> {
                 turnPlayer.addOutOfJailCard();
                 runtime.popupService().show(card.text(), callbackAction::doAction);

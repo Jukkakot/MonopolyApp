@@ -4,14 +4,14 @@ import controlP5.Button;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.board.Board;
+import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.images.Image;
 import fi.monopoly.types.StreetType;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.SpotProps;
 import lombok.extern.slf4j.Slf4j;
-import fi.monopoly.components.properties.Property;
-import fi.monopoly.images.Image;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -20,17 +20,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class Players {
-    private final MonopolyRuntime runtime;
     private static final int PLAYERS_PER_ROW = 3;
     private final static int DEEDS_PER_ROW = 5;
     private final static int MARGIN = 10;
     private static final int TEXT_INFO_HEIGHT = 50;
+    private final MonopolyRuntime runtime;
     private final Coordinates baseCoords = new Coordinates(Spot.SPOT_W * 12, 0, 0);
     private final List<Player> playerList = new ArrayList<>();
     private final Map<String, Button> playerButtons = new HashMap<>();
+    private final Image getOutOFJailImg;
     private int turnNum = 1;
     private Player selectedPlayer;
-    private final Image getOutOFJailImg;
 
     public Players(MonopolyRuntime runtime) {
         this.runtime = runtime;
@@ -61,7 +61,7 @@ public class Players {
                     }
                 }
             });
-            if(loopCount++ >= 100) {
+            if (loopCount++ >= 100) {
                 break;
             }
         }

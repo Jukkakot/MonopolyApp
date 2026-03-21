@@ -29,7 +29,7 @@ public class MonopolyEventObserver extends PApplet {
         }
         if (keyEvent.getKey() == 'h') {
             log.info("""
-                                        
+                    
                     ----HELP-----
                     H = help
                     E = end round

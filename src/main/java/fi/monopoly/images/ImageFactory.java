@@ -8,11 +8,11 @@ import fi.monopoly.utils.Coordinates;
 public class ImageFactory {
     public static SpotImage getImage(MonopolyRuntime runtime, Coordinates coords, SpotType spotType) {
         if (spotType.isProperty) {
-           if(PlaceType.STREET.equals(spotType.streetType.placeType)) {
-               return new StreetPropertySpotImage(runtime, coords, spotType);
-           } else {
-               return new PropertySpotImage(runtime, coords, spotType);
-           }
+            if (PlaceType.STREET.equals(spotType.streetType.placeType)) {
+                return new StreetPropertySpotImage(runtime, coords, spotType);
+            } else {
+                return new PropertySpotImage(runtime, coords, spotType);
+            }
         } else {
             return new SpotImage(runtime, coords, spotType);
         }

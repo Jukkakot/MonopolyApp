@@ -3,13 +3,13 @@ package fi.monopoly.components.popup;
 
 import controlP5.Canvas;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.MonopolyUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import fi.monopoly.components.event.MonopolyEventListener;
 import processing.core.PGraphics;
 import processing.event.Event;
 import processing.event.KeyEvent;
@@ -18,11 +18,11 @@ import static processing.core.PConstants.CENTER;
 
 @Slf4j
 public abstract class Popup extends Canvas implements MonopolyEventListener {
-    protected final MonopolyRuntime runtime;
-    protected String popupText;
     protected static Coordinates coords = new Coordinates(Spot.SPOT_W * 6, Spot.SPOT_W * 6);
     protected static int width = 500;
     protected static int height = 300;
+    protected final MonopolyRuntime runtime;
+    protected String popupText;
     @Getter(AccessLevel.PROTECTED)
     protected boolean isVisible = false;
 

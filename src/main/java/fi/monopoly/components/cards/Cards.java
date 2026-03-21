@@ -1,18 +1,18 @@
 package fi.monopoly.components.cards;
 
-import lombok.extern.slf4j.Slf4j;
 import fi.monopoly.types.CardType;
 import fi.monopoly.types.StreetType;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
 @Slf4j
 public class Cards {
+    private static final String SINGLE_TEXT_DELIMITER = "#";
+    private static final String PROP_VALUES_DELIMITER = ";";
     private Properties props = new Properties();
     private List<Card> cardList = new ArrayList<>();
     private Card previousCard;
-    private static final String SINGLE_TEXT_DELIMITER = "#";
-    private static final String PROP_VALUES_DELIMITER = ";";
 
     public Cards(StreetType streetType) {
         try {

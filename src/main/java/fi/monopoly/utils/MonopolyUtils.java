@@ -1,8 +1,8 @@
 package fi.monopoly.utils;
 
+import fi.monopoly.MonopolyApp;
 import javafx.scene.paint.Color;
 import lombok.experimental.UtilityClass;
-import fi.monopoly.MonopolyApp;
 
 import static javafx.scene.paint.Color.color;
 import static processing.core.PApplet.map;

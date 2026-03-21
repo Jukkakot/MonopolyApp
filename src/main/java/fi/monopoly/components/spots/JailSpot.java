@@ -1,16 +1,15 @@
 package fi.monopoly.components.spots;
 
-import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.types.DiceState;
-import fi.monopoly.types.TurnResult;
-import fi.monopoly.utils.Coordinates;
-import lombok.extern.slf4j.Slf4j;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.images.SpotImage;
+import fi.monopoly.types.DiceState;
+import fi.monopoly.types.TurnResult;
+import fi.monopoly.utils.Coordinates;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
@@ -29,6 +28,15 @@ public class JailSpot extends CornerSpot {
         super(spotImage);
     }
 
+    private static Set<Player> getPlayersInJail() {
+        return jailTimeLeftMap.keySet();
+    }
+
+    private static Coordinates getInJailCoords() {
+        int index = getPlayersInJail().size() - 1;
+        return IN_JAIL_COORDS.get(index % IN_JAIL_COORDS.size());
+    }
+
     @Override
     public Coordinates getTokenCoords(Player player) {
         Coordinates tokenCoords;
@@ -43,15 +51,6 @@ public class JailSpot extends CornerSpot {
     private Coordinates getPassingByCoords() {
         int index = playersOnSpot.size() - getPlayersInJail().size();
         return JUST_VISIT_COORDS.get(index % JUST_VISIT_COORDS.size());
-    }
-
-    private static Set<Player> getPlayersInJail() {
-        return jailTimeLeftMap.keySet();
-    }
-
-    private static Coordinates getInJailCoords() {
-        int index = getPlayersInJail().size() - 1;
-        return IN_JAIL_COORDS.get(index % IN_JAIL_COORDS.size());
     }
 
     @Override

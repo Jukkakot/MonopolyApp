@@ -14,11 +14,13 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class PathTest {
+
+    private static Spot spot(MonopolyRuntime runtime, SpotType spotType, Coordinates coords) {
+        return new CornerSpot(new SpotImage(runtime, coords, spotType));
+    }
 
     @Test
     void getNextAndGetLastUseCurrentAndLastSpotTokenCoordinates() {
@@ -69,9 +71,5 @@ class PathTest {
 
         assertTrue(withGo.passesGoSpot());
         assertFalse(withoutGo.passesGoSpot());
-    }
-
-    private static Spot spot(MonopolyRuntime runtime, SpotType spotType, Coordinates coords) {
-        return new CornerSpot(new SpotImage(runtime, coords, spotType));
     }
 }

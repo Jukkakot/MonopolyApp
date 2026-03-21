@@ -10,24 +10,23 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import processing.core.PConstants;
 import processing.core.PImage;
-
-import static fi.monopoly.utils.MonopolyUtils.toColor;
 
 @ToString(onlyExplicitlyIncluded = true)
 public class Image implements Drawable {
+    protected static final float HOVER_SCALE = 1.1f;
     protected final MonopolyRuntime runtime;
+    private final float width;
+    private final float height;
     @Setter
     @Getter
     protected Coordinates coords;
-    private final float width;
-    private final float height;
     @Setter
     protected String imgName;
     @Getter
     @Setter
     protected boolean isHovered = false;
-    protected static final float HOVER_SCALE = 1.1f;
 
     public Image(MonopolyRuntime runtime, SpotProps sp, String imgName) {
         this(runtime, Coordinates.of(sp), imgName, sp.w(), sp.h());
@@ -68,7 +67,7 @@ public class Image implements Drawable {
 
         p.translate(c.x(), c.y());
         p.rotate(MonopolyApp.radians(c.r() + rotation));
-        p.imageMode(p.CENTER);
+        p.imageMode(PConstants.CENTER);
         PImage img = MonopolyApp.getImage(imgName);
         if (img != null) {
             if (color != null) {

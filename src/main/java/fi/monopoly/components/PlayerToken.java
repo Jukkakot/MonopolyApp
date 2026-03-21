@@ -2,20 +2,20 @@ package fi.monopoly.components;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.images.Image;
 import fi.monopoly.utils.Coordinates;
 import javafx.scene.paint.Color;
 import lombok.Getter;
-import fi.monopoly.images.Image;
 
 public class PlayerToken extends Image {
+    public static final int TOKEN_RADIUS = 35;
+    public static final int PLAYER_TOKEN_BIG_DIAMETER = (int) (TOKEN_RADIUS * 1.5);
     @Getter
     protected final Color color;
     @Getter
-    protected Spot spot;
-    @Getter
     protected final MonopolyRuntime runtime;
-    public static final int TOKEN_RADIUS = 35;
-    public static final int PLAYER_TOKEN_BIG_DIAMETER = (int) (TOKEN_RADIUS * 1.5);
+    @Getter
+    protected Spot spot;
 
     public PlayerToken(MonopolyRuntime runtime, Spot spot, Color color) {
         super(runtime, spot.getTokenCoords(), "Token.png", PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS);

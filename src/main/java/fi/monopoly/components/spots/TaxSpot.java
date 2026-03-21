@@ -1,11 +1,11 @@
 package fi.monopoly.components.spots;
 
-import fi.monopoly.types.TurnResult;
-import lombok.Getter;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.images.SpotImage;
+import fi.monopoly.types.TurnResult;
+import lombok.Getter;
 
 public class TaxSpot extends Spot {
     @Getter

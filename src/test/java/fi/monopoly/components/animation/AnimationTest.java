@@ -8,9 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AnimationTest {
 
@@ -94,13 +92,13 @@ class AnimationTest {
         }
 
         @Override
-        public void setHovered(boolean isHovered) {
-            hovered = isHovered;
+        public boolean isHovered() {
+            return hovered;
         }
 
         @Override
-        public boolean isHovered() {
-            return hovered;
+        public void setHovered(boolean isHovered) {
+            hovered = isHovered;
         }
 
         @Override

@@ -1,9 +1,9 @@
 package fi.monopoly.components;
 
 import fi.monopoly.MonopolyRuntime;
-import lombok.experimental.UtilityClass;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.images.Deed;
+import lombok.experimental.UtilityClass;
 
 import java.util.HashMap;
 import java.util.Map;

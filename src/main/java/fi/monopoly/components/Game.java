@@ -13,13 +13,7 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
-import fi.monopoly.components.turn.EndTurnEffect;
-import fi.monopoly.components.turn.MovePlayerEffect;
-import fi.monopoly.components.turn.ShowDiceEffect;
-import fi.monopoly.components.turn.ShowEndTurnEffect;
-import fi.monopoly.components.turn.TurnEffect;
-import fi.monopoly.components.turn.TurnEngine;
-import fi.monopoly.components.turn.TurnPlan;
+import fi.monopoly.components.turn.*;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
@@ -34,16 +28,15 @@ import static processing.event.MouseEvent.CLICK;
 
 @Slf4j
 public class Game implements MonopolyEventListener {
-    private final MonopolyRuntime runtime;
     public static Dices DICES;
-    Board board;
     public static Players players;
     public static Animations animations;
-    TurnResult prevTurnResult;
+    public static int GO_MONEY_AMOUNT = 200;
+    private final MonopolyRuntime runtime;
     private final TurnEngine turnEngine = new TurnEngine();
     private final Button endRoundButton;
-
-    public static int GO_MONEY_AMOUNT = 200;
+    Board board;
+    TurnResult prevTurnResult;
 
     public Game(MonopolyRuntime runtime) {
         this.runtime = runtime;

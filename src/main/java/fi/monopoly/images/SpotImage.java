@@ -10,6 +10,7 @@ import fi.monopoly.utils.MonopolyUtils;
 import fi.monopoly.utils.SpotProps;
 import lombok.Getter;
 import lombok.ToString;
+import processing.core.PConstants;
 import processing.core.PImage;
 
 @ToString(callSuper = true)
@@ -86,7 +87,7 @@ public class SpotImage extends Image {
     private void drawPrice() {
         MonopolyApp p = runtime.app();
         p.fill(0);
-        p.textAlign(p.CENTER);
+        p.textAlign(PConstants.CENTER);
         p.textFont(runtime.font10());
         p.text("M" + spotType.getStringProperty("price"), (int) -(getWidth() * 0.37), getHeight() / 3, (int) (getWidth() * 0.75), getHeight());
     }
@@ -94,16 +95,16 @@ public class SpotImage extends Image {
     private void drawIconSpot() {
         MonopolyApp p = runtime.app();
         PImage img = MonopolyApp.getImage(spotType);
-        if(img != null) {
+        if (img != null) {
             p.push();
 
             p.translate(coords.x(), coords.y());
             p.rotate(MonopolyApp.radians((coords.r())));
-            p.imageMode(p.CENTER);
+            p.imageMode(PConstants.CENTER);
             p.image(img, 0, 0, getWidth(), getHeight());
 
             p.fill(0);
-            p.textAlign(p.CENTER);
+            p.textAlign(PConstants.CENTER);
             p.textFont(runtime.font10());
             p.textLeading(10);
             if (spotType.hasProperty("name")) {

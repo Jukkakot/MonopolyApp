@@ -3,8 +3,6 @@ package fi.monopoly.types;
 import fi.monopoly.utils.MonopolyUtils;
 import javafx.scene.paint.Color;
 
-import static fi.monopoly.utils.MonopolyUtils.toColor;
-
 public enum StreetType {
 
     BROWN(PlaceType.STREET, Color.SADDLEBROWN),

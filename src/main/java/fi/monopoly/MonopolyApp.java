@@ -1,12 +1,12 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
-import fi.monopoly.types.SpotType;
-import fi.monopoly.utils.MonopolyUtils;
-import javafx.scene.paint.Color;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.event.MonopolyEventObserver;
+import fi.monopoly.types.SpotType;
+import fi.monopoly.utils.MonopolyUtils;
+import javafx.scene.paint.Color;
 import processing.core.PFont;
 import processing.core.PImage;
 
@@ -18,48 +18,19 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 public class MonopolyApp extends MonopolyEventObserver {
+    public static final char ENTER = '\n';
+    public static final char SPACE = ' ';
     public static MonopolyApp self;
     public static boolean DEBUG_MODE = false;
     public static boolean SKIP_ANNIMATIONS = false;
-    private Game game;
     public static ControlP5 p5;
-    private static Map<String, PImage> IMAGES = new HashMap<>();
     public static PFont font10, font20, font30;
-    public static final char ENTER = '\n';
-    public static final char SPACE = ' ';
+    private static Map<String, PImage> IMAGES = new HashMap<>();
+    private Game game;
 
     public MonopolyApp() {
         self = this;
         MonopolyRuntime.initialize(this, null, null, null, null);
-    }
-
-    public void settings() {
-        size(1700, 996);
-    }
-
-    public void setup() {
-        initImages();
-        p5 = new ControlP5(this);
-        font10 = createFont("Monopoly Regular.ttf", 10);
-        font20 = createFont("Monopoly Regular.ttf", 20);
-        font30 = createFont("Monopoly Regular.ttf", 30);
-        MonopolyRuntime.initialize(this, p5, font10, font20, font30);
-        textFont(font10);
-        game = new Game(MonopolyRuntime.get());
-    }
-
-    public void draw() {
-        background(205, 230, 209);
-        game.draw();
-        if (DEBUG_MODE) {
-            push();
-            fill(255, 105, 180);
-            noStroke();
-            circle(mouseX, mouseY, 20);
-            textFont(font20);
-            text(mouseX + " , " + mouseY, mouseX - 40, mouseY + 30);
-            pop();
-        }
     }
 
     /**
@@ -97,11 +68,40 @@ public class MonopolyApp extends MonopolyEventObserver {
         PImage image = getImage(spotType.streetType.imgName, null);
         if (image == null) {
             String imgName = spotType.streetType.imgName;
-            if(imgName != null) {
+            if (imgName != null) {
                 image = getImage(imgName.substring(0, imgName.indexOf(".")) + spotType.id + imgName.substring(imgName.indexOf(".")), null);
             }
         }
         return image;
+    }
+
+    public void settings() {
+        size(1700, 996);
+    }
+
+    public void setup() {
+        initImages();
+        p5 = new ControlP5(this);
+        font10 = createFont("Monopoly Regular.ttf", 10);
+        font20 = createFont("Monopoly Regular.ttf", 20);
+        font30 = createFont("Monopoly Regular.ttf", 30);
+        MonopolyRuntime.initialize(this, p5, font10, font20, font30);
+        textFont(font10);
+        game = new Game(MonopolyRuntime.get());
+    }
+
+    public void draw() {
+        background(205, 230, 209);
+        game.draw();
+        if (DEBUG_MODE) {
+            push();
+            fill(255, 105, 180);
+            noStroke();
+            circle(mouseX, mouseY, 20);
+            textFont(font20);
+            text(mouseX + " , " + mouseY, mouseX - 40, mouseY + 30);
+            pop();
+        }
     }
 
     private void initImages() {

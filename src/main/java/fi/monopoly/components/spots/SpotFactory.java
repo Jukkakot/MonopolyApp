@@ -1,12 +1,12 @@
 package fi.monopoly.components.spots;
 
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.images.ImageFactory;
+import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.Coordinates;
 import lombok.experimental.UtilityClass;
-import fi.monopoly.images.ImageFactory;
-import fi.monopoly.images.SpotImage;
 
 @UtilityClass
 public class SpotFactory {

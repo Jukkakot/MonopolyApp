@@ -1,11 +1,11 @@
 package fi.monopoly.images;
 
-import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.utils.Coordinates;
 import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.types.SpotType;
+import fi.monopoly.utils.Coordinates;
 
 public class PropertySpotImage extends SpotImage {
     private final Property property;

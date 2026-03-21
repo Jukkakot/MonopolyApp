@@ -1,7 +1,7 @@
 package fi.monopoly.components.board;
 
-import fi.monopoly.components.animation.AnimationPath;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.animation.AnimationPath;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.Coordinates;

@@ -25,10 +25,12 @@ public enum SpotType {
     CHANCE1(StreetType.CHANCE, 1, false), CHANCE2(StreetType.CHANCE, 2, false), CHANCE3(StreetType.CHANCE, 3, false),
     GO_SPOT(StreetType.CORNER, 1, false), JAIL(StreetType.CORNER, 2, false), FREE_PARKING(StreetType.CORNER, 3, false), GO_TO_JAIL(StreetType.CORNER, 4, false);
 
+    public static final List<SpotType> SPOT_TYPES = Arrays.asList(SpotType.GO_SPOT, SpotType.B1, SpotType.COMMUNITY1, SpotType.B2,
+            SpotType.TAX1, SpotType.RR1, SpotType.LB1, SpotType.CHANCE1, SpotType.LB2, SpotType.LB3, SpotType.JAIL,
+            SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.FREE_PARKING,
+            SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.GO_TO_JAIL,
+            SpotType.G1, SpotType.G2, SpotType.COMMUNITY3, SpotType.G3, SpotType.RR4, SpotType.CHANCE3, SpotType.DB1, SpotType.TAX2, SpotType.DB2);
     private static final Logger log = LoggerFactory.getLogger(SpotType.class);
-    public final StreetType streetType;
-    public final int id;
-    public final boolean isProperty;
     private static final Properties props = new Properties();
 
     static {
@@ -39,15 +41,29 @@ public enum SpotType {
         }
     }
 
+    public final StreetType streetType;
+    public final int id;
+    public final boolean isProperty;
+
     SpotType(StreetType sType, int id) {
         this.streetType = sType;
         this.id = id;
         this.isProperty = true;
     }
+
     SpotType(StreetType sType, int id, boolean isProperty) {
         this.streetType = sType;
         this.id = id;
         this.isProperty = isProperty;
+    }
+
+    public static SpotType randomType() {
+        int randomIndex = (int) (Math.random() * SpotType.values().length);
+        return SpotType.values()[randomIndex];
+    }
+
+    public static Integer getNumberOfSpots(StreetType streetType) {
+        return SPOT_TYPES.stream().filter(spotType -> streetType.equals(spotType.streetType)).toList().size();
     }
 
     public boolean hasProperty(String propName) {
@@ -75,20 +91,5 @@ public enum SpotType {
             log.error("Error getting integer property {} for property: {}", propName, name());
         }
         return result;
-    }
-
-    public static SpotType randomType() {
-        int randomIndex = (int) (Math.random() * SpotType.values().length);
-        return SpotType.values()[randomIndex];
-    }
-
-    public static final List<SpotType> SPOT_TYPES = Arrays.asList(SpotType.GO_SPOT, SpotType.B1, SpotType.COMMUNITY1, SpotType.B2,
-            SpotType.TAX1, SpotType.RR1, SpotType.LB1, SpotType.CHANCE1, SpotType.LB2, SpotType.LB3, SpotType.JAIL,
-            SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.FREE_PARKING,
-            SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.GO_TO_JAIL,
-            SpotType.G1, SpotType.G2, SpotType.COMMUNITY3, SpotType.G3, SpotType.RR4, SpotType.CHANCE3, SpotType.DB1, SpotType.TAX2, SpotType.DB2);
-
-    public static Integer getNumberOfSpots(StreetType streetType) {
-        return SPOT_TYPES.stream().filter(spotType -> streetType.equals(spotType.streetType)).toList().size();
     }
 }

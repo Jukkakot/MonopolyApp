@@ -10,12 +10,10 @@ import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.TurnResult;
+import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import javafx.scene.paint.Color;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TurnEngineTest {
 
@@ -43,7 +41,7 @@ class TurnEngineTest {
 
         assertEquals(TurnPhase.TURN_FINISHED, plan.phase());
         EndTurnEffect effect = (EndTurnEffect) plan.effects().get(0);
-        assertEquals(true, effect.switchTurns());
+        assertTrue(effect.switchTurns());
     }
 
     @Test
@@ -91,7 +89,7 @@ class TurnEngineTest {
         assertEquals(SpotType.JAIL, effect.path().getLastSpot().getSpotType());
         Path path = effect.path();
         path.removePrevious();
-        assertEquals(true, path.isEmpty());
+        assertTrue(path.isEmpty());
     }
 
     @Test
@@ -107,10 +105,10 @@ class TurnEngineTest {
         assertEquals(SpotType.B2, effect.path().getLastSpot().getSpotType());
         Path path = effect.path();
         path.removePrevious();
-        assertEquals(false, path.isEmpty());
+        assertFalse(path.isEmpty());
         path.removePrevious();
-        assertEquals(false, path.isEmpty());
+        assertFalse(path.isEmpty());
         path.removePrevious();
-        assertEquals(true, path.isEmpty());
+        assertTrue(path.isEmpty());
     }
 }

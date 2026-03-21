@@ -29,7 +29,7 @@ public class StreetPropertySpot extends PropertySpot {
             //Cannot sell/buy buildings on mortgaged property
             return;
         }
-        if(turnPlayer.getOwnedProperties(spotType.streetType).stream().anyMatch(Property::isMortgaged)) {
+        if (turnPlayer.getOwnedProperties(spotType.streetType).stream().anyMatch(Property::isMortgaged)) {
             runtime.popupService().show("Cannot buy buildings when some of the properties are mortgaged");
             return;
         }
