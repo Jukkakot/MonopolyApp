@@ -12,6 +12,7 @@ import processing.event.KeyEvent;
 
 import java.time.Duration;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static processing.event.KeyEvent.PRESS;
 
@@ -78,8 +79,8 @@ class GameSmokeTest {
         settlePendingGameFlow(runtime);
 
         assertTrue(rollCount > 0, "Game did not complete any rolls during the soak window");
-        assertTrue(!Game.animations.isRunning(), "Animations should not be left running at the end of the smoke test");
-        assertTrue(!runtime.popupService().isAnyVisible(), "Popup should not be left open at the end of the smoke test");
+        assertFalse(Game.animations.isRunning(), "Animations should not be left running at the end of the smoke test");
+        assertFalse(runtime.popupService().isAnyVisible(), "Popup should not be left open at the end of the smoke test");
     }
 
     private static MonopolyRuntime initHeadlessRuntime() {
@@ -123,7 +124,7 @@ class GameSmokeTest {
         Player turn = Game.players.getTurn();
         String turnName = turn != null ? turn.getName() : "none";
         String turnSpot = turn != null && turn.getSpot() != null ? turn.getSpot().getSpotType().name() : "none";
-        int turnMoney = turn != null ? turn.getMoneyAmounnt() : -1;
+        int turnMoney = turn != null ? turn.getMoneyAmount() : -1;
         String diceValue = Game.DICES.getValue() != null ? Game.DICES.getValue().toString() : "null";
         return turnName
                 + "|spot=" + turnSpot

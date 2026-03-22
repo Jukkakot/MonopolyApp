@@ -47,12 +47,28 @@ class StreetPropertyTest {
         TestObjectFactory.giveProperty(owner, property);
 
         assertTrue(property.buyHouses(1));
-        assertEquals(950, owner.getMoneyAmounnt());
+        assertEquals(950, owner.getMoneyAmount());
         assertEquals(1, property.getHouseCount());
 
         assertTrue(property.sellHouses(1));
-        assertEquals(975, owner.getMoneyAmounnt());
+        assertEquals(975, owner.getMoneyAmount());
         assertEquals(0, property.getHouseCount());
+    }
+
+    @Test
+    void sellableBuildingCountTreatsHotelAsFiveHouses() {
+        Player owner = TestObjectFactory.player("Owner", 2000, 1);
+        StreetProperty property = new StreetProperty(SpotType.B1);
+
+        TestObjectFactory.giveProperty(owner, property);
+
+        assertEquals(0, property.getSellableBuildingCount());
+
+        assertTrue(property.buyHouses(2));
+        assertEquals(2, property.getSellableBuildingCount());
+
+        assertTrue(property.buyHouses(3));
+        assertEquals(5, property.getSellableBuildingCount());
     }
 
     @Test

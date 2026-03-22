@@ -15,6 +15,14 @@ public class Properties {
         return propertySet.add(property);
     }
 
+    public boolean removeProperty(Property property) {
+        return propertySet.remove(property);
+    }
+
+    public void clear() {
+        propertySet.clear();
+    }
+
     public List<Property> getProperties() {
         return propertySet.stream().toList();
     }

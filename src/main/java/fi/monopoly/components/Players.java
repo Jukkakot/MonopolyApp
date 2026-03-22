@@ -217,7 +217,7 @@ public class Players {
 
         p.fill(0);
         p.textFont(runtime.font30());
-        int moneyAmount = selectedPlayer != null ? selectedPlayer.getMoneyAmounnt() : 0;
+        int moneyAmount = selectedPlayer != null ? selectedPlayer.getMoneyAmount() : 0;
         p.translate(MARGIN, textYAxel);
         p.text("M" + moneyAmount, 0, 0);
         p.translate(MARGIN + getOutOFJailImg.getWidth() / 2, -MARGIN);

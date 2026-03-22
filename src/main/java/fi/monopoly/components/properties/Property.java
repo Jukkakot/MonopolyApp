@@ -62,15 +62,27 @@ public abstract class Property {
 
     public abstract Integer getRent(Player player);
 
+    public int getMortgageValue() {
+        return getPrice() / 2;
+    }
+
+    public int getMortgageInterest() {
+        return (int) (getMortgageValue() * 0.1);
+    }
+
+    public int getLiquidationValue() {
+        return isMortgaged() ? 0 : getMortgageValue();
+    }
+
     public boolean handleMortgaging() {
         if (!hasOwner()) {
             log.error("Property does not have a owner.");
             return false;
         }
 
-        int mortgageAmount = getPrice() / 2;
+        int mortgageAmount = getMortgageValue();
         if (isMortgaged()) {
-            int interest = (int) (mortgageAmount * 0.1);
+            int interest = getMortgageInterest();
             int unMortageAmount = mortgageAmount + interest;
             if (ownerPlayer.addMoney(-unMortageAmount)) {
                 setMortgaged(false);

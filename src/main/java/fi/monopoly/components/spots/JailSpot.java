@@ -4,6 +4,9 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.DiceValue;
+import fi.monopoly.components.payment.BankTarget;
+import fi.monopoly.components.payment.PaymentHandler;
+import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.DiceState;
@@ -12,6 +15,8 @@ import fi.monopoly.utils.Coordinates;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+
+import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
 public class JailSpot extends CornerSpot {
@@ -62,18 +67,20 @@ public class JailSpot extends CornerSpot {
         if (shouldNotGoToJail) {
             callbackAction.doAction();
         } else {
-            if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoneyAmounnt() >= GET_OUT_OF_JAIL_FEE) {
+            if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoneyAmount() >= GET_OUT_OF_JAIL_FEE) {
                 ButtonAction onAccept = () -> {
-                    if (turnPlayer.useGetOutOfJailCard() || turnPlayer.addMoney(-GET_OUT_OF_JAIL_FEE)) {
-                        String text = "You were not sent to jail";
-                        runtime.popupService().show(text, callbackAction::doAction);
+                    if (turnPlayer.useGetOutOfJailCard()) {
+                        runtime.popupService().show(text("jail.notSent"), callbackAction::doAction);
+                    } else if (turnPlayer.getMoneyAmount() >= GET_OUT_OF_JAIL_FEE) {
+                        gameState.getPaymentHandler().requestPayment(
+                                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, GET_OUT_OF_JAIL_FEE, "Pay M50 to avoid jail"),
+                                () -> runtime.popupService().show(text("jail.notSent"), callbackAction::doAction)
+                        );
                     } else {
-                        String text = "You didn't have get out of jail card or didin't have M50 to pay";
-                        runtime.popupService().show(text, () -> sendToJail(turnPlayer, callbackAction));
+                        runtime.popupService().show(text("jail.noCardOrCash"), () -> sendToJail(turnPlayer, callbackAction));
                     }
                 };
-                String text = "Do you want to pay M50 or use get out of jail card to get out of jail?";
-                runtime.popupService().show(text, onAccept, () -> sendToJail(turnPlayer, callbackAction));
+                runtime.popupService().show(text("jail.payOrCardPrompt"), onAccept, () -> sendToJail(turnPlayer, callbackAction));
             } else {
                 sendToJail(turnPlayer, callbackAction);
             }
@@ -81,12 +88,12 @@ public class JailSpot extends CornerSpot {
         return null;
     }
 
-    public void handleInJailTurn(Player player, DiceValue diceValue, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
+    public void handleInJailTurn(Player player, DiceValue diceValue, PaymentHandler paymentHandler, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
         if (player.isInJail()) {
             if (diceValue.diceState().equals(DiceState.DOUBLES)) {
                 releaseFromJail(player, onGetOufOfJail);
             } else {
-                tryToGetOufOfJail(player, diceValue, onGetOufOfJail, onStayInjail);
+                tryToGetOufOfJail(player, diceValue, paymentHandler, onGetOufOfJail, onStayInjail);
             }
             player.setCoords(getTokenCoords(player));
         } else {
@@ -97,31 +104,38 @@ public class JailSpot extends CornerSpot {
     private void sendToJail(Player turnPlayer, CallbackAction callbackAction) {
         jailTimeLeftMap.put(turnPlayer, JAIL_ROUND_NUMBER);
         turnPlayer.setCoords(getTokenCoords(turnPlayer));
-        runtime.popupService().show("You were sent to jail", callbackAction::doAction);
+        log.info("Player sent to jail: {}", turnPlayer.getName());
+        runtime.popupService().show(text("jail.sent"), callbackAction::doAction);
     }
 
-    public void tryToGetOufOfJail(Player player, DiceValue diceValue, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
+    public void tryToGetOufOfJail(Player player, DiceValue diceValue, PaymentHandler paymentHandler, CallbackAction onGetOufOfJail, CallbackAction onStayInjail) {
         Integer roundCount = jailTimeLeftMap.get(player);
         if (!player.isInJail() || roundCount < 0) {
             throw new RuntimeException("Error with jail handling!");
         }
 
         if (diceValue.diceState().equals(DiceState.DOUBLES)) {
+            log.info("Player rolled doubles and gets out of jail: {}", player.getName());
             releaseFromJail(player, onGetOufOfJail);
         } else if (roundCount == 1) {
-            if (!player.addMoney(-GET_OUT_OF_JAIL_FEE)) {
-                log.info("Player could not afford paying M{} fine", GET_OUT_OF_JAIL_FEE);
-                //TODO what if cant afford paying fine?
-            }
-            releaseFromJail(player, onGetOufOfJail);
+            paymentHandler.requestPayment(
+                    new PaymentRequest(player, BankTarget.INSTANCE, GET_OUT_OF_JAIL_FEE, "Pay M50 to get out of jail"),
+                    () -> {
+                        log.info("Player paid final jail fine and gets out: {}", player.getName());
+                        releaseFromJail(player, onGetOufOfJail);
+                    }
+            );
         } else {
             jailTimeLeftMap.put(player, jailTimeLeftMap.get(player) - 1);
-            runtime.popupService().show("You still have " + jailTimeLeftMap.get(player) + " rounds left in jail", onStayInjail::doAction);
+            log.debug("Player remains in jail: {}, roundsLeft={}", player.getName(), jailTimeLeftMap.get(player));
+            runtime.popupService().show(text("jail.roundsLeft", jailTimeLeftMap.get(player)), onStayInjail::doAction);
         }
     }
 
     public void releaseFromJail(Player player, CallbackAction onGetOufOfJail) {
         jailTimeLeftMap.remove(player);
-        runtime.popupService().show("You got out of jail", onGetOufOfJail::doAction);
+        player.setCoords(getTokenCoords(player));
+        log.info("Player released from jail: {}", player.getName());
+        runtime.popupService().show(text("jail.gotOut"), onGetOufOfJail::doAction);
     }
 }

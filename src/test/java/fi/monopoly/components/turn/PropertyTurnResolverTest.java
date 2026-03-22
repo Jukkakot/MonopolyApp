@@ -23,13 +23,14 @@ class PropertyTurnResolverTest {
         Players players = TestObjectFactory.playersWithTurn(turnPlayer);
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        List<TurnEffect> effects = resolver.resolve(new GameState(players, null, null, null), "Brown 1", property);
+        List<TurnEffect> effects = resolver.resolve(new GameState(players, null, null, null, null), "Brown 1", property);
 
         assertEquals(1, effects.size());
         OfferToBuyPropertyEffect effect = (OfferToBuyPropertyEffect) effects.get(0);
         assertEquals(turnPlayer, effect.player());
         assertEquals(property, effect.property());
         assertTrue(effect.message().contains("Brown 1"));
+        assertTrue(effect.message().contains("M60"));
     }
 
     @Test
@@ -42,7 +43,7 @@ class PropertyTurnResolverTest {
         TestObjectFactory.giveProperty(owner, property);
         TestObjectFactory.giveProperty(owner, sibling);
 
-        List<TurnEffect> effects = resolver.resolve(new GameState(players, null, null, null), "Brown 1", property);
+        List<TurnEffect> effects = resolver.resolve(new GameState(players, null, null, null, null), "Brown 1", property);
 
         assertEquals(1, effects.size());
         PayRentEffect effect = (PayRentEffect) effects.get(0);
@@ -60,7 +61,7 @@ class PropertyTurnResolverTest {
         TestObjectFactory.giveProperty(owner, property);
         property.setMortgaged(true);
 
-        List<TurnEffect> effects = resolver.resolve(new GameState(players, null, null, null), "Brown 1", property);
+        List<TurnEffect> effects = resolver.resolve(new GameState(players, null, null, null, null), "Brown 1", property);
 
         assertTrue(effects.isEmpty());
     }

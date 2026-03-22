@@ -2,6 +2,7 @@ package fi.monopoly.components.popup;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.popup.components.ButtonProps;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.function.Supplier;
 
+@Slf4j
 public class PopupService {
     private final MonopolyRuntime runtime;
     private final Map<Class<? extends Popup>, Popup> popupInstances = new HashMap<>();
@@ -23,14 +25,8 @@ public class PopupService {
         return activePopup != null;
     }
 
-    public void hideAll() {
-        pendingRequests.clear();
-        if (activePopup != null) {
-            Popup popupToHide = activePopup;
-            activePopup = null;
-            popupToHide.hide();
-        }
-        popupInstances.values().forEach(Popup::hide);
+    private static String popupName(Popup popup) {
+        return popup == null ? "none" : popup.getClass().getSimpleName();
     }
 
     public void show(String text) {
@@ -70,11 +66,15 @@ public class PopupService {
         });
     }
 
-    public void onPopupClosed(Popup popup) {
-        if (popup != activePopup) {
-            return;
+    public void hideAll() {
+        log.debug("Hiding all popups. activePopup={}, pendingRequests={}", popupName(activePopup), pendingRequests.size());
+        pendingRequests.clear();
+        if (activePopup != null) {
+            Popup popupToHide = activePopup;
+            activePopup = null;
+            popupToHide.hide();
         }
-        activePopup = null;
+        popupInstances.values().forEach(Popup::hide);
     }
 
     public void showNextPending() {
@@ -85,21 +85,19 @@ public class PopupService {
         return clazz.cast(popupInstances.computeIfAbsent(clazz, this::createPopup));
     }
 
-    private void enqueue(PopupRequest request) {
-        pendingRequests.add(request);
-        showNextIfPossible();
+    public void onPopupClosed(Popup popup) {
+        if (popup != activePopup) {
+            log.trace("Ignoring popup close for non-active popup {}", popupName(popup));
+            return;
+        }
+        log.trace("Popup closed: {}", popupName(popup));
+        activePopup = null;
     }
 
-    private void showNextIfPossible() {
-        if (activePopup != null) {
-            return;
-        }
-        PopupRequest nextRequest = pendingRequests.poll();
-        if (nextRequest == null) {
-            return;
-        }
-        activePopup = nextRequest.prepare();
-        activePopup.show();
+    private void enqueue(PopupRequest request) {
+        pendingRequests.add(request);
+        log.trace("Queued popup request. activePopup={}, pendingRequests={}", popupName(activePopup), pendingRequests.size());
+        showNextIfPossible();
     }
 
     private Popup createPopup(Class<? extends Popup> clazz) {
@@ -118,5 +116,19 @@ public class PopupService {
     @FunctionalInterface
     private interface PopupRequest {
         Popup prepare();
+    }
+
+    private void showNextIfPossible() {
+        if (activePopup != null) {
+            log.trace("Popup queue blocked by active popup {}", popupName(activePopup));
+            return;
+        }
+        PopupRequest nextRequest = pendingRequests.poll();
+        if (nextRequest == null) {
+            return;
+        }
+        activePopup = nextRequest.prepare();
+        log.trace("Showing popup {}. pendingRequests={}", popupName(activePopup), pendingRequests.size());
+        activePopup.show();
     }
 }

@@ -7,6 +7,8 @@ import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.TurnResult;
 
+import static fi.monopoly.text.UiTexts.text;
+
 public class GoToJailSpot extends CornerSpot {
 
     public GoToJailSpot(SpotImage spotImage) {
@@ -15,7 +17,7 @@ public class GoToJailSpot extends CornerSpot {
 
     @Override
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
-        runtime.popupService().show("Go to jail", callbackAction::doAction);
+        runtime.popupService().show(text("spot.goToJail"), callbackAction::doAction);
         return TurnResult.builder()
                 .nextSpotCriteria(SpotType.JAIL)
                 .pathMode(PathMode.FLY)

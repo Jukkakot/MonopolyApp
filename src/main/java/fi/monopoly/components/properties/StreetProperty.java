@@ -5,6 +5,8 @@ import fi.monopoly.types.SpotType;
 import lombok.Getter;
 import lombok.ToString;
 
+import static fi.monopoly.text.UiTexts.text;
+
 @ToString(callSuper = true)
 public class StreetProperty extends Property {
     @Getter
@@ -40,12 +42,32 @@ public class StreetProperty extends Property {
         return houseCount > 0 || hotelCount > 0;
     }
 
+    /**
+     * Selling flows treat a hotel as five houses, which matches the existing
+     * house/hotel transition rules in this class.
+     */
+    public int getSellableBuildingCount() {
+        return houseCount + hotelCount * 5;
+    }
+
+    @Override
+    public int getLiquidationValue() {
+        int buildingSellValue = getSellableBuildingCount() * housePrice / 2;
+        return buildingSellValue + super.getLiquidationValue();
+    }
+
     public boolean buyHouses(int count) {
+        if (fi.monopoly.components.Game.isDebtResolutionForCurrentTurn()) {
+            if (ownerPlayer != null && ownerPlayer.getRuntime() != null) {
+                ownerPlayer.getRuntime().popupService().show(text("streetProperty.debt.noBuy"));
+            }
+            return false;
+        }
         if (ownerPlayer.addMoney(-count * housePrice)) {
             houseCount += count;
         } else {
             if (ownerPlayer != null && ownerPlayer.getRuntime() != null) {
-                ownerPlayer.getRuntime().popupService().show("You dont have enough money to buy " + count + " houses");
+                ownerPlayer.getRuntime().popupService().show(text("streetProperty.buy.notEnough", count));
             }
             return false;
         }

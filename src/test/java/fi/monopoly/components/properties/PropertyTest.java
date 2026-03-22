@@ -46,7 +46,7 @@ class PropertyTest {
 
         assertTrue(result);
         assertTrue(property.isMortgaged());
-        assertEquals(1030, owner.getMoneyAmounnt());
+        assertEquals(1030, owner.getMoneyAmount());
     }
 
     @Test
@@ -60,7 +60,7 @@ class PropertyTest {
 
         assertTrue(result);
         assertFalse(property.isMortgaged());
-        assertEquals(967, owner.getMoneyAmounnt());
+        assertEquals(967, owner.getMoneyAmount());
     }
 
     @Test
@@ -84,6 +84,6 @@ class PropertyTest {
 
         assertFalse(result);
         assertTrue(property.isMortgaged());
-        assertEquals(10, owner.getMoneyAmounnt());
+        assertEquals(10, owner.getMoneyAmount());
     }
 }

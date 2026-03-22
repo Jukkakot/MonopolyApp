@@ -9,6 +9,8 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.SpotType;
 
+import static fi.monopoly.text.UiTexts.text;
+
 public class StreetPropertySpot extends PropertySpot {
     private final StreetProperty property;
 
@@ -30,20 +32,28 @@ public class StreetPropertySpot extends PropertySpot {
             return;
         }
         if (turnPlayer.getOwnedProperties(spotType.streetType).stream().anyMatch(Property::isMortgaged)) {
-            runtime.popupService().show("Cannot buy buildings when some of the properties are mortgaged");
+            runtime.popupService().show(text("streetProperty.mortgaged.cannotBuy"));
             return;
         }
         if (!turnPlayer.ownsAllStreetProperties(spotType.streetType)) {
-            runtime.popupService().show("You can't buy houses unless you own all same street properties");
+            runtime.popupService().show(text("streetProperty.requireFullSet"));
+            return;
+        }
+        if (Game.isDebtResolutionForCurrentTurn()) {
+            if (property.hasBuildings()) {
+                handleSellBuildings();
+            } else {
+                runtime.popupService().show(text("streetProperty.debt.onlySellOrMortgage"));
+            }
             return;
         }
         if (property.hasBuildings()) {
             if (property.getHotelCount() == 1) {
                 handleSellBuildings();
             } else {
-                runtime.popupService().show("Do you want to buy or sell houses?",
-                        new ButtonProps("Buy", this::handleBuyBuildings),
-                        new ButtonProps("Sell", this::handleSellBuildings));
+                runtime.popupService().show(text("streetProperty.buyOrSellPrompt", property.getHousePrice(), getHouseSellValue()),
+                        new ButtonProps(text("popup.action.buy"), this::handleBuyBuildings),
+                        new ButtonProps(text("popup.action.sell"), this::handleSellBuildings));
             }
         } else {
             handleBuyBuildings();
@@ -54,21 +64,22 @@ public class StreetPropertySpot extends PropertySpot {
     private void handleBuyBuildings() {
         int maxHouseCount = getMaxHouseCountToBuy();
         if (maxHouseCount > 0) {
-            runtime.popupService().show("How many houses do you want to buy? Houses cost M" + property.getHousePrice() + " each.", getBuyHousesButtons(maxHouseCount));
+            runtime.popupService().show(text("streetProperty.buy.countPrompt", property.getHousePrice()), getBuyHousesButtons(maxHouseCount));
         } else {
-            runtime.popupService().show("You cannot afford buying houses");
+            runtime.popupService().show(text("streetProperty.buy.cannotAfford"));
         }
     }
 
     private void handleSellBuildings() {
-        runtime.popupService().show("How many houses do you want to sell?", getSellHousesButtons());
+        runtime.popupService().show(text("streetProperty.sell.countPrompt", getHouseSellValue()), getSellHousesButtons());
     }
 
     private ButtonProps[] getBuyHousesButtons(int maxHouseCount) {
         ButtonProps[] buttonProps = new ButtonProps[maxHouseCount];
         for (int i = 0; i < maxHouseCount; i++) {
             final int finalI = i + 1;
-            buttonProps[i] = new ButtonProps(String.valueOf(finalI), () -> property.buyHouses(finalI));
+            int totalCost = finalI * property.getHousePrice();
+            buttonProps[i] = new ButtonProps(finalI + " (M" + totalCost + ")", () -> property.buyHouses(finalI));
         }
         return buttonProps;
     }
@@ -77,20 +88,25 @@ public class StreetPropertySpot extends PropertySpot {
         //How many houses can property fit still
         int maxHouseCountToBuy = 5 - property.getHouseCount();
         //How many houses can player afford
-        int maxHouseCountAfford = Game.players.getTurn().getMoneyAmounnt() / property.getHousePrice();
+        int maxHouseCountAfford = Game.players.getTurn().getMoneyAmount() / property.getHousePrice();
 
         int maxHouseCount = Math.min(maxHouseCountToBuy, maxHouseCountAfford);
         return maxHouseCount;
     }
 
     private ButtonProps[] getSellHousesButtons() {
-        int intMaxHousesToSell = property.getHouseCount() + property.getHotelCount() * 5;
+        int intMaxHousesToSell = property.getSellableBuildingCount();
         ButtonProps[] buttonProps = new ButtonProps[intMaxHousesToSell];
         for (int i = 0; i < intMaxHousesToSell; i++) {
             final int finalI = i + 1;
-            buttonProps[i] = new ButtonProps(String.valueOf(finalI), () -> property.sellHouses(finalI));
+            int totalReturn = finalI * getHouseSellValue();
+            buttonProps[i] = new ButtonProps(finalI + " (M" + totalReturn + ")", () -> property.sellHouses(finalI));
         }
         return buttonProps;
+    }
+
+    private int getHouseSellValue() {
+        return property.getHousePrice() / 2;
     }
 
 

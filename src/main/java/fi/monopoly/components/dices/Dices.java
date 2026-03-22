@@ -13,9 +13,11 @@ import fi.monopoly.utils.SpotProps;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import processing.event.Event;
 import processing.event.KeyEvent;
 
+@Slf4j
 public class Dices implements MonopolyEventListener {
     private final MonopolyRuntime runtime;
     private final Pair<Dice, Dice> dices;
@@ -58,6 +60,8 @@ public class Dices implements MonopolyEventListener {
         if (dice1 == dice2) pairCount++;
         else pairCount = 0;
         value = new DiceValue(DiceState.valueOf(pairCount), dice1 + dice2);
+        log.debug("Rolled dice: first={}, second={}, pairCount={}, state={}, total={}",
+                dice1, dice2, pairCount, value.diceState(), value.value());
     }
 
     public void draw(Coordinates c) {
@@ -81,6 +85,7 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void reset() {
+        log.trace("Resetting dice state");
         pairCount = 0;
         value = null;
         show();

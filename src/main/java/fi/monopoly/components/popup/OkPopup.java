@@ -9,6 +9,8 @@ import lombok.Setter;
 import java.util.Arrays;
 import java.util.List;
 
+import static fi.monopoly.text.UiTexts.text;
+
 public class OkPopup extends Popup {
     private static final List<Character> OK_ACTION_CHAR_LIST = Arrays.asList('1', MonopolyApp.SPACE, MonopolyApp.ENTER);
     @Setter
@@ -20,7 +22,7 @@ public class OkPopup extends Popup {
         this.okButton = new MonopolyButton(runtime, "ok")
                 .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
                 .addListener(e -> okAction())
-                .setLabel("Ok")
+                .setLabel(text("popup.ok.label"))
                 .hide()
                 .setSize(100, 50);
     }

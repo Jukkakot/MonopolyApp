@@ -12,6 +12,11 @@ public class MonopolyButton extends Button {
     public MonopolyButton(MonopolyRuntime runtime, String id) {
         super(runtime.controlP5(), id);
         setFont(runtime.font20());
+        addListener(e -> {
+            if (buttonAction != null) {
+                buttonAction.doAction();
+            }
+        });
     }
 
     public MonopolyButton setPosition(Coordinates coordinates) {
@@ -26,7 +31,6 @@ public class MonopolyButton extends Button {
 
     public MonopolyButton addListener(ButtonAction buttonAction) {
         this.buttonAction = buttonAction;
-        addListener(e -> buttonAction.doAction());
         return this;
     }
 

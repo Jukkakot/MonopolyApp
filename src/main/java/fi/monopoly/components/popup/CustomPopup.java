@@ -1,7 +1,6 @@
 package fi.monopoly.components.popup;
 
 import controlP5.Button;
-import controlP5.Controller;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.popup.components.ButtonProps;
@@ -11,9 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fi.monopoly.text.UiTexts.text;
+
 @Slf4j
 public class CustomPopup extends Popup {
-    private List<MonopolyButton> customButtons = new ArrayList<>();
+    private final List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
     private final Button closeButton;
     private static final int BUTTON_WIDTH = 100;
@@ -24,27 +25,36 @@ public class CustomPopup extends Popup {
         this.closeButton = new MonopolyButton(runtime, "close")
                 .setPosition(coords.x() + (float) width / 2 - 30, coords.y() - (float) height / 2 + 10)
                 .addListener(e -> completeAction(null))
-                .setLabel("X")
+                .setLabel(text("popup.close.label"))
                 .hide()
                 .setSize(20, 20);
     }
 
     public void setButtons(ButtonProps... buttonProps) {
         totalButtonCount = buttonProps.length;
-        customButtons = new ArrayList<>();
-        for (ButtonProps buttonProp : buttonProps) {
-            customButtons.add(getButton(buttonProp));
+        ensureButtonPoolSize(buttonProps.length);
+        for (int i = 0; i < buttonProps.length; i++) {
+            configureButton(customButtons.get(i), buttonProps[i], i);
+        }
+        for (int i = buttonProps.length; i < customButtons.size(); i++) {
+            customButtons.get(i).hide();
         }
     }
 
-    private MonopolyButton getButton(ButtonProps buttonProps) {
-        MonopolyButton button = new MonopolyButton(runtime, "customButton" + customButtons.size())
-                .setLabel(buttonProps.name())
-                .setPosition(getButtonCoords())
-                .addListener(() -> getButtonAction(buttonProps.buttonAction()));
-        button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+    private void ensureButtonPoolSize(int requiredCount) {
+        while (customButtons.size() < requiredCount) {
+            MonopolyButton button = new MonopolyButton(runtime, "customButton" + customButtons.size());
+            button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+            button.hide();
+            customButtons.add(button);
+        }
+    }
 
-        return button;
+    private void configureButton(MonopolyButton button, ButtonProps buttonProps, int index) {
+        button.setLabel(buttonProps.name());
+        button.setPosition(getButtonCoords(index));
+        button.addListener(() -> getButtonAction(buttonProps.buttonAction()));
+        button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 
     /**
@@ -52,8 +62,7 @@ public class CustomPopup extends Popup {
      *
      * @return button coordinates
      */
-    private Coordinates getButtonCoords() {
-        int index = customButtons.size();
+    private Coordinates getButtonCoords(int index) {
         int n = totalButtonCount;
         // Calculate the number of columns and rows needed to arrange the buttons
         int cols = (int) Math.ceil(Math.sqrt(n));  // Number of columns in the grid
@@ -87,16 +96,17 @@ public class CustomPopup extends Popup {
     protected void show() {
         super.show();
         closeButton.show();
-        customButtons.forEach(Controller::show);
+        for (int i = 0; i < totalButtonCount; i++) {
+            customButtons.get(i).show();
+        }
     }
 
     @Override
     protected void hide() {
         super.hide();
-        totalButtonCount = 0;
         closeButton.hide();
-        customButtons.forEach(Controller::remove);
-        customButtons.clear();
+        customButtons.forEach(MonopolyButton::hide);
+        totalButtonCount = 0;
     }
 
     protected boolean onKeyAction(char key) {

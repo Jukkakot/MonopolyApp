@@ -10,6 +10,8 @@ import fi.monopoly.types.TurnResult;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fi.monopoly.text.UiTexts.text;
+
 public class PropertyTurnResolver {
 
     public List<TurnEffect> resolve(GameState gameState, String spotName, Property property) {
@@ -17,14 +19,18 @@ public class PropertyTurnResolver {
         List<TurnEffect> effects = new ArrayList<>();
 
         if (!property.hasOwner()) {
-            effects.add(new OfferToBuyPropertyEffect(turnPlayer, property, "Arrived at " + spotName + " do you want to buy it?"));
+            effects.add(new OfferToBuyPropertyEffect(
+                    turnPlayer,
+                    property,
+                    text("property.offerToBuy", spotName, property.getPrice())
+            ));
             return effects;
         }
 
         if (property.isNotOwner(turnPlayer) && !property.isMortgaged()) {
             int rent = calculateRent(gameState, turnPlayer, property);
             effects.add(new PayRentEffect(turnPlayer, property.getOwnerPlayer(), rent,
-                    "Uh oh... you need to pay M" + rent + " rent to " + property.getOwnerPlayer().getName()));
+                    text("property.payRent", rent, property.getOwnerPlayer().getName())));
         }
 
         return effects;

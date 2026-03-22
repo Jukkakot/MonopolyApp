@@ -1,6 +1,9 @@
 package fi.monopoly.components.turn;
 
 import fi.monopoly.components.CallbackAction;
+import fi.monopoly.components.payment.PaymentHandler;
+import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.popup.PopupService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,18 +17,18 @@ public class LegacyTurnEffectExecutor {
         this.popupService = popupService;
     }
 
-    public void execute(List<TurnEffect> effects, CallbackAction onComplete) {
-        executeNext(effects, 0, onComplete);
+    public void execute(List<TurnEffect> effects, PaymentHandler paymentHandler, CallbackAction onComplete) {
+        executeNext(effects, 0, paymentHandler, onComplete);
     }
 
-    private void executeNext(List<TurnEffect> effects, int index, CallbackAction onComplete) {
+    private void executeNext(List<TurnEffect> effects, int index, PaymentHandler paymentHandler, CallbackAction onComplete) {
         if (index >= effects.size()) {
             onComplete.doAction();
             return;
         }
 
         TurnEffect effect = effects.get(index);
-        CallbackAction next = () -> executeNext(effects, index + 1, onComplete);
+        CallbackAction next = () -> executeNext(effects, index + 1, paymentHandler, onComplete);
 
         if (effect instanceof ShowMessageEffect showMessageEffect) {
             popupService.show(showMessageEffect.message(), next::doAction);
@@ -45,11 +48,12 @@ public class LegacyTurnEffectExecutor {
             }, next::doAction);
         } else if (effect instanceof PayRentEffect payRentEffect) {
             popupService.show(payRentEffect.message(), () -> {
-                boolean success = payRentEffect.toPlayer().giveMoney(payRentEffect.fromPlayer(), payRentEffect.amount());
-                if (!success) {
-                    log.warn("{} did not have enough money to pay M{} rent", payRentEffect.fromPlayer().getName(), payRentEffect.amount());
-                }
-                next.doAction();
+                paymentHandler.requestPayment(new PaymentRequest(
+                        payRentEffect.fromPlayer(),
+                        new PlayerTarget(payRentEffect.toPlayer()),
+                        payRentEffect.amount(),
+                        payRentEffect.message()
+                ), next);
             });
         } else {
             throw new IllegalStateException("Unhandled legacy turn effect: " + effect.getClass().getSimpleName());

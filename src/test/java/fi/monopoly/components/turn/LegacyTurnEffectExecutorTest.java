@@ -2,6 +2,8 @@ package fi.monopoly.components.turn;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.payment.BankTarget;
+import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.StreetProperty;
@@ -13,10 +15,16 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class LegacyTurnEffectExecutorTest {
+    private final PaymentHandler paymentHandler = (request, onResolved) -> {
+        request.debtor().addMoney(-request.amount());
+        if (!(request.target() instanceof BankTarget)) {
+            ((fi.monopoly.components.payment.PlayerTarget) request.target()).player().addMoney(request.amount());
+        }
+        onResolved.doAction();
+    };
 
     @Test
     void executeCallsOnCompleteImmediatelyWhenNoEffectsExist() {
@@ -24,7 +32,7 @@ class LegacyTurnEffectExecutorTest {
         LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
         TestCallbackAction callback = new TestCallbackAction();
 
-        executor.execute(List.of(), callback);
+        executor.execute(List.of(), paymentHandler, callback);
 
         assertEquals(1, callback.callCount);
         assertTrue(popupService.messages.isEmpty());
@@ -36,7 +44,7 @@ class LegacyTurnEffectExecutorTest {
         LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
         TestCallbackAction callback = new TestCallbackAction();
 
-        executor.execute(List.of(new ShowMessageEffect("hello")), callback);
+        executor.execute(List.of(new ShowMessageEffect("hello")), paymentHandler, callback);
 
         assertEquals(List.of("hello"), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -49,9 +57,9 @@ class LegacyTurnEffectExecutorTest {
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Owner", 1000, 1);
 
-        executor.execute(List.of(new AdjustPlayerMoneyEffect(player, 50, "gain 50")), callback);
+        executor.execute(List.of(new AdjustPlayerMoneyEffect(player, 50, "gain 50")), paymentHandler, callback);
 
-        assertEquals(1050, player.getMoneyAmounnt());
+        assertEquals(1050, player.getMoneyAmount());
         assertEquals(List.of("gain 50"), popupService.messages);
         assertEquals(1, callback.callCount);
     }
@@ -64,10 +72,10 @@ class LegacyTurnEffectExecutorTest {
         Player player = TestObjectFactory.player("Buyer", 1500, 1);
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
 
         assertEquals(player, property.getOwnerPlayer());
-        assertEquals(1440, player.getMoneyAmounnt());
+        assertEquals(1440, player.getMoneyAmount());
         assertEquals(List.of("buy it"), popupService.messages);
         assertEquals(1, callback.callCount);
     }
@@ -80,10 +88,10 @@ class LegacyTurnEffectExecutorTest {
         Player player = TestObjectFactory.player("Buyer", 10, 1);
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
 
-        assertEquals(null, property.getOwnerPlayer());
-        assertEquals(10, player.getMoneyAmounnt());
+        assertNull(property.getOwnerPlayer());
+        assertEquals(10, player.getMoneyAmount());
         assertEquals(List.of("buy it", "You don't have enough money to buy MEDITER- RANEAN AVENUE"), popupService.messages);
         assertEquals(1, callback.callCount);
     }
@@ -96,10 +104,10 @@ class LegacyTurnEffectExecutorTest {
         Player from = TestObjectFactory.player("From", 1000, 1);
         Player to = TestObjectFactory.player("To", 1000, 2);
 
-        executor.execute(List.of(new PayRentEffect(from, to, 200, "pay rent")), callback);
+        executor.execute(List.of(new PayRentEffect(from, to, 200, "pay rent")), paymentHandler, callback);
 
-        assertEquals(800, from.getMoneyAmounnt());
-        assertEquals(1200, to.getMoneyAmounnt());
+        assertEquals(800, from.getMoneyAmount());
+        assertEquals(1200, to.getMoneyAmount());
         assertEquals(List.of("pay rent"), popupService.messages);
         assertEquals(1, callback.callCount);
     }
