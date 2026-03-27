@@ -3,6 +3,7 @@ package fi.monopoly.components;
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.utils.LayoutMetrics;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import processing.awt.PGraphicsJava2D;
@@ -18,9 +19,13 @@ import static processing.event.KeyEvent.PRESS;
 class GameTurnControlsTest {
 
     private static MonopolyRuntime initHeadlessRuntime() {
+        return initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
+    }
+
+    private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
         MonopolyApp app = new MonopolyApp();
-        app.width = 1700;
-        app.height = 996;
+        app.width = width;
+        app.height = height;
 
         PGraphicsJava2D graphics = new PGraphicsJava2D();
         graphics.setParent(app);
@@ -92,5 +97,20 @@ class GameTurnControlsTest {
         runtime.eventBus().flushPendingChanges();
 
         assertEquals(List.of("Second popup", "First popup"), runtime.popupService().recentPopupMessages());
+    }
+
+    @Test
+    void gameReadsSidebarMetricsFromCurrentWindowSize() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime(1200, 800);
+        Game game = new Game(runtime);
+
+        var method = Game.class.getDeclaredMethod("getLayoutMetrics");
+        method.setAccessible(true);
+        LayoutMetrics metrics = (LayoutMetrics) method.invoke(game);
+
+        assertEquals(1200, metrics.windowWidth(), 0.0001f);
+        assertEquals(800, metrics.windowHeight(), 0.0001f);
+        assertEquals(1200 - fi.monopoly.components.spots.Spot.SPOT_W * 12, metrics.sidebarWidth(), 0.0001f);
     }
 }

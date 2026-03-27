@@ -21,6 +21,7 @@ import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.TurnResult;
+import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
 import processing.core.PConstants;
@@ -37,8 +38,9 @@ import static processing.event.MouseEvent.CLICK;
 @Slf4j
 public class Game implements MonopolyEventListener {
     private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
-    private static final float SIDEBAR_X = Spot.SPOT_W * 12;
-    private static final float SIDEBAR_W = 1700 - SIDEBAR_X;
+    private static final LayoutMetrics DEFAULT_LAYOUT = LayoutMetrics.defaultWindow();
+    private static final float SIDEBAR_X = DEFAULT_LAYOUT.sidebarX();
+    private static final float SIDEBAR_W = DEFAULT_LAYOUT.sidebarWidth();
     private static final int SIDEBAR_MARGIN = 16;
     private static final int SIDEBAR_LABEL_X = 16;
     private static final int SIDEBAR_VALUE_X = 192;
@@ -203,37 +205,43 @@ public class Game implements MonopolyEventListener {
      * overview and controls stay in one predictable area.
      */
     private void drawSidebarPanel() {
+        LayoutMetrics layoutMetrics = getLayoutMetrics();
+        float sidebarX = layoutMetrics.sidebarX();
+        float sidebarWidth = layoutMetrics.sidebarWidth();
+        if (!layoutMetrics.hasSidebarSpace()) {
+            return;
+        }
         MonopolyApp app = runtime.app();
         app.push();
         app.noStroke();
         app.fill(245, 239, 221);
-        app.rect(SIDEBAR_X, 0, SIDEBAR_W, app.height);
+        app.rect(sidebarX, 0, sidebarWidth, app.height);
 
         app.stroke(193, 178, 140);
         app.strokeWeight(2);
-        app.line(SIDEBAR_X, 0, SIDEBAR_X, app.height);
-        app.line(SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_HEADER_HEIGHT, SIDEBAR_X + SIDEBAR_W - SIDEBAR_MARGIN, SIDEBAR_HEADER_HEIGHT);
+        app.line(sidebarX, 0, sidebarX, app.height);
+        app.line(sidebarX + SIDEBAR_MARGIN, SIDEBAR_HEADER_HEIGHT, sidebarX + sidebarWidth - SIDEBAR_MARGIN, SIDEBAR_HEADER_HEIGHT);
         if (isDebtSidebarMode()) {
-            app.line(SIDEBAR_X + SIDEBAR_MARGIN, getDebtSectionBottom(), SIDEBAR_X + SIDEBAR_W - SIDEBAR_MARGIN, getDebtSectionBottom());
+            app.line(sidebarX + SIDEBAR_MARGIN, getDebtSectionBottom(), sidebarX + sidebarWidth - SIDEBAR_MARGIN, getDebtSectionBottom());
         }
 
         Player turnPlayer = players.getTurn();
         app.fill(46, 72, 63);
         app.textAlign(PConstants.LEFT);
         app.textFont(runtime.font30());
-        app.text(text("sidebar.title"), SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_TITLE_Y);
+        app.text(text("sidebar.title"), sidebarX + SIDEBAR_MARGIN, SIDEBAR_TITLE_Y);
 
         app.fill(0);
         app.textFont(runtime.font20());
-        app.text(text("sidebar.currentPlayer"), SIDEBAR_X + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_1_Y);
-        app.text(text("sidebar.turnPhase"), SIDEBAR_X + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_2_Y);
-        app.text(text("sidebar.currentSpot"), SIDEBAR_X + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_3_Y);
+        app.text(text("sidebar.currentPlayer"), sidebarX + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_1_Y);
+        app.text(text("sidebar.turnPhase"), sidebarX + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_2_Y);
+        app.text(text("sidebar.currentSpot"), sidebarX + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_3_Y);
 
         app.fill(46, 72, 63);
-        app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_1_Y);
-        app.text(resolveCurrentTurnPhase(), SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_2_Y);
-        app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_3_Y);
-        drawPopupHistoryPanel(app);
+        app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), sidebarX + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_1_Y);
+        app.text(resolveCurrentTurnPhase(), sidebarX + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_2_Y);
+        app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), sidebarX + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_3_Y);
+        drawPopupHistoryPanel(app, layoutMetrics);
         app.pop();
     }
 
@@ -241,10 +249,10 @@ public class Game implements MonopolyEventListener {
      * Keeps the latest popup texts visible after accidental dismissals without
      * covering the game board itself.
      */
-    private void drawPopupHistoryPanel(MonopolyApp app) {
-        float panelX = SIDEBAR_X + SIDEBAR_MARGIN;
+    private void drawPopupHistoryPanel(MonopolyApp app, LayoutMetrics layoutMetrics) {
+        float panelX = layoutMetrics.sidebarX() + SIDEBAR_MARGIN;
         float panelY = app.height - SIDEBAR_HISTORY_HEIGHT - SIDEBAR_HISTORY_BOTTOM_MARGIN;
-        float panelW = SIDEBAR_W - SIDEBAR_MARGIN * 2;
+        float panelW = layoutMetrics.sidebarWidth() - SIDEBAR_MARGIN * 2;
         List<String> recentMessages = runtime.popupService().recentPopupMessages();
 
         app.noStroke();
@@ -591,11 +599,12 @@ public class Game implements MonopolyEventListener {
             return;
         }
 
+        LayoutMetrics layoutMetrics = getLayoutMetrics();
         MonopolyApp app = runtime.app();
         app.push();
         app.fill(46, 72, 63);
         app.textFont(runtime.font20());
-        app.text(text("sidebar.section.debt"), SIDEBAR_X + SIDEBAR_MARGIN, DEBT_SECTION_TITLE_Y);
+        app.text(text("sidebar.section.debt"), layoutMetrics.sidebarX() + SIDEBAR_MARGIN, DEBT_SECTION_TITLE_Y);
 
         app.fill(0);
         app.textFont(runtime.font20());
@@ -603,10 +612,14 @@ public class Game implements MonopolyEventListener {
         PaymentRequest request = debtState.paymentRequest();
         app.text(
                 buildDebtSidebarText(request),
-                SIDEBAR_X + SIDEBAR_MARGIN,
+                layoutMetrics.sidebarX() + SIDEBAR_MARGIN,
                 DEBT_TEXT_Y
         );
         app.pop();
+    }
+
+    private LayoutMetrics getLayoutMetrics() {
+        return LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
     }
 
     private void declareBankruptcy() {

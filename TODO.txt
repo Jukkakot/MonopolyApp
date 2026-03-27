@@ -19,7 +19,6 @@ UI AND UX
 [Medium] Show monopoly, mortgage, and building status more clearly on deeds
 [Medium] Show houses and hotels more clearly on board and owned properties
 [Low] Improve token visibility when multiple players share a spot
-[Low] Replace hard-coded 1700x996 sidebar measurements with responsive layout values
 [Low] Make sidebar sections reflow when height is limited
 [Low] Make action buttons and dice panel reposition from current window size
 [Low] Make player summary and deed panel fit narrower sidebar widths
