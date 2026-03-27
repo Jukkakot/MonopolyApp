@@ -4,9 +4,6 @@ MONOPOLY RULES
 [High] Add starting order by dice roll
 [High] Add property auction when player declines to buy
 [High] Add property auction when player cannot afford to buy
-[Medium] Enforce even building across a full color set
-[Medium] Enforce even house selling across a full color set
-[Medium] Validate all building buy and sell rules
 [Low] Remove random starting deeds from normal game setup
 
 ECONOMY AND MULTIPLAYER
