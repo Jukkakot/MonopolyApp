@@ -54,11 +54,14 @@ public class Game implements MonopolyEventListener {
     private static final int SIDEBAR_DEBUG_BUTTON_ROW_2_Y = 336;
     private static final int SIDEBAR_DEBUG_BUTTON_ROW_3_Y = 384;
     private static final int SIDEBAR_CONTENT_TOP = 288;
+    private static final int SIDEBAR_MIN_CONTENT_TOP = 220;
     private static final int SIDEBAR_HISTORY_HEIGHT = 192;
+    private static final int SIDEBAR_HISTORY_MIN_HEIGHT = 112;
     private static final int SIDEBAR_HISTORY_BOTTOM_MARGIN = 80;
     private static final int SIDEBAR_HISTORY_HEADER_HEIGHT = 32;
     private static final int SIDEBAR_HISTORY_TEXT_INSET = 8;
     private static final int SIDEBAR_HISTORY_ENTRY_HEIGHT = 28;
+    private static final int SIDEBAR_HISTORY_TOP_MARGIN = 16;
     private static final int DEBT_SECTION_TITLE_Y = 240;
     private static final int DEBT_TEXT_Y = 272;
     private static final int SIDEBAR_LINE_HEIGHT = 24;
@@ -251,13 +254,14 @@ public class Game implements MonopolyEventListener {
      */
     private void drawPopupHistoryPanel(MonopolyApp app, LayoutMetrics layoutMetrics) {
         float panelX = layoutMetrics.sidebarX() + SIDEBAR_MARGIN;
-        float panelY = app.height - SIDEBAR_HISTORY_HEIGHT - SIDEBAR_HISTORY_BOTTOM_MARGIN;
+        float historyHeight = getSidebarHistoryHeight();
+        float panelY = getSidebarHistoryPanelY();
         float panelW = layoutMetrics.sidebarWidth() - SIDEBAR_MARGIN * 2;
         List<String> recentMessages = runtime.popupService().recentPopupMessages();
 
         app.noStroke();
         app.fill(255, 249, 233);
-        app.rect(panelX, panelY, panelW, SIDEBAR_HISTORY_HEIGHT, 16);
+        app.rect(panelX, panelY, panelW, historyHeight, 16);
 
         app.stroke(193, 178, 140);
         app.strokeWeight(2);
@@ -276,7 +280,7 @@ public class Game implements MonopolyEventListener {
                     panelX + SIDEBAR_HISTORY_TEXT_INSET,
                     panelY + 56,
                     panelW - SIDEBAR_HISTORY_TEXT_INSET * 2,
-                    SIDEBAR_HISTORY_HEIGHT - 48
+                    historyHeight - 48
             );
             return;
         }
@@ -295,7 +299,7 @@ public class Game implements MonopolyEventListener {
                     SIDEBAR_HISTORY_ENTRY_HEIGHT
             );
             currentY += 20;
-            if (currentY > panelY + SIDEBAR_HISTORY_HEIGHT - 16) {
+            if (currentY > panelY + historyHeight - 16) {
                 break;
             }
         }
@@ -324,10 +328,10 @@ public class Game implements MonopolyEventListener {
         if (debtState != null) {
             return getDebtSectionBottom() + 20;
         }
-        if (MonopolyApp.DEBUG_MODE) {
-            return 450;
-        }
-        return SIDEBAR_CONTENT_TOP;
+        float debugFloor = getSidebarReservedTop();
+        float historyTop = getSidebarHistoryPanelY();
+        float availableTop = historyTop - SIDEBAR_HISTORY_TOP_MARGIN;
+        return Math.max(SIDEBAR_MIN_CONTENT_TOP, Math.min(debugFloor, availableTop));
     }
 
     private boolean isDebtSidebarMode() {
@@ -620,6 +624,19 @@ public class Game implements MonopolyEventListener {
 
     private LayoutMetrics getLayoutMetrics() {
         return LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+    }
+
+    private float getSidebarHistoryHeight() {
+        float availableHeight = runtime.app().height - getSidebarReservedTop() - SIDEBAR_HISTORY_BOTTOM_MARGIN - SIDEBAR_HISTORY_TOP_MARGIN;
+        return Math.max(SIDEBAR_HISTORY_MIN_HEIGHT, Math.min(SIDEBAR_HISTORY_HEIGHT, availableHeight));
+    }
+
+    private float getSidebarHistoryPanelY() {
+        return runtime.app().height - getSidebarHistoryHeight() - SIDEBAR_HISTORY_BOTTOM_MARGIN;
+    }
+
+    private float getSidebarReservedTop() {
+        return MonopolyApp.DEBUG_MODE ? SIDEBAR_DEBUG_BUTTON_ROW_3_Y + 62 : SIDEBAR_CONTENT_TOP;
     }
 
     private void declareBankruptcy() {

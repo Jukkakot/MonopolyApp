@@ -113,4 +113,27 @@ class GameTurnControlsTest {
         assertEquals(800, metrics.windowHeight(), 0.0001f);
         assertEquals(1200 - fi.monopoly.components.spots.Spot.SPOT_W * 12, metrics.sidebarWidth(), 0.0001f);
     }
+
+    @Test
+    void sidebarHistoryShrinksAndContentTopStaysAboveItWhenWindowIsShort() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime(1700, 560);
+        Game game = new Game(runtime);
+
+        var historyHeightMethod = Game.class.getDeclaredMethod("getSidebarHistoryHeight");
+        historyHeightMethod.setAccessible(true);
+        float historyHeight = (float) historyHeightMethod.invoke(game);
+
+        var historyYMethod = Game.class.getDeclaredMethod("getSidebarHistoryPanelY");
+        historyYMethod.setAccessible(true);
+        float historyY = (float) historyYMethod.invoke(game);
+
+        var contentTopMethod = Game.class.getDeclaredMethod("getSidebarContentTop");
+        contentTopMethod.setAccessible(true);
+        float contentTop = (float) contentTopMethod.invoke(game);
+
+        assertTrue(historyHeight < 192f);
+        assertTrue(historyHeight >= 112f);
+        assertTrue(contentTop <= historyY - 16f);
+    }
 }
