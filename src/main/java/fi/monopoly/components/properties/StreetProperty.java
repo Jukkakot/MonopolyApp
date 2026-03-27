@@ -1,5 +1,6 @@
 package fi.monopoly.components.properties;
 
+import fi.monopoly.components.Game;
 import fi.monopoly.components.Player;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
@@ -13,6 +14,8 @@ import static fi.monopoly.text.UiTexts.text;
 
 @ToString(callSuper = true)
 public class StreetProperty extends Property {
+    public static final int BANK_HOUSE_SUPPLY = 32;
+    public static final int BANK_HOTEL_SUPPLY = 12;
     @Getter
     private final int housePrice;
     @Getter
@@ -73,12 +76,9 @@ public class StreetProperty extends Property {
             showPopup("streetProperty.debt.noBuy");
             return false;
         }
-        if (!canBuyHouses(count)) {
-            if (ownerPlayer == null || ownerPlayer.getMoneyAmount() >= count * housePrice) {
-                showPopup("streetProperty.buy.mustBuildEvenly");
-            } else {
-                showPopup("streetProperty.buy.notEnough", count);
-            }
+        BuildValidationResult result = validateBuyHouses(count);
+        if (result != BuildValidationResult.OK) {
+            showValidationPopup(result, count);
             return false;
         }
         for (int i = 0; i < count; i++) {
@@ -95,15 +95,15 @@ public class StreetProperty extends Property {
             houseCount = 5 + houseCount;
         }
         if (houseCount >= 5) {
-            //Handle hotel
             houseCount = 0;
             hotelCount = 1;
         }
     }
 
     public boolean sellHouses(int count) {
-        if (!canSellHouses(count)) {
-            showPopup("streetProperty.sell.mustSellEvenly");
+        BuildValidationResult result = validateSellHouses(count);
+        if (result != BuildValidationResult.OK) {
+            showValidationPopup(result, count);
             return false;
         }
         for (int i = 0; i < count; i++) {
@@ -115,17 +115,29 @@ public class StreetProperty extends Property {
     }
 
     public boolean canBuyHouses(int count) {
-        if (count <= 0 || ownerPlayer == null || !ownerPlayer.ownsAllStreetProperties(streetType())) {
-            return false;
+        return validateBuyHouses(count) == BuildValidationResult.OK;
+    }
+
+    private BuildValidationResult validateBuyHouses(int count) {
+        if (count <= 0 || ownerPlayer == null) {
+            return BuildValidationResult.INVALID_COUNT;
+        }
+        if (!ownerPlayer.ownsAllStreetProperties(streetType())) {
+            return BuildValidationResult.REQUIRES_FULL_SET;
         }
         if (ownerPlayer.getOwnedProperties(streetType()).stream().anyMatch(Property::isMortgaged)) {
-            return false;
+            return BuildValidationResult.MORTGAGED_PROPERTY;
         }
         int simulatedLevel = getBuildingLevel();
         int availableMoney = ownerPlayer.getMoneyAmount();
+        int builtHouses = getBuiltHouseCount();
+        int builtHotels = getBuiltHotelCount();
         for (int i = 0; i < count; i++) {
-            if (simulatedLevel >= 5 || availableMoney < housePrice) {
-                return false;
+            if (simulatedLevel >= 5) {
+                return BuildValidationResult.MUST_BUILD_EVENLY;
+            }
+            if (availableMoney < housePrice) {
+                return BuildValidationResult.NOT_ENOUGH_MONEY;
             }
             int simulatedCurrentLevel = simulatedLevel;
             int minGroupLevel = getStreetSetProperties().stream()
@@ -133,22 +145,40 @@ public class StreetProperty extends Property {
                     .min()
                     .orElse(simulatedCurrentLevel);
             if (simulatedLevel > minGroupLevel) {
-                return false;
+                return BuildValidationResult.MUST_BUILD_EVENLY;
+            }
+            if (simulatedLevel == 4) {
+                if (builtHotels >= BANK_HOTEL_SUPPLY) {
+                    return BuildValidationResult.NO_HOTELS_LEFT;
+                }
+                builtHotels += 1;
+                builtHouses -= 4;
+            } else {
+                if (builtHouses >= BANK_HOUSE_SUPPLY) {
+                    return BuildValidationResult.NO_HOUSES_LEFT;
+                }
+                builtHouses += 1;
             }
             simulatedLevel += 1;
             availableMoney -= housePrice;
         }
-        return true;
+        return BuildValidationResult.OK;
     }
 
     public boolean canSellHouses(int count) {
+        return validateSellHouses(count) == BuildValidationResult.OK;
+    }
+
+    private BuildValidationResult validateSellHouses(int count) {
         if (count <= 0 || ownerPlayer == null) {
-            return false;
+            return BuildValidationResult.INVALID_COUNT;
         }
         int simulatedLevel = getBuildingLevel();
+        int builtHouses = getBuiltHouseCount();
+        int builtHotels = getBuiltHotelCount();
         for (int i = 0; i < count; i++) {
             if (simulatedLevel <= 0) {
-                return false;
+                return BuildValidationResult.MUST_SELL_EVENLY;
             }
             int simulatedCurrentLevel = simulatedLevel;
             int maxGroupLevel = getStreetSetProperties().stream()
@@ -156,11 +186,20 @@ public class StreetProperty extends Property {
                     .max()
                     .orElse(simulatedCurrentLevel);
             if (simulatedLevel < maxGroupLevel) {
-                return false;
+                return BuildValidationResult.MUST_SELL_EVENLY;
+            }
+            if (simulatedLevel == 5) {
+                if (builtHouses + 4 > BANK_HOUSE_SUPPLY) {
+                    return BuildValidationResult.NO_HOUSES_TO_BREAK_HOTEL;
+                }
+                builtHotels -= 1;
+                builtHouses += 4;
+            } else {
+                builtHouses -= 1;
             }
             simulatedLevel -= 1;
         }
-        return true;
+        return BuildValidationResult.OK;
     }
 
     public int getMaxBuyableHouseCount() {
@@ -172,12 +211,9 @@ public class StreetProperty extends Property {
     }
 
     public boolean buyBuildingRoundsAcrossSet(int rounds) {
-        if (!canBuyBuildingRoundsAcrossSet(rounds)) {
-            if (ownerPlayer == null || ownerPlayer.getMoneyAmount() >= getStreetSetRoundCost(rounds)) {
-                showPopup("streetProperty.buy.mustBuildEvenly");
-            } else {
-                showPopup("streetProperty.buy.notEnoughSet", rounds);
-            }
+        BuildValidationResult result = validateBuyBuildingRoundsAcrossSet(rounds);
+        if (result != BuildValidationResult.OK) {
+            showValidationPopup(result, rounds);
             return false;
         }
         List<StreetProperty> properties = getStreetSetProperties();
@@ -190,30 +226,54 @@ public class StreetProperty extends Property {
     }
 
     public boolean canBuyBuildingRoundsAcrossSet(int rounds) {
+        return validateBuyBuildingRoundsAcrossSet(rounds) == BuildValidationResult.OK;
+    }
+
+    private BuildValidationResult validateBuyBuildingRoundsAcrossSet(int rounds) {
         List<StreetProperty> properties = getStreetSetProperties();
-        if (rounds <= 0 || ownerPlayer == null || !ownerPlayer.ownsAllStreetProperties(streetType())) {
-            return false;
+        if (rounds <= 0 || ownerPlayer == null) {
+            return BuildValidationResult.INVALID_COUNT;
+        }
+        if (!ownerPlayer.ownsAllStreetProperties(streetType())) {
+            return BuildValidationResult.REQUIRES_FULL_SET;
         }
         if (ownerPlayer.getOwnedProperties(streetType()).stream().anyMatch(Property::isMortgaged)) {
-            return false;
+            return BuildValidationResult.MORTGAGED_PROPERTY;
         }
         int[] levels = properties.stream().mapToInt(StreetProperty::getBuildingLevel).toArray();
         int availableMoney = ownerPlayer.getMoneyAmount();
+        int builtHouses = getBuiltHouseCount();
+        int builtHotels = getBuiltHotelCount();
         for (int round = 0; round < rounds; round++) {
             for (int i = 0; i < properties.size(); i++) {
                 StreetProperty property = properties.get(i);
-                if (levels[i] >= 5 || availableMoney < property.getHousePrice()) {
-                    return false;
+                if (levels[i] >= 5) {
+                    return BuildValidationResult.MUST_BUILD_EVENLY;
+                }
+                if (availableMoney < property.getHousePrice()) {
+                    return BuildValidationResult.NOT_ENOUGH_MONEY;
                 }
                 int minGroupLevel = java.util.Arrays.stream(levels).min().orElse(levels[i]);
                 if (levels[i] > minGroupLevel) {
-                    return false;
+                    return BuildValidationResult.MUST_BUILD_EVENLY;
+                }
+                if (levels[i] == 4) {
+                    if (builtHotels >= BANK_HOTEL_SUPPLY) {
+                        return BuildValidationResult.NO_HOTELS_LEFT;
+                    }
+                    builtHotels += 1;
+                    builtHouses -= 4;
+                } else {
+                    if (builtHouses >= BANK_HOUSE_SUPPLY) {
+                        return BuildValidationResult.NO_HOUSES_LEFT;
+                    }
+                    builtHouses += 1;
                 }
                 levels[i] += 1;
                 availableMoney -= property.getHousePrice();
             }
         }
-        return true;
+        return BuildValidationResult.OK;
     }
 
     public int getMaxBuyableBuildingRoundsAcrossSet() {
@@ -259,5 +319,51 @@ public class StreetProperty extends Property {
         if (ownerPlayer != null && ownerPlayer.getRuntime() != null) {
             ownerPlayer.getRuntime().popupService().show(text(key, args));
         }
+    }
+
+    private void showValidationPopup(BuildValidationResult result, int count) {
+        switch (result) {
+            case NOT_ENOUGH_MONEY -> {
+                if (count > 1 && getStreetSetProperties().size() > 1) {
+                    showPopup("streetProperty.buy.notEnoughSet", count);
+                } else {
+                    showPopup("streetProperty.buy.notEnough", count);
+                }
+            }
+            case NO_HOUSES_LEFT -> showPopup("streetProperty.bank.noHouses");
+            case NO_HOTELS_LEFT -> showPopup("streetProperty.bank.noHotels");
+            case NO_HOUSES_TO_BREAK_HOTEL -> showPopup("streetProperty.sell.bank.noHouses");
+            case MORTGAGED_PROPERTY -> showPopup("streetProperty.mortgaged.cannotBuy");
+            case REQUIRES_FULL_SET -> showPopup("streetProperty.requireFullSet");
+            case MUST_SELL_EVENLY -> showPopup("streetProperty.sell.mustSellEvenly");
+            default -> showPopup("streetProperty.buy.mustBuildEvenly");
+        }
+    }
+
+    private int getBuiltHouseCount() {
+        if (Game.players == null) {
+            return 0;
+        }
+        return Game.players.getTotalHouseCount();
+    }
+
+    private int getBuiltHotelCount() {
+        if (Game.players == null) {
+            return 0;
+        }
+        return Game.players.getTotalHotelCount();
+    }
+
+    private enum BuildValidationResult {
+        OK,
+        INVALID_COUNT,
+        REQUIRES_FULL_SET,
+        MORTGAGED_PROPERTY,
+        NOT_ENOUGH_MONEY,
+        MUST_BUILD_EVENLY,
+        MUST_SELL_EVENLY,
+        NO_HOUSES_LEFT,
+        NO_HOTELS_LEFT,
+        NO_HOUSES_TO_BREAK_HOTEL
     }
 }

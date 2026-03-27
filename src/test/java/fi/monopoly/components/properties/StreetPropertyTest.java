@@ -1,13 +1,23 @@
 package fi.monopoly.components.properties;
 
+import fi.monopoly.components.Game;
 import fi.monopoly.components.Player;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Field;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class StreetPropertyTest {
+
+    @AfterEach
+    void clearGamePlayers() {
+        Game.players = null;
+    }
 
     @Test
     void rentIsDoubledWhenOwnerHasFullColorSetWithoutBuildings() {
@@ -195,5 +205,93 @@ class StreetPropertyTest {
         assertEquals(2, first.getHouseCount());
         assertEquals(2, second.getHouseCount());
         assertEquals(60, owner.getMoneyAmount());
+    }
+
+    @Test
+    void buyingHouseFailsWhenBankHasNoHousesLeft() {
+        Player owner = TestObjectFactory.player("Owner", 2000, 1);
+        Player other = TestObjectFactory.player("Other", 2000, 2);
+        StreetProperty first = new StreetProperty(SpotType.B1);
+        StreetProperty second = new StreetProperty(SpotType.B2);
+        TestObjectFactory.giveProperty(owner, first);
+        TestObjectFactory.giveProperty(owner, second);
+
+        StreetProperty fillerA = new StreetProperty(SpotType.LB1);
+        StreetProperty fillerB = new StreetProperty(SpotType.LB2);
+        TestObjectFactory.giveProperty(other, fillerA);
+        TestObjectFactory.giveProperty(other, fillerB);
+        setBuildingState(fillerA, 16, 0);
+        setBuildingState(fillerB, 16, 0);
+
+        Game.players = TestObjectFactory.playersWithTurn(owner, other);
+
+        assertFalse(first.buyHouses(1));
+        assertEquals(0, first.getHouseCount());
+    }
+
+    @Test
+    void buyingHotelFailsWhenBankHasNoHotelsLeft() {
+        Player owner = TestObjectFactory.player("Owner", 5000, 1);
+        Player hotelOwner = TestObjectFactory.player("HotelOwner", 5000, 2);
+        StreetProperty first = new StreetProperty(SpotType.B1);
+        StreetProperty second = new StreetProperty(SpotType.B2);
+        TestObjectFactory.giveProperty(owner, first);
+        TestObjectFactory.giveProperty(owner, second);
+        setBuildingState(first, 4, 0);
+        setBuildingState(second, 4, 0);
+
+        List<StreetProperty> hotelProperties = List.of(
+                new StreetProperty(SpotType.LB1), new StreetProperty(SpotType.LB2), new StreetProperty(SpotType.LB3),
+                new StreetProperty(SpotType.P1), new StreetProperty(SpotType.P2), new StreetProperty(SpotType.P3),
+                new StreetProperty(SpotType.O1), new StreetProperty(SpotType.O2), new StreetProperty(SpotType.O3),
+                new StreetProperty(SpotType.R1), new StreetProperty(SpotType.R2), new StreetProperty(SpotType.R3)
+        );
+        for (StreetProperty property : hotelProperties) {
+            TestObjectFactory.giveProperty(hotelOwner, property);
+            setBuildingState(property, 0, 1);
+        }
+
+        Game.players = TestObjectFactory.playersWithTurn(owner, hotelOwner);
+
+        assertFalse(first.buyHouses(1));
+        assertEquals(4, first.getHouseCount());
+        assertEquals(0, first.getHotelCount());
+    }
+
+    @Test
+    void sellingHotelFailsWhenBankCannotReturnFourHouses() {
+        Player owner = TestObjectFactory.player("Owner", 5000, 1);
+        Player other = TestObjectFactory.player("Other", 5000, 2);
+        StreetProperty first = new StreetProperty(SpotType.B1);
+        StreetProperty second = new StreetProperty(SpotType.B2);
+        TestObjectFactory.giveProperty(owner, first);
+        TestObjectFactory.giveProperty(owner, second);
+        setBuildingState(first, 0, 1);
+        setBuildingState(second, 0, 1);
+
+        StreetProperty filler = new StreetProperty(SpotType.LB1);
+        TestObjectFactory.giveProperty(other, filler);
+        setBuildingState(filler, 29, 0);
+
+        Game.players = TestObjectFactory.playersWithTurn(owner, other);
+
+        assertFalse(first.sellHouses(1));
+        assertEquals(0, first.getHouseCount());
+        assertEquals(1, first.getHotelCount());
+    }
+
+    private void setBuildingState(StreetProperty property, int houses, int hotels) {
+        setField(property, "houseCount", houses);
+        setField(property, "hotelCount", hotels);
+    }
+
+    private void setField(Object target, String fieldName, int value) {
+        try {
+            Field field = StreetProperty.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.setInt(target, value);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -109,6 +109,14 @@ public class Players {
         return playerList.size();
     }
 
+    public int getTotalHouseCount() {
+        return playerList.stream().mapToInt(Player::getTotalHouseCount).sum();
+    }
+
+    public int getTotalHotelCount() {
+        return playerList.stream().mapToInt(Player::getTotalHotelCount).sum();
+    }
+
     public void forEachOtherPLayer(Player turnPlayer, Consumer<Player> update) {
         //TODO what if cant do this update to all players? like all players cant afford giving money
         playerList.stream().filter(player -> !turnPlayer.equals(player)).forEach(update);

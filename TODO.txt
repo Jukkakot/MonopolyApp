@@ -4,7 +4,6 @@ MONOPOLY RULES
 [High] Add starting order by dice roll
 [High] Add property auction when player declines to buy
 [High] Add property auction when player cannot afford to buy
-[High] Add house and hotel bank supply limits
 [High] Review all card effects against Monopoly rules
 [Medium] Enforce even building across a full color set
 [Medium] Enforce even house selling across a full color set
