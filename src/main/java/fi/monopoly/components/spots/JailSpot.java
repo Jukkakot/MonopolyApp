@@ -3,6 +3,7 @@ package fi.monopoly.components.spots;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.cards.Cards;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.PaymentHandler;
@@ -10,6 +11,7 @@ import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.DiceState;
+import fi.monopoly.types.StreetType;
 import fi.monopoly.types.TurnResult;
 import fi.monopoly.utils.Coordinates;
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +71,12 @@ public class JailSpot extends CornerSpot {
         } else {
             if (turnPlayer.hasGetOutOfJailCard() || turnPlayer.getMoneyAmount() >= GET_OUT_OF_JAIL_FEE) {
                 ButtonAction onAccept = () -> {
-                    if (turnPlayer.useGetOutOfJailCard()) {
+                    boolean hadCard = turnPlayer.hasGetOutOfJailCard();
+                    StreetType sourceDeck = hadCard ? turnPlayer.useGetOutOfJailCard() : null;
+                    if (hadCard) {
+                        if (sourceDeck != null) {
+                            Cards.returnOutOfJailCard(sourceDeck);
+                        }
                         runtime.popupService().show(text("jail.notSent"), callbackAction::doAction);
                     } else if (turnPlayer.getMoneyAmount() >= GET_OUT_OF_JAIL_FEE) {
                         gameState.getPaymentHandler().requestPayment(

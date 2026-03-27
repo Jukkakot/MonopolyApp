@@ -15,6 +15,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 
 import static fi.monopoly.text.UiTexts.text;
@@ -33,8 +35,8 @@ public class Player extends PlayerToken {
     @Getter
     private int turnNumber;
     @Getter
-    @Setter
     private int getOutOfJailCardCount = 0;
+    private final Deque<StreetType> getOutOfJailCardSources = new LinkedList<>();
 
     public Player(MonopolyRuntime runtime, String name, Color color, Spot spot) {
         super(runtime, spot, color);
@@ -155,6 +157,9 @@ public class Player extends PlayerToken {
             }
         }
         targetPlayer.setGetOutOfJailCardCount(targetPlayer.getGetOutOfJailCardCount() + getOutOfJailCardCount);
+        targetPlayer.getOutOfJailCardSources.addAll(getOutOfJailCardSources);
+        getOutOfJailCardSources.clear();
+        getOutOfJailCardCount = 0;
         if (moneyAmount > 0) {
             targetPlayer.addMoney(moneyAmount);
             moneyAmount = 0;
@@ -173,6 +178,11 @@ public class Player extends PlayerToken {
     }
 
     public void addOutOfJailCard() {
+        addOutOfJailCard(null);
+    }
+
+    public void addOutOfJailCard(StreetType sourceStreetType) {
+        getOutOfJailCardSources.addLast(sourceStreetType);
         getOutOfJailCardCount++;
     }
 
@@ -180,16 +190,30 @@ public class Player extends PlayerToken {
         return getOutOfJailCardCount > 0;
     }
 
-    public boolean useGetOutOfJailCard() {
+    public StreetType useGetOutOfJailCard() {
         if (isInJail()) {
             log.error("Tried to use get out of jail when already in jail");
-            return false;
+            return null;
         }
         if (hasGetOutOfJailCard()) {
             getOutOfJailCardCount--;
-            return true;
+            return getOutOfJailCardSources.pollFirst();
         }
-        return false;
+        return null;
+    }
+
+    public void setGetOutOfJailCardCount(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("Get out of jail card count cannot be negative");
+        }
+        while (getOutOfJailCardCount < count) {
+            getOutOfJailCardSources.addLast(null);
+            getOutOfJailCardCount++;
+        }
+        while (getOutOfJailCardCount > count) {
+            getOutOfJailCardSources.pollLast();
+            getOutOfJailCardCount--;
+        }
     }
 
     public int getTotalHouseCount() {

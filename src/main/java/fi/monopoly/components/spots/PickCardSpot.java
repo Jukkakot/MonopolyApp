@@ -32,7 +32,7 @@ public class PickCardSpot extends Spot {
         switch (card.cardType()) {
             case MONEY -> updateMoney(turnPlayer, Integer.parseInt(card.values().get(0)), card.text(), callbackAction);
             case OUT_OF_JAIL -> {
-                turnPlayer.addOutOfJailCard();
+                turnPlayer.addOutOfJailCard(spotType.streetType);
                 runtime.popupService().show(card.text(), callbackAction::doAction);
             }
             case ALL_PLAYERS_MONEY -> {

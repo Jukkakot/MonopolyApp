@@ -13,13 +13,13 @@ public class Cards {
     private static final String SINGLE_TEXT_DELIMITER = "#";
     private static final String PROP_VALUES_DELIMITER = ";";
     private final StreetType streetType;
-    private final List<CardDefinition> cardList = new ArrayList<>();
-    private int previousCardIndex = -1;
+    private static final Map<StreetType, DeckState> DECKS = new EnumMap<>(StreetType.class);
 
     public Cards(StreetType streetType) {
         this.streetType = streetType;
-        initCards();
-        Collections.shuffle(cardList);
+        synchronized (DECKS) {
+            DECKS.computeIfAbsent(streetType, Cards::createDeckState);
+        }
     }
 
     static String getLocalizedCardText(StreetType streetType, CardType cardType, int entryIndex) {
@@ -68,7 +68,8 @@ public class Cards {
         return streetType.name().toLowerCase(Locale.ROOT);
     }
 
-    private void initCards() {
+    private static DeckState createDeckState(StreetType streetType) {
+        List<CardDefinition> definitions = new ArrayList<>();
         for (CardType ct : CardType.values()) {
             List<String> entries = splitCardEntries(getBundleValue(getDefaultBundle(streetType), ct.name()));
             if (!entries.isEmpty()) {
@@ -76,26 +77,77 @@ public class Cards {
                     String propSingleText = entries.get(i);
                     List<String> propParts = new ArrayList<>(Arrays.asList(propSingleText.split(PROP_VALUES_DELIMITER)));
                     propParts.remove(0);
-                    cardList.add(new CardDefinition(ct, i, List.copyOf(propParts)));
+                    definitions.add(new CardDefinition(ct, i, List.copyOf(propParts)));
                 }
             }
         }
+        Collections.shuffle(definitions);
+        return new DeckState(definitions);
     }
 
     public Card getCard() {
-        if (previousCardIndex == -1) {
-            previousCardIndex = 0;
-        } else if (previousCardIndex == cardList.size() - 1) {
-            Collections.shuffle(cardList);
-            log.info("Shuffling cards...");
-            previousCardIndex = 0;
-        } else {
-            previousCardIndex++;
-        }
-        CardDefinition definition = cardList.get(previousCardIndex);
+        DeckState deckState = getDeckState();
+        CardDefinition definition = deckState.drawNext();
         return new Card(definition.cardType(), getLocalizedCardText(streetType, definition.cardType(), definition.entryIndex()), definition.values());
     }
 
+    public static void returnOutOfJailCard(StreetType streetType) {
+        synchronized (DECKS) {
+            DeckState deckState = DECKS.get(streetType);
+            if (deckState == null) {
+                return;
+            }
+            deckState.returnOutOfJailCard();
+        }
+    }
+
+    static void resetDecks() {
+        synchronized (DECKS) {
+            DECKS.clear();
+        }
+    }
+
+    private DeckState getDeckState() {
+        synchronized (DECKS) {
+            DeckState deckState = DECKS.get(streetType);
+            if (deckState == null) {
+                deckState = createDeckState(streetType);
+                DECKS.put(streetType, deckState);
+            }
+            return deckState;
+        }
+    }
+
     private record CardDefinition(CardType cardType, int entryIndex, List<String> values) {
+    }
+
+    private static final class DeckState {
+        private final Deque<CardDefinition> drawPile = new ArrayDeque<>();
+        private final Deque<CardDefinition> heldOutOfJailCards = new ArrayDeque<>();
+
+        private DeckState(List<CardDefinition> definitions) {
+            drawPile.addAll(definitions);
+        }
+
+        private CardDefinition drawNext() {
+            if (drawPile.isEmpty()) {
+                throw new IllegalStateException("No cards available in deck");
+            }
+            CardDefinition definition = drawPile.removeFirst();
+            if (definition.cardType() == CardType.OUT_OF_JAIL) {
+                heldOutOfJailCards.addLast(definition);
+            } else {
+                drawPile.addLast(definition);
+            }
+            return definition;
+        }
+
+        private void returnOutOfJailCard() {
+            CardDefinition definition = heldOutOfJailCards.pollFirst();
+            if (definition == null) {
+                return;
+            }
+            drawPile.addLast(definition);
+        }
     }
 }
