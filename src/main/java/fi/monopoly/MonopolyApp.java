@@ -20,6 +20,8 @@ import java.util.stream.Stream;
 public class MonopolyApp extends MonopolyEventObserver {
     public static final char ENTER = '\n';
     public static final char SPACE = ' ';
+    public static final int DEFAULT_WINDOW_WIDTH = 1700;
+    public static final int DEFAULT_WINDOW_HEIGHT = 996;
     public static MonopolyApp self;
     public static boolean DEBUG_MODE = false;
     public static boolean SKIP_ANNIMATIONS = false;
@@ -76,7 +78,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     public void settings() {
-        size(1700, 996);
+        size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
     }
 
     public void setup() {
