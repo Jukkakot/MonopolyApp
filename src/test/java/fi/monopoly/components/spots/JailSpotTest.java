@@ -10,6 +10,7 @@ import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.support.TestObjectFactory;
+import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.TurnResult;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 import processing.event.KeyEvent;
+
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static processing.event.KeyEvent.PRESS;
@@ -47,6 +50,7 @@ class JailSpotTest {
 
     @BeforeEach
     void setUp() {
+        UiTexts.setLocale(Locale.ENGLISH);
         runtime = initHeadlessRuntime();
         Game.animations = new Animations();
         jailSpot = new JailSpot(new SpotImage(runtime, new Coordinates(100, 100), SpotType.JAIL));
@@ -55,6 +59,7 @@ class JailSpotTest {
 
     @AfterEach
     void tearDown() {
+        UiTexts.setLocale(Locale.ENGLISH);
         JailSpot.jailTimeLeftMap.clear();
     }
 

@@ -8,12 +8,16 @@ import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.support.TestObjectFactory;
+import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.SpotType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,6 +29,16 @@ class LegacyTurnEffectExecutorTest {
         }
         onResolved.doAction();
     };
+
+    @BeforeEach
+    void setEnglishLocale() {
+        UiTexts.setLocale(Locale.ENGLISH);
+    }
+
+    @AfterEach
+    void resetEnglishLocale() {
+        UiTexts.setLocale(Locale.ENGLISH);
+    }
 
     @Test
     void executeCallsOnCompleteImmediatelyWhenNoEffectsExist() {

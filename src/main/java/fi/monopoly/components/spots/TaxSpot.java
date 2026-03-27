@@ -9,6 +9,8 @@ import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.TurnResult;
 import lombok.Getter;
 
+import static fi.monopoly.text.UiTexts.text;
+
 public class TaxSpot extends Spot {
     @Getter
     private final Integer price;
@@ -22,7 +24,7 @@ public class TaxSpot extends Spot {
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
         Player turnPlayer = gameState.getPlayers().getTurn();
         gameState.getPaymentHandler().requestPayment(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, price, "You need to pay M" + price + " tax."),
+                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, price, text("tax.reason.pay", price)),
                 callbackAction
         );
         return null;

@@ -99,7 +99,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             noStroke();
             circle(mouseX, mouseY, 20);
             textFont(font20);
-            text(mouseX + " , " + mouseY, mouseX - 40, mouseY + 30);
+            text(fi.monopoly.text.UiTexts.text("app.debug.mouseCoords", mouseX, mouseY), mouseX - 40, mouseY + 30);
             pop();
         }
     }

@@ -28,12 +28,38 @@ import processing.event.Event;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
+import java.util.List;
+import java.util.Locale;
+
 import static fi.monopoly.text.UiTexts.text;
 import static processing.event.MouseEvent.CLICK;
 
 @Slf4j
 public class Game implements MonopolyEventListener {
     private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
+    private static final float SIDEBAR_X = Spot.SPOT_W * 12;
+    private static final float SIDEBAR_W = 1700 - SIDEBAR_X;
+    private static final int SIDEBAR_MARGIN = 16;
+    private static final int SIDEBAR_LABEL_X = 16;
+    private static final int SIDEBAR_VALUE_X = 192;
+    private static final int SIDEBAR_TITLE_Y = 32;
+    private static final int SIDEBAR_HEADER_ROW_1_Y = 64;
+    private static final int SIDEBAR_HEADER_ROW_2_Y = 96;
+    private static final int SIDEBAR_HEADER_ROW_3_Y = 128;
+    private static final int SIDEBAR_HEADER_HEIGHT = 160;
+    private static final int SIDEBAR_PRIMARY_BUTTON_Y = 192;
+    private static final int SIDEBAR_DEBUG_BUTTON_ROW_1_Y = 288;
+    private static final int SIDEBAR_DEBUG_BUTTON_ROW_2_Y = 336;
+    private static final int SIDEBAR_DEBUG_BUTTON_ROW_3_Y = 384;
+    private static final int SIDEBAR_CONTENT_TOP = 288;
+    private static final int SIDEBAR_HISTORY_HEIGHT = 192;
+    private static final int SIDEBAR_HISTORY_BOTTOM_MARGIN = 80;
+    private static final int SIDEBAR_HISTORY_HEADER_HEIGHT = 32;
+    private static final int SIDEBAR_HISTORY_TEXT_INSET = 8;
+    private static final int SIDEBAR_HISTORY_ENTRY_HEIGHT = 28;
+    private static final int DEBT_SECTION_TITLE_Y = 240;
+    private static final int DEBT_TEXT_Y = 272;
+    private static final int SIDEBAR_LINE_HEIGHT = 24;
     private static Game current;
     public static Dices DICES;
     public static Players players;
@@ -50,6 +76,7 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton debugSendToJailButton;
     private final MonopolyButton debugResetTurnButton;
     private final MonopolyButton debugGodModeButton;
+    private final MonopolyButton languageButton;
     Board board;
     TurnResult prevTurnResult;
     private DebtState debtState;
@@ -58,37 +85,42 @@ public class Game implements MonopolyEventListener {
         current = this;
         this.runtime = runtime;
         this.endRoundButton = new MonopolyButton(runtime, "endRound");
-        endRoundButton.setPosition((int) (Spot.SPOT_W * 5.4), runtime.app().height - Spot.SPOT_W * 3);
-        endRoundButton.setLabel(text("game.button.endRound"));
-        endRoundButton.setSize(100, 50);
+        endRoundButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_PRIMARY_BUTTON_Y);
+        endRoundButton.setSize(150, 44);
+        endRoundButton.setAutoWidth(100, 28, 180);
         this.retryDebtButton = new MonopolyButton(runtime, "retryDebt");
-        retryDebtButton.setPosition((int) (Spot.SPOT_W * 12 + 20), 560);
-        retryDebtButton.setLabel(text("game.button.retryDebt"));
+        retryDebtButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_PRIMARY_BUTTON_Y);
         retryDebtButton.setSize(140, 40);
+        retryDebtButton.setAutoWidth(140, 28, 220);
         this.declareBankruptcyButton = new MonopolyButton(runtime, "declareBankruptcy");
-        declareBankruptcyButton.setPosition((int) (Spot.SPOT_W * 12 + 180), 560);
-        declareBankruptcyButton.setLabel(text("game.button.bankrupt"));
+        declareBankruptcyButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_PRIMARY_BUTTON_Y);
         declareBankruptcyButton.setSize(140, 40);
+        declareBankruptcyButton.setAutoWidth(140, 28, 220);
         this.debugAddCashButton = new MonopolyButton(runtime, "debugAddCash");
-        debugAddCashButton.setPosition((int) (Spot.SPOT_W * 12 + 20), 640);
-        debugAddCashButton.setLabel(text("game.button.debugAddCash"));
+        debugAddCashButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_DEBUG_BUTTON_ROW_1_Y);
         debugAddCashButton.setSize(140, 36);
+        debugAddCashButton.setAutoWidth(140, 28, 220);
         this.debugDebtScenarioButton = new MonopolyButton(runtime, "debugDebtScenario");
-        debugDebtScenarioButton.setPosition((int) (Spot.SPOT_W * 12 + 180), 640);
-        debugDebtScenarioButton.setLabel(text("game.button.debugDebt"));
+        debugDebtScenarioButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_DEBUG_BUTTON_ROW_1_Y);
         debugDebtScenarioButton.setSize(140, 36);
+        debugDebtScenarioButton.setAutoWidth(140, 28, 220);
         this.debugSendToJailButton = new MonopolyButton(runtime, "debugSendToJail");
-        debugSendToJailButton.setPosition((int) (Spot.SPOT_W * 12 + 20), 684);
-        debugSendToJailButton.setLabel(text("game.button.debugJail"));
+        debugSendToJailButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_DEBUG_BUTTON_ROW_2_Y);
         debugSendToJailButton.setSize(140, 36);
+        debugSendToJailButton.setAutoWidth(140, 28, 220);
         this.debugResetTurnButton = new MonopolyButton(runtime, "debugResetTurn");
-        debugResetTurnButton.setPosition((int) (Spot.SPOT_W * 12 + 180), 684);
-        debugResetTurnButton.setLabel(text("game.button.debugReset"));
+        debugResetTurnButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_DEBUG_BUTTON_ROW_2_Y);
         debugResetTurnButton.setSize(140, 36);
+        debugResetTurnButton.setAutoWidth(140, 28, 220);
         this.debugGodModeButton = new MonopolyButton(runtime, "debugGodMode");
-        debugGodModeButton.setPosition((int) (Spot.SPOT_W * 12 + 20), 728);
-        debugGodModeButton.setLabel(text("game.button.godMode"));
+        debugGodModeButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_DEBUG_BUTTON_ROW_3_Y);
         debugGodModeButton.setSize(300, 36);
+        debugGodModeButton.setAutoWidth(180, 28, 300);
+        this.languageButton = new MonopolyButton(runtime, "language");
+        languageButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, runtime.app().height - 48);
+        languageButton.setSize(220, 36);
+        languageButton.setAutoWidth(180, 28, 280);
+        refreshLabels();
         endRoundButton.hide();
         retryDebtButton.hide();
         declareBankruptcyButton.hide();
@@ -97,6 +129,7 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.hide();
         debugResetTurnButton.hide();
         debugGodModeButton.hide();
+        fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
         runtime.eventBus().addListener(this);
         board = new Board(runtime);
         DICES = Dices.setRollDice(runtime, this::rollDice);
@@ -104,9 +137,9 @@ public class Game implements MonopolyEventListener {
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(runtime, "Eka", Color.MEDIUMPURPLE, spot));
-        players.addPlayer(new Player(runtime, "Toka", Color.PINK, spot));
-        players.addPlayer(new Player(runtime, "Kolmas", Color.DARKOLIVEGREEN, spot));
+        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot));
+        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot));
+        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot));
 //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
 //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
 //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
@@ -129,6 +162,7 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.addListener(this::debugSendCurrentPlayerToJail);
         debugResetTurnButton.addListener(this::debugResetTurnState);
         debugGodModeButton.addListener(this::openDebugGodModeMenu);
+        languageButton.addListener(this::openLanguageMenu);
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
             initializeDebtDebugScenario();
@@ -151,10 +185,164 @@ public class Game implements MonopolyEventListener {
             animations.updateAnimations();
         }
         board.draw(null);
-        DICES.draw(null);
-        players.draw();
+        drawSidebarPanel();
+        if (!isDebtSidebarMode()) {
+            DICES.draw(null);
+        }
+        if (isDebtSidebarMode()) {
+            players.focusPlayer(debtState.paymentRequest().debtor());
+        }
+        players.draw(getSidebarContentTop(), !isDebtSidebarMode(), !isDebtSidebarMode());
         updateDebugButtons();
+        enforcePrimaryTurnControlInvariant();
         drawDebtState();
+    }
+
+    /**
+     * Draws the persistent right-side information panel so turn state, player
+     * overview and controls stay in one predictable area.
+     */
+    private void drawSidebarPanel() {
+        MonopolyApp app = runtime.app();
+        app.push();
+        app.noStroke();
+        app.fill(245, 239, 221);
+        app.rect(SIDEBAR_X, 0, SIDEBAR_W, app.height);
+
+        app.stroke(193, 178, 140);
+        app.strokeWeight(2);
+        app.line(SIDEBAR_X, 0, SIDEBAR_X, app.height);
+        app.line(SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_HEADER_HEIGHT, SIDEBAR_X + SIDEBAR_W - SIDEBAR_MARGIN, SIDEBAR_HEADER_HEIGHT);
+        if (isDebtSidebarMode()) {
+            app.line(SIDEBAR_X + SIDEBAR_MARGIN, getDebtSectionBottom(), SIDEBAR_X + SIDEBAR_W - SIDEBAR_MARGIN, getDebtSectionBottom());
+        }
+
+        Player turnPlayer = players.getTurn();
+        app.fill(46, 72, 63);
+        app.textAlign(PConstants.LEFT);
+        app.textFont(runtime.font30());
+        app.text(text("sidebar.title"), SIDEBAR_X + SIDEBAR_MARGIN, SIDEBAR_TITLE_Y);
+
+        app.fill(0);
+        app.textFont(runtime.font20());
+        app.text(text("sidebar.currentPlayer"), SIDEBAR_X + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_1_Y);
+        app.text(text("sidebar.turnPhase"), SIDEBAR_X + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_2_Y);
+        app.text(text("sidebar.currentSpot"), SIDEBAR_X + SIDEBAR_LABEL_X, SIDEBAR_HEADER_ROW_3_Y);
+
+        app.fill(46, 72, 63);
+        app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_1_Y);
+        app.text(resolveCurrentTurnPhase(), SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_2_Y);
+        app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), SIDEBAR_X + SIDEBAR_VALUE_X, SIDEBAR_HEADER_ROW_3_Y);
+        drawPopupHistoryPanel(app);
+        app.pop();
+    }
+
+    /**
+     * Keeps the latest popup texts visible after accidental dismissals without
+     * covering the game board itself.
+     */
+    private void drawPopupHistoryPanel(MonopolyApp app) {
+        float panelX = SIDEBAR_X + SIDEBAR_MARGIN;
+        float panelY = app.height - SIDEBAR_HISTORY_HEIGHT - SIDEBAR_HISTORY_BOTTOM_MARGIN;
+        float panelW = SIDEBAR_W - SIDEBAR_MARGIN * 2;
+        List<String> recentMessages = runtime.popupService().recentPopupMessages();
+
+        app.noStroke();
+        app.fill(255, 249, 233);
+        app.rect(panelX, panelY, panelW, SIDEBAR_HISTORY_HEIGHT, 16);
+
+        app.stroke(193, 178, 140);
+        app.strokeWeight(2);
+        app.line(panelX, panelY + SIDEBAR_HISTORY_HEADER_HEIGHT, panelX + panelW, panelY + SIDEBAR_HISTORY_HEADER_HEIGHT);
+
+        app.fill(46, 72, 63);
+        app.textFont(runtime.font20());
+        app.text(text("sidebar.section.history"), panelX + SIDEBAR_HISTORY_TEXT_INSET, panelY + 24);
+
+        app.fill(0);
+        app.textFont(runtime.font10());
+
+        if (recentMessages.isEmpty()) {
+            app.text(
+                    text("sidebar.history.empty"),
+                    panelX + SIDEBAR_HISTORY_TEXT_INSET,
+                    panelY + 56,
+                    panelW - SIDEBAR_HISTORY_TEXT_INSET * 2,
+                    SIDEBAR_HISTORY_HEIGHT - 48
+            );
+            return;
+        }
+
+        float currentY = panelY + 52;
+        for (String message : recentMessages) {
+            String condensedMessage = message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
+            if (condensedMessage.isEmpty()) {
+                continue;
+            }
+            app.text(
+                    "- " + condensedMessage,
+                    panelX + SIDEBAR_HISTORY_TEXT_INSET,
+                    currentY,
+                    panelW - SIDEBAR_HISTORY_TEXT_INSET * 2,
+                    SIDEBAR_HISTORY_ENTRY_HEIGHT
+            );
+            currentY += 20;
+            if (currentY > panelY + SIDEBAR_HISTORY_HEIGHT - 16) {
+                break;
+            }
+        }
+    }
+
+    private String resolveCurrentTurnPhase() {
+        if (debtState != null) {
+            return text("sidebar.phase.debt");
+        }
+        if (runtime.popupService().isAnyVisible()) {
+            return text("sidebar.phase.popup");
+        }
+        if (animations.isRunning()) {
+            return text("sidebar.phase.animation");
+        }
+        if (endRoundButton.isVisible()) {
+            return text("sidebar.phase.endTurn");
+        }
+        if (DICES.isVisible()) {
+            return text("sidebar.phase.roll");
+        }
+        return text("sidebar.phase.resolving");
+    }
+
+    private float getSidebarContentTop() {
+        if (debtState != null) {
+            return getDebtSectionBottom() + 20;
+        }
+        if (MonopolyApp.DEBUG_MODE) {
+            return 450;
+        }
+        return SIDEBAR_CONTENT_TOP;
+    }
+
+    private boolean isDebtSidebarMode() {
+        return debtState != null;
+    }
+
+    private String buildDebtSidebarText(PaymentRequest request) {
+        return text(
+                "sidebar.debt.summary",
+                request.debtor().getName(),
+                request.amount(),
+                request.target().getDisplayName(),
+                request.debtor().getMoneyAmount(),
+                request.debtor().getTotalLiquidationValue()
+        );
+    }
+
+    private int getDebtSectionBottom() {
+        if (debtState == null) {
+            return DEBT_TEXT_Y;
+        }
+        int lineCount = buildDebtSidebarText(debtState.paymentRequest()).split("\\R").length;
+        return DEBT_TEXT_Y + lineCount * SIDEBAR_LINE_HEIGHT;
     }
 
     private Spot getNewSpot(DiceValue diceValue) {
@@ -179,8 +367,7 @@ public class Game implements MonopolyEventListener {
         if (switchTurns) {
             players.switchTurn();
         }
-        DICES.reset();
-        endRoundButton.hide();
+        showRollDiceControl();
         log.debug("Ending round. previousTurnPlayer={}, switchTurns={}, nextTurnPlayer={}",
                 currentTurn != null ? currentTurn.getName() : "none",
                 switchTurns,
@@ -272,9 +459,9 @@ public class Game implements MonopolyEventListener {
             if (effect instanceof MovePlayerEffect movePlayerEffect) {
                 playRound(movePlayerEffect.path(), movePlayerEffect.diceState());
             } else if (effect instanceof ShowDiceEffect) {
-                DICES.show();
+                showRollDiceControl();
             } else if (effect instanceof ShowEndTurnEffect) {
-                endRoundButton.show();
+                showEndTurnControl();
             } else if (effect instanceof EndTurnEffect endTurnEffect) {
                 endRound(endTurnEffect.switchTurns());
             } else {
@@ -345,8 +532,7 @@ public class Game implements MonopolyEventListener {
         }
 
         debtState = new DebtState(request, onResolved, result.status() == PaymentStatus.BANKRUPT);
-        DICES.hide();
-        endRoundButton.hide();
+        hidePrimaryTurnControls();
         updateDebtButtons();
         log.info("Entering debt resolution: debtor={}, target={}, amount={}, bankruptcyRisk={}",
                 request.debtor().getName(), request.target().getDisplayName(), request.amount(), debtState.bankruptcyRisk());
@@ -360,7 +546,6 @@ public class Game implements MonopolyEventListener {
 
         log.debug("Retrying pending debt payment for debtor={} amount={}",
                 debtState.paymentRequest().debtor().getName(), debtState.paymentRequest().amount());
-        autoRaiseFundsIfPossible(debtState.paymentRequest());
         PaymentResult result = paymentResolver.tryPay(debtState.paymentRequest());
         if (result.status() == PaymentStatus.PAID) {
             DebtState resolvedDebt = debtState;
@@ -408,33 +593,20 @@ public class Game implements MonopolyEventListener {
 
         MonopolyApp app = runtime.app();
         app.push();
+        app.fill(46, 72, 63);
+        app.textFont(runtime.font20());
+        app.text(text("sidebar.section.debt"), SIDEBAR_X + SIDEBAR_MARGIN, DEBT_SECTION_TITLE_Y);
+
         app.fill(0);
         app.textFont(runtime.font20());
         app.textAlign(PConstants.LEFT);
         PaymentRequest request = debtState.paymentRequest();
         app.text(
-                text(
-                        "game.debt.sidebar",
-                        request.debtor().getName(),
-                        request.amount(),
-                        request.target().getDisplayName(),
-                        request.debtor().getMoneyAmount(),
-                        request.debtor().getTotalLiquidationValue()
-                ),
-                Spot.SPOT_W * 12 + 20,
-                420
+                buildDebtSidebarText(request),
+                SIDEBAR_X + SIDEBAR_MARGIN,
+                DEBT_TEXT_Y
         );
         app.pop();
-    }
-
-    /**
-     * This method is called when the player needs to raise funds to pay a debt.
-     * Auto-mortgage is disabled, so the player must manually choose which properties to mortgage or sell.
-     * Shows a popup to instruct the player.
-     */
-    private void autoRaiseFundsIfPossible(PaymentRequest request) {
-        log.info("Auto-mortgage is disabled. Player must choose properties to mortgage manually.");
-        runtime.popupService().show(text("game.debt.manual"));
     }
 
     private void declareBankruptcy() {
@@ -460,16 +632,15 @@ public class Game implements MonopolyEventListener {
 
         if (players.count() <= 1) {
             Player winner = players.getTurn();
-            String winnerName = winner != null ? winner.getName() : "No one";
+            String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
             log.info("Game over after bankruptcy. winner={}", winnerName);
             runtime.popupService().show(text("game.bankruptcy.gameOver", winnerName));
-            DICES.hide();
-            endRoundButton.hide();
+            hidePrimaryTurnControls();
             return;
         }
 
         players.switchTurn();
-        DICES.reset();
+        showRollDiceControl();
         log.info("Bankruptcy handled. Next turn player={}", players.getTurn() != null ? players.getTurn().getName() : "none");
         runtime.popupService().show(text("game.bankruptcy.playerWent", request.debtor().getName()));
     }
@@ -493,12 +664,13 @@ public class Game implements MonopolyEventListener {
         turnPlayer.buyProperty(PropertyFactory.getProperty(SpotType.RR1));
         turnPlayer.addMoney(-(turnPlayer.getMoneyAmount() - 40));
         handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, "Debug debt scenario: pay M200 tax"),
+                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.tax", 200)),
                 this::restoreNormalTurnControls
         );
     }
 
     private void updateDebugButtons() {
+        languageButton.show();
         if (!MonopolyApp.DEBUG_MODE) {
             debugAddCashButton.hide();
             debugDebtScenarioButton.hide();
@@ -512,6 +684,30 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.show();
         debugResetTurnButton.show();
         debugGodModeButton.show();
+    }
+
+    private void refreshLabels() {
+        endRoundButton.setLabel(text("game.button.endRound"));
+        retryDebtButton.setLabel(text("game.button.retryDebt"));
+        declareBankruptcyButton.setLabel(text("game.button.bankrupt"));
+        debugAddCashButton.setLabel(text("game.button.debugAddCash"));
+        debugDebtScenarioButton.setLabel(text("game.button.debugDebt"));
+        debugSendToJailButton.setLabel(text("game.button.debugJail"));
+        debugResetTurnButton.setLabel(text("game.button.debugReset"));
+        debugGodModeButton.setLabel(text("game.button.godMode"));
+        languageButton.setLabel(text("language.button.current", text("language.name.current")));
+    }
+
+    private void openLanguageMenu() {
+        runtime.popupService().show(
+                text("language.menu.title"),
+                new ButtonProps(text("language.menu.english"), () -> switchLanguage(Locale.ENGLISH)),
+                new ButtonProps(text("language.menu.finnish"), () -> switchLanguage(Locale.forLanguageTag("fi")))
+        );
+    }
+
+    private void switchLanguage(Locale locale) {
+        fi.monopoly.text.UiTexts.setLocale(locale);
     }
 
     private void debugAddCash() {
@@ -531,7 +727,7 @@ public class Game implements MonopolyEventListener {
         log.debug("Debug action: start debt scenario for {}", turnPlayer.getName());
         turnPlayer.addMoney(-(turnPlayer.getMoneyAmount() - 40));
         handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, "Debug debt scenario: pay M200 tax"),
+                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.tax", 200)),
                 this::restoreNormalTurnControls
         );
     }
@@ -555,8 +751,7 @@ public class Game implements MonopolyEventListener {
         debtState = null;
         updateDebtButtons();
         runtime.popupService().hideAll();
-        DICES.reset();
-        endRoundButton.hide();
+        showRollDiceControl();
         runtime.popupService().show(text("game.debug.reset"));
     }
 
@@ -663,7 +858,7 @@ public class Game implements MonopolyEventListener {
         }
         log.debug("Debug action: start custom debt scenario for {} amount={}", turnPlayer.getName(), amount);
         handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, amount, "Debug debt scenario: pay M" + amount),
+                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, amount, text("game.debug.reason.tax", amount)),
                 this::restoreNormalTurnControls
         );
     }
@@ -712,7 +907,7 @@ public class Game implements MonopolyEventListener {
         b2.buyHouses(2);
         debugSetCurrentPlayerMoney(50);
         handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 300, "Debug brown debt scenario"),
+                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 300, text("game.debug.reason.brownDebt")),
                 this::restoreNormalTurnControls
         );
     }
@@ -725,7 +920,7 @@ public class Game implements MonopolyEventListener {
         debugAssignProperty(turnPlayer, SpotType.RR1);
         debugSetCurrentPlayerMoney(40);
         handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, "Debug railroad debt scenario"),
+                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.railDebt")),
                 this::restoreNormalTurnControls
         );
     }
@@ -744,7 +939,33 @@ public class Game implements MonopolyEventListener {
         log.trace("Restoring normal turn controls");
         debtState = null;
         updateDebtButtons();
+        showRollDiceControl();
+    }
+
+    private void showRollDiceControl() {
         DICES.reset();
+        DICES.show();
         endRoundButton.hide();
+    }
+
+    private void showEndTurnControl() {
+        DICES.hide();
+        endRoundButton.show();
+    }
+
+    private void hidePrimaryTurnControls() {
+        DICES.hide();
+        endRoundButton.hide();
+    }
+
+    private void enforcePrimaryTurnControlInvariant() {
+        if (debtState != null) {
+            hidePrimaryTurnControls();
+            return;
+        }
+        if (endRoundButton.isVisible() && DICES.isVisible()) {
+            log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.");
+            DICES.hide();
+        }
     }
 }

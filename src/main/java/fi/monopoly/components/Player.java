@@ -200,6 +200,10 @@ public class Player extends PlayerToken {
         return ownedProperties.getTotalHotelCount();
     }
 
+    /**
+     * Sums each property's liquidation value, including subclass-specific
+     * overrides such as street building sell value.
+     */
     public int getTotalLiquidationValue() {
         return ownedProperties.getProperties().stream()
                 .mapToInt(Property::getLiquidationValue)

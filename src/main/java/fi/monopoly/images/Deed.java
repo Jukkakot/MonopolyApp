@@ -17,12 +17,10 @@ import static fi.monopoly.text.UiTexts.text;
 public class Deed extends AbstractClickable {
     @Getter
     private final Property property;
-    private String name;
 
     public Deed(MonopolyRuntime runtime, Property property) {
         super(runtime, property.getSpotType());
         this.property = property;
-        this.name = property.getSpotType().getStringProperty("name");
     }
 
     @Override
@@ -37,14 +35,14 @@ public class Deed extends AbstractClickable {
                 handleMortgaging();
             } else if (Game.isDebtResolutionForCurrentTurn()) {
                 runtime.popupService().show(
-                        text("deed.sellBeforeMortgage", name, getHouseSellValue(streetProperty)),
+                        text("deed.sellBeforeMortgage", property.getDisplayName(), getHouseSellValue(streetProperty)),
                         getSellHouseButtons(streetProperty)
                 );
             } else {
                 //Assuming that mortgaged property should never have buildings on it.
                 runtime.popupService().show(text("deed.cannotMortgageWithBuildings"));
                 if (property.isMortgaged()) {
-                    log.warn("Mortgaged property with buildings? {}", name);
+                    log.warn("Mortgaged property with buildings? {}", property.getDisplayName());
                 }
             }
         } else {
@@ -58,7 +56,7 @@ public class Deed extends AbstractClickable {
         for (int i = 0; i < sellableBuildingCount; i++) {
             final int finalI = i + 1;
             int totalReturn = finalI * getHouseSellValue(streetProperty);
-            buttonProps[i] = new ButtonProps(finalI + " (M" + totalReturn + ")", () -> streetProperty.sellHouses(finalI));
+            buttonProps[i] = new ButtonProps(text("format.countMoneyOption", finalI, totalReturn), () -> streetProperty.sellHouses(finalI));
         }
         return buttonProps;
     }
@@ -78,9 +76,9 @@ public class Deed extends AbstractClickable {
                     runtime.popupService().show(text("deed.notEnoughToUnmortgage", getUnmortgageCost()));
                 }
             };
-            runtime.popupService().show(text("deed.confirmUnmortgage", name, getUnmortgageCost()), onAccept, null);
+            runtime.popupService().show(text("deed.confirmUnmortgage", property.getDisplayName(), getUnmortgageCost()), onAccept, null);
         } else {
-            runtime.popupService().show(text("deed.confirmMortgage", name, property.getMortgageValue()), property::handleMortgaging, null);
+            runtime.popupService().show(text("deed.confirmMortgage", property.getDisplayName(), property.getMortgageValue()), property::handleMortgaging, null);
         }
     }
 

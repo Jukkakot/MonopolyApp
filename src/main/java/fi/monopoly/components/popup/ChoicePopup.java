@@ -1,6 +1,5 @@
 package fi.monopoly.components.popup;
 
-import controlP5.Button;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
@@ -9,8 +8,8 @@ import lombok.Setter;
 import static fi.monopoly.text.UiTexts.text;
 
 public class ChoicePopup extends Popup {
-    private final Button acceptButton;
-    private final Button declineButton;
+    private final MonopolyButton acceptButton;
+    private final MonopolyButton declineButton;
 
     @Setter
     private ButtonAction onAcceptAction;
@@ -19,18 +18,25 @@ public class ChoicePopup extends Popup {
 
     protected ChoicePopup(MonopolyRuntime runtime) {
         super(runtime);
-        this.acceptButton = new MonopolyButton(runtime, "accept")
-                .setPosition(coords.x() - 150, coords.y() + (float) height / 4)
-                .addListener(e -> acceptAction())
-                .setLabel(text("popup.choice.accept"))
-                .hide()
-                .setSize(100, 50);
-        this.declineButton = new MonopolyButton(runtime, "decline")
-                .setPosition(coords.x() + 50, coords.y() + (float) height / 4)
-                .addListener(e -> declineAction())
-                .setLabel(text("popup.choice.decline"))
-                .hide()
-                .setSize(100, 50);
+        this.acceptButton = new MonopolyButton(runtime, "accept");
+        acceptButton.setPosition(coords.x() - 150, coords.y() + (float) height / 4);
+        acceptButton.addListener(this::acceptAction);
+        acceptButton.setSize(100, 50);
+        acceptButton.setAutoWidth(100, 28, 180);
+        acceptButton.hide();
+        this.declineButton = new MonopolyButton(runtime, "decline");
+        declineButton.setPosition(coords.x() + 50, coords.y() + (float) height / 4);
+        declineButton.addListener(this::declineAction);
+        declineButton.setSize(100, 50);
+        declineButton.setAutoWidth(100, 28, 180);
+        declineButton.hide();
+        refreshLabels();
+        fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
+    }
+
+    private void refreshLabels() {
+        acceptButton.setLabel(text("popup.choice.accept"));
+        declineButton.setLabel(text("popup.choice.decline"));
     }
 
     private void acceptAction() {

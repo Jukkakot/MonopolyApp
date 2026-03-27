@@ -14,28 +14,38 @@ import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
 public class CustomPopup extends Popup {
+    private static final int MIN_BUTTON_WIDTH = 100;
+    private static final int MAX_BUTTON_WIDTH = 220;
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
     private final Button closeButton;
-    private static final int BUTTON_WIDTH = 100;
     private static final int BUTTON_HEIGHT = 50;
+    private static final int BUTTON_PADDING = 28;
+    private static final int BUTTON_GAP_X = 12;
+    private static final int BUTTON_GAP_Y = 12;
 
     protected CustomPopup(MonopolyRuntime runtime) {
         super(runtime);
         this.closeButton = new MonopolyButton(runtime, "close")
                 .setPosition(coords.x() + (float) width / 2 - 30, coords.y() - (float) height / 2 + 10)
                 .addListener(e -> completeAction(null))
-                .setLabel(text("popup.close.label"))
                 .hide()
                 .setSize(20, 20);
+        refreshLabels();
+        fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
+    }
+
+    private void refreshLabels() {
+        closeButton.setLabel(text("popup.close.label"));
     }
 
     public void setButtons(ButtonProps... buttonProps) {
         totalButtonCount = buttonProps.length;
         ensureButtonPoolSize(buttonProps.length);
         for (int i = 0; i < buttonProps.length; i++) {
-            configureButton(customButtons.get(i), buttonProps[i], i);
+            configureButton(customButtons.get(i), buttonProps[i]);
         }
+        layoutButtons();
         for (int i = buttonProps.length; i < customButtons.size(); i++) {
             customButtons.get(i).hide();
         }
@@ -44,48 +54,46 @@ public class CustomPopup extends Popup {
     private void ensureButtonPoolSize(int requiredCount) {
         while (customButtons.size() < requiredCount) {
             MonopolyButton button = new MonopolyButton(runtime, "customButton" + customButtons.size());
-            button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+            button.setSize(MIN_BUTTON_WIDTH, BUTTON_HEIGHT);
+            button.setAutoWidth(MIN_BUTTON_WIDTH, BUTTON_PADDING, MAX_BUTTON_WIDTH);
             button.hide();
             customButtons.add(button);
         }
     }
 
-    private void configureButton(MonopolyButton button, ButtonProps buttonProps, int index) {
+    private void configureButton(MonopolyButton button, ButtonProps buttonProps) {
         button.setLabel(buttonProps.name());
-        button.setPosition(getButtonCoords(index));
         button.addListener(() -> getButtonAction(buttonProps.buttonAction()));
-        button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+        button.setSize(MIN_BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 
-    /**
-     * Method straigt from chatgbt :)
-     *
-     * @return button coordinates
-     */
-    private Coordinates getButtonCoords(int index) {
-        int n = totalButtonCount;
-        // Calculate the number of columns and rows needed to arrange the buttons
-        int cols = (int) Math.ceil(Math.sqrt(n));  // Number of columns in the grid
-        int rows = (int) Math.ceil((double) n / cols);  // Number of rows in the grid
+    private void layoutButtons() {
+        if (totalButtonCount == 0) {
+            return;
+        }
+        int cols = Math.min(3, (int) Math.ceil(Math.sqrt(totalButtonCount)));
+        int rows = (int) Math.ceil((double) totalButtonCount / cols);
+        int top = (int) (coords.y() - (float) height / 2 + 90);
+        int totalHeight = rows * BUTTON_HEIGHT + Math.max(0, rows - 1) * BUTTON_GAP_Y;
+        int startY = top + Math.max(0, (height - 120 - totalHeight) / 2);
 
-        // Calculate the width and height of each cell in the grid
-        int cellWidth = width / cols;  // Width of each cell
-        int cellHeight = (int) ((height - BUTTON_HEIGHT * 1.5) / rows);  // Height of each cell
-
-        // Determine the row and column of the current button based on its index
-        int row = index / cols;  // Row position of the button
-        int col = index % cols;  // Column position of the button
-
-        // Calculate the top-left position of the cell for the button
-        int cellCenterX = col * cellWidth + cellWidth / 2;  // X-coordinate of the cell's center
-        int cellCenterY = row * cellHeight + cellHeight / 2;  // Y-coordinate of the cell's center
-
-        // Calculate the top-left position of the button relative to the cell center
-        int x = cellCenterX - BUTTON_WIDTH / 2;  // Top-left X-coordinate of the button
-        int y = cellCenterY - BUTTON_HEIGHT / 2;  // Top-left Y-coordinate of the button
-
-        return new Coordinates(x, y).move(coords.x() / 2, (float) (coords.y() * 0.7 + BUTTON_HEIGHT * 1.4));  // Return the coordinates as a Dimension object
-
+        for (int row = 0; row < rows; row++) {
+            int rowStart = row * cols;
+            int rowEnd = Math.min(rowStart + cols, totalButtonCount);
+            int rowWidth = 0;
+            for (int i = rowStart; i < rowEnd; i++) {
+                rowWidth += Math.round(customButtons.get(i).getWidth());
+            }
+            rowWidth += Math.max(0, rowEnd - rowStart - 1) * BUTTON_GAP_X;
+            int startX = Math.round(coords.x() - rowWidth / 2f);
+            int x = startX;
+            int y = startY + row * (BUTTON_HEIGHT + BUTTON_GAP_Y);
+            for (int i = rowStart; i < rowEnd; i++) {
+                MonopolyButton button = customButtons.get(i);
+                button.setPosition(new Coordinates(x, y));
+                x += Math.round(button.getWidth()) + BUTTON_GAP_X;
+            }
+        }
     }
 
     private void getButtonAction(ButtonAction buttonAction) {

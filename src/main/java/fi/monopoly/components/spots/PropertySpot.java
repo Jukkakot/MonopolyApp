@@ -27,7 +27,7 @@ public class PropertySpot extends Spot {
 
     @Override
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
-        turnEffectExecutor.execute(TURN_RESOLVER.resolve(gameState, name, property), gameState.getPaymentHandler(), callbackAction);
+        turnEffectExecutor.execute(TURN_RESOLVER.resolve(gameState, getName(), property), gameState.getPaymentHandler(), callbackAction);
         return null;
     }
 }

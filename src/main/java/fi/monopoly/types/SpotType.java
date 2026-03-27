@@ -1,12 +1,14 @@
 package fi.monopoly.types;
 
+import fi.monopoly.text.UiTexts;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 @ToString(onlyExplicitlyIncluded = true)
 public enum SpotType {
@@ -31,15 +33,11 @@ public enum SpotType {
             SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.GO_TO_JAIL,
             SpotType.G1, SpotType.G2, SpotType.COMMUNITY3, SpotType.G3, SpotType.RR4, SpotType.CHANCE3, SpotType.DB1, SpotType.TAX2, SpotType.DB2);
     private static final Logger log = LoggerFactory.getLogger(SpotType.class);
-    private static final Properties props = new Properties();
-
-    static {
-        try {
-            props.load(SpotType.class.getResourceAsStream("/" + SpotType.class.getSimpleName() + ".properties"));
-        } catch (Exception e) {
-            log.error("Error loading SpotType properties: {}", e.getMessage());
-        }
-    }
+    private static final String BUNDLE_NAME = SpotType.class.getSimpleName();
+    private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
+    private static Locale loadedLocale = null;
+    private static ResourceBundle bundle;
+    private static ResourceBundle defaultBundle = ResourceBundle.getBundle(BUNDLE_NAME, DEFAULT_LOCALE);
 
     public final StreetType streetType;
     public final int id;
@@ -75,12 +73,13 @@ public enum SpotType {
         return result != null ? result : "";
     }
 
-    private String getProperty(String propName) {
-        String result = props.getProperty(name() + "." + propName);
-        if (result == null || result.isBlank()) {
-            result = props.getProperty(name().substring(0, name().length() - 1) + "." + propName);
+    private static ResourceBundle getBundle() {
+        Locale locale = UiTexts.getLocale();
+        if (bundle == null || !locale.equals(loadedLocale)) {
+            bundle = ResourceBundle.getBundle(BUNDLE_NAME, locale);
+            loadedLocale = locale;
         }
-        return result;
+        return bundle;
     }
 
     public int getIntegerProperty(String propName) {
@@ -89,6 +88,28 @@ public enum SpotType {
             result = Integer.parseInt(getProperty(propName));
         } catch (NumberFormatException e) {
             log.error("Error getting integer property {} for property: {}", propName, name());
+        }
+        return result;
+    }
+
+    private static String getBundleValue(ResourceBundle bundle, String key) {
+        if (!bundle.containsKey(key)) {
+            return null;
+        }
+        return bundle.getString(key);
+    }
+
+    private String getProperty(String propName) {
+        ResourceBundle properties = getBundle();
+        String result = getBundleValue(properties, name() + "." + propName);
+        if (result == null || result.isBlank()) {
+            result = getBundleValue(properties, name().substring(0, name().length() - 1) + "." + propName);
+        }
+        if (result == null || result.isBlank()) {
+            result = getBundleValue(defaultBundle, name() + "." + propName);
+        }
+        if (result == null || result.isBlank()) {
+            result = getBundleValue(defaultBundle, name().substring(0, name().length() - 1) + "." + propName);
         }
         return result;
     }

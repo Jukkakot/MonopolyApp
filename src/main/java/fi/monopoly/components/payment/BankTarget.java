@@ -1,5 +1,7 @@
 package fi.monopoly.components.payment;
 
+import static fi.monopoly.text.UiTexts.text;
+
 public final class BankTarget implements PaymentTarget {
     public static final BankTarget INSTANCE = new BankTarget();
 
@@ -8,6 +10,6 @@ public final class BankTarget implements PaymentTarget {
 
     @Override
     public String getDisplayName() {
-        return "Bank";
+        return text("payment.target.bank");
     }
 }

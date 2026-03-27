@@ -73,7 +73,7 @@ public class JailSpot extends CornerSpot {
                         runtime.popupService().show(text("jail.notSent"), callbackAction::doAction);
                     } else if (turnPlayer.getMoneyAmount() >= GET_OUT_OF_JAIL_FEE) {
                         gameState.getPaymentHandler().requestPayment(
-                                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, GET_OUT_OF_JAIL_FEE, "Pay M50 to avoid jail"),
+                                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, GET_OUT_OF_JAIL_FEE, text("jail.reason.avoid", GET_OUT_OF_JAIL_FEE)),
                                 () -> runtime.popupService().show(text("jail.notSent"), callbackAction::doAction)
                         );
                     } else {
@@ -119,7 +119,7 @@ public class JailSpot extends CornerSpot {
             releaseFromJail(player, onGetOufOfJail);
         } else if (roundCount == 1) {
             paymentHandler.requestPayment(
-                    new PaymentRequest(player, BankTarget.INSTANCE, GET_OUT_OF_JAIL_FEE, "Pay M50 to get out of jail"),
+                    new PaymentRequest(player, BankTarget.INSTANCE, GET_OUT_OF_JAIL_FEE, text("jail.reason.release", GET_OUT_OF_JAIL_FEE)),
                     () -> {
                         log.info("Player paid final jail fine and gets out: {}", player.getName());
                         releaseFromJail(player, onGetOufOfJail);

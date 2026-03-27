@@ -1,6 +1,5 @@
 package fi.monopoly.components.dices;
 
-import controlP5.Button;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
@@ -17,11 +16,17 @@ import lombok.extern.slf4j.Slf4j;
 import processing.event.Event;
 import processing.event.KeyEvent;
 
+import static fi.monopoly.text.UiTexts.text;
+
 @Slf4j
 public class Dices implements MonopolyEventListener {
+    private static final float SIDEBAR_X = Spot.SPOT_W * 12;
+    private static final int SIDEBAR_BUTTON_Y = 184;
+    private static final int SIDEBAR_BUTTON_HEIGHT = 44;
+    private static final int SIDEBAR_BUTTON_CENTER_Y = SIDEBAR_BUTTON_Y + SIDEBAR_BUTTON_HEIGHT / 2;
     private final MonopolyRuntime runtime;
     private final Pair<Dice, Dice> dices;
-    private final Button rollDiceButton;
+    private final MonopolyButton rollDiceButton;
     private int pairCount = 0;
     @Getter
     @Setter // Just for debugging can manually set dice value..
@@ -30,16 +35,22 @@ public class Dices implements MonopolyEventListener {
     public Dices(MonopolyRuntime runtime) {
         this.runtime = runtime;
         this.rollDiceButton = new MonopolyButton(runtime, "rollDice")
-                .setPosition((int) (Spot.SPOT_W * 5.4), Spot.SPOT_W * 3)
-                .setLabel("Roll dice")
-                .setSize(100, 50);
+                .setPosition(SIDEBAR_X + 20, SIDEBAR_BUTTON_Y)
+                .setSize(150, SIDEBAR_BUTTON_HEIGHT)
+                .setAutoWidth(100, 28, 180);
+        refreshLabels();
+        fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
         runtime.eventBus().addListener(this);
         float diceSideLength = Spot.SPOT_W / 2;
-        SpotProps sp1 = new SpotProps((int) (Spot.SPOT_W * 5.7), (int) (Spot.SPOT_W * 2.5), diceSideLength, diceSideLength);
-        SpotProps sp2 = new SpotProps((int) (Spot.SPOT_W * 6.3), sp1.y(), sp1.w(), sp1.h());
+        SpotProps sp1 = new SpotProps((int) (SIDEBAR_X + 360), SIDEBAR_BUTTON_CENTER_Y, diceSideLength, diceSideLength);
+        SpotProps sp2 = new SpotProps((int) (SIDEBAR_X + 420), sp1.y(), sp1.w(), sp1.h());
         dices = new Pair<>(new Dice(runtime, sp1), new Dice(runtime, sp2));
 
         rollDiceButton.addListener(e -> rollDice());
+    }
+
+    private void refreshLabels() {
+        rollDiceButton.setLabel(text("dice.button.roll"));
     }
 
     public static Dices setRollDice(MonopolyRuntime runtime, CallbackAction onRollAction) {
@@ -88,7 +99,7 @@ public class Dices implements MonopolyEventListener {
         log.trace("Resetting dice state");
         pairCount = 0;
         value = null;
-        show();
+        hide();
     }
 
     public boolean isVisible() {

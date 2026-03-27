@@ -1,38 +1,40 @@
 package fi.monopoly.text;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 public final class UiTexts {
-    private static final Properties POPUP_TEXTS = loadProperties();
+    private static final String BUNDLE_NAME = "UiTexts";
+    private static final Locale DEFAULT_LOCALE = Locale.forLanguageTag("fi");
+    private static final List<Runnable> CHANGE_LISTENERS = new ArrayList<>();
+    private static Locale locale = DEFAULT_LOCALE;
+    private static ResourceBundle bundle = ResourceBundle.getBundle(BUNDLE_NAME, DEFAULT_LOCALE);
 
     private UiTexts() {
     }
 
     public static String text(String key, Object... args) {
-        String template = POPUP_TEXTS.getProperty(key);
-        if (template == null) {
-            throw new IllegalArgumentException("Missing popup text for key: " + key);
-        }
-        String result = template;
+        String result = bundle.getString(key);
         for (int i = 0; i < args.length; i++) {
             result = result.replace("{" + i + "}", Objects.toString(args[i]));
         }
         return result;
     }
 
-    private static Properties loadProperties() {
-        Properties properties = new Properties();
-        try (InputStream stream = UiTexts.class.getResourceAsStream("/PopupTexts.properties")) {
-            if (stream == null) {
-                throw new IllegalStateException("PopupTexts.properties not found");
-            }
-            properties.load(stream);
-            return properties;
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to load PopupTexts.properties", e);
+    public static Locale getLocale() {
+        return locale;
+    }
+
+    public static void setLocale(Locale newLocale) {
+        Locale targetLocale = newLocale == null ? DEFAULT_LOCALE : newLocale;
+        if (locale.equals(targetLocale)) {
+            return;
         }
+        bundle = ResourceBundle.getBundle(BUNDLE_NAME, targetLocale);
+        locale = targetLocale;
+        CHANGE_LISTENERS.forEach(Runnable::run);
+    }
+
+    public static void addChangeListener(Runnable listener) {
+        CHANGE_LISTENERS.add(listener);
     }
 }

@@ -27,8 +27,6 @@ public abstract class Spot extends AbstractClickable {
     public static final float SPOT_H = SPOT_W * 1.5f;
     @Getter
     protected final SpotType spotType;
-    @Getter
-    protected final String name;
     Set<Image> playersOnSpot = new HashSet<>();
     private static final List<Coordinates> TOKEN_COORDS = Arrays.asList(new Coordinates(0, 0), new Coordinates(-PlayerToken.TOKEN_RADIUS, 0), new Coordinates(PlayerToken.TOKEN_RADIUS, 0),
             new Coordinates(0, PlayerToken.TOKEN_RADIUS), new Coordinates(-PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS), new Coordinates(PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS));
@@ -36,8 +34,11 @@ public abstract class Spot extends AbstractClickable {
     public Spot(SpotImage image) {
         super(image);
         this.spotType = image.getSpotType();
+    }
+
+    public String getName() {
         String spotName = spotType.getStringProperty("name");
-        this.name = spotName.isBlank() ? spotType.name() : MonopolyUtils.parseIllegalCharacters(spotName);
+        return spotName.isBlank() ? spotType.name() : MonopolyUtils.parseIllegalCharacters(spotName);
     }
 
     public void addPlayer(Player p) {

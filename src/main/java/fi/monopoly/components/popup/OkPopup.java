@@ -1,6 +1,5 @@
 package fi.monopoly.components.popup;
 
-import controlP5.Button;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
@@ -15,16 +14,22 @@ public class OkPopup extends Popup {
     private static final List<Character> OK_ACTION_CHAR_LIST = Arrays.asList('1', MonopolyApp.SPACE, MonopolyApp.ENTER);
     @Setter
     private ButtonAction onOkAction;
-    private final Button okButton;
+    private final MonopolyButton okButton;
 
     protected OkPopup(MonopolyRuntime runtime) {
         super(runtime);
-        this.okButton = new MonopolyButton(runtime, "ok")
-                .setPosition(coords.x() - 50, coords.y() + (float) height / 4)
-                .addListener(e -> okAction())
-                .setLabel(text("popup.ok.label"))
-                .hide()
-                .setSize(100, 50);
+        this.okButton = new MonopolyButton(runtime, "ok");
+        okButton.setPosition(coords.x() - 50, coords.y() + (float) height / 4);
+        okButton.addListener(this::okAction);
+        okButton.setSize(100, 50);
+        okButton.setAutoWidth(100, 28, 180);
+        okButton.hide();
+        refreshLabels();
+        fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
+    }
+
+    private void refreshLabels() {
+        okButton.setLabel(text("popup.ok.label"));
     }
 
     private void okAction() {

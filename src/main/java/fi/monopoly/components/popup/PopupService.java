@@ -4,17 +4,16 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.popup.components.ButtonProps;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.function.Supplier;
 
 @Slf4j
 public class PopupService {
+    private static final int MAX_HISTORY_ENTRIES = 12;
     private final MonopolyRuntime runtime;
     private final Map<Class<? extends Popup>, Popup> popupInstances = new HashMap<>();
     private final Queue<PopupRequest> pendingRequests = new ArrayDeque<>();
+    private final ArrayDeque<String> popupHistory = new ArrayDeque<>();
     private Popup activePopup;
 
     public PopupService(MonopolyRuntime runtime) {
@@ -81,6 +80,10 @@ public class PopupService {
         showNextIfPossible();
     }
 
+    public List<String> recentPopupMessages() {
+        return List.copyOf(popupHistory);
+    }
+
     private <T extends Popup> T getInstance(Class<T> clazz) {
         return clazz.cast(popupInstances.computeIfAbsent(clazz, this::createPopup));
     }
@@ -128,7 +131,22 @@ public class PopupService {
             return;
         }
         activePopup = nextRequest.prepare();
+        recordShownPopup(activePopup);
         log.trace("Showing popup {}. pendingRequests={}", popupName(activePopup), pendingRequests.size());
         activePopup.show();
+    }
+
+    private void recordShownPopup(Popup popup) {
+        if (popup == null || popup.getPopupText() == null) {
+            return;
+        }
+        String message = popup.getPopupText().trim();
+        if (message.isEmpty()) {
+            return;
+        }
+        popupHistory.addFirst(message);
+        while (popupHistory.size() > MAX_HISTORY_ENTRIES) {
+            popupHistory.removeLast();
+        }
     }
 }

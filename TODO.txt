@@ -1,41 +1,43 @@
+BACKLOG
+
+P0 = core Monopoly rule gap or game-flow issue
+P1 = important gameplay / UX improvement
+P2 = nice-to-have polish
+
 CORE RULES
-Starting order by rolling dice
-Remove bankrupt player from game and detect winner / game over
+[P1] Starting order by rolling dice
+[P1] Auction property when player declines to buy
+[P1] Auction property when player cannot afford to buy
+[P2] Remove or replace random starting deeds in normal game flow (`players.giveRandomDeeds(board)`), because this is not standard Monopoly setup
 
 JAIL
-Have to pay fine eventually once you get out of jail on 3rd try
-Handle case where player cannot afford tax or jail fine
-Get out of jail free card should return to deck after use
+[P0] Return Get Out of Jail Free card to its deck after use <-- is this actually a rule????
 
-ECONOMY / BANKRUPTCY / TRADING
-Handle cases if cant afford paying rent
-Bankruptcy
-Transfer deeds/money/get out of jail cards correctly on bankruptcy
-Trading between players
-Trading flow for money + property + get out of jail card offers
-Auction property when player declines to buy
-Auction property when player cannot afford to buy
+ECONOMY / BANKRUPTCY / TRADING <--- these are annoying tobuild before better multiplayer option is available. im planning on adding netowking for this perhaps in future. lets add support if nothing else istodo , but not too high prio now.
+[P0] Trading between players
+[P0] Trading flow for money + property + Get Out of Jail Free card offers
+[P0] Handle "all players pay / receive money" cards correctly when some players cannot afford payment
+[P1] Review long-run economy balance so games naturally progress toward bankruptcy once monopolies and buildings develop
 
 PROPERTIES / BUILDING / MORTGAGES
-Even building rule for streets in same color group
-Hotel / house bank supply limits
-Selling houses evenly across a color group
-Cannot mortgage property set while any property in the color group has buildings
-Unmortgage flow as part of turn / before forced payments
+[P0] Hotel / house bank supply limits
+[P0] Validate building purchases and sales against full Monopoly building rules
+[P1] Even building rule for streets in same color group
+[P1] Selling houses evenly across a color group
 
 CARDS / DECKS
-Chance / community chest deck reshuffle when empty
+[P0] Review all card behaviours against official Monopoly rules
 
 GAME SETUP / FLOW
-Player setup screen: names, player count, colors
+[P1] Player setup screen: names, player count, colors
 
 UI / UX
-Turn / action log visible in UI instead of console only
-Use right-side empty area for a proper game info / actions panel
-Show current player and current turn phase clearly in UI
-Show all players money balances all the time
-Move roll / end turn controls into a dedicated controls panel
-Show latest game event / status message in UI
-Show monopoly / mortgage / building status more clearly on deeds
-Show houses and hotels more clearly on owned properties / board
-Improve token stacking / visibility when multiple players share a spot
+[P1] Show monopoly / mortgage / building status more clearly on deeds
+[P1] Show houses and hotels more clearly on owned properties / board
+[P2] Turn / action log visible in UI instead of console only
+[P2] Show latest game event / status message in UI
+[P2] Improve token stacking / visibility when multiple players share a spot
+[P2] Make layout resize-aware instead of assuming a fixed 1700x996 window
+
+Other / future plans
+[P0] Add networking / multiplayer functionality. Separate into backend / front projects.

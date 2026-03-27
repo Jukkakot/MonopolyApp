@@ -62,8 +62,9 @@ public class StreetPropertySpot extends PropertySpot {
     }
 
     private void handleBuyBuildings() {
-        int maxHouseCount = getMaxHouseCountToBuy();
-        if (maxHouseCount > 0) {
+        int maxHouseCount = property.getMaxBuyableHouseCount();
+        int maxSetRounds = property.getMaxBuyableBuildingRoundsAcrossSet();
+        if (maxHouseCount > 0 || maxSetRounds > 0) {
             runtime.popupService().show(text("streetProperty.buy.countPrompt", property.getHousePrice()), getBuyHousesButtons(maxHouseCount));
         } else {
             runtime.popupService().show(text("streetProperty.buy.cannotAfford"));
@@ -75,32 +76,30 @@ public class StreetPropertySpot extends PropertySpot {
     }
 
     private ButtonProps[] getBuyHousesButtons(int maxHouseCount) {
-        ButtonProps[] buttonProps = new ButtonProps[maxHouseCount];
+        int maxSetRounds = property.getMaxBuyableBuildingRoundsAcrossSet();
+        ButtonProps[] buttonProps = new ButtonProps[maxHouseCount + maxSetRounds];
         for (int i = 0; i < maxHouseCount; i++) {
             final int finalI = i + 1;
             int totalCost = finalI * property.getHousePrice();
-            buttonProps[i] = new ButtonProps(finalI + " (M" + totalCost + ")", () -> property.buyHouses(finalI));
+            buttonProps[i] = new ButtonProps(text("streetProperty.buy.singleOption", finalI, totalCost), () -> property.buyHouses(finalI));
+        }
+        for (int i = 0; i < maxSetRounds; i++) {
+            final int finalI = i + 1;
+            int totalCost = property.getStreetSetRoundCost(finalI);
+            buttonProps[maxHouseCount + i] = new ButtonProps(
+                    text("streetProperty.buy.setOption", finalI, totalCost),
+                    () -> property.buyBuildingRoundsAcrossSet(finalI));
         }
         return buttonProps;
     }
 
-    private int getMaxHouseCountToBuy() {
-        //How many houses can property fit still
-        int maxHouseCountToBuy = 5 - property.getHouseCount();
-        //How many houses can player afford
-        int maxHouseCountAfford = Game.players.getTurn().getMoneyAmount() / property.getHousePrice();
-
-        int maxHouseCount = Math.min(maxHouseCountToBuy, maxHouseCountAfford);
-        return maxHouseCount;
-    }
-
     private ButtonProps[] getSellHousesButtons() {
-        int intMaxHousesToSell = property.getSellableBuildingCount();
+        int intMaxHousesToSell = property.getMaxSellableHouseCount();
         ButtonProps[] buttonProps = new ButtonProps[intMaxHousesToSell];
         for (int i = 0; i < intMaxHousesToSell; i++) {
             final int finalI = i + 1;
             int totalReturn = finalI * getHouseSellValue();
-            buttonProps[i] = new ButtonProps(finalI + " (M" + totalReturn + ")", () -> property.sellHouses(finalI));
+            buttonProps[i] = new ButtonProps(text("format.countMoneyOption", finalI, totalReturn), () -> property.sellHouses(finalI));
         }
         return buttonProps;
     }

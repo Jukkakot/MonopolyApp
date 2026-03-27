@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static fi.monopoly.text.UiTexts.text;
+
 @Slf4j
 public class LegacyTurnEffectExecutor {
     private final PopupService popupService;
@@ -41,7 +43,7 @@ public class LegacyTurnEffectExecutor {
             popupService.show(offerToBuyPropertyEffect.message(), () -> {
                 boolean couldBuy = offerToBuyPropertyEffect.player().buyProperty(offerToBuyPropertyEffect.property());
                 if (!couldBuy) {
-                    popupService.show("You don't have enough money to buy " + offerToBuyPropertyEffect.property().getDisplayName(), next::doAction);
+                    popupService.show(text("property.buy.notEnough", offerToBuyPropertyEffect.property().getDisplayName()), next::doAction);
                     return;
                 }
                 next.doAction();

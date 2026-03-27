@@ -13,6 +13,8 @@ import lombok.ToString;
 import processing.core.PConstants;
 import processing.core.PImage;
 
+import static fi.monopoly.text.UiTexts.text;
+
 @ToString(callSuper = true)
 public class SpotImage extends Image {
     @Getter
@@ -89,7 +91,7 @@ public class SpotImage extends Image {
         p.fill(0);
         p.textAlign(PConstants.CENTER);
         p.textFont(runtime.font10());
-        p.text("M" + spotType.getStringProperty("price"), (int) -(getWidth() * 0.37), getHeight() / 3, (int) (getWidth() * 0.75), getHeight());
+        p.text(text("format.money", spotType.getStringProperty("price")), (int) -(getWidth() * 0.37), getHeight() / 3, (int) (getWidth() * 0.75), getHeight());
     }
 
     private void drawIconSpot() {
@@ -107,7 +109,7 @@ public class SpotImage extends Image {
             p.textAlign(PConstants.CENTER);
             p.textFont(runtime.font10());
             p.textLeading(10);
-            if (spotType.hasProperty("name")) {
+            if (!StreetType.CORNER.equals(spotType.streetType) && spotType.hasProperty("name")) {
                 p.text(spotType.getStringProperty("name"),
                         (int) -(getWidth() * 0.37), (int) -(getHeight() * 0.42),
                         (int) (getWidth() * 0.75), getHeight() / 2);

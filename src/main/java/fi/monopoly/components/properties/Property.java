@@ -70,6 +70,11 @@ public abstract class Property {
         return (int) (getMortgageValue() * 0.1);
     }
 
+    /**
+     * Returns the amount of cash this property can contribute in an immediate
+     * liquidation scenario. Subclasses may extend this with additional
+     * asset-specific value such as sellable buildings.
+     */
     public int getLiquidationValue() {
         return isMortgaged() ? 0 : getMortgageValue();
     }

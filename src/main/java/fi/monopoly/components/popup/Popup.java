@@ -81,6 +81,10 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         this.popupText = MonopolyUtils.parseIllegalCharacters(text);
     }
 
+    public String getPopupText() {
+        return popupText;
+    }
+
     protected boolean onKeyAction(char key) {
         return false;
     }
