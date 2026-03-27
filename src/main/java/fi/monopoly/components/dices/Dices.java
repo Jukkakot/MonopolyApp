@@ -8,6 +8,7 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.utils.Coordinates;
+import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.SpotProps;
 import javafx.util.Pair;
 import lombok.Getter;
@@ -21,9 +22,12 @@ import static fi.monopoly.text.UiTexts.text;
 @Slf4j
 public class Dices implements MonopolyEventListener {
     private static final float SIDEBAR_X = Spot.SPOT_W * 12;
+    private static final int SIDEBAR_MARGIN = 16;
+    private static final int DICE_GAP = 16;
     private static final int SIDEBAR_BUTTON_Y = 184;
     private static final int SIDEBAR_BUTTON_HEIGHT = 44;
     private static final int SIDEBAR_BUTTON_CENTER_Y = SIDEBAR_BUTTON_Y + SIDEBAR_BUTTON_HEIGHT / 2;
+    private static final int STACKED_DICE_CENTER_Y = SIDEBAR_BUTTON_CENTER_Y + 56;
     private final MonopolyRuntime runtime;
     private final Pair<Dice, Dice> dices;
     private final MonopolyButton rollDiceButton;
@@ -45,6 +49,7 @@ public class Dices implements MonopolyEventListener {
         SpotProps sp1 = new SpotProps((int) (SIDEBAR_X + 360), SIDEBAR_BUTTON_CENTER_Y, diceSideLength, diceSideLength);
         SpotProps sp2 = new SpotProps((int) (SIDEBAR_X + 420), sp1.y(), sp1.w(), sp1.h());
         dices = new Pair<>(new Dice(runtime, sp1), new Dice(runtime, sp2));
+        updateLayout(LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height));
 
         rollDiceButton.addListener(e -> rollDice());
     }
@@ -80,6 +85,27 @@ public class Dices implements MonopolyEventListener {
         dices.getValue().draw(c);
     }
 
+    public void updateLayout(LayoutMetrics layoutMetrics) {
+        if (!layoutMetrics.hasSidebarSpace()) {
+            return;
+        }
+        float buttonX = layoutMetrics.sidebarX() + 20;
+        rollDiceButton.setPosition(buttonX, SIDEBAR_BUTTON_Y);
+
+        float diceSide = dices.getKey().getUnScaledWidth();
+        float inlineSecondCenterX = layoutMetrics.sidebarRight() - SIDEBAR_MARGIN - diceSide / 2f;
+        float inlineFirstCenterX = inlineSecondCenterX - diceSide - DICE_GAP;
+        float minimumInlineFirstCenterX = buttonX + rollDiceButton.getWidth() + 12 + diceSide / 2f;
+        if (inlineFirstCenterX >= minimumInlineFirstCenterX) {
+            setDicePositions(inlineFirstCenterX, SIDEBAR_BUTTON_CENTER_Y, inlineSecondCenterX, SIDEBAR_BUTTON_CENTER_Y);
+            return;
+        }
+
+        float stackedFirstCenterX = buttonX + diceSide / 2f;
+        float stackedSecondCenterX = stackedFirstCenterX + diceSide + DICE_GAP;
+        setDicePositions(stackedFirstCenterX, STACKED_DICE_CENTER_Y, stackedSecondCenterX, STACKED_DICE_CENTER_Y);
+    }
+
     public void rollDice() {
         if (!runtime.popupService().isAnyVisible()) {
             roll();
@@ -104,6 +130,11 @@ public class Dices implements MonopolyEventListener {
 
     public boolean isVisible() {
         return rollDiceButton.isVisible();
+    }
+
+    private void setDicePositions(float firstX, float firstY, float secondX, float secondY) {
+        dices.getKey().setCoords(Coordinates.of(firstX, firstY));
+        dices.getValue().setCoords(Coordinates.of(secondX, secondY));
     }
 
     @Override

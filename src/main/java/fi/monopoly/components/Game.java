@@ -189,6 +189,7 @@ public class Game implements MonopolyEventListener {
         if (!runtime.popupService().isAnyVisible()) {
             animations.updateAnimations();
         }
+        updateSidebarControlPositions();
         board.draw(null);
         drawSidebarPanel();
         if (!isDebtSidebarMode()) {
@@ -624,6 +625,27 @@ public class Game implements MonopolyEventListener {
 
     private LayoutMetrics getLayoutMetrics() {
         return LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+    }
+
+    private void updateSidebarControlPositions() {
+        LayoutMetrics layoutMetrics = getLayoutMetrics();
+        if (!layoutMetrics.hasSidebarSpace()) {
+            return;
+        }
+
+        float sidebarLeftX = layoutMetrics.sidebarX() + SIDEBAR_MARGIN;
+        float sidebarRightAlignedX = layoutMetrics.sidebarRight() - SIDEBAR_MARGIN;
+
+        endRoundButton.setPosition(sidebarRightAlignedX - endRoundButton.getWidth(), SIDEBAR_PRIMARY_BUTTON_Y);
+        retryDebtButton.setPosition(sidebarLeftX, SIDEBAR_PRIMARY_BUTTON_Y);
+        declareBankruptcyButton.setPosition(sidebarRightAlignedX - declareBankruptcyButton.getWidth(), SIDEBAR_PRIMARY_BUTTON_Y);
+        debugAddCashButton.setPosition(sidebarLeftX, SIDEBAR_DEBUG_BUTTON_ROW_1_Y);
+        debugDebtScenarioButton.setPosition(sidebarRightAlignedX - debugDebtScenarioButton.getWidth(), SIDEBAR_DEBUG_BUTTON_ROW_1_Y);
+        debugSendToJailButton.setPosition(sidebarLeftX, SIDEBAR_DEBUG_BUTTON_ROW_2_Y);
+        debugResetTurnButton.setPosition(sidebarRightAlignedX - debugResetTurnButton.getWidth(), SIDEBAR_DEBUG_BUTTON_ROW_2_Y);
+        debugGodModeButton.setPosition(sidebarLeftX, SIDEBAR_DEBUG_BUTTON_ROW_3_Y);
+        languageButton.setPosition(sidebarLeftX, runtime.app().height - 48);
+        DICES.updateLayout(layoutMetrics);
     }
 
     private float getSidebarHistoryHeight() {
