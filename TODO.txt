@@ -18,7 +18,5 @@ GAME FLOW
 UI AND UX
 [Medium] Show monopoly, mortgage, and building status more clearly on deeds
 [Medium] Show houses and hotels more clearly on board and owned properties
-[Low] Show turn and action log in the UI
-[Low] Show latest game status message in the UI
 [Low] Improve token visibility when multiple players share a spot
 [Low] Make layout adapt better to different window sizes
