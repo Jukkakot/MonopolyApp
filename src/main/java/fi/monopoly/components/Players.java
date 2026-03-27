@@ -9,6 +9,7 @@ import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.images.Image;
 import fi.monopoly.utils.Coordinates;
+import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.SpotProps;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +23,7 @@ public class Players {
     private static final int PLAYER_LIST_BUTTON_DIAMETER = 42;
     private static final int PLAYER_ROW_HEIGHT = 64;
     private static final int PLAYER_LIST_ICON_OFFSET = 24;
-    private static final int DEEDS_PER_ROW = 5;
+    private static final int DEFAULT_DEEDS_PER_ROW = 5;
     private final static int MARGIN = 16;
     private static final int SECTION_GAP = 16;
     private static final int SECTION_TITLE_BASELINE = 24;
@@ -36,12 +37,14 @@ public class Players {
     private static final int PLAYER_LIST_VISUAL_CENTER_OFFSET_X = 4;
     private static final int PLAYER_LIST_VISUAL_CENTER_OFFSET_Y = 4;
     private static final int TEXT_INFO_HEIGHT = 160;
+    private static final int COMPACT_TEXT_INFO_HEIGHT = 192;
     private static final int DEEDS_TOP_OFFSET = 88;
     private static final int DEED_PAGER_BUTTON_WIDTH = 32;
     private static final int DEED_PAGER_LEFT_X = 256;
     private static final int DEED_PAGER_RIGHT_X = 296;
     private static final int DEED_PAGER_BUTTON_Y = 0;
     private static final int[] TURN_HIGHLIGHT_COLOR = {214, 158, 46};
+    private static final int COMPACT_SUMMARY_WIDTH_THRESHOLD = 320;
     private final MonopolyRuntime runtime;
     private final Coordinates baseCoords = new Coordinates(Spot.SPOT_W * 12, 0, 0);
     private final List<Player> playerList = new ArrayList<>();
@@ -269,18 +272,23 @@ public class Players {
         p.text(text("sidebar.section.selected"), MARGIN, SECTION_TITLE_BASELINE);
 
         if (selectedPlayer != null) {
+            float contentWidth = getSidebarContentWidth();
+            boolean compactLayout = useCompactSummaryLayout();
             p.fill(0);
-            p.textFont(runtime.font30());
-            p.text(selectedPlayer.getName(), MARGIN, 48);
+            p.textFont(compactLayout ? runtime.font20() : runtime.font30());
+            p.text(selectedPlayer.getName(), MARGIN, 48, contentWidth, compactLayout ? 32 : 24);
             p.textFont(runtime.font20());
-            p.text(text("sidebar.selected.money", selectedPlayer.getMoneyAmount()), MARGIN, 80);
-            p.text(text("sidebar.selected.liquidation", selectedPlayer.getTotalLiquidationValue()), MARGIN, 104);
-            p.text(text("sidebar.selected.buildings", selectedPlayer.getTotalHouseCount(), selectedPlayer.getTotalHotelCount()), MARGIN, 128);
+            float detailStartY = compactLayout ? 88 : 80;
+            float lineHeight = compactLayout ? 28 : 24;
+            p.text(text("sidebar.selected.money", selectedPlayer.getMoneyAmount()), MARGIN, detailStartY, contentWidth, 24);
+            p.text(text("sidebar.selected.liquidation", selectedPlayer.getTotalLiquidationValue()), MARGIN, detailStartY + lineHeight, contentWidth, 24);
+            p.text(text("sidebar.selected.buildings", selectedPlayer.getTotalHouseCount(), selectedPlayer.getTotalHotelCount()), MARGIN, detailStartY + lineHeight * 2, contentWidth, 24);
 
             int getOutOfJailCardCount = selectedPlayer.getGetOutOfJailCardCount();
             if (getOutOfJailCardCount > 0) {
                 p.push();
-                p.translate(MARGIN + getOutOFJailImg.getWidth() / 2, 144 + getOutOFJailImg.getHeight() / 2);
+                float cardY = compactLayout ? 164 : 144;
+                p.translate(MARGIN + getOutOFJailImg.getWidth() / 2, cardY + getOutOFJailImg.getHeight() / 2);
                 for (int i = 0; i < getOutOfJailCardCount; i++) {
                     getOutOFJailImg.draw(null);
                     p.translate(getOutOFJailImg.getWidth() + MARGIN, 0);
@@ -290,7 +298,7 @@ public class Players {
         }
 
         p.pop();
-        return new Coordinates(0, startCoords.y() + TEXT_INFO_HEIGHT + SECTION_GAP);
+        return new Coordinates(0, startCoords.y() + getTextInfoHeight() + SECTION_GAP);
     }
 
     private void drawPlayerIcon(Player player, Coordinates absoluteCoords) {
@@ -356,8 +364,9 @@ public class Players {
         List<Property> sortedProperties = selectedPlayer.getOwnedProperties().stream()
                 .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
                 .toList();
-        deedPageStartIndex = Math.max(0, Math.min(deedPageStartIndex, Math.max(0, sortedProperties.size() - DEEDS_PER_ROW)));
-        int endIndex = Math.min(sortedProperties.size(), deedPageStartIndex + DEEDS_PER_ROW);
+        int deedsPerRow = getDeedsPerRow();
+        deedPageStartIndex = Math.max(0, Math.min(deedPageStartIndex, Math.max(0, sortedProperties.size() - deedsPerRow)));
+        int endIndex = Math.min(sortedProperties.size(), deedPageStartIndex + deedsPerRow);
         return sortedProperties.subList(deedPageStartIndex, endIndex);
     }
 
@@ -367,11 +376,16 @@ public class Players {
         }
         float baseX = baseCoords.x() + startCoords.x();
         float baseY = baseCoords.y() + startCoords.y();
-        previousDeedsButton.setPosition(baseX + DEED_PAGER_LEFT_X, baseY + DEED_PAGER_BUTTON_Y);
-        nextDeedsButton.setPosition(baseX + DEED_PAGER_RIGHT_X, baseY + DEED_PAGER_BUTTON_Y);
+        float pagerRightX = baseX + getSidebarWidth() - MARGIN;
+        nextDeedsButton.setPosition(pagerRightX - nextDeedsButton.getWidth(), baseY + DEED_PAGER_BUTTON_Y);
+        previousDeedsButton.setPosition(
+                pagerRightX - nextDeedsButton.getWidth() - MARGIN / 2f - previousDeedsButton.getWidth(),
+                baseY + DEED_PAGER_BUTTON_Y
+        );
 
+        int deedsPerRow = getDeedsPerRow();
         boolean hasPreviousPage = deedPageStartIndex > 0;
-        boolean hasNextPage = deedPageStartIndex + DEEDS_PER_ROW < deedCount;
+        boolean hasNextPage = deedPageStartIndex + deedsPerRow < deedCount;
         if (hasPreviousPage) {
             previousDeedsButton.show();
         } else {
@@ -385,15 +399,44 @@ public class Players {
     }
 
     private void showPreviousDeedsPage() {
-        deedPageStartIndex = Math.max(0, deedPageStartIndex - DEEDS_PER_ROW);
+        deedPageStartIndex = Math.max(0, deedPageStartIndex - getDeedsPerRow());
     }
 
     private void showNextDeedsPage() {
         if (selectedPlayer == null) {
             return;
         }
-        int maxStartIndex = Math.max(0, selectedPlayer.getOwnedProperties().size() - DEEDS_PER_ROW);
-        deedPageStartIndex = Math.min(maxStartIndex, deedPageStartIndex + DEEDS_PER_ROW);
+        int deedsPerRow = getDeedsPerRow();
+        int maxStartIndex = Math.max(0, selectedPlayer.getOwnedProperties().size() - deedsPerRow);
+        deedPageStartIndex = Math.min(maxStartIndex, deedPageStartIndex + deedsPerRow);
+    }
+
+    private int getDeedsPerRow() {
+        if (runtime == null) {
+            return DEFAULT_DEEDS_PER_ROW;
+        }
+        float availableWidth = getSidebarContentWidth();
+        int deedsPerRow = (int) Math.floor((availableWidth + MARGIN) / (Spot.SPOT_W + MARGIN));
+        return Math.max(1, Math.min(DEFAULT_DEEDS_PER_ROW, deedsPerRow));
+    }
+
+    private float getSidebarWidth() {
+        if (runtime == null) {
+            return LayoutMetrics.defaultWindow().sidebarWidth();
+        }
+        return LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height).sidebarWidth();
+    }
+
+    private float getSidebarContentWidth() {
+        return Math.max(0, getSidebarWidth() - MARGIN * 2f);
+    }
+
+    private boolean useCompactSummaryLayout() {
+        return getSidebarContentWidth() < COMPACT_SUMMARY_WIDTH_THRESHOLD;
+    }
+
+    private int getTextInfoHeight() {
+        return useCompactSummaryLayout() ? COMPACT_TEXT_INFO_HEIGHT : TEXT_INFO_HEIGHT;
     }
 
     private void translate(Coordinates c) {

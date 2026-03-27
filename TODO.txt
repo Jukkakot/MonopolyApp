@@ -19,6 +19,5 @@ UI AND UX
 [Medium] Show monopoly, mortgage, and building status more clearly on deeds
 [Medium] Show houses and hotels more clearly on board and owned properties
 [Low] Improve token visibility when multiple players share a spot
-[Low] Make player summary and deed panel fit narrower sidebar widths
 [Low] Make popup sizes and button layouts adapt to smaller windows
 [Low] Add resize-focused UI smoke checks for narrow and short window sizes
