@@ -4,7 +4,6 @@ MONOPOLY RULES
 [High] Add starting order by dice roll
 [High] Add property auction when player declines to buy
 [High] Add property auction when player cannot afford to buy
-[High] Review all card effects against Monopoly rules
 [Medium] Enforce even building across a full color set
 [Medium] Enforce even house selling across a full color set
 [Medium] Validate all building buy and sell rules
@@ -13,7 +12,6 @@ MONOPOLY RULES
 ECONOMY AND MULTIPLAYER
 [High] Add player trading
 [High] Add trade offers for money, property, and jail card
-[High] Handle all-player pay and receive cards when someone cannot afford payment
 [Low] Review long-game economy and bankruptcy pacing
 [Low] Plan networking as separate backend and frontend work
 

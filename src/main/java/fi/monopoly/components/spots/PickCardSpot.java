@@ -5,12 +5,15 @@ import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.cards.Card;
 import fi.monopoly.components.cards.Cards;
+import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
 import fi.monopoly.types.TurnResult;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PickCardSpot extends Spot {
@@ -35,15 +38,7 @@ public class PickCardSpot extends Spot {
                 turnPlayer.addOutOfJailCard(spotType.streetType);
                 runtime.popupService().show(card.text(), callbackAction::doAction);
             }
-            case ALL_PLAYERS_MONEY -> {
-                // Amount is negative if turnplayer gives money to others
-                // Amount is positive if turnplayer gets money from others
-                int amount = Integer.parseInt(card.values().get(0));
-                updateMoney(turnPlayer, amount * (gameState.getPlayers().count() - 1), card.text(), () -> {
-                    gameState.getPlayers().forEachOtherPLayer(turnPlayer, player -> player.addMoney(-amount));
-                    callbackAction.doAction();
-                });
-            }
+            case ALL_PLAYERS_MONEY -> handleAllPlayersMoneyCard(gameState, turnPlayer, card, callbackAction);
             case REPAIR_PROPERTIES -> {
                 List<Integer> repairPrices = card.values().stream().map(Integer::valueOf).toList();
                 int housePrice = repairPrices.get(0);
@@ -87,5 +82,37 @@ public class PickCardSpot extends Spot {
             }
         }
         return null;
+    }
+
+    private void handleAllPlayersMoneyCard(GameState gameState, Player turnPlayer, Card card, CallbackAction callbackAction) {
+        int amount = Integer.parseInt(card.values().get(0));
+        List<Player> otherPlayers = new ArrayList<>();
+        gameState.getPlayers().forEachOtherPLayer(turnPlayer, otherPlayers::add);
+
+        runtime.popupService().show(card.text(), () -> processAllPlayersMoneyPayment(gameState, turnPlayer, otherPlayers, amount, 0, callbackAction));
+    }
+
+    private void processAllPlayersMoneyPayment(
+            GameState gameState,
+            Player turnPlayer,
+            List<Player> otherPlayers,
+            int amount,
+            int index,
+            CallbackAction onComplete
+    ) {
+        if (index >= otherPlayers.size()) {
+            onComplete.doAction();
+            return;
+        }
+
+        Player otherPlayer = otherPlayers.get(index);
+        PaymentRequest request = amount >= 0
+                ? new PaymentRequest(otherPlayer, new PlayerTarget(turnPlayer), amount, "Card effect: " + spotType.streetType.name())
+                : new PaymentRequest(turnPlayer, new PlayerTarget(otherPlayer), -amount, "Card effect: " + spotType.streetType.name());
+
+        gameState.getPaymentHandler().requestPayment(
+                request,
+                () -> processAllPlayersMoneyPayment(gameState, turnPlayer, otherPlayers, amount, index + 1, onComplete)
+        );
     }
 }
