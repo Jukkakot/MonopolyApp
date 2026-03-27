@@ -19,13 +19,11 @@ public class ChoicePopup extends Popup {
     protected ChoicePopup(MonopolyRuntime runtime) {
         super(runtime);
         this.acceptButton = new MonopolyButton(runtime, "accept");
-        acceptButton.setPosition(coords.x() - 150, coords.y() + (float) height / 4);
         acceptButton.addListener(this::acceptAction);
         acceptButton.setSize(100, 50);
         acceptButton.setAutoWidth(100, 28, 180);
         acceptButton.hide();
         this.declineButton = new MonopolyButton(runtime, "decline");
-        declineButton.setPosition(coords.x() + 50, coords.y() + (float) height / 4);
         declineButton.addListener(this::declineAction);
         declineButton.setSize(100, 50);
         declineButton.setAutoWidth(100, 28, 180);
@@ -50,6 +48,7 @@ public class ChoicePopup extends Popup {
     @Override
     public void show() {
         super.show();
+        layoutButtons();
         acceptButton.show();
         declineButton.show();
     }
@@ -73,5 +72,24 @@ public class ChoicePopup extends Popup {
             return true;
         }
         return super.onKeyAction(key);
+    }
+
+    private void layoutButtons() {
+        float centerX = getPopupCenter().x();
+        float buttonY = getButtonAreaTop() + Math.max(0, (getButtonAreaHeight() - acceptButton.getHeight()) / 2f);
+        float combinedWidth = acceptButton.getWidth() + declineButton.getWidth() + 16f;
+        float minInlineX = getPopupLeft() + 20f;
+        float maxInlineRight = getPopupRight() - 20f;
+        if (combinedWidth <= getPopupWidth() - 40f) {
+            float startX = centerX - combinedWidth / 2f;
+            acceptButton.setPosition(Math.max(minInlineX, startX), buttonY);
+            declineButton.setPosition(Math.min(maxInlineRight - declineButton.getWidth(), startX + acceptButton.getWidth() + 16f), buttonY);
+            return;
+        }
+
+        float stackedX = centerX - Math.max(acceptButton.getWidth(), declineButton.getWidth()) / 2f;
+        float firstY = getButtonAreaTop() + 8f;
+        acceptButton.setPosition(stackedX, firstY);
+        declineButton.setPosition(stackedX, firstY + acceptButton.getHeight() + 12f);
     }
 }

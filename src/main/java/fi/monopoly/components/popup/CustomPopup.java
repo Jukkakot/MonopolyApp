@@ -27,7 +27,6 @@ public class CustomPopup extends Popup {
     protected CustomPopup(MonopolyRuntime runtime) {
         super(runtime);
         this.closeButton = new MonopolyButton(runtime, "close")
-                .setPosition(coords.x() + (float) width / 2 - 30, coords.y() - (float) height / 2 + 10)
                 .addListener(e -> completeAction(null))
                 .hide()
                 .setSize(20, 20);
@@ -69,13 +68,15 @@ public class CustomPopup extends Popup {
 
     private void layoutButtons() {
         if (totalButtonCount == 0) {
+            layoutCloseButton();
             return;
         }
-        int cols = Math.min(3, (int) Math.ceil(Math.sqrt(totalButtonCount)));
+        layoutCloseButton();
+        int cols = Math.min(getMaxButtonColumns(), (int) Math.ceil(Math.sqrt(totalButtonCount)));
         int rows = (int) Math.ceil((double) totalButtonCount / cols);
-        int top = (int) (coords.y() - (float) height / 2 + 90);
+        int top = Math.round(getButtonAreaTop());
         int totalHeight = rows * BUTTON_HEIGHT + Math.max(0, rows - 1) * BUTTON_GAP_Y;
-        int startY = top + Math.max(0, (height - 120 - totalHeight) / 2);
+        int startY = top + Math.max(0, Math.round((getButtonAreaHeight() - totalHeight) / 2f));
 
         for (int row = 0; row < rows; row++) {
             int rowStart = row * cols;
@@ -85,7 +86,7 @@ public class CustomPopup extends Popup {
                 rowWidth += Math.round(customButtons.get(i).getWidth());
             }
             rowWidth += Math.max(0, rowEnd - rowStart - 1) * BUTTON_GAP_X;
-            int startX = Math.round(coords.x() - rowWidth / 2f);
+            int startX = Math.round(getPopupCenter().x() - rowWidth / 2f);
             int x = startX;
             int y = startY + row * (BUTTON_HEIGHT + BUTTON_GAP_Y);
             for (int i = rowStart; i < rowEnd; i++) {
@@ -103,6 +104,7 @@ public class CustomPopup extends Popup {
     @Override
     protected void show() {
         super.show();
+        layoutButtons();
         closeButton.show();
         for (int i = 0; i < totalButtonCount; i++) {
             customButtons.get(i).show();
@@ -131,5 +133,13 @@ public class CustomPopup extends Popup {
         }
 
         return super.onKeyAction(key);
+    }
+
+    private int getMaxButtonColumns() {
+        return getPopupWidth() < 420 ? 2 : 3;
+    }
+
+    private void layoutCloseButton() {
+        closeButton.setPosition(getPopupRight() - 30, getPopupTop() + 10);
     }
 }

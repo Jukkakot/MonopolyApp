@@ -19,7 +19,6 @@ public class OkPopup extends Popup {
     protected OkPopup(MonopolyRuntime runtime) {
         super(runtime);
         this.okButton = new MonopolyButton(runtime, "ok");
-        okButton.setPosition(coords.x() - 50, coords.y() + (float) height / 4);
         okButton.addListener(this::okAction);
         okButton.setSize(100, 50);
         okButton.setAutoWidth(100, 28, 180);
@@ -39,6 +38,7 @@ public class OkPopup extends Popup {
     @Override
     public void show() {
         super.show();
+        layoutButtons();
         okButton.show();
     }
 
@@ -56,5 +56,11 @@ public class OkPopup extends Popup {
             return true;
         }
         return super.onKeyAction(key);
+    }
+
+    private void layoutButtons() {
+        float buttonX = getPopupCenter().x() - okButton.getWidth() / 2f;
+        float buttonY = getButtonAreaTop() + Math.max(0, (getButtonAreaHeight() - okButton.getHeight()) / 2f);
+        okButton.setPosition(buttonX, buttonY);
     }
 }
