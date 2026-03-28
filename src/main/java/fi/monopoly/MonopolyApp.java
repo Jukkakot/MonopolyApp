@@ -22,6 +22,8 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static final char SPACE = ' ';
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
     public static final int DEFAULT_WINDOW_HEIGHT = 996;
+    public static final boolean WINDOW_RESIZE_ENABLED =
+            Boolean.parseBoolean(System.getProperty("monopoly.window.resizable", "false"));
     public static MonopolyApp self;
     public static boolean DEBUG_MODE = false;
     public static boolean SKIP_ANNIMATIONS = false;
@@ -84,6 +86,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     public void setup() {
         initImages();
         p5 = new ControlP5(this);
+        surface.setResizable(WINDOW_RESIZE_ENABLED);
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
         font30 = createFont("Monopoly Regular.ttf", 30);

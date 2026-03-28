@@ -79,6 +79,9 @@ Then run `StartMonopolyApp` from the IDE or with your own Java run configuration
 Note: this project is currently easiest to run from an IDE because it is a Processing-based desktop app rather than a
 packaged release build.
 
+Window resizing is guarded behind the JVM property `-Dmonopoly.window.resizable=true`. By default, the app keeps the
+window non-resizable while the fixed-board layout migration is still in progress.
+
 ## Controls
 
 These keys are available during the game:
