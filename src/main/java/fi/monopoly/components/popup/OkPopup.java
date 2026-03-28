@@ -3,6 +3,7 @@ package fi.monopoly.components.popup;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import lombok.Setter;
 
 import java.util.Arrays;
@@ -56,6 +57,12 @@ public class OkPopup extends Popup {
             return true;
         }
         return super.onKeyAction(key);
+    }
+
+    @Override
+    protected boolean onComputerAction(ComputerPlayerProfile profile) {
+        okAction();
+        return true;
     }
 
     @Override

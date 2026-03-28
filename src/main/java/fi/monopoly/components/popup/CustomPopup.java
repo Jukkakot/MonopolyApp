@@ -3,6 +3,7 @@ package fi.monopoly.components.popup;
 import controlP5.Button;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.utils.Coordinates;
 import lombok.extern.slf4j.Slf4j;
@@ -139,6 +140,16 @@ public class CustomPopup extends Popup {
         }
 
         return super.onKeyAction(key);
+    }
+
+    @Override
+    protected boolean onComputerAction(ComputerPlayerProfile profile) {
+        if (totalButtonCount > 0) {
+            customButtons.get(0).pressButton();
+            return true;
+        }
+        completeAction(null);
+        return true;
     }
 
     private int getMaxButtonColumns() {

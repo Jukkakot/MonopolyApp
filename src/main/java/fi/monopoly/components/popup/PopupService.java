@@ -1,6 +1,7 @@
 package fi.monopoly.components.popup;
 
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,6 +83,13 @@ public class PopupService {
 
     public List<String> recentPopupMessages() {
         return List.copyOf(popupHistory);
+    }
+
+    public boolean resolveForComputer(ComputerPlayerProfile profile) {
+        if (activePopup == null) {
+            return false;
+        }
+        return activePopup.onComputerAction(profile);
     }
 
     private <T extends Popup> T getInstance(Class<T> clazz) {

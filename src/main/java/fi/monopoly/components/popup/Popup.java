@@ -3,6 +3,7 @@ package fi.monopoly.components.popup;
 
 import controlP5.Canvas;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.LayoutMetrics;
@@ -144,6 +145,10 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected boolean onKeyAction(char key) {
+        return false;
+    }
+
+    protected boolean onComputerAction(ComputerPlayerProfile profile) {
         return false;
     }
 

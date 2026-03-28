@@ -3,6 +3,7 @@ package fi.monopoly.components.popup;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import lombok.Setter;
 
 import static fi.monopoly.text.UiTexts.text;
@@ -72,6 +73,12 @@ public class ChoicePopup extends Popup {
             return true;
         }
         return super.onKeyAction(key);
+    }
+
+    @Override
+    protected boolean onComputerAction(ComputerPlayerProfile profile) {
+        acceptAction();
+        return true;
     }
 
     @Override

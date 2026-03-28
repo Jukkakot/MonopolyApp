@@ -272,8 +272,13 @@ public class Players {
             float contentWidth = getSidebarContentWidth();
             boolean compactLayout = useCompactSummaryLayout();
             p.fill(0);
+            p.textAlign(processing.core.PConstants.LEFT, processing.core.PConstants.TOP);
             p.textFont(compactLayout ? runtime.font20() : runtime.font30());
-            p.text(selectedPlayer.getName(), MARGIN, 48, contentWidth, compactLayout ? 32 : 24);
+            p.text(selectedPlayer.getName(), MARGIN, compactLayout ? 52 : 44);
+            if (selectedPlayer.isComputerControlled()) {
+                float badgeX = MARGIN + p.textWidth(selectedPlayer.getName()) + 12;
+                drawComputerBadge(badgeX, compactLayout ? 50 : 44);
+            }
             p.textFont(runtime.font20());
             float detailStartY = compactLayout ? 88 : 80;
             float lineHeight = compactLayout ? 28 : 24;
@@ -322,6 +327,9 @@ public class Players {
         p.textFont(runtime.font20());
         float textX = absoluteCoords.x() + PLAYER_LIST_BUTTON_DIAMETER / 2f + MARGIN;
         p.text(player.getName(), textX, absoluteCoords.y() - 6);
+        if (player.isComputerControlled()) {
+            drawComputerBadge(textX + p.textWidth(player.getName()) + 10, absoluteCoords.y() - 20);
+        }
         p.text(text("format.money", player.getMoneyAmount()), textX, absoluteCoords.y() + 16);
         String status = player.equals(getTurn()) ? text("sidebar.player.turn") : player.equals(selectedPlayer) ? text("sidebar.player.selected") : "";
         if (!status.isBlank()) {
@@ -332,6 +340,20 @@ public class Players {
             p.textFont(runtime.font20());
         }
         p.noFill();
+    }
+
+    private void drawComputerBadge(float x, float y) {
+        MonopolyApp p = runtime.app();
+        p.pushStyle();
+        p.rectMode(processing.core.PConstants.CORNER);
+        p.noStroke();
+        p.fill(46, 72, 63);
+        p.rect(x, y, 42, 18, 8);
+        p.fill(255);
+        p.textFont(runtime.font10());
+        p.textAlign(processing.core.PConstants.CENTER, processing.core.PConstants.TOP);
+        p.text("BOT", x + 21, y + 4);
+        p.popStyle();
     }
 
     private void drawCircle(Coordinates absoluteCoords, int red, int green, int blue, boolean jailCircle) {

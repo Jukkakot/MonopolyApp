@@ -9,6 +9,19 @@ MONOPOLY RULES
 ECONOMY AND MULTIPLAYER
 [High] Add player trading
 [High] Add trade offers for money, property, and jail card
+[High] Add computer players with configurable difficulty profiles
+[High] Add read-only bot evaluation views over game state
+[High] Implement strong computer-player property-buy heuristics
+[High] Implement strong computer-player debt liquidation priorities
+[Medium] Implement strong computer-player building heuristics with cash reserve rules
+[Medium] Implement strong computer-player jail decision rules
+[Medium] Add bot decision logging with score/reason output
+[Medium] Add simulation tests for bot-vs-bot stability and tuning
+[Medium] Add configurable strong bot variants like aggressive and defensive
+[Medium] Add player setup UI for choosing human vs computer seats before game start
+[Medium] Add player setup UI for selecting computer difficulty per seat
+[Medium] Decide whether computer difficulty can change mid-game or only before game start
+[Medium] Improve computer-player debt, property-buy, and jail decisions beyond smoke-test behavior
 [Low] Review long-game economy and bankruptcy pacing
 [Low] Plan networking as separate backend and frontend work
 

@@ -6,6 +6,9 @@ import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.board.Path;
+import fi.monopoly.components.computer.ComputerStrategies;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
@@ -57,6 +60,8 @@ public class Game implements MonopolyEventListener {
     private static final int OVERLAY_SECONDARY_ROW_1_Y = 68;
     private static final int OVERLAY_SECONDARY_ROW_2_Y = 112;
     private static final int OVERLAY_SECONDARY_ROW_3_Y = 156;
+    private static final int COMPUTER_ACTION_DELAY_MS = 120;
+    private static final int NO_COMPUTER_ACTION_YET = -1;
     private static Game current;
     public static Dices DICES;
     public static Players players;
@@ -77,6 +82,7 @@ public class Game implements MonopolyEventListener {
     Board board;
     TurnResult prevTurnResult;
     private DebtState debtState;
+    private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
 
     public Game(MonopolyRuntime runtime) {
         current = this;
@@ -134,9 +140,9 @@ public class Game implements MonopolyEventListener {
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot));
-        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot));
-        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot));
+        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.SMOKE_TEST));
+        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.SMOKE_TEST));
+        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.SMOKE_TEST));
 //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
 //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
 //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
@@ -204,6 +210,7 @@ public class Game implements MonopolyEventListener {
         if (hasSidebarSpace) {
             drawDebtState();
         }
+        runComputerPlayerStep();
     }
 
     /**
@@ -244,11 +251,29 @@ public class Game implements MonopolyEventListener {
         app.text(text("sidebar.currentSpot"), sidebarX + SIDEBAR_LABEL_X, layoutMetrics.sidebarHeaderRow3Y());
 
         app.fill(46, 72, 63);
-        app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), sidebarX + SIDEBAR_VALUE_X, layoutMetrics.sidebarHeaderRow1Y());
+        float currentPlayerValueX = sidebarX + SIDEBAR_VALUE_X;
+        float currentPlayerValueY = layoutMetrics.sidebarHeaderRow1Y();
+        app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), currentPlayerValueX, currentPlayerValueY);
+        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+            drawComputerBadge(app, currentPlayerValueX + app.textWidth(turnPlayer.getName()) + 12, currentPlayerValueY - 14);
+        }
         app.text(resolveCurrentTurnPhase(), sidebarX + SIDEBAR_VALUE_X, layoutMetrics.sidebarHeaderRow2Y());
         app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), sidebarX + SIDEBAR_VALUE_X, layoutMetrics.sidebarHeaderRow3Y());
         drawPopupHistoryPanel(app, layoutMetrics);
         app.pop();
+    }
+
+    private void drawComputerBadge(MonopolyApp app, float x, float y) {
+        app.pushStyle();
+        app.rectMode(PConstants.CORNER);
+        app.noStroke();
+        app.fill(46, 72, 63);
+        app.rect(x, y, 42, 18, 8);
+        app.fill(255);
+        app.textFont(runtime.font10());
+        app.textAlign(PConstants.CENTER, PConstants.TOP);
+        app.text("BOT", x + 21, y + 4);
+        app.popStyle();
     }
 
     /**
@@ -374,6 +399,27 @@ public class Game implements MonopolyEventListener {
         }
         log.debug("Starting turn roll for player {}", players.getTurn().getName());
         playRound(DICES.getValue());
+    }
+
+    private void runComputerPlayerStep() {
+        Player turnPlayer = players.getTurn();
+        if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
+            return;
+        }
+        if (animations.isRunning()) {
+            return;
+        }
+        int now = runtime.app().millis();
+        boolean shouldApplyDelay = !MonopolyApp.SKIP_ANNIMATIONS && lastComputerActionAt != NO_COMPUTER_ACTION_YET;
+        if (shouldApplyDelay && now - lastComputerActionAt < COMPUTER_ACTION_DELAY_MS) {
+            return;
+        }
+
+        boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile())
+                .takeStep(new GameComputerTurnContext(), turnPlayer);
+        if (acted) {
+            lastComputerActionAt = now;
+        }
     }
 
     private void endRound(boolean switchTurns) {
@@ -1046,6 +1092,66 @@ public class Game implements MonopolyEventListener {
         if (endRoundButton.isVisible() && DICES.isVisible()) {
             log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.");
             DICES.hide();
+        }
+    }
+
+    private final class GameComputerTurnContext implements ComputerTurnContext {
+        @Override
+        public boolean isPopupVisible() {
+            return runtime.popupService().isAnyVisible();
+        }
+
+        @Override
+        public boolean resolvePopupForComputer(ComputerPlayerProfile profile) {
+            return runtime.popupService().resolveForComputer(profile);
+        }
+
+        @Override
+        public boolean isDebtResolutionActiveFor(Player player) {
+            return debtState != null && debtState.paymentRequest().debtor().equals(player);
+        }
+
+        @Override
+        public int requiredDebtAmount(Player player) {
+            if (!isDebtResolutionActiveFor(player)) {
+                return 0;
+            }
+            return debtState.paymentRequest().amount();
+        }
+
+        @Override
+        public boolean isBankruptcyRiskFor(Player player) {
+            return isDebtResolutionActiveFor(player) && debtState.bankruptcyRisk();
+        }
+
+        @Override
+        public void retryPendingDebtPayment() {
+            Game.this.retryPendingDebtPayment();
+        }
+
+        @Override
+        public void declareBankruptcy() {
+            Game.this.declareBankruptcy();
+        }
+
+        @Override
+        public boolean isDiceVisible() {
+            return DICES.isVisible();
+        }
+
+        @Override
+        public void rollDice() {
+            DICES.rollDice();
+        }
+
+        @Override
+        public boolean isEndTurnVisible() {
+            return endRoundButton.isVisible();
+        }
+
+        @Override
+        public void endTurn() {
+            Game.this.endRound(true);
         }
     }
 }

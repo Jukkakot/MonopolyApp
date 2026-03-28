@@ -160,14 +160,14 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     public void windowResized() {
-        log.debug("Processing windowResized callback: sketch={}x{}", width, height);
+//        log.debug("Processing windowResized callback: sketch={}x{}", width, height);
     }
 
     private void logWindowSizeChangeFromDraw() {
         if (width == lastDrawWidth && height == lastDrawHeight) {
             return;
         }
-        log.debug("Draw observed sketch resize: {}x{} -> {}x{}", lastDrawWidth, lastDrawHeight, width, height);
+//        log.debug("Draw observed sketch resize: {}x{} -> {}x{}", lastDrawWidth, lastDrawHeight, width, height);
         lastDrawWidth = width;
         lastDrawHeight = height;
     }

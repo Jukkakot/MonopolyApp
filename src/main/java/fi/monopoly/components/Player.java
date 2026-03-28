@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.Properties;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.spots.JailSpot;
@@ -35,25 +36,37 @@ public class Player extends PlayerToken {
     @Getter
     private int turnNumber;
     @Getter
+    private final ComputerPlayerProfile computerProfile;
+    @Getter
     private int getOutOfJailCardCount = 0;
     private final Deque<StreetType> getOutOfJailCardSources = new LinkedList<>();
 
     public Player(MonopolyRuntime runtime, String name, Color color, Spot spot) {
+        this(runtime, name, color, spot, ComputerPlayerProfile.HUMAN);
+    }
+
+    public Player(MonopolyRuntime runtime, String name, Color color, Spot spot, ComputerPlayerProfile computerProfile) {
         super(runtime, spot, color);
         this.id = NEXT_ID++;
         this.name = name;
         this.moneyAmount = STARTING_MONEY_AMOUNT;
+        this.computerProfile = computerProfile;
         // turn number is id by default. Later maybe implement so that this can change
         this.turnNumber = id + 1; // Turn numbers starts from 1
         setSpot(spot);
     }
 
     public Player(String name, Color color, int moneyAmount, int turnNumber) {
+        this(name, color, moneyAmount, turnNumber, ComputerPlayerProfile.HUMAN);
+    }
+
+    public Player(String name, Color color, int moneyAmount, int turnNumber, ComputerPlayerProfile computerProfile) {
         super(null, new Coordinates(), color);
         this.id = turnNumber - 1;
         this.name = name;
         this.moneyAmount = moneyAmount;
         this.turnNumber = turnNumber;
+        this.computerProfile = computerProfile;
     }
 
     public String getName() {
@@ -236,5 +249,9 @@ public class Player extends PlayerToken {
 
     public boolean isInJail() {
         return JailSpot.jailTimeLeftMap.get(this) != null;
+    }
+
+    public boolean isComputerControlled() {
+        return computerProfile.isComputerControlled();
     }
 }
