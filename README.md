@@ -3,23 +3,27 @@
 A Java + Processing based Monopoly application.
 
 This project is a desktop board game with its own board, dice, popup flow, deeds, property purchase/rent logic, card
-spots, and a gradually refactored turn system. The codebase has also been made more testable over time, and now includes
-unit tests plus a headless smoke test for the main game flow.
+spots, a right-side game info panel, and a gradually refactored turn system. The codebase has also been made more
+testable over time, and now includes unit tests plus a headless smoke test for the main game flow.
 
 ## Current Features
 
 - playable Monopoly-style desktop board game
+- default three-player game setup
 - multiple players on the same board
 - dice rolling, movement, and animations
 - buying properties
 - paying rent
+- debt resolution flow with retry and bankruptcy handling
 - tax spots
 - jail / go to jail flow
-- chance / community chest card spots
+- chance / community chest card spots with localized shuffled decks
 - deed view for owned properties
 - partial house buying / selling support
 - partial mortgage / unmortgage support
 - popup-based decision flow
+- right-side sidebar for turn state, selected player info, debt state, and popup history
+- debug controls for cash, movement, debt, jail, and language switching
 - automated smoke test that runs the game headlessly and verifies it does not get stuck
 
 ## Tech Stack
@@ -59,10 +63,6 @@ unit tests plus a headless smoke test for the main game flow.
 - Java 19
 - Maven
 
-The project also depends on a local library:
-
-- [`libs/controlP5.jar`](/E:/Documents/ProcessingProjects/MonopolyApp/libs/controlP5.jar)
-
 ### Start the Game
 
 In IntelliJ, the easiest way is to run [
@@ -79,8 +79,8 @@ Then run `StartMonopolyApp` from the IDE or with your own Java run configuration
 Note: this project is currently easiest to run from an IDE because it is a Processing-based desktop app rather than a
 packaged release build.
 
-Window resizing is guarded behind the JVM property `-Dmonopoly.window.resizable=true`. By default, the app keeps the
-window non-resizable while the fixed-board layout migration is still in progress.
+Window resizing is enabled. The app currently keeps a minimum window size so the fixed board and essential sidebar
+controls still fit while the layout migration is in progress, but the board itself is not yet fully responsive.
 
 ## Controls
 
@@ -129,14 +129,13 @@ See the up-to-date task list in [`TODO.txt`](/E:/Documents/ProcessingProjects/Mo
 
 Some of the biggest unfinished areas are:
 
-- full bankruptcy handling
+- bankruptcy and debt-resolution rule polish
 - auctions
 - player-to-player trading
 - final jail rule behavior
 - fuller building rule support
-- deck reshuffling
 - player setup screen
-- a proper right-side info / actions panel in the UI
+- full responsive layout for board and sidebar resizing
 
 ## Architecture Notes
 
@@ -144,6 +143,8 @@ The project has gone through an incremental refactor where:
 
 - popup and event flow have been moved into services
 - turn logic has started moving into a dedicated `turn` layer
+- debt handling has been separated into payment and debt-resolution components
+- sidebar and popup layout logic has started moving into centralized layout helpers
 - part of the older global `MonopolyApp.self` usage has been replaced with a `MonopolyRuntime` structure
 - testability has been improved with headless testing and cleaner domain-side logic
 

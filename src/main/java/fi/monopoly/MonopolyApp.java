@@ -7,12 +7,18 @@ import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
+import javafx.application.Platform;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import processing.awt.PSurfaceAWT;
 import processing.core.PFont;
 import processing.core.PImage;
 
-import java.awt.Dimension;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -20,13 +26,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@Slf4j
 public class MonopolyApp extends MonopolyEventObserver {
     public static final char ENTER = '\n';
     public static final char SPACE = ' ';
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
     public static final int DEFAULT_WINDOW_HEIGHT = 996;
-    public static final boolean WINDOW_RESIZE_ENABLED =
-            Boolean.parseBoolean(System.getProperty("monopoly.window.resizable", "false"));
     public static MonopolyApp self;
     public static boolean DEBUG_MODE = false;
     public static boolean SKIP_ANNIMATIONS = false;
@@ -34,6 +39,8 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static PFont font10, font20, font30;
     private static Map<String, PImage> IMAGES = new HashMap<>();
     private Game game;
+    private int lastDrawWidth = -1;
+    private int lastDrawHeight = -1;
 
     public MonopolyApp() {
         self = this;
@@ -83,7 +90,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     public void settings() {
-        size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+        size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, FX2D);
     }
 
     public void setup() {
@@ -99,20 +106,46 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     private void configureWindowSizing() {
-        surface.setResizable(WINDOW_RESIZE_ENABLED);
-        if (!WINDOW_RESIZE_ENABLED) {
-            return;
-        }
+        surface.setResizable(true);
         Object nativeSurface = surface.getNative();
         if (nativeSurface instanceof PSurfaceAWT.SmoothCanvas smoothCanvas && smoothCanvas.getFrame() != null) {
             smoothCanvas.getFrame().setMinimumSize(new Dimension(
                     LayoutMetrics.minimumFixedLayoutWindowWidth(),
                     LayoutMetrics.minimumFixedLayoutWindowHeight()
             ));
+            smoothCanvas.getFrame().addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    log.info("AWT resize event: frame={}x{}, sketch={}x{}",
+                            smoothCanvas.getFrame().getWidth(),
+                            smoothCanvas.getFrame().getHeight(),
+                            width,
+                            height
+                    );
+                }
+            });
+            return;
+        }
+        if (nativeSurface instanceof Canvas fxCanvas) {
+            Platform.runLater(() -> applyFxMinimumWindowSize(fxCanvas));
         }
     }
 
+    private void applyFxMinimumWindowSize(Canvas fxCanvas) {
+        if (fxCanvas.getScene() == null || fxCanvas.getScene().getWindow() == null) {
+            log.warn("FX2D canvas scene/window not ready when applying minimum size");
+            return;
+        }
+        Stage stage = (Stage) fxCanvas.getScene().getWindow();
+        stage.setMinWidth(LayoutMetrics.minimumFixedLayoutWindowWidth());
+        stage.setMinHeight(LayoutMetrics.minimumFixedLayoutWindowHeight());
+        log.info("Applied FX minimum window size: {}x{}",
+                LayoutMetrics.minimumFixedLayoutWindowWidth(),
+                LayoutMetrics.minimumFixedLayoutWindowHeight());
+    }
+
     public void draw() {
+        logWindowSizeChangeFromDraw();
         background(205, 230, 209);
         game.draw();
         if (DEBUG_MODE) {
@@ -124,6 +157,19 @@ public class MonopolyApp extends MonopolyEventObserver {
             text(fi.monopoly.text.UiTexts.text("app.debug.mouseCoords", mouseX, mouseY), mouseX - 40, mouseY + 30);
             pop();
         }
+    }
+
+    public void windowResized() {
+        log.debug("Processing windowResized callback: sketch={}x{}", width, height);
+    }
+
+    private void logWindowSizeChangeFromDraw() {
+        if (width == lastDrawWidth && height == lastDrawHeight) {
+            return;
+        }
+        log.debug("Draw observed sketch resize: {}x{} -> {}x{}", lastDrawWidth, lastDrawHeight, width, height);
+        lastDrawWidth = width;
+        lastDrawHeight = height;
     }
 
     private void initImages() {
