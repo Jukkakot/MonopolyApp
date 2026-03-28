@@ -12,7 +12,8 @@ public class Animation {
     private final Drawable drawable;
     private final AnimationPath path;
     private final static float MIN_ANIM_DISTANCE = 2;
-    private final static float ANIMATION_SPEED = 0.4f;
+    // Larger value moves farther per frame and makes animations faster; smaller value slows them down.
+    private final static float ANIMATION_SPEED = 0.3f;
     private final CallbackAction onAnimationEnd;
 
     public Animation(Drawable drawable, AnimationPath path, CallbackAction onAnimationEnd) {

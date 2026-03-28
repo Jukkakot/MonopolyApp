@@ -4,7 +4,6 @@ import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Drawable;
 import fi.monopoly.utils.Coordinates;
-import fi.monopoly.utils.MonopolyUtils;
 import fi.monopoly.utils.SpotProps;
 import javafx.scene.paint.Color;
 import lombok.Getter;
@@ -68,11 +67,8 @@ public class Image implements Drawable {
         p.translate(c.x(), c.y());
         p.rotate(MonopolyApp.radians(c.r() + rotation));
         p.imageMode(PConstants.CENTER);
-        PImage img = MonopolyApp.getImage(imgName);
+        PImage img = color != null ? MonopolyApp.getImage(imgName, color) : MonopolyApp.getImage(imgName);
         if (img != null) {
-            if (color != null) {
-                p.tint(MonopolyUtils.toColor(p, color));
-            }
             p.image(img, 0, 0, getWidth(), getHeight());
         }
 

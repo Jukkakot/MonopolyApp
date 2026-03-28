@@ -23,11 +23,12 @@ public class MonopolyEventObserver extends PApplet {
     public void keyPressed(KeyEvent keyEvent) {
         super.keyPressed(keyEvent);
         eventBus().sendConsumableEvent(keyEvent);
-        if (keyEvent.getKey() == 'd') {
+        char key = Character.toLowerCase(keyEvent.getKey());
+        if (key == 'd') {
             MonopolyApp.DEBUG_MODE = !MonopolyApp.DEBUG_MODE;
             log.debug("Debug mode {},", MonopolyApp.DEBUG_MODE);
         }
-        if (keyEvent.getKey() == 'h') {
+        if (key == 'h') {
             log.info("""
                     
                     ----HELP-----

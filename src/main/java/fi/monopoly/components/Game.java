@@ -501,31 +501,32 @@ public class Game implements MonopolyEventListener {
     public boolean onEvent(Event event) {
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
+            char key = Character.toLowerCase(keyEvent.getKey());
             if (runtime.popupService().isAnyVisible()) {
                 return consumedEvent;
             }
             if (debtState != null) {
-                if (keyEvent.getKey() == MonopolyApp.SPACE || keyEvent.getKey() == MonopolyApp.ENTER) {
+                if (key == MonopolyApp.SPACE || key == MonopolyApp.ENTER) {
                     retryPendingDebtPayment();
                     return true;
                 }
                 return false;
             }
-            if (endRoundButton.isVisible() && (keyEvent.getKey() == MonopolyApp.SPACE || keyEvent.getKey() == MonopolyApp.ENTER)) {
+            if (endRoundButton.isVisible() && (key == MonopolyApp.SPACE || key == MonopolyApp.ENTER)) {
                 endRound(true);
                 consumedEvent = true;
             }
-            if (MonopolyApp.DEBUG_MODE && keyEvent.getKey() == 'e') {
+            if (MonopolyApp.DEBUG_MODE && key == 'e') {
                 log.debug("Ending round");
                 animations.finishAllAnimations();
                 endRound(true);
                 consumedEvent = true;
             }
-            if (MonopolyApp.DEBUG_MODE && keyEvent.getKey() == 'g') {
+            if (MonopolyApp.DEBUG_MODE && key == 'g') {
                 openDebugGodModeMenu();
                 consumedEvent = true;
             }
-            if (keyEvent.getKey() == 'a') {
+            if (key == 'a') {
                 MonopolyApp.SKIP_ANNIMATIONS = !MonopolyApp.SKIP_ANNIMATIONS;
                 log.debug("Skip animations: {}", MonopolyApp.SKIP_ANNIMATIONS);
                 consumedEvent = true;

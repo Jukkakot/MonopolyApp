@@ -125,7 +125,8 @@ public class CustomPopup extends Popup {
     }
 
     protected boolean onKeyAction(char key) {
-        if (key == 'x') {
+        char normalizedKey = Character.toLowerCase(key);
+        if (normalizedKey == 'x') {
             completeAction(null);
             return true;
         }
