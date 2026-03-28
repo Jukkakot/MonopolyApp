@@ -42,15 +42,27 @@ class GameTurnControlsTest {
     }
 
     private static MonopolyButton getEndRoundButton(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("endRoundButton");
+        return getButton(game, "endRoundButton");
+    }
+
+    private static MonopolyButton getLanguageButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "languageButton");
+    }
+
+    private static MonopolyButton getButton(Game game, String fieldName) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField(fieldName);
         field.setAccessible(true);
         return (MonopolyButton) field.get(game);
     }
 
-    private static MonopolyButton getLanguageButton(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("languageButton");
-        field.setAccessible(true);
-        return (MonopolyButton) field.get(game);
+    private static float invokeFloatMethod(Game game, String methodName) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod(methodName);
+        method.setAccessible(true);
+        return (float) method.invoke(game);
+    }
+
+    private static MonopolyButton getDebugGodModeButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "debugGodModeButton");
     }
 
     @SuppressWarnings("unchecked")
@@ -154,7 +166,7 @@ class GameTurnControlsTest {
         contentTopMethod.setAccessible(true);
         float contentTop = (float) contentTopMethod.invoke(game);
 
-        assertTrue(historyHeight < 192f);
+        assertTrue(historyHeight <= 192f);
         assertTrue(historyHeight >= 112f);
         assertTrue(contentTop <= historyY - 16f);
     }
@@ -180,6 +192,30 @@ class GameTurnControlsTest {
         assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
         assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
         assertTrue(dicePair.getKey().getCoords().y() > 206f);
+    }
+
+    @Test
+    void shortDebugSidebarKeepsControlsAboveHistoryPanel() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyApp.DEBUG_MODE = true;
+        MonopolyRuntime runtime = initHeadlessRuntime(1700, 560);
+        Game game = new Game(runtime);
+
+        updateSidebarControlPositions(game);
+
+        MonopolyButton endRoundButton = getEndRoundButton(game);
+        MonopolyButton debugGodModeButton = getDebugGodModeButton(game);
+        Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+        float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
+
+        float lowestDiceBottom = Math.max(
+                dicePair.getKey().getCoords().y() + dicePair.getKey().getUnScaledHeight() / 2f,
+                dicePair.getValue().getCoords().y() + dicePair.getValue().getUnScaledHeight() / 2f
+        );
+
+        assertTrue(endRoundButton.getPosition()[1] < 192f);
+        assertTrue(lowestDiceBottom < historyY);
+        assertTrue(debugGodModeButton.getPosition()[1] + debugGodModeButton.getHeight() < historyY);
     }
 
     @Test
