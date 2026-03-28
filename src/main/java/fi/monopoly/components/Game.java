@@ -636,7 +636,7 @@ public class Game implements MonopolyEventListener {
         float sidebarLeftX = layoutMetrics.sidebarX() + SIDEBAR_MARGIN;
         float sidebarRightAlignedX = layoutMetrics.sidebarRight() - SIDEBAR_MARGIN;
 
-        endRoundButton.setPosition(sidebarRightAlignedX - endRoundButton.getWidth(), SIDEBAR_PRIMARY_BUTTON_Y);
+        endRoundButton.setPosition(sidebarLeftX, SIDEBAR_PRIMARY_BUTTON_Y);
         retryDebtButton.setPosition(sidebarLeftX, SIDEBAR_PRIMARY_BUTTON_Y);
         declareBankruptcyButton.setPosition(sidebarRightAlignedX - declareBankruptcyButton.getWidth(), SIDEBAR_PRIMARY_BUTTON_Y);
         debugAddCashButton.setPosition(sidebarLeftX, SIDEBAR_DEBUG_BUTTON_ROW_1_Y);

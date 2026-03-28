@@ -233,14 +233,13 @@ public class Players {
      */
     private Coordinates drawPlayerButtons(Coordinates startCoords) {
         MonopolyApp p = runtime.app();
-        p.push();
-        translate(baseCoords);
-        translate(startCoords);
         selectedPlayer = selectedPlayer != null ? selectedPlayer : getTurn();
 
         p.fill(46, 72, 63);
         p.textFont(runtime.font20());
-        p.text(text("sidebar.section.players"), MARGIN, SECTION_TITLE_BASELINE);
+        float titleX = baseCoords.x() + startCoords.x() + MARGIN;
+        float titleY = baseCoords.y() + startCoords.y() + SECTION_TITLE_BASELINE;
+        p.text(text("sidebar.section.players"), titleX, titleY);
 
         Coordinates playerListOrigin = baseCoords.move(startCoords).move(MARGIN + PLAYER_LIST_ICON_OFFSET, PLAYER_LIST_START_Y);
         for (int index = 0; index < playerList.size(); index++) {
@@ -250,7 +249,6 @@ public class Players {
             Coordinates absoluteCoords = playerListOrigin.move(column * PLAYER_LIST_COLUMN_WIDTH, row * PLAYER_ROW_HEIGHT);
             drawPlayerIcon(player, absoluteCoords);
         }
-        p.pop();
         int columnCount = Math.max(1, (int) Math.ceil(playerList.size() / (double) PLAYER_LIST_ROWS_PER_COLUMN));
         return new Coordinates(startCoords.x() + columnCount * PLAYER_LIST_COLUMN_WIDTH, startCoords.y() + PLAYER_LIST_START_Y + PLAYER_LIST_ROWS_PER_COLUMN * PLAYER_ROW_HEIGHT + SECTION_GAP);
     }
@@ -310,7 +308,6 @@ public class Players {
                 button.getPosition()[1] + button.getHeight() / 2f + PLAYER_LIST_VISUAL_CENTER_OFFSET_Y
         );
         if (player.equals(selectedPlayer) || player.equals(getTurn()) || player.isInJail()) {
-            p.pop();
             if (player.isInJail()) {
                 drawCircle(buttonCenter, 255, 0, 0, true);
             }
@@ -320,10 +317,8 @@ public class Players {
             if (player.equals(getTurn())) {
                 drawCircle(buttonCenter, TURN_HIGHLIGHT_COLOR[0], TURN_HIGHLIGHT_COLOR[1], TURN_HIGHLIGHT_COLOR[2], false);
             }
-            p.push();
         }
 
-        p.pop();
         p.fill(0);
         p.textFont(runtime.font20());
         float textX = absoluteCoords.x() + PLAYER_LIST_BUTTON_DIAMETER / 2f + MARGIN;
@@ -338,7 +333,6 @@ public class Players {
             p.textFont(runtime.font20());
         }
         p.noFill();
-        p.push();
     }
 
     private void drawCircle(Coordinates absoluteCoords, int red, int green, int blue, boolean jailCircle) {

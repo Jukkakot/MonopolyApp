@@ -54,6 +54,16 @@ class PopupLayoutTest {
         assertEquals(220, popup.getPopupHeight());
         assertEquals(180f, popup.getPopupCenter().x(), 0.0001f);
         assertEquals(130f, popup.getPopupCenter().y(), 0.0001f);
+        assertTrue(popup.getTextAreaHeight() > 0);
+        assertTrue(popup.getPopupTop() + Popup.TEXT_TOP_OFFSET + popup.getTextAreaHeight() <= popup.getButtonAreaTop());
+    }
+
+    @Test
+    void popupCentersToBoardAreaWhenSidebarIsVisible() {
+        Popup popup = new OkPopup(initHeadlessRuntime(1700, 996));
+
+        assertEquals(498f, popup.getPopupCenter().x(), 0.0001f);
+        assertEquals(500, popup.getPopupWidth());
     }
 
     @Test

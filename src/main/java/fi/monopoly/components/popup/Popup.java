@@ -5,6 +5,7 @@ import controlP5.Canvas;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.utils.Coordinates;
+import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -13,7 +14,11 @@ import processing.core.PGraphics;
 import processing.event.Event;
 import processing.event.KeyEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static processing.core.PConstants.CENTER;
+import static processing.core.PConstants.TOP;
 
 @Slf4j
 public abstract class Popup extends Canvas implements MonopolyEventListener {
@@ -23,7 +28,9 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     protected static final int MIN_POPUP_HEIGHT = 220;
     protected static final int WINDOW_MARGIN = 32;
     protected static final int TEXT_TOP_OFFSET = 24;
-    protected static final int TEXT_HEIGHT = 140;
+    protected static final int TEXT_SIDE_PADDING = 20;
+    protected static final int TEXT_BOTTOM_PADDING = 16;
+    protected static final int TEXT_LINE_HEIGHT = 24;
     protected static final int BUTTON_AREA_TOP_PADDING = 90;
     protected static final int BUTTON_AREA_BOTTOM_PADDING = 30;
     protected final MonopolyRuntime runtime;
@@ -64,25 +71,67 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         if (!isVisible) {
             return;
         }
-        Coordinates coords = getPopupCenter();
         float width = getPopupWidth();
         float height = getPopupHeight();
-        p.push();
-
-        p.translate(coords.x(), coords.y());
+        float left = getPopupLeft();
+        float top = getPopupTop();
+        float centerX = getPopupCenter().x();
+        float centerY = getPopupCenter().y();
+        p.pushMatrix();
+        p.pushStyle();
+        p.resetMatrix();
 
         p.fill(p.color(255, 217, 127));
         p.rectMode(CENTER);
         p.stroke(0);
         p.strokeWeight(10);
-        p.rect(0, 0, width, height, 30);
+        p.rect(centerX, centerY, width, height, 30);
 
         p.fill(0);
         p.textFont(runtime.font20());
-        p.textAlign(CENTER);
-        p.text(popupText, -width / 2f + 20, -height / 2f + TEXT_TOP_OFFSET, width - 40, TEXT_HEIGHT);
+        p.textAlign(CENTER, TOP);
+        p.textLeading(TEXT_LINE_HEIGHT);
+        drawPopupText(p, centerX, top + TEXT_TOP_OFFSET, width - TEXT_SIDE_PADDING * 2f);
 
-        p.pop();
+        p.popStyle();
+        p.popMatrix();
+    }
+
+    private void drawPopupText(PGraphics p, float centerX, float startY, float maxWidth) {
+        List<String> lines = wrapPopupText(p, popupText, maxWidth);
+        for (int i = 0; i < lines.size(); i++) {
+            float y = startY + i * TEXT_LINE_HEIGHT;
+            if (y + TEXT_LINE_HEIGHT > getPopupTop() + TEXT_TOP_OFFSET + getTextAreaHeight()) {
+                break;
+            }
+            p.text(lines.get(i), centerX, y);
+        }
+    }
+
+    private List<String> wrapPopupText(PGraphics p, String text, float maxWidth) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return lines;
+        }
+        for (String paragraph : text.split("\\R", -1)) {
+            if (paragraph.isBlank()) {
+                lines.add("");
+                continue;
+            }
+            String[] words = paragraph.trim().split("\\s+");
+            String currentLine = words[0];
+            for (int i = 1; i < words.length; i++) {
+                String candidate = currentLine + " " + words[i];
+                if (p.textWidth(candidate) <= maxWidth) {
+                    currentLine = candidate;
+                } else {
+                    lines.add(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.add(currentLine);
+        }
+        return lines;
     }
 
     public void setPopupText(String text) {
@@ -98,11 +147,13 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected Coordinates getPopupCenter() {
-        return Coordinates.of(runtime.app().width / 2f, runtime.app().height / 2f);
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        return Coordinates.of(layoutMetrics.boardWidth() / 2f, runtime.app().height / 2f);
     }
 
     protected int getPopupWidth() {
-        int availableWidth = runtime.app().width - WINDOW_MARGIN * 2;
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        int availableWidth = Math.round(layoutMetrics.boardWidth()) - WINDOW_MARGIN * 2;
         return Math.max(MIN_POPUP_WIDTH, Math.min(DEFAULT_POPUP_WIDTH, availableWidth));
     }
 
@@ -125,6 +176,13 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
 
     protected float getPopupBottom() {
         return getPopupTop() + getPopupHeight();
+    }
+
+    protected float getTextAreaHeight() {
+        return Math.max(
+                0,
+                getButtonAreaTop() - getPopupTop() - TEXT_TOP_OFFSET - TEXT_BOTTOM_PADDING
+        );
     }
 
     protected float getButtonAreaTop() {

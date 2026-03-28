@@ -174,11 +174,27 @@ class GameTurnControlsTest {
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
 
-        assertEquals(metrics.sidebarRight() - 16 - endRoundButton.getWidth(), endRoundButton.getPosition()[0], 0.0001f);
+        assertEquals(metrics.sidebarX() + 16, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(metrics.sidebarX() + 16, languageButton.getPosition()[0], 0.0001f);
         assertEquals(runtime.app().height - 48, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
         assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
         assertTrue(dicePair.getKey().getCoords().y() > 206f);
+    }
+
+    @Test
+    void endTurnButtonStaysLeftOfDiceDisplayArea() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+
+        updateSidebarControlPositions(game);
+
+        MonopolyButton endRoundButton = getEndRoundButton(game);
+        Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+        float firstDiceLeft = dicePair.getKey().getCoords().x() - dicePair.getKey().getUnScaledWidth() / 2f;
+
+        assertTrue(endRoundButton.getPosition()[0] + endRoundButton.getWidth() < firstDiceLeft,
+                "End turn button should not overlap the dice display area");
     }
 }
