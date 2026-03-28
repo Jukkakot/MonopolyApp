@@ -32,15 +32,20 @@ import static processing.event.KeyEvent.PRESS;
  */
 class GameSmokeTest {
     private static final int STANDARD_ROLL_TARGET = 100;
+    private static final int RESIZE_SMOKE_ROLL_TARGET = 40;
     private static final int MAX_STAGNANT_STEPS = 250;
     private static final int MIN_TURN_SWITCHES = 15;
     private static final int MIN_UNIQUE_SPOTS = 12;
     private Level previousMonopolyLogLevel;
 
     private static void runAutoConfirmedRollSmokeTest(int targetRollCount) {
+        runAutoConfirmedRollSmokeTest(targetRollCount, 1700, 996, false);
+    }
+
+    private static void runAutoConfirmedRollSmokeTest(int targetRollCount, int width, int height, boolean verifyResponsiveUi) {
         resetNextPlayerId();
         MonopolyApp.SKIP_ANNIMATIONS = true;
-        MonopolyRuntime runtime = initHeadlessRuntime();
+        MonopolyRuntime runtime = initHeadlessRuntime(width, height);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
@@ -61,6 +66,9 @@ class GameSmokeTest {
         while (rollCount < targetRollCount) {
             runtime.eventBus().flushPendingChanges();
             invokePrimaryControlInvariant(game);
+            if (verifyResponsiveUi) {
+                assertResponsiveUiState(game, runtime);
+            }
 
             if (Game.animations.isRunning()) {
                 Game.animations.finishAllAnimations();
@@ -86,6 +94,9 @@ class GameSmokeTest {
 
             runtime.eventBus().flushPendingChanges();
             invokePrimaryControlInvariant(game);
+            if (verifyResponsiveUi) {
+                assertResponsiveUiState(game, runtime);
+            }
             assertCoreInvariants(game, initialPlayerCount);
 
             String currentTurnName = currentTurnName();
@@ -113,7 +124,7 @@ class GameSmokeTest {
         }
 
         // Finish any last popup/animation chain before asserting the end state.
-        settlePendingGameFlow(runtime, game);
+        settlePendingGameFlow(runtime, game, verifyResponsiveUi);
         assertCoreInvariants(game, initialPlayerCount);
 
         assertTrue(rollCount >= targetRollCount, "Game did not complete the expected number of rolls");
@@ -130,11 +141,14 @@ class GameSmokeTest {
         System.out.println(buildPlayerSummary());
     }
 
-    private static void settlePendingGameFlow(MonopolyRuntime runtime, Game game) {
+    private static void settlePendingGameFlow(MonopolyRuntime runtime, Game game, boolean verifyResponsiveUi) {
         // Drain any popup/animation tail so the test does not stop mid-turn.
         for (int step = 0; step < 500; step++) {
             runtime.eventBus().flushPendingChanges();
             invokePrimaryControlInvariant(game);
+            if (verifyResponsiveUi) {
+                assertResponsiveUiState(game, runtime);
+            }
             if (Game.animations.isRunning()) {
                 Game.animations.finishAllAnimations();
                 continue;
@@ -153,6 +167,27 @@ class GameSmokeTest {
                 continue;
             }
             return;
+        }
+    }
+
+    private static void assertResponsiveUiState(Game game, MonopolyRuntime runtime) {
+        invokeNoArgMethod(game, "updateSidebarControlPositions");
+
+        MonopolyButton endRoundButton = getEndRoundButton(game);
+        assertTrue(endRoundButton.getPosition()[0] + endRoundButton.getWidth() <= runtime.app().width,
+                "End turn button should stay inside the window");
+
+        MonopolyButton languageButton = getButton(game, "languageButton");
+        assertTrue(languageButton.getPosition()[0] >= 0, "Language button should stay inside the window");
+        assertTrue(languageButton.getPosition()[1] + languageButton.getHeight() <= runtime.app().height,
+                "Language button should stay above the bottom edge");
+
+        fi.monopoly.components.popup.Popup activePopup = getActivePopup(runtime);
+        if (activePopup != null) {
+            int popupWidth = (int) invokeNoArgMethod(activePopup, fi.monopoly.components.popup.Popup.class, "getPopupWidth");
+            int popupHeight = (int) invokeNoArgMethod(activePopup, fi.monopoly.components.popup.Popup.class, "getPopupHeight");
+            assertTrue(popupWidth <= runtime.app().width - 64, "Popup width should fit the current window");
+            assertTrue(popupHeight <= runtime.app().height - 64, "Popup height should fit the current window");
         }
     }
 
@@ -202,8 +237,12 @@ class GameSmokeTest {
     }
 
     private static MonopolyButton getEndRoundButton(Game game) {
+        return getButton(game, "endRoundButton");
+    }
+
+    private static MonopolyButton getButton(Game game, String fieldName) {
         try {
-            Field field = Game.class.getDeclaredField("endRoundButton");
+            Field field = Game.class.getDeclaredField(fieldName);
             field.setAccessible(true);
             return (MonopolyButton) field.get(game);
         } catch (ReflectiveOperationException e) {
@@ -212,9 +251,13 @@ class GameSmokeTest {
     }
 
     private static MonopolyRuntime initHeadlessRuntime() {
+        return initHeadlessRuntime(1700, 996);
+    }
+
+    private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
         MonopolyApp app = new MonopolyApp();
-        app.width = 1700;
-        app.height = 996;
+        app.width = width;
+        app.height = height;
 
         // ControlP5 needs a live Processing graphics context even in tests.
         PGraphicsJava2D graphics = new PGraphicsJava2D();
@@ -279,6 +322,26 @@ class GameSmokeTest {
             Method method = Game.class.getDeclaredMethod(methodName);
             method.setAccessible(true);
             method.invoke(game);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Object invokeNoArgMethod(Object target, Class<?> declaringClass, String methodName) {
+        try {
+            Method method = declaringClass.getDeclaredMethod(methodName);
+            method.setAccessible(true);
+            return method.invoke(target);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static fi.monopoly.components.popup.Popup getActivePopup(MonopolyRuntime runtime) {
+        try {
+            Field field = runtime.popupService().getClass().getDeclaredField("activePopup");
+            field.setAccessible(true);
+            return (fi.monopoly.components.popup.Popup) field.get(runtime.popupService());
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -359,6 +422,18 @@ class GameSmokeTest {
     @Timeout(5)
     void gameCanPlayHundredAutoConfirmedRollsWithoutGettingStuck() {
         runAutoConfirmedRollSmokeTest(STANDARD_ROLL_TARGET);
+    }
+
+    @Test
+    @Timeout(5)
+    void gameCanRenderAndProgressInNarrowWindowLayout() {
+        runAutoConfirmedRollSmokeTest(RESIZE_SMOKE_ROLL_TARGET, 1200, 996, true);
+    }
+
+    @Test
+    @Timeout(5)
+    void gameCanRenderAndProgressInShortWindowLayout() {
+        runAutoConfirmedRollSmokeTest(RESIZE_SMOKE_ROLL_TARGET, 1700, 560, true);
     }
 
     @Test
