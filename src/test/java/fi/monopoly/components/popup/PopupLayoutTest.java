@@ -82,6 +82,28 @@ class PopupLayoutTest {
     }
 
     @Test
+    void visibleChoicePopupRelayoutsButtonsAfterWindowResize() throws ReflectiveOperationException {
+        MonopolyRuntime runtime = initHeadlessRuntime(1700, 996);
+        ChoicePopup popup = new ChoicePopup(runtime);
+        popup.setPopupText("Question");
+        popup.show();
+
+        MonopolyButton acceptButton = getButton(popup, "acceptButton");
+        float originalX = acceptButton.getPosition()[0];
+        float originalY = acceptButton.getPosition()[1];
+
+        runtime.app().width = 800;
+        runtime.app().height = 700;
+        popup.refreshControlLayout();
+
+        assertTrue(acceptButton.getPosition()[0] != originalX || acceptButton.getPosition()[1] != originalY);
+        assertTrue(acceptButton.getPosition()[0] >= popup.getPopupLeft());
+        assertTrue(acceptButton.getPosition()[0] + acceptButton.getWidth() <= popup.getPopupRight());
+        assertTrue(acceptButton.getPosition()[1] >= popup.getButtonAreaTop());
+        assertTrue(acceptButton.getPosition()[1] + acceptButton.getHeight() <= popup.getPopupBottom());
+    }
+
+    @Test
     void customPopupUsesNarrowerButtonGridOnSmallWindow() throws ReflectiveOperationException {
         CustomPopup popup = new CustomPopup(initHeadlessRuntime(360, 320));
         popup.setPopupText("Pick one");

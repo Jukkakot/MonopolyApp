@@ -119,6 +119,11 @@ public class CustomPopup extends Popup {
         totalButtonCount = 0;
     }
 
+    @Override
+    protected void refreshControlLayout() {
+        layoutButtons();
+    }
+
     protected boolean onKeyAction(char key) {
         if (key == 'x') {
             completeAction(null);

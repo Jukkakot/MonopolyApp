@@ -1,13 +1,9 @@
 BACKLOG
 
 RESIZABLE WINDOW STABILIZATION
-[High] Enable Processing window resizing behind a guarded app setting and keep the current fixed board size
-[High] Clamp minimum window size so the fixed board and essential sidebar controls always fit on screen
-[High] Audit all ControlP5 buttons and popups so their positions refresh from current window metrics every frame
 [High] Handle no-sidebar / narrow-width fallback so board interactions remain usable when the sidebar cannot fit fully
 [Medium] Reflow sidebar sections for shorter heights so headers, dice, debt actions, and history do not overlap
 [Medium] Add smoke/layout tests for resized small, default, and tall-window scenarios
-[Low] Add a debug overlay or log line for active layout metrics during resize testing
 
 MONOPOLY RULES
 [High] Add starting order by dice roll

@@ -71,6 +71,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         if (!isVisible) {
             return;
         }
+        refreshControlLayout();
         float width = getPopupWidth();
         float height = getPopupHeight();
         float left = getPopupLeft();
@@ -144,6 +145,9 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
 
     protected boolean onKeyAction(char key) {
         return false;
+    }
+
+    protected void refreshControlLayout() {
     }
 
     protected Coordinates getPopupCenter() {

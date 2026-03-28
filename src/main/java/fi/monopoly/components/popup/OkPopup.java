@@ -58,6 +58,11 @@ public class OkPopup extends Popup {
         return super.onKeyAction(key);
     }
 
+    @Override
+    protected void refreshControlLayout() {
+        layoutButtons();
+    }
+
     private void layoutButtons() {
         float buttonX = getPopupCenter().x() - okButton.getWidth() / 2f;
         float buttonY = getButtonAreaTop() + Math.max(0, (getButtonAreaHeight() - okButton.getHeight()) / 2f);

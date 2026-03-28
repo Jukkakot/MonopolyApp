@@ -74,6 +74,11 @@ public class ChoicePopup extends Popup {
         return super.onKeyAction(key);
     }
 
+    @Override
+    protected void refreshControlLayout() {
+        layoutButtons();
+    }
+
     private void layoutButtons() {
         float centerX = getPopupCenter().x();
         float buttonY = getButtonAreaTop() + Math.max(0, (getButtonAreaHeight() - acceptButton.getHeight()) / 2f);
