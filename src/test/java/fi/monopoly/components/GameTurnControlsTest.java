@@ -183,6 +183,26 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void narrowWindowMovesPrimaryControlsIntoBoardOverlay() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime(800, 700);
+        Game game = new Game(runtime);
+
+        updateSidebarControlPositions(game);
+
+        MonopolyButton endRoundButton = getEndRoundButton(game);
+        MonopolyButton languageButton = getLanguageButton(game);
+        Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+
+        assertEquals(16f, endRoundButton.getPosition()[0], 0.0001f);
+        assertEquals(16f, endRoundButton.getPosition()[1], 0.0001f);
+        assertTrue(languageButton.getPosition()[0] + languageButton.getWidth() <= runtime.app().width);
+        assertEquals(runtime.app().height - 48, languageButton.getPosition()[1], 0.0001f);
+        assertTrue(dicePair.getKey().getCoords().x() <= runtime.app().width);
+        assertTrue(dicePair.getValue().getCoords().x() <= runtime.app().width);
+    }
+
+    @Test
     void endTurnButtonStaysLeftOfDiceDisplayArea() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();

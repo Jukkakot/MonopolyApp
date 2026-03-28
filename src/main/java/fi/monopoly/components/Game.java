@@ -65,6 +65,11 @@ public class Game implements MonopolyEventListener {
     private static final int DEBT_SECTION_TITLE_Y = 240;
     private static final int DEBT_TEXT_Y = 272;
     private static final int SIDEBAR_LINE_HEIGHT = 24;
+    private static final int OVERLAY_MARGIN = 16;
+    private static final int OVERLAY_PRIMARY_BUTTON_Y = 16;
+    private static final int OVERLAY_SECONDARY_ROW_1_Y = 68;
+    private static final int OVERLAY_SECONDARY_ROW_2_Y = 112;
+    private static final int OVERLAY_SECONDARY_ROW_3_Y = 156;
     private static Game current;
     public static Dices DICES;
     public static Players players;
@@ -183,6 +188,8 @@ public class Game implements MonopolyEventListener {
     }
 
     public void draw() {
+        LayoutMetrics layoutMetrics = getLayoutMetrics();
+        boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
         if (MonopolyApp.SKIP_ANNIMATIONS) {
             animations.finishAllAnimations();
         }
@@ -191,17 +198,25 @@ public class Game implements MonopolyEventListener {
         }
         updateSidebarControlPositions();
         board.draw(null);
-        drawSidebarPanel();
+        if (hasSidebarSpace) {
+            drawSidebarPanel();
+        }
         if (!isDebtSidebarMode()) {
             DICES.draw(null);
         }
-        if (isDebtSidebarMode()) {
+        if (hasSidebarSpace && isDebtSidebarMode()) {
             players.focusPlayer(debtState.paymentRequest().debtor());
         }
-        players.draw(getSidebarContentTop(), !isDebtSidebarMode(), !isDebtSidebarMode());
+        if (hasSidebarSpace) {
+            players.draw(getSidebarContentTop(), !isDebtSidebarMode(), !isDebtSidebarMode());
+        } else {
+            players.drawTokens();
+        }
         updateDebugButtons();
         enforcePrimaryTurnControlInvariant();
-        drawDebtState();
+        if (hasSidebarSpace) {
+            drawDebtState();
+        }
     }
 
     /**
@@ -630,6 +645,8 @@ public class Game implements MonopolyEventListener {
     private void updateSidebarControlPositions() {
         LayoutMetrics layoutMetrics = getLayoutMetrics();
         if (!layoutMetrics.hasSidebarSpace()) {
+            layoutOverlayControls(layoutMetrics);
+            DICES.updateLayout(layoutMetrics);
             return;
         }
 
@@ -646,6 +663,24 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setPosition(sidebarLeftX, SIDEBAR_DEBUG_BUTTON_ROW_3_Y);
         languageButton.setPosition(sidebarLeftX, runtime.app().height - 48);
         DICES.updateLayout(layoutMetrics);
+    }
+
+    private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
+        float leftX = OVERLAY_MARGIN;
+        float rightX = layoutMetrics.boardWidth() - OVERLAY_MARGIN;
+
+        endRoundButton.setPosition(leftX, OVERLAY_PRIMARY_BUTTON_Y);
+        retryDebtButton.setPosition(leftX, OVERLAY_PRIMARY_BUTTON_Y);
+        declareBankruptcyButton.setPosition(rightX - declareBankruptcyButton.getWidth(), OVERLAY_PRIMARY_BUTTON_Y);
+        debugAddCashButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_1_Y);
+        debugDebtScenarioButton.setPosition(rightX - debugDebtScenarioButton.getWidth(), OVERLAY_SECONDARY_ROW_1_Y);
+        debugSendToJailButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_2_Y);
+        debugResetTurnButton.setPosition(rightX - debugResetTurnButton.getWidth(), OVERLAY_SECONDARY_ROW_2_Y);
+        debugGodModeButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_3_Y);
+        languageButton.setPosition(
+                Math.max(leftX, rightX - languageButton.getWidth()),
+                runtime.app().height - 48
+        );
     }
 
     private float getSidebarHistoryHeight() {

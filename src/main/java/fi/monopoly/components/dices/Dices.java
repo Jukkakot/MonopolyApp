@@ -28,6 +28,10 @@ public class Dices implements MonopolyEventListener {
     private static final int SIDEBAR_BUTTON_HEIGHT = 44;
     private static final int SIDEBAR_BUTTON_CENTER_Y = SIDEBAR_BUTTON_Y + SIDEBAR_BUTTON_HEIGHT / 2;
     private static final int STACKED_DICE_CENTER_Y = SIDEBAR_BUTTON_CENTER_Y + 56;
+    private static final int OVERLAY_BUTTON_X = 16;
+    private static final int OVERLAY_BUTTON_Y = 16;
+    private static final int OVERLAY_BUTTON_CENTER_Y = OVERLAY_BUTTON_Y + SIDEBAR_BUTTON_HEIGHT / 2;
+    private static final int OVERLAY_STACKED_DICE_CENTER_Y = OVERLAY_BUTTON_CENTER_Y + 56;
     private final MonopolyRuntime runtime;
     private final Pair<Dice, Dice> dices;
     private final MonopolyButton rollDiceButton;
@@ -87,6 +91,7 @@ public class Dices implements MonopolyEventListener {
 
     public void updateLayout(LayoutMetrics layoutMetrics) {
         if (!layoutMetrics.hasSidebarSpace()) {
+            layoutOverlayControls(layoutMetrics);
             return;
         }
         float buttonX = layoutMetrics.sidebarX() + 20;
@@ -104,6 +109,24 @@ public class Dices implements MonopolyEventListener {
         float stackedFirstCenterX = buttonX + diceSide / 2f;
         float stackedSecondCenterX = stackedFirstCenterX + diceSide + DICE_GAP;
         setDicePositions(stackedFirstCenterX, STACKED_DICE_CENTER_Y, stackedSecondCenterX, STACKED_DICE_CENTER_Y);
+    }
+
+    private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
+        float buttonX = OVERLAY_BUTTON_X;
+        rollDiceButton.setPosition(buttonX, OVERLAY_BUTTON_Y);
+
+        float diceSide = dices.getKey().getUnScaledWidth();
+        float inlineFirstCenterX = buttonX + rollDiceButton.getWidth() + 12 + diceSide / 2f;
+        float inlineSecondCenterX = inlineFirstCenterX + diceSide + DICE_GAP;
+        float maxInlineRight = layoutMetrics.boardWidth() - SIDEBAR_MARGIN;
+        if (inlineSecondCenterX + diceSide / 2f <= maxInlineRight) {
+            setDicePositions(inlineFirstCenterX, OVERLAY_BUTTON_CENTER_Y, inlineSecondCenterX, OVERLAY_BUTTON_CENTER_Y);
+            return;
+        }
+
+        float stackedFirstCenterX = buttonX + diceSide / 2f;
+        float stackedSecondCenterX = stackedFirstCenterX + diceSide + DICE_GAP;
+        setDicePositions(stackedFirstCenterX, OVERLAY_STACKED_DICE_CENTER_Y, stackedSecondCenterX, OVERLAY_STACKED_DICE_CENTER_Y);
     }
 
     public void rollDice() {

@@ -1,7 +1,6 @@
 BACKLOG
 
 RESIZABLE WINDOW STABILIZATION
-[High] Handle no-sidebar / narrow-width fallback so board interactions remain usable when the sidebar cannot fit fully
 [Medium] Reflow sidebar sections for shorter heights so headers, dice, debt actions, and history do not overlap
 [Medium] Add smoke/layout tests for resized small, default, and tall-window scenarios
 
