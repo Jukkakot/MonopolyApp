@@ -15,6 +15,8 @@ public record LayoutMetrics(
         float sidebarWidth
 ) {
     private static final float DEFAULT_BOARD_WIDTH = Spot.SPOT_W * 12;
+    private static final int MIN_FIXED_LAYOUT_WINDOW_WIDTH = MonopolyApp.DEFAULT_WINDOW_WIDTH;
+    private static final int MIN_FIXED_LAYOUT_WINDOW_HEIGHT = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
 
     public static LayoutMetrics fromWindow(float windowWidth, float windowHeight) {
         float resolvedWindowWidth = Math.max(0, windowWidth);
@@ -33,6 +35,14 @@ public record LayoutMetrics(
 
     public static LayoutMetrics defaultWindow() {
         return fromWindow(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
+    }
+
+    public static int minimumFixedLayoutWindowWidth() {
+        return MIN_FIXED_LAYOUT_WINDOW_WIDTH;
+    }
+
+    public static int minimumFixedLayoutWindowHeight() {
+        return MIN_FIXED_LAYOUT_WINDOW_HEIGHT;
     }
 
     public float sidebarRight() {

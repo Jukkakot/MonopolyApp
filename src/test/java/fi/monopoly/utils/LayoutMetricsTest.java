@@ -22,6 +22,12 @@ class LayoutMetricsTest {
     }
 
     @Test
+    void fixedLayoutMinimumWindowMatchesCurrentSafeBaseline() {
+        assertEquals(MonopolyApp.DEFAULT_WINDOW_WIDTH, LayoutMetrics.minimumFixedLayoutWindowWidth());
+        assertEquals(MonopolyApp.DEFAULT_WINDOW_HEIGHT, LayoutMetrics.minimumFixedLayoutWindowHeight());
+    }
+
+    @Test
     void narrowWindowClampsSidebarToRemainingSpace() {
         LayoutMetrics metrics = LayoutMetrics.fromWindow(1200, 800);
 

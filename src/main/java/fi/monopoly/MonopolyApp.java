@@ -5,11 +5,14 @@ import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.types.SpotType;
+import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
 import javafx.scene.paint.Color;
+import processing.awt.PSurfaceAWT;
 import processing.core.PFont;
 import processing.core.PImage;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -86,13 +89,27 @@ public class MonopolyApp extends MonopolyEventObserver {
     public void setup() {
         initImages();
         p5 = new ControlP5(this);
-        surface.setResizable(WINDOW_RESIZE_ENABLED);
+        configureWindowSizing();
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
         font30 = createFont("Monopoly Regular.ttf", 30);
         MonopolyRuntime.initialize(this, p5, font10, font20, font30);
         textFont(font10);
         game = new Game(MonopolyRuntime.get());
+    }
+
+    private void configureWindowSizing() {
+        surface.setResizable(WINDOW_RESIZE_ENABLED);
+        if (!WINDOW_RESIZE_ENABLED) {
+            return;
+        }
+        Object nativeSurface = surface.getNative();
+        if (nativeSurface instanceof PSurfaceAWT.SmoothCanvas smoothCanvas && smoothCanvas.getFrame() != null) {
+            smoothCanvas.getFrame().setMinimumSize(new Dimension(
+                    LayoutMetrics.minimumFixedLayoutWindowWidth(),
+                    LayoutMetrics.minimumFixedLayoutWindowHeight()
+            ));
+        }
     }
 
     public void draw() {
