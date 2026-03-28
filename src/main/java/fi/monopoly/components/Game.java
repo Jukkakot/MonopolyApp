@@ -644,6 +644,7 @@ public class Game implements MonopolyEventListener {
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
         float debugRow2Y = layoutMetrics.sidebarDebugButtonRow2Y();
         float debugRow3Y = layoutMetrics.sidebarDebugButtonRow3Y();
+        float languageButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
 
         endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
         retryDebtButton.setPosition(sidebarLeftX, primaryButtonY);
@@ -653,7 +654,7 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.setPosition(sidebarLeftX, debugRow2Y);
         debugResetTurnButton.setPosition(sidebarRightAlignedX - debugResetTurnButton.getWidth(), debugRow2Y);
         debugGodModeButton.setPosition(sidebarLeftX, debugRow3Y);
-        languageButton.setPosition(sidebarLeftX, runtime.app().height - 48);
+        languageButton.setPosition(sidebarLeftX, languageButtonY);
         DICES.updateLayout(layoutMetrics);
     }
 
@@ -671,7 +672,7 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_3_Y);
         languageButton.setPosition(
                 Math.max(leftX, rightX - languageButton.getWidth()),
-                runtime.app().height - 48
+                OVERLAY_SECONDARY_ROW_3_Y
         );
     }
 

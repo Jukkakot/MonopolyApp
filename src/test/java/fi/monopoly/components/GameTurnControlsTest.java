@@ -90,6 +90,12 @@ class GameTurnControlsTest {
         method.invoke(game);
     }
 
+    private static void updateDebugButtons(Game game) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod("updateDebugButtons");
+        method.setAccessible(true);
+        method.invoke(game);
+    }
+
     private static void dispatchKey(MonopolyRuntime runtime, char key) {
         runtime.eventBus().sendConsumableEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
@@ -185,10 +191,12 @@ class GameTurnControlsTest {
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+        float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
+        float historyHeight = invokeFloatMethod(game, "getSidebarHistoryHeight");
 
         assertEquals(metrics.sidebarX() + 16, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(metrics.sidebarX() + 16, languageButton.getPosition()[0], 0.0001f);
-        assertEquals(runtime.app().height - 48, languageButton.getPosition()[1], 0.0001f);
+        assertEquals(historyY + historyHeight + 12, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
         assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
         assertTrue(dicePair.getKey().getCoords().y() > 206f);
@@ -233,7 +241,7 @@ class GameTurnControlsTest {
         assertEquals(16f, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(16f, endRoundButton.getPosition()[1], 0.0001f);
         assertTrue(languageButton.getPosition()[0] + languageButton.getWidth() <= runtime.app().width);
-        assertEquals(runtime.app().height - 48, languageButton.getPosition()[1], 0.0001f);
+        assertEquals(156f, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() <= runtime.app().width);
         assertTrue(dicePair.getValue().getCoords().x() <= runtime.app().width);
     }

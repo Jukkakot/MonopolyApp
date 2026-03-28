@@ -1,8 +1,5 @@
 BACKLOG
 
-RESIZABLE WINDOW STABILIZATION
-[Medium] Add smoke/layout tests for resized small, default, and tall-window scenarios
-
 MONOPOLY RULES
 [High] Add starting order by dice roll
 [High] Add property auction when player declines to buy
@@ -19,8 +16,3 @@ GAME FLOW
 [Medium] Add player setup screen for names, player count, and colors
 
 UI AND UX
-[Medium] Show monopoly, mortgage, and building status more clearly on deeds
-[Medium] Show houses and hotels more clearly on board and owned properties
-[Medium] Make visible deed card count adapt to available width before showing pager arrows
-[Medium] Rework board token visuals so player colors stay distinct on the board
-[Low] Improve token visibility when multiple players share a spot

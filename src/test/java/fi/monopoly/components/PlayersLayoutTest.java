@@ -39,7 +39,7 @@ class PlayersLayoutTest {
     void defaultSidebarKeepsFullDeedPageAndRegularSummaryHeight() throws ReflectiveOperationException {
         Players players = new Players(initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT));
 
-        assertEquals(5, invoke(players, "getDeedsPerRow"));
+        assertEquals(6, invoke(players, "getDeedsPerRow"));
         assertFalse((boolean) invoke(players, "useCompactSummaryLayout"));
         assertEquals(160, invoke(players, "getTextInfoHeight"));
     }
@@ -54,5 +54,14 @@ class PlayersLayoutTest {
         assertTrue(deedsPerRow >= 1);
         assertTrue((boolean) invoke(players, "useCompactSummaryLayout"));
         assertEquals(192, invoke(players, "getTextInfoHeight"));
+    }
+
+    @Test
+    void widerSidebarShowsMoreThanDefaultFiveDeedsBeforePaging() throws ReflectiveOperationException {
+        Players players = new Players(initHeadlessRuntime(1900, MonopolyApp.DEFAULT_WINDOW_HEIGHT));
+
+        int deedsPerRow = (int) invoke(players, "getDeedsPerRow");
+
+        assertTrue(deedsPerRow > 6);
     }
 }

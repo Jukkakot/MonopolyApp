@@ -23,7 +23,6 @@ public class Players {
     private static final int PLAYER_LIST_BUTTON_DIAMETER = 42;
     private static final int PLAYER_ROW_HEIGHT = 64;
     private static final int PLAYER_LIST_ICON_OFFSET = 24;
-    private static final int DEFAULT_DEEDS_PER_ROW = 5;
     private final static int MARGIN = 16;
     private static final int SECTION_GAP = 16;
     private static final int SECTION_TITLE_BASELINE = 24;
@@ -407,11 +406,11 @@ public class Players {
 
     private int getDeedsPerRow() {
         if (runtime == null) {
-            return DEFAULT_DEEDS_PER_ROW;
+            return 1;
         }
         float availableWidth = getSidebarContentWidth();
         int deedsPerRow = (int) Math.floor((availableWidth + MARGIN) / (Spot.SPOT_W + MARGIN));
-        return Math.max(1, Math.min(DEFAULT_DEEDS_PER_ROW, deedsPerRow));
+        return Math.max(1, deedsPerRow);
     }
 
     private float getSidebarWidth() {
