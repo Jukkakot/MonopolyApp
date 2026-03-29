@@ -98,6 +98,18 @@ class GameTurnControlsTest {
         method.invoke(game);
     }
 
+    private static void invokeShowRollDiceControl(Game game) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod("showRollDiceControl");
+        method.setAccessible(true);
+        method.invoke(game);
+    }
+
+    private static void invokeShowEndTurnControl(Game game) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod("showEndTurnControl");
+        method.setAccessible(true);
+        method.invoke(game);
+    }
+
     private static void updateDebugButtons(Game game) throws ReflectiveOperationException {
         var method = Game.class.getDeclaredMethod("updateDebugButtons");
         method.setAccessible(true);
@@ -309,5 +321,21 @@ class GameTurnControlsTest {
 
         assertTrue(endRoundButton.getPosition()[0] + endRoundButton.getWidth() < firstDiceLeft,
                 "End turn button should not overlap the dice display area");
+    }
+
+    @Test
+    void botTurnKeepsPrimaryTurnControlsHidden() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+
+        Game.players.switchTurn();
+        invokeShowRollDiceControl(game);
+        assertFalse(Game.DICES.isVisible(), "Roll dice must stay hidden on bot turns");
+        assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
+
+        invokeShowEndTurnControl(game);
+        assertFalse(Game.DICES.isVisible(), "Roll dice must stay hidden on bot turns");
+        assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
     }
 }
