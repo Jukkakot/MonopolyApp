@@ -1559,8 +1559,8 @@ public class Game implements MonopolyEventListener {
                         runtime.popupService().isAnyVisible(),
                         retryDebtButton.isVisible(),
                         declareBankruptcyButton.isVisible(),
-                        DICES.isVisible(),
-                        endRoundButton.isVisible()
+                        isRollDiceActionAvailable(currentPlayer),
+                        isEndTurnActionAvailable(currentPlayer)
                 ),
                 popupView,
                 debtView,
@@ -1599,6 +1599,26 @@ public class Game implements MonopolyEventListener {
                 completedSets,
                 ownedProperties
         );
+    }
+
+    private boolean isRollDiceActionAvailable(Player currentPlayer) {
+        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtState != null) {
+            return false;
+        }
+        if (!currentPlayer.isComputerControlled()) {
+            return DICES.isVisible();
+        }
+        return DICES.getValue() == null;
+    }
+
+    private boolean isEndTurnActionAvailable(Player currentPlayer) {
+        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtState != null) {
+            return false;
+        }
+        if (!currentPlayer.isComputerControlled()) {
+            return endRoundButton.isVisible();
+        }
+        return DICES.getValue() != null;
     }
 
     private PropertyView createPropertyView(Player owner, Property property) {
