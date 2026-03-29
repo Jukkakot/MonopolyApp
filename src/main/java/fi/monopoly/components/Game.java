@@ -781,7 +781,11 @@ public class Game implements MonopolyEventListener {
         updateDebtButtons();
 
         if (players.count() <= 1) {
-            Player winner = players.getTurn();
+            Player winner = players.getPlayers().stream().findFirst().orElse(null);
+            if (winner != null && winner.getSpot() != null) {
+                winner.setCoords(winner.getSpot().getTokenCoords(winner));
+                players.focusPlayer(winner);
+            }
             String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
             log.info("Game over after bankruptcy. winner={}", winnerName);
             runtime.popupService().show(text("game.bankruptcy.gameOver", winnerName));

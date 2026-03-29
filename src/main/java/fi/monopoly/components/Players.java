@@ -129,6 +129,15 @@ public class Players {
     }
 
     public boolean removePlayer(Player p) {
+        if (p == null) {
+            return false;
+        }
+        if (p.getSpot() != null) {
+            p.getSpot().removePlayer(p);
+        }
+        if (selectedPlayer == p) {
+            selectedPlayer = null;
+        }
         return playerList.remove(p);
     }
 

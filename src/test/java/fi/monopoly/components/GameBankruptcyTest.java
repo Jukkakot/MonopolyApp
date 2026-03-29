@@ -97,6 +97,32 @@ class GameBankruptcyTest {
         assertEquals(0, b2.getBuildingLevel());
     }
 
+    @Test
+    void winnerTokenStaysOnBoardAfterGameEndingBankruptcy() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+
+        List<Player> players = getPlayers();
+        Player debtor = players.get(0);
+        Player winner = players.get(1);
+        Player third = players.get(2);
+        Game.players.removePlayer(third);
+
+        setDebtState(game, new DebtState(
+                new PaymentRequest(debtor, new PlayerTarget(winner), 2_000, "Bankruptcy"),
+                () -> {
+                },
+                true
+        ));
+
+        invokeDeclareBankruptcy(game);
+
+        assertEquals(1, Game.players.count());
+        assertEquals(winner, Game.players.getPlayers().get(0));
+        assertEquals(winner.getSpot().getTokenCoords(winner), winner.getCoords());
+    }
+
     @AfterEach
     void tearDown() {
         MonopolyApp.DEBUG_MODE = false;
