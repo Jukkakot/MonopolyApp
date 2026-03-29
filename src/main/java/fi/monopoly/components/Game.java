@@ -777,15 +777,34 @@ public class Game implements MonopolyEventListener {
         }
         if (request.target() instanceof PlayerTarget playerTarget) {
             request.debtor().transferAssetsTo(playerTarget.player());
+            finishBankruptcyFlow(request);
         } else {
+            List<Property> bankAuctionProperties = List.copyOf(request.debtor().getOwnedProperties());
             request.debtor().releaseAssetsToBank();
-            log.info("Bankruptcy returned debtor properties to bank. Auction flow remains pending implementation.");
+            finishBankruptcyFlowAfterBankRelease(request, bankAuctionProperties);
+            return;
         }
+    }
+
+    private void finishBankruptcyFlowAfterBankRelease(PaymentRequest request, List<Property> bankAuctionProperties) {
+        log.info("Bankruptcy returned {} debtor properties to bank for auction", bankAuctionProperties.size());
+        removeBankruptPlayerFromGame(request);
+        new PropertyAuctionResolver(runtime.popupService(), players).resolveAll(bankAuctionProperties, () -> completeBankruptcyFlow(request));
+    }
+
+    private void finishBankruptcyFlow(PaymentRequest request) {
+        removeBankruptPlayerFromGame(request);
+        completeBankruptcyFlow(request);
+    }
+
+    private void removeBankruptPlayerFromGame(PaymentRequest request) {
         request.debtor().setGetOutOfJailCardCount(0);
         players.removePlayer(request.debtor());
         debtState = null;
         updateDebtButtons();
+    }
 
+    private void completeBankruptcyFlow(PaymentRequest request) {
         if (players.count() <= 1) {
             Player winner = players.getPlayers().stream().findFirst().orElse(null);
             if (winner != null && winner.getSpot() != null) {

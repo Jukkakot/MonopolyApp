@@ -16,7 +16,7 @@ import java.util.List;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
-final class PropertyAuctionResolver {
+public class PropertyAuctionResolver {
     private static final int AUCTION_BID_INCREMENT = 10;
     private static final int AUCTION_OPENING_BID = 10;
     private static final int DEFAULT_RESERVE = 100;
@@ -25,12 +25,12 @@ final class PropertyAuctionResolver {
     private final PopupService popupService;
     private final Players players;
 
-    PropertyAuctionResolver(PopupService popupService, Players players) {
+    public PropertyAuctionResolver(PopupService popupService, Players players) {
         this.popupService = popupService;
         this.players = players;
     }
 
-    void resolve(Player triggeringPlayer, Property property, CallbackAction onComplete) {
+    public void resolve(Player triggeringPlayer, Property property, CallbackAction onComplete) {
         AuctionBid winningBid = determineWinningBid(triggeringPlayer, property);
         if (winningBid == null) {
             popupService.show(text("property.auction.noBids", property.getDisplayName()), onComplete::doAction);
@@ -47,6 +47,19 @@ final class PropertyAuctionResolver {
                 text("property.auction.won", winningBid.player().getName(), property.getDisplayName(), winningBid.amount()),
                 onComplete::doAction
         );
+    }
+
+    public void resolveAll(List<Property> properties, CallbackAction onComplete) {
+        resolveNext(properties, 0, onComplete);
+    }
+
+    private void resolveNext(List<Property> properties, int index, CallbackAction onComplete) {
+        if (properties == null || index >= properties.size()) {
+            onComplete.doAction();
+            return;
+        }
+        Property property = properties.get(index);
+        resolve(null, property, () -> resolveNext(properties, index + 1, onComplete));
     }
 
     private AuctionBid determineWinningBid(Player triggeringPlayer, Property property) {
@@ -69,20 +82,25 @@ final class PropertyAuctionResolver {
             return null;
         }
 
-        AuctionBid highest = bids.stream()
-                .max(Comparator.comparingInt(AuctionBid::amount))
-                .orElse(null);
+        AuctionBid highest = bids.get(0);
+        for (int i = 1; i < bids.size(); i++) {
+            AuctionBid candidate = bids.get(i);
+            if (candidate.amount() > highest.amount()) {
+                highest = candidate;
+            }
+        }
         if (highest == null) {
             return null;
         }
 
+        AuctionBid winningBid = highest;
         int secondHighest = bids.stream()
-                .filter(bid -> bid.player() != highest.player())
+                .filter(bid -> bid.player() != winningBid.player())
                 .mapToInt(AuctionBid::amount)
                 .max()
                 .orElse(0);
-        int winningBidAmount = Math.min(highest.amount(), Math.max(AUCTION_OPENING_BID, secondHighest + AUCTION_BID_INCREMENT));
-        return new AuctionBid(highest.player(), roundDownToIncrement(winningBidAmount));
+        int winningBidAmount = Math.min(winningBid.amount(), Math.max(AUCTION_OPENING_BID, secondHighest + AUCTION_BID_INCREMENT));
+        return new AuctionBid(winningBid.player(), roundDownToIncrement(winningBidAmount));
     }
 
     private List<Player> orderedBidders(Player triggeringPlayer) {
