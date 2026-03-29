@@ -19,6 +19,7 @@ import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.trade.TradeDecision;
+import fi.monopoly.components.trade.TradeDraft;
 import fi.monopoly.components.trade.TradeOffer;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeSelection;
@@ -934,51 +935,82 @@ public class Game implements MonopolyEventListener {
             return;
         }
         ButtonProps[] partnerButtons = tradePartners.stream()
-                .map(player -> new ButtonProps(player.getName(), () -> openTradeOfferSelection(proposer, player)))
+                .map(player -> new ButtonProps(player.getName(), () -> openTradeEditor(
+                        new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE),
+                        true
+                )))
                 .toArray(ButtonProps[]::new);
         runtime.popupService().show(text("trade.choosePartner", proposer.getName()), partnerButtons);
     }
 
-    private void openTradeOfferSelection(Player proposer, Player recipient) {
+    private void openTradeEditor(TradeDraft draft, boolean editingOfferSide) {
+        Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
+        Player otherPlayer = editingOfferSide ? draft.recipient() : draft.proposer();
+        TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
         runtime.popupService().show(
-                text("trade.chooseOffer", proposer.getName(), recipient.getName()),
-                buildTradeSelectionButtons(proposer, selection -> openTradeRequestSelection(proposer, recipient, selection))
+                (editingOfferSide
+                        ? text("trade.chooseOffer", editingPlayer.getName(), otherPlayer.getName())
+                        : text("trade.chooseRequest", editingPlayer.getName(), otherPlayer.getName()))
+                        + "\n" + text("trade.currentSelection", describeTradeSelection(selection)),
+                buildTradeEditorButtons(draft, editingOfferSide)
         );
     }
 
-    private void openTradeRequestSelection(Player proposer, Player recipient, TradeSelection offeredSelection) {
-        runtime.popupService().show(
-                text("trade.chooseRequest", recipient.getName(), proposer.getName()),
-                buildTradeSelectionButtons(recipient, selection -> confirmTradeOffer(new TradeOffer(proposer, recipient, offeredSelection, selection)))
-        );
-    }
-
-    private ButtonProps[] buildTradeSelectionButtons(Player owner, java.util.function.Consumer<TradeSelection> onSelect) {
+    private ButtonProps[] buildTradeEditorButtons(TradeDraft draft, boolean editingOfferSide) {
+        Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
+        TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
         List<ButtonProps> buttons = new java.util.ArrayList<>();
-        buttons.add(new ButtonProps(text("trade.option.nothing"), () -> onSelect.accept(TradeSelection.NONE)));
-        for (int amount : List.of(50, 100, 200, 500)) {
-            if (owner.getMoneyAmount() >= amount) {
-                buttons.add(new ButtonProps(text("trade.option.money", amount), () -> onSelect.accept(new TradeSelection(amount, null, false))));
+        buttons.add(new ButtonProps(text("trade.button.done"), () -> {
+            if (editingOfferSide) {
+                openTradeEditor(draft, false);
+            } else {
+                confirmTradeOffer(draft);
+            }
+        }));
+        buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
+                editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
+                editingOfferSide
+        )));
+        for (int delta : List.of(10, 100, -10, -100)) {
+            int nextAmount = Math.max(0, selection.moneyAmount() + delta);
+            if (nextAmount <= editingPlayer.getMoneyAmount()) {
+                String label = delta > 0 ? "+" + delta : String.valueOf(delta);
+                buttons.add(new ButtonProps(label, () -> openTradeEditor(
+                        updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(nextAmount)),
+                        editingOfferSide
+                )));
             }
         }
-        owner.getOwnedProperties().stream()
+        buttons.add(new ButtonProps(
+                selection.jailCard() ? text("trade.button.removeJailCard") : text("trade.button.addJailCard"),
+                () -> openTradeEditor(updateTradeSelection(draft, editingOfferSide, selection.toggleJailCard()), editingOfferSide)
+        ));
+        if (selection.property() != null) {
+            buttons.add(new ButtonProps(text("trade.button.clearProperty"), () -> openTradeEditor(
+                    updateTradeSelection(draft, editingOfferSide, selection.withProperty(null)),
+                    editingOfferSide
+            )));
+        }
+        editingPlayer.getOwnedProperties().stream()
                 .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
                 .filter(this::isTradableProperty)
                 .forEach(property -> buttons.add(new ButtonProps(
-                        text("trade.option.property", property.getDisplayName()),
-                        () -> onSelect.accept(new TradeSelection(0, property, false))
+                        property.getDisplayName(),
+                        () -> openTradeEditor(updateTradeSelection(draft, editingOfferSide, selection.withProperty(property)), editingOfferSide)
                 )));
-        if (owner.hasGetOutOfJailCard()) {
-            buttons.add(new ButtonProps(text("trade.option.jailCard"), () -> onSelect.accept(new TradeSelection(0, null, true))));
-        }
         return buttons.toArray(ButtonProps[]::new);
+    }
+
+    private TradeDraft updateTradeSelection(TradeDraft draft, boolean editingOfferSide, TradeSelection selection) {
+        return editingOfferSide ? draft.withOfferedToRecipient(selection) : draft.withRequestedFromRecipient(selection);
     }
 
     private boolean isTradableProperty(Property property) {
         return !(property instanceof StreetProperty streetProperty) || streetProperty.getBuildingLevel() == 0;
     }
 
-    private void confirmTradeOffer(TradeOffer offer) {
+    private void confirmTradeOffer(TradeDraft draft) {
+        TradeOffer offer = draft.toOffer();
         if (!offer.isValid()) {
             runtime.popupService().show(text("trade.invalid"));
             return;
@@ -999,13 +1031,13 @@ public class Game implements MonopolyEventListener {
             }
             return;
         }
-        runtime.popupService().show(
-                text("trade.review", offer.recipient().getName()) + "\n" + summary,
-                () -> {
+        runtime.popupService().show(text("trade.review", offer.recipient().getName()) + "\n" + summary,
+                new ButtonProps(text("popup.choice.accept"), () -> {
                     applyTradeOffer(offer);
                     runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));
-                },
-                () -> runtime.popupService().show(text("trade.declined", offer.recipient().getName()))
+                }),
+                new ButtonProps(text("popup.choice.decline"), () -> runtime.popupService().show(text("trade.declined", offer.recipient().getName()))),
+                new ButtonProps(text("trade.button.counterOffer"), () -> openTradeEditor(draft.asCounterOffer(), true))
         );
     }
 
@@ -1030,7 +1062,7 @@ public class Game implements MonopolyEventListener {
             parts.add(text("trade.option.money", selection.moneyAmount()));
         }
         if (selection.property() != null) {
-            parts.add(text("trade.option.property", selection.property().getDisplayName()));
+            parts.add(selection.property().getDisplayName());
         }
         if (selection.jailCard()) {
             parts.add(text("trade.option.jailCard"));

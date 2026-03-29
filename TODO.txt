@@ -5,6 +5,10 @@ MONOPOLY RULES
 [Low] Remove random starting deeds from normal game setup
 
 ECONOMY AND MULTIPLAYER
+[Medium] Add richer trade bundles with multiple properties or both money and property presets per side
+[Medium] Add trade history / recent trade summaries to sidebar message flow
+[Medium] Add explicit bot trade strategy profiles and smarter counteroffer valuation
+[Low] Add trade UX polish like highlighting selected assets and showing net value delta
 [High] Add computer players with configurable difficulty profiles
 [Medium] Add configurable strong bot variants like aggressive and defensive
 [Medium] Add player setup UI for choosing human vs computer seats before game start
