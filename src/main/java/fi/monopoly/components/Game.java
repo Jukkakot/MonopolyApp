@@ -940,6 +940,7 @@ public class Game implements MonopolyEventListener {
                         : text("trade.button.selectedEditorSide", draft.recipient().getName()),
                 () -> openTradeEditor(draft, false)
         ));
+        buttons.add(new ButtonProps(text("trade.button.back"), this::openTradeMenu));
         buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
         buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
                 editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
@@ -1009,6 +1010,7 @@ public class Game implements MonopolyEventListener {
         runtime.popupService().showTrade(
                 text("trade.review", offer.recipient().getName()) + "\n" + summary,
                 buildTradePopupView(offer, text("trade.review.header"), text("trade.review", offer.recipient().getName()), null),
+                new ButtonProps(text("trade.button.back"), () -> openTradeEditor(draft, false)),
                 new ButtonProps(text("popup.choice.accept"), () -> {
                     applyTradeOffer(offer);
                     runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));

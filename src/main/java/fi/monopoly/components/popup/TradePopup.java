@@ -7,6 +7,8 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
+import fi.monopoly.types.PlaceType;
+import fi.monopoly.types.StreetType;
 import fi.monopoly.utils.MonopolyUtils;
 import javafx.scene.paint.Color;
 import processing.core.PGraphics;
@@ -24,8 +26,8 @@ import static processing.core.PConstants.TOP;
 import static processing.event.MouseEvent.CLICK;
 
 public class TradePopup extends Popup {
-    private static final int POPUP_WIDTH = 920;
-    private static final int POPUP_HEIGHT = 720;
+    private static final int POPUP_WIDTH = 980;
+    private static final int POPUP_HEIGHT = 820;
     private static final int MIN_BUTTON_WIDTH = 100;
     private static final int MAX_BUTTON_WIDTH = 220;
     private static final int BUTTON_HEIGHT = 50;
@@ -47,6 +49,9 @@ public class TradePopup extends Popup {
     private static final float TOKEN_SIZE = 34f;
     private static final float SUBTITLE_TOP_OFFSET = 40f;
     private static final float FOOTER_BOTTOM_PADDING = 22f;
+    private static final float PROPERTY_COLOR_STRIPE_HEIGHT = 18f;
+    private static final float BUTTON_AREA_BOTTOM_MARGIN = 28f;
+    private static final float BUTTON_AREA_TOP_MARGIN = 18f;
 
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private final List<String> activeButtonLabels = new ArrayList<>();
@@ -101,7 +106,12 @@ public class TradePopup extends Popup {
 
     @Override
     protected float getButtonAreaTop() {
-        return getPopupBottom() - 150f;
+        return getPopupBottom() - BUTTON_AREA_BOTTOM_MARGIN - requiredButtonAreaHeight();
+    }
+
+    @Override
+    protected float getButtonAreaHeight() {
+        return requiredButtonAreaHeight();
     }
 
     @Override
@@ -163,10 +173,10 @@ public class TradePopup extends Popup {
         drawInventory(p, left + TEXT_SIDE_PADDING, inventoryTitleY + INVENTORY_TITLE_GAP, width - TEXT_SIDE_PADDING * 2f, getButtonAreaTop() - (inventoryTitleY + INVENTORY_TITLE_GAP) - 12f);
 
         if (tradeView.footer() != null && !tradeView.footer().isBlank()) {
-            p.fill(0);
-            p.textFont(runtime.font10());
+            p.fill(p.color(85, 42, 0));
+            p.textFont(runtime.font20());
             p.textAlign(CENTER, TOP);
-            p.text(tradeView.footer(), getPopupCenter().x(), getButtonAreaTop() - FOOTER_BOTTOM_PADDING);
+            p.text(tradeView.footer(), getPopupCenter().x(), getButtonAreaTop() - FOOTER_BOTTOM_PADDING - 6f);
         }
 
         p.popStyle();
@@ -252,10 +262,15 @@ public class TradePopup extends Popup {
     }
 
     private void drawPropertyItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height, boolean showLabel) {
+        int stripeColor = resolveTradePropertyStripeColor(item.property());
+        p.noStroke();
+        p.fill(stripeColor);
+        p.rect(x + 4f, y + 4f, width - 8f, PROPERTY_COLOR_STRIPE_HEIGHT, 10, 10, 4, 4);
+
         PImage image = MonopolyApp.getImage(item.property().getSpotType());
         if (image != null) {
             p.imageMode(CORNER);
-            p.image(image, x + 8f, y + 8f, width - 16f, height - (showLabel ? 42f : 16f));
+            p.image(image, x + 8f, y + 8f + PROPERTY_COLOR_STRIPE_HEIGHT, width - 16f, height - (showLabel ? 42f : 16f) - PROPERTY_COLOR_STRIPE_HEIGHT);
         }
         p.fill(0);
         p.textFont(runtime.font10());
@@ -292,6 +307,20 @@ public class TradePopup extends Popup {
         p.stroke(0);
         p.strokeWeight(2);
         p.ellipse(centerX, centerY, size, size);
+    }
+
+    private int resolveTradePropertyStripeColor(fi.monopoly.components.properties.Property property) {
+        StreetType streetType = property.getSpotType().streetType;
+        if (streetType.color != null) {
+            return MonopolyUtils.toColor(runtime.app(), streetType.color);
+        }
+        if (streetType.placeType == PlaceType.RAILROAD) {
+            return runtime.app().color(50, 50, 50);
+        }
+        if (streetType.placeType == PlaceType.UTILITY) {
+            return runtime.app().color(120, 160, 170);
+        }
+        return runtime.app().color(170, 150, 100);
     }
 
     private void ensureButtonPoolSize(int requiredCount) {
@@ -426,6 +455,17 @@ public class TradePopup extends Popup {
 
     private int getMaxButtonColumns() {
         return getPopupWidth() < 720 ? 3 : 4;
+    }
+
+    private float requiredButtonAreaHeight() {
+        if (totalButtonCount <= 0) {
+            return BUTTON_HEIGHT + BUTTON_AREA_TOP_MARGIN;
+        }
+        int cols = Math.min(getMaxButtonColumns(), totalButtonCount);
+        int rows = (int) Math.ceil((double) totalButtonCount / cols);
+        return rows * BUTTON_HEIGHT
+                + Math.max(0, rows - 1) * BUTTON_GAP_Y
+                + BUTTON_AREA_TOP_MARGIN;
     }
 
     private void layoutCloseButton() {
