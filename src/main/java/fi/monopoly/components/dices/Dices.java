@@ -35,6 +35,7 @@ public class Dices implements MonopolyEventListener {
     private final MonopolyRuntime runtime;
     private final Pair<Dice, Dice> dices;
     private final MonopolyButton rollDiceButton;
+    private boolean rollDiceRequestedVisible = true;
     private int pairCount = 0;
     @Getter
     @Setter // Just for debugging can manually set dice value..
@@ -93,6 +94,7 @@ public class Dices implements MonopolyEventListener {
     public void updateLayout(LayoutMetrics layoutMetrics) {
         if (!layoutMetrics.hasSidebarSpace()) {
             layoutOverlayControls(layoutMetrics);
+            applyRollDiceButtonVisibility();
             return;
         }
         float buttonX = layoutMetrics.sidebarX() + 20;
@@ -106,6 +108,7 @@ public class Dices implements MonopolyEventListener {
         float minimumInlineFirstCenterX = buttonX + rollDiceButton.getWidth() + 12 + diceSide / 2f;
         if (inlineFirstCenterX >= minimumInlineFirstCenterX) {
             setDicePositions(inlineFirstCenterX, buttonCenterY, inlineSecondCenterX, buttonCenterY);
+            applyRollDiceButtonVisibility();
             return;
         }
 
@@ -113,6 +116,7 @@ public class Dices implements MonopolyEventListener {
         float stackedSecondCenterX = stackedFirstCenterX + diceSide + DICE_GAP;
         float stackedCenterY = buttonCenterY + STACKED_DICE_VERTICAL_OFFSET;
         setDicePositions(stackedFirstCenterX, stackedCenterY, stackedSecondCenterX, stackedCenterY);
+        applyRollDiceButtonVisibility();
     }
 
     private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
@@ -131,6 +135,7 @@ public class Dices implements MonopolyEventListener {
         float stackedFirstCenterX = buttonX + diceSide / 2f;
         float stackedSecondCenterX = stackedFirstCenterX + diceSide + DICE_GAP;
         setDicePositions(stackedFirstCenterX, OVERLAY_STACKED_DICE_CENTER_Y, stackedSecondCenterX, OVERLAY_STACKED_DICE_CENTER_Y);
+        applyRollDiceButtonVisibility();
     }
 
     public void rollDice() {
@@ -141,10 +146,12 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void show() {
-        rollDiceButton.show();
+        rollDiceRequestedVisible = true;
+        applyRollDiceButtonVisibility();
     }
 
     public void hide() {
+        rollDiceRequestedVisible = false;
         rollDiceButton.hide();
     }
 
@@ -157,6 +164,14 @@ public class Dices implements MonopolyEventListener {
 
     public boolean isVisible() {
         return rollDiceButton.isVisible();
+    }
+
+    private void applyRollDiceButtonVisibility() {
+        if (rollDiceRequestedVisible && !runtime.popupService().isAnyVisible()) {
+            rollDiceButton.show();
+            return;
+        }
+        rollDiceButton.hide();
     }
 
     private void setDicePositions(float firstX, float firstY, float secondX, float secondY) {

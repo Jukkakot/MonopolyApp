@@ -277,6 +277,25 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void rollDiceButtonHidesWhilePopupIsVisible() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+
+        assertTrue(Game.DICES.isVisible());
+
+        runtime.popupService().show("Test popup");
+        updateSidebarControlPositions(game);
+
+        assertFalse(Game.DICES.isVisible(), "Roll dice button should never remain above an active popup");
+
+        runtime.popupService().triggerPrimaryAction();
+        updateSidebarControlPositions(game);
+
+        assertTrue(Game.DICES.isVisible(), "Roll dice button should return after popup closes when rolling is still allowed");
+    }
+
+    @Test
     void endTurnButtonStaysLeftOfDiceDisplayArea() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
