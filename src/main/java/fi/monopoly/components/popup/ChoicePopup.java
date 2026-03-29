@@ -82,6 +82,11 @@ public class ChoicePopup extends Popup {
     }
 
     @Override
+    public java.util.List<String> getVisibleActionLabels() {
+        return java.util.List.of(text("popup.choice.accept"), text("popup.choice.decline"));
+    }
+
+    @Override
     protected void refreshControlLayout() {
         layoutButtons();
     }

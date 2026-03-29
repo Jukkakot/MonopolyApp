@@ -1,27 +1,23 @@
 package fi.monopoly.components.computer;
 
-import fi.monopoly.components.Player;
+import fi.monopoly.types.SpotType;
 
 public interface ComputerTurnContext {
-    boolean isPopupVisible();
+    GameView gameView();
 
-    boolean resolvePopupForComputer(ComputerPlayerProfile profile);
+    PlayerView currentPlayerView();
 
-    boolean isDebtResolutionActiveFor(Player player);
+    boolean resolveActivePopup();
 
-    int requiredDebtAmount(Player player);
+    boolean sellBuilding(SpotType spotType, int count);
 
-    boolean isBankruptcyRiskFor(Player player);
+    boolean toggleMortgage(SpotType spotType);
 
     void retryPendingDebtPayment();
 
     void declareBankruptcy();
 
-    boolean isDiceVisible();
-
     void rollDice();
-
-    boolean isEndTurnVisible();
 
     void endTurn();
 }

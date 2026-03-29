@@ -66,6 +66,11 @@ public class OkPopup extends Popup {
     }
 
     @Override
+    public java.util.List<String> getVisibleActionLabels() {
+        return java.util.List.of(text("popup.ok.label"));
+    }
+
+    @Override
     protected void refreshControlLayout() {
         layoutButtons();
     }

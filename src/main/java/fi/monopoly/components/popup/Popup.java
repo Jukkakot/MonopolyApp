@@ -144,6 +144,14 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         return popupText;
     }
 
+    public String getPopupKind() {
+        return getClass().getSimpleName();
+    }
+
+    public List<String> getVisibleActionLabels() {
+        return List.of();
+    }
+
     protected boolean onKeyAction(char key) {
         return false;
     }

@@ -20,6 +20,7 @@ public class CustomPopup extends Popup {
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
     private final Button closeButton;
+    private final List<String> activeButtonLabels = new ArrayList<>();
     private static final int BUTTON_HEIGHT = 50;
     private static final int BUTTON_PADDING = 28;
     private static final int BUTTON_GAP_X = 12;
@@ -41,9 +42,11 @@ public class CustomPopup extends Popup {
 
     public void setButtons(ButtonProps... buttonProps) {
         totalButtonCount = buttonProps.length;
+        activeButtonLabels.clear();
         ensureButtonPoolSize(buttonProps.length);
         for (int i = 0; i < buttonProps.length; i++) {
             configureButton(customButtons.get(i), buttonProps[i]);
+            activeButtonLabels.add(buttonProps[i].name());
         }
         layoutButtons();
         for (int i = buttonProps.length; i < customButtons.size(); i++) {
@@ -118,6 +121,7 @@ public class CustomPopup extends Popup {
         closeButton.hide();
         customButtons.forEach(MonopolyButton::hide);
         totalButtonCount = 0;
+        activeButtonLabels.clear();
     }
 
     @Override
@@ -150,6 +154,11 @@ public class CustomPopup extends Popup {
         }
         completeAction(null);
         return true;
+    }
+
+    @Override
+    public List<String> getVisibleActionLabels() {
+        return List.copyOf(activeButtonLabels);
     }
 
     private int getMaxButtonColumns() {

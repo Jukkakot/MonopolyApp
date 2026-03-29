@@ -9,6 +9,12 @@ import fi.monopoly.components.board.Path;
 import fi.monopoly.components.computer.ComputerStrategies;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.ComputerTurnContext;
+import fi.monopoly.components.computer.DebtView;
+import fi.monopoly.components.computer.GameView;
+import fi.monopoly.components.computer.PlayerView;
+import fi.monopoly.components.computer.PopupView;
+import fi.monopoly.components.computer.PropertyView;
+import fi.monopoly.components.computer.VisibleActionsView;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
@@ -18,11 +24,14 @@ import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
+import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.*;
+import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
+import fi.monopoly.types.StreetType;
 import fi.monopoly.types.TurnResult;
 import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
@@ -32,6 +41,7 @@ import processing.event.Event;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -416,7 +426,7 @@ public class Game implements MonopolyEventListener {
         }
 
         boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile())
-                .takeStep(new GameComputerTurnContext(), turnPlayer);
+                .takeStep(new GameComputerTurnContext(turnPlayer));
         if (acted) {
             lastComputerActionAt = now;
         }
@@ -1096,32 +1106,39 @@ public class Game implements MonopolyEventListener {
     }
 
     private final class GameComputerTurnContext implements ComputerTurnContext {
-        @Override
-        public boolean isPopupVisible() {
-            return runtime.popupService().isAnyVisible();
+        private final Player player;
+
+        private GameComputerTurnContext(Player player) {
+            this.player = player;
         }
 
         @Override
-        public boolean resolvePopupForComputer(ComputerPlayerProfile profile) {
-            return runtime.popupService().resolveForComputer(profile);
+        public GameView gameView() {
+            return createGameView(player);
         }
 
         @Override
-        public boolean isDebtResolutionActiveFor(Player player) {
-            return debtState != null && debtState.paymentRequest().debtor().equals(player);
+        public PlayerView currentPlayerView() {
+            return createPlayerView(player);
         }
 
         @Override
-        public int requiredDebtAmount(Player player) {
-            if (!isDebtResolutionActiveFor(player)) {
-                return 0;
+        public boolean resolveActivePopup() {
+            return runtime.popupService().resolveForComputer(player.getComputerProfile());
+        }
+
+        @Override
+        public boolean sellBuilding(SpotType spotType, int count) {
+            Property property = PropertyFactory.getProperty(spotType);
+            if (!(property instanceof StreetProperty streetProperty)) {
+                return false;
             }
-            return debtState.paymentRequest().amount();
+            return streetProperty.sellHouses(count);
         }
 
         @Override
-        public boolean isBankruptcyRiskFor(Player player) {
-            return isDebtResolutionActiveFor(player) && debtState.bankruptcyRisk();
+        public boolean toggleMortgage(SpotType spotType) {
+            return PropertyFactory.getProperty(spotType).handleMortgaging();
         }
 
         @Override
@@ -1135,23 +1152,147 @@ public class Game implements MonopolyEventListener {
         }
 
         @Override
-        public boolean isDiceVisible() {
-            return DICES.isVisible();
-        }
-
-        @Override
         public void rollDice() {
             DICES.rollDice();
-        }
-
-        @Override
-        public boolean isEndTurnVisible() {
-            return endRoundButton.isVisible();
         }
 
         @Override
         public void endTurn() {
             Game.this.endRound(true);
         }
+    }
+
+    GameView createGameView(Player currentPlayer) {
+        PopupView popupView = runtime.popupService().isAnyVisible()
+                ? new PopupView(
+                runtime.popupService().activePopupKind(),
+                runtime.popupService().activePopupMessage(),
+                runtime.popupService().activePopupActions()
+        )
+                : null;
+        DebtView debtView = debtState == null ? null : new DebtView(
+                debtState.paymentRequest().amount(),
+                debtState.paymentRequest().reason(),
+                debtState.bankruptcyRisk(),
+                debtState.paymentRequest().target().getClass().getSimpleName(),
+                debtTargetName(debtState.paymentRequest())
+        );
+        return new GameView(
+                currentPlayer.getId(),
+                players.getPlayers().stream()
+                        .map(this::createPlayerView)
+                        .sorted(Comparator.comparingInt(PlayerView::turnNumber))
+                        .toList(),
+                new VisibleActionsView(
+                        runtime.popupService().isAnyVisible(),
+                        retryDebtButton.isVisible(),
+                        declareBankruptcyButton.isVisible(),
+                        DICES.isVisible(),
+                        endRoundButton.isVisible()
+                ),
+                popupView,
+                debtView,
+                countUnownedProperties(),
+                StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount(),
+                StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount()
+        );
+    }
+
+    PlayerView createPlayerView(Player player) {
+        List<PropertyView> ownedProperties = player.getOwnedProperties().stream()
+                .map(property -> createPropertyView(player, property))
+                .sorted(Comparator.comparing(property -> property.spotType().ordinal()))
+                .toList();
+        List<StreetType> completedSets = player.getOwnedProperties().stream()
+                .map(Property::getSpotType)
+                .map(spotType -> spotType.streetType)
+                .distinct()
+                .filter(player::ownsAllStreetProperties)
+                .sorted(Comparator.comparingInt(Enum::ordinal))
+                .toList();
+        return new PlayerView(
+                player.getId(),
+                player.getName(),
+                player.getMoneyAmount(),
+                player.getTurnNumber(),
+                player.getComputerProfile(),
+                player.getSpot().getSpotType(),
+                player.isInJail(),
+                JailSpot.jailTimeLeftMap.getOrDefault(player, 0),
+                player.getGetOutOfJailCardCount(),
+                player.getTotalHouseCount(),
+                player.getTotalHotelCount(),
+                player.getTotalLiquidationValue(),
+                calculateBoardDangerScore(player),
+                completedSets,
+                ownedProperties
+        );
+    }
+
+    private PropertyView createPropertyView(Player owner, Property property) {
+        int buildingLevel = 0;
+        int houseCount = 0;
+        int hotelCount = 0;
+        if (property instanceof StreetProperty streetProperty) {
+            buildingLevel = streetProperty.getBuildingLevel();
+            houseCount = streetProperty.getHouseCount();
+            hotelCount = streetProperty.getHotelCount();
+        }
+        return new PropertyView(
+                property.getSpotType(),
+                property.getSpotType().streetType,
+                property.getSpotType().streetType.placeType,
+                property.getDisplayName(),
+                property.getPrice(),
+                property.isMortgaged(),
+                property.getMortgageValue(),
+                property.getLiquidationValue(),
+                buildingLevel,
+                houseCount,
+                hotelCount,
+                estimateRent(property, owner),
+                owner.ownsAllStreetProperties(property.getSpotType().streetType)
+        );
+    }
+
+    private int estimateRent(Property property, Player owner) {
+        if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
+            return switch (owner.getOwnedProperties(property.getSpotType().streetType).size()) {
+                case 2 -> 70;
+                default -> 28;
+            };
+        }
+        Player nonOwner = players.getPlayers().stream()
+                .filter(candidate -> candidate != owner)
+                .findFirst()
+                .orElse(null);
+        return nonOwner == null ? 0 : property.getRent(nonOwner);
+    }
+
+    private int calculateBoardDangerScore(Player player) {
+        return board.getSpots().stream()
+                .filter(PropertySpot.class::isInstance)
+                .map(PropertySpot.class::cast)
+                .map(PropertySpot::getProperty)
+                .filter(Property::hasOwner)
+                .filter(property -> property.isNotOwner(player))
+                .mapToInt(property -> estimateRent(property, property.getOwnerPlayer()))
+                .sum();
+    }
+
+    private int countUnownedProperties() {
+        return (int) board.getSpots().stream()
+                .filter(PropertySpot.class::isInstance)
+                .map(PropertySpot.class::cast)
+                .map(PropertySpot::getProperty)
+                .filter(property -> !property.hasOwner())
+                .count();
+    }
+
+    private String debtTargetName(PaymentRequest paymentRequest) {
+        if (paymentRequest.target() instanceof PlayerTarget playerTarget) {
+            return playerTarget.player().getName();
+        }
+        return paymentRequest.target().getClass().getSimpleName();
     }
 }

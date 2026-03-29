@@ -92,6 +92,18 @@ public class PopupService {
         return activePopup.onComputerAction(profile);
     }
 
+    public String activePopupKind() {
+        return activePopup == null ? null : activePopup.getPopupKind();
+    }
+
+    public String activePopupMessage() {
+        return activePopup == null ? null : activePopup.getPopupText();
+    }
+
+    public List<String> activePopupActions() {
+        return activePopup == null ? List.of() : activePopup.getVisibleActionLabels();
+    }
+
     private <T extends Popup> T getInstance(Class<T> clazz) {
         return clazz.cast(popupInstances.computeIfAbsent(clazz, this::createPopup));
     }

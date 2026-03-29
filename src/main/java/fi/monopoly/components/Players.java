@@ -111,6 +111,10 @@ public class Players {
         return playerList.size();
     }
 
+    public List<Player> getPlayers() {
+        return List.copyOf(playerList);
+    }
+
     public int getTotalHouseCount() {
         return playerList.stream().mapToInt(Player::getTotalHouseCount).sum();
     }

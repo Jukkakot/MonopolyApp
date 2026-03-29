@@ -1,85 +1,83 @@
 package fi.monopoly.components.computer;
 
-import fi.monopoly.components.Player;
-import fi.monopoly.components.properties.Property;
-import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.types.PlaceType;
 
 import java.util.Comparator;
 
 final class SmokeTestComputerStrategy implements ComputerTurnStrategy {
     @Override
-    public boolean takeStep(ComputerTurnContext context, Player player) {
-        if (context.isPopupVisible()) {
-            return context.resolvePopupForComputer(player.getComputerProfile());
+    public boolean takeStep(ComputerTurnContext context) {
+        GameView view = context.gameView();
+        PlayerView player = context.currentPlayerView();
+        if (view.visibleActions().popupVisible()) {
+            return context.resolveActivePopup();
         }
-        if (context.isDebtResolutionActiveFor(player)) {
+        if (view.debt() != null) {
             return resolveDebt(context, player);
         }
-        if (context.isDiceVisible()) {
+        if (view.visibleActions().rollDiceVisible()) {
             context.rollDice();
             return true;
         }
-        if (context.isEndTurnVisible()) {
+        if (view.visibleActions().endTurnVisible()) {
             context.endTurn();
             return true;
         }
         return false;
     }
 
-    private boolean resolveDebt(ComputerTurnContext context, Player debtor) {
-        int amount = context.requiredDebtAmount(debtor);
-        if (debtor.getMoneyAmount() < amount) {
-            liquidateAssets(debtor, amount);
+    private boolean resolveDebt(ComputerTurnContext context, PlayerView debtor) {
+        int amount = context.gameView().debt().amount();
+        if (debtor.moneyAmount() < amount) {
+            liquidateAssets(context, debtor, amount);
         }
-        if (debtor.getMoneyAmount() >= amount) {
+        if (context.currentPlayerView().moneyAmount() >= amount) {
             context.retryPendingDebtPayment();
             return true;
         }
-        if (context.isBankruptcyRiskFor(debtor)) {
+        if (context.gameView().debt().bankruptcyRisk()) {
             context.declareBankruptcy();
             return true;
         }
         return false;
     }
 
-    private void liquidateAssets(Player player, int targetAmount) {
-        while (player.getMoneyAmount() < targetAmount && sellOneBuilding(player)) {
+    private void liquidateAssets(ComputerTurnContext context, PlayerView player, int targetAmount) {
+        while (context.currentPlayerView().moneyAmount() < targetAmount && sellOneBuilding(context, player)) {
             // Keep selling until the player has enough cash or cannot liquidate more buildings.
         }
-        if (player.getMoneyAmount() >= targetAmount) {
+        if (context.currentPlayerView().moneyAmount() >= targetAmount) {
             return;
         }
-        for (Property property : player.getOwnedProperties().stream()
-                .filter(property -> !property.isMortgaged())
+        for (PropertyView property : player.ownedProperties().stream()
+                .filter(property -> !property.mortgaged())
                 .filter(this::canMortgage)
-                .sorted(Comparator.comparingInt(Property::getMortgageValue))
+                .sorted(Comparator.comparingInt(PropertyView::mortgageValue))
                 .toList()) {
-            property.handleMortgaging();
-            if (player.getMoneyAmount() >= targetAmount) {
+            context.toggleMortgage(property.spotType());
+            if (context.currentPlayerView().moneyAmount() >= targetAmount) {
                 return;
             }
         }
     }
 
-    private boolean sellOneBuilding(Player player) {
-        for (StreetProperty property : player.getOwnedProperties().stream()
-                .filter(StreetProperty.class::isInstance)
-                .map(StreetProperty.class::cast)
-                .filter(property -> property.getMaxSellableHouseCount() > 0)
-                .sorted(Comparator.comparingInt(StreetProperty::getHousePrice).reversed())
+    private boolean sellOneBuilding(ComputerTurnContext context, PlayerView player) {
+        for (PropertyView property : player.ownedProperties().stream()
+                .filter(property -> property.placeType() == PlaceType.STREET)
+                .filter(property -> property.buildingLevel() > 0)
+                .sorted(Comparator.comparingInt(PropertyView::price).reversed())
                 .toList()) {
-            if (property.sellHouses(1)) {
+            if (context.sellBuilding(property.spotType(), 1)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean canMortgage(Property property) {
-        if (property.getSpotType().streetType.placeType != PlaceType.STREET) {
+    private boolean canMortgage(PropertyView property) {
+        if (property.placeType() != PlaceType.STREET) {
             return true;
         }
-        return !(property instanceof StreetProperty streetProperty) || !streetProperty.hasBuildings();
+        return property.buildingLevel() == 0;
     }
 }
