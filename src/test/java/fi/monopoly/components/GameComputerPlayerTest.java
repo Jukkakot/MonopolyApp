@@ -61,24 +61,24 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    void defaultSeatsUseSmokeTestBotProfile() throws ReflectiveOperationException {
+    void defaultSeatsUseStrongBotProfile() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         new Game(runtime);
 
         List<Player> players = getPlayerList();
         long computerPlayerCount = players.stream().filter(Player::isComputerControlled).count();
-        long smokeTestPlayerCount = players.stream()
-                .filter(player -> player.getComputerProfile() == ComputerPlayerProfile.SMOKE_TEST)
+        long strongBotCount = players.stream()
+                .filter(player -> player.getComputerProfile() == ComputerPlayerProfile.STRONG)
                 .count();
 
         assertEquals(3, players.size());
         assertEquals(3, computerPlayerCount);
-        assertEquals(3, smokeTestPlayerCount);
+        assertEquals(3, strongBotCount);
     }
 
     @Test
-    void smokeTestBotCanFinishItsTurnWithoutUserInput() throws ReflectiveOperationException {
+    void defaultBotCanFinishItsTurnWithoutUserInput() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyApp.SKIP_ANNIMATIONS = true;
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);

@@ -7,6 +7,7 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
     private final StrongBotConfig config = StrongBotConfig.defaults();
     private final StrongPropertyBuyEvaluator propertyBuyEvaluator = new StrongPropertyBuyEvaluator(config);
     private final StrongBuildingEvaluator buildingEvaluator = new StrongBuildingEvaluator(config);
+    private final StrongUnmortgageEvaluator unmortgageEvaluator = new StrongUnmortgageEvaluator(config);
     private final StrongDebtResolver debtResolver = new StrongDebtResolver();
     private final StrongJailDecisionEvaluator jailDecisionEvaluator = new StrongJailDecisionEvaluator(config);
     private final SmokeTestComputerStrategy fallbackStrategy = new SmokeTestComputerStrategy();
@@ -37,11 +38,18 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
         }
         if (view.visibleActions().endTurnVisible()) {
             BuildPlan buildPlan = buildingEvaluator.evaluateBuild(view, self);
-            if (buildPlan != null) {
+            StrongUnmortgageEvaluator.UnmortgagePlan unmortgagePlan = unmortgageEvaluator.evaluate(view, self);
+            if (buildPlan != null && (unmortgagePlan == null || buildPlan.decision().score() >= unmortgagePlan.decision().score())) {
                 logDecision(self, buildPlan.decision());
+                if (context.buyBuildingRound(buildPlan.target().spotType())) {
+                    return true;
+                }
             }
-            if (buildPlan != null && context.buyBuildingRound(buildPlan.target().spotType())) {
-                return true;
+            if (unmortgagePlan != null) {
+                logDecision(self, unmortgagePlan.decision());
+                if (context.toggleMortgage(unmortgagePlan.target().spotType())) {
+                    return true;
+                }
             }
         }
         if (view.visibleActions().endTurnVisible()) {

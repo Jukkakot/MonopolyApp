@@ -144,6 +144,19 @@ class StrongComputerStrategyTest {
     }
 
     @Test
+    void strongStrategyUnmortgagesCompletedSetWhenCashIsSafe() {
+        PlayerView self = playerView(1, 900, List.of(
+                mortgagedPropertyView(SpotType.O1, 180, 14, true, 100),
+                propertyView(SpotType.O2, 180, 14, 0, true, 100),
+                propertyView(SpotType.O3, 200, 16, 0, true, 100)
+        ));
+        FakeContext context = new FakeContext(endTurnGameView(self), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("unmortgage:O1"), context.operations);
+    }
+
+    @Test
     void buildDecisionIncludesReasonAndAction() {
         PlayerView self = playerView(1, 900, List.of(
                 propertyView(SpotType.O1, 180, 14, 0, true, 100),
@@ -290,6 +303,25 @@ class StrongComputerStrategyTest {
                 buildingLevel,
                 buildingLevel == 5 ? 0 : buildingLevel,
                 buildingLevel == 5 ? 1 : 0,
+                rentEstimate,
+                completedSet
+        );
+    }
+
+    private static PropertyView mortgagedPropertyView(SpotType spotType, int price, int rentEstimate, boolean completedSet, int housePrice) {
+        return new PropertyView(
+                spotType,
+                spotType.streetType,
+                spotType.streetType.placeType,
+                spotType.name(),
+                price,
+                true,
+                price / 2,
+                0,
+                housePrice,
+                0,
+                0,
+                0,
                 rentEstimate,
                 completedSet
         );
@@ -460,43 +492,84 @@ class StrongComputerStrategyTest {
         @Override
         public boolean toggleMortgage(SpotType spotType) {
             PropertyView property = findProperty(spotType);
-            if (property == null || property.mortgaged()) {
+            if (property == null) {
                 return false;
             }
-            replaceProperty(new PropertyView(
-                    property.spotType(),
-                    property.streetType(),
-                    property.placeType(),
-                    property.name(),
-                    property.price(),
-                    true,
-                    property.mortgageValue(),
-                    property.liquidationValue(),
-                    property.housePrice(),
-                    property.buildingLevel(),
-                    property.houseCount(),
-                    property.hotelCount(),
-                    property.rentEstimate(),
-                    property.completedSet()
-            ));
-            self = new PlayerView(
-                    self.id(),
-                    self.name(),
-                    self.moneyAmount() + property.mortgageValue(),
-                    self.turnNumber(),
-                    self.computerProfile(),
-                    self.currentSpot(),
-                    self.inJail(),
-                    self.jailRoundsLeft(),
-                    self.getOutOfJailCardCount(),
-                    self.totalHouseCount(),
-                    self.totalHotelCount(),
-                    self.totalLiquidationValue(),
-                    self.boardDangerScore(),
-                    self.completedSets(),
-                    self.ownedProperties()
-            );
-            operations.add("mortgage:" + spotType.name());
+            if (property.mortgaged()) {
+                int cost = property.mortgageValue() + property.mortgageValue() / 10;
+                if (self.moneyAmount() < cost) {
+                    return false;
+                }
+                replaceProperty(new PropertyView(
+                        property.spotType(),
+                        property.streetType(),
+                        property.placeType(),
+                        property.name(),
+                        property.price(),
+                        false,
+                        property.mortgageValue(),
+                        property.mortgageValue(),
+                        property.housePrice(),
+                        property.buildingLevel(),
+                        property.houseCount(),
+                        property.hotelCount(),
+                        property.rentEstimate(),
+                        property.completedSet()
+                ));
+                self = new PlayerView(
+                        self.id(),
+                        self.name(),
+                        self.moneyAmount() - cost,
+                        self.turnNumber(),
+                        self.computerProfile(),
+                        self.currentSpot(),
+                        self.inJail(),
+                        self.jailRoundsLeft(),
+                        self.getOutOfJailCardCount(),
+                        self.totalHouseCount(),
+                        self.totalHotelCount(),
+                        self.totalLiquidationValue(),
+                        self.boardDangerScore(),
+                        self.completedSets(),
+                        self.ownedProperties()
+                );
+                operations.add("unmortgage:" + spotType.name());
+            } else {
+                replaceProperty(new PropertyView(
+                        property.spotType(),
+                        property.streetType(),
+                        property.placeType(),
+                        property.name(),
+                        property.price(),
+                        true,
+                        property.mortgageValue(),
+                        property.liquidationValue(),
+                        property.housePrice(),
+                        property.buildingLevel(),
+                        property.houseCount(),
+                        property.hotelCount(),
+                        property.rentEstimate(),
+                        property.completedSet()
+                ));
+                self = new PlayerView(
+                        self.id(),
+                        self.name(),
+                        self.moneyAmount() + property.mortgageValue(),
+                        self.turnNumber(),
+                        self.computerProfile(),
+                        self.currentSpot(),
+                        self.inJail(),
+                        self.jailRoundsLeft(),
+                        self.getOutOfJailCardCount(),
+                        self.totalHouseCount(),
+                        self.totalHotelCount(),
+                        self.totalLiquidationValue(),
+                        self.boardDangerScore(),
+                        self.completedSets(),
+                        self.ownedProperties()
+                );
+                operations.add("mortgage:" + spotType.name());
+            }
             replacePlayer();
             return true;
         }

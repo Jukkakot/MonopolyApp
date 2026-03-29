@@ -114,7 +114,7 @@ class GameComputerViewTest {
     }
 
     @Test
-    void defaultSeatsStillUseSmokeTestProfile() throws ReflectiveOperationException {
+    void defaultSeatsUseStrongBotProfile() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
@@ -122,6 +122,6 @@ class GameComputerViewTest {
         GameView view = game.createGameView(Game.players.getTurn());
 
         assertEquals(3, view.players().size());
-        assertTrue(view.players().stream().allMatch(player -> player.computerProfile() == ComputerPlayerProfile.SMOKE_TEST));
+        assertTrue(view.players().stream().allMatch(player -> player.computerProfile() == ComputerPlayerProfile.STRONG));
     }
 }

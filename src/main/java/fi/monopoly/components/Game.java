@@ -150,9 +150,9 @@ public class Game implements MonopolyEventListener {
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.SMOKE_TEST));
-        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.SMOKE_TEST));
-        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.SMOKE_TEST));
+        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
 //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
 //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
 //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
