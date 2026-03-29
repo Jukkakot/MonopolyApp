@@ -10,8 +10,10 @@ import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.support.TestObjectFactory;
+import fi.monopoly.support.TestLogLevels;
 import fi.monopoly.types.SpotType;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import processing.awt.PGraphicsJava2D;
@@ -27,6 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameBankruptcyTest {
+    private TestLogLevels.LogLevelSnapshot logLevelSnapshot;
+
+    @BeforeEach
+    void setWarnOnlyLogging() {
+        logLevelSnapshot = TestLogLevels.forceWarnOnly();
+    }
 
     @Test
     @Timeout(5)
@@ -171,6 +179,9 @@ class GameBankruptcyTest {
 
     @AfterEach
     void tearDown() {
+        if (logLevelSnapshot != null) {
+            logLevelSnapshot.restore();
+        }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;
         fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.clear();

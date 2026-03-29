@@ -4,6 +4,7 @@ import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.payment.DebtState;
+import fi.monopoly.support.TestLogLevels;
 import org.junit.jupiter.api.*;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
@@ -33,6 +34,7 @@ class GameSmokeTest {
     private static final int MAX_STAGNANT_STEPS = 250;
     private static final int MIN_TURN_SWITCHES = 15;
     private static final int MIN_UNIQUE_SPOTS = 12;
+    private TestLogLevels.LogLevelSnapshot logLevelSnapshot;
 
     private static void runAutoConfirmedRollSmokeTest(int targetRollCount) {
         runAutoConfirmedRollSmokeTest(targetRollCount, 1700, 996, false);
@@ -406,8 +408,16 @@ class GameSmokeTest {
                 + "|debt=" + Game.isDebtResolutionActive();
     }
 
+    @BeforeEach
+    void setWarnOnlyLogging() {
+        logLevelSnapshot = TestLogLevels.forceWarnOnly();
+    }
+
     @AfterEach
     void tearDown() {
+        if (logLevelSnapshot != null) {
+            logLevelSnapshot.restore();
+        }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;
         fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.clear();

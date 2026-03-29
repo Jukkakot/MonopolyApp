@@ -4,7 +4,9 @@ import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.support.TestLogLevels;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import processing.awt.PGraphicsJava2D;
@@ -21,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static processing.event.KeyEvent.PRESS;
 
 class GameComputerPlayerTest {
+    private TestLogLevels.LogLevelSnapshot logLevelSnapshot;
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
         MonopolyApp app = new MonopolyApp();
@@ -67,8 +70,16 @@ class GameComputerPlayerTest {
         return (List<Player>) field.get(Game.players);
     }
 
+    @BeforeEach
+    void setWarnOnlyLogging() {
+        logLevelSnapshot = TestLogLevels.forceWarnOnly();
+    }
+
     @AfterEach
     void tearDown() {
+        if (logLevelSnapshot != null) {
+            logLevelSnapshot.restore();
+        }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;
     }
