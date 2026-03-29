@@ -897,8 +897,10 @@ public class Game implements MonopolyEventListener {
                         List.of(TradePopupItem.empty(text("trade.choosePartnerCurrent"))),
                         true,
                         null,
+                        null,
                         List.of(),
                         false,
+                        null,
                         text("trade.choosePartnerHint"),
                         text("trade.choosePartnerList"),
                         tradePartners.stream()
@@ -928,18 +930,6 @@ public class Game implements MonopolyEventListener {
         Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
         TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
         List<ButtonProps> buttons = new java.util.ArrayList<>();
-        buttons.add(new ButtonProps(
-                editingOfferSide
-                        ? text("trade.button.selectedEditorSide", draft.proposer().getName())
-                        : text("trade.button.switchEditorSide", draft.proposer().getName()),
-                () -> openTradeEditor(draft, true)
-        ));
-        buttons.add(new ButtonProps(
-                editingOfferSide
-                        ? text("trade.button.switchEditorSide", draft.recipient().getName())
-                        : text("trade.button.selectedEditorSide", draft.recipient().getName()),
-                () -> openTradeEditor(draft, false)
-        ));
         buttons.add(new ButtonProps(text("trade.button.back"), this::openTradeMenu));
         buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
         buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
@@ -949,7 +939,7 @@ public class Game implements MonopolyEventListener {
         for (int delta : List.of(10, 100, -10, -100)) {
             int nextAmount = Math.max(0, selection.moneyAmount() + delta);
             if (nextAmount <= editingPlayer.getMoneyAmount()) {
-                String label = delta > 0 ? "+" + delta : String.valueOf(delta);
+                String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
                 buttons.add(new ButtonProps(label, () -> openTradeEditor(
                         updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(nextAmount)),
                         editingOfferSide
@@ -1074,9 +1064,11 @@ public class Game implements MonopolyEventListener {
                 offer.proposer(),
                 describeTradeSelectionVisualItems(offer.offeredToRecipient()),
                 Boolean.TRUE.equals(editingOfferSide),
+                editingOfferSide == null ? null : () -> openTradeEditor(draftFromOffer(offer), true),
                 offer.recipient(),
                 describeTradeSelectionVisualItems(offer.requestedFromRecipient()),
                 Boolean.FALSE.equals(editingOfferSide),
+                editingOfferSide == null ? null : () -> openTradeEditor(draftFromOffer(offer), false),
                 buildTradeValueDeltaSummary(offer),
                 editingOfferSide == null
                         ? null

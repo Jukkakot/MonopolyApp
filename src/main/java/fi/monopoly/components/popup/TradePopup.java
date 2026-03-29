@@ -183,6 +183,12 @@ public class TradePopup extends Popup {
 
         drawPanel(p, leftPanelX, panelY, panelWidth, PANELS_HEIGHT, tradeView.leftPlayer(), tradeView.leftItems(), tradeView.highlightLeft());
         drawPanel(p, rightPanelX, panelY, panelWidth, PANELS_HEIGHT, tradeView.rightPlayer(), tradeView.rightItems(), tradeView.highlightRight());
+        if (tradeView.leftAction() != null) {
+            clickableRegions.add(new ClickableRegion(leftPanelX, panelY, panelWidth, PANELS_HEIGHT, tradeView.leftAction(), tradeView.leftPlayer()));
+        }
+        if (tradeView.rightAction() != null) {
+            clickableRegions.add(new ClickableRegion(rightPanelX, panelY, panelWidth, PANELS_HEIGHT, tradeView.rightAction(), tradeView.rightPlayer()));
+        }
 
         float inventoryTitleY = panelY + PANELS_HEIGHT + INVENTORY_TOP_GAP;
         if (tradeView.inventoryTitle() != null && !tradeView.inventoryTitle().isBlank()) {
