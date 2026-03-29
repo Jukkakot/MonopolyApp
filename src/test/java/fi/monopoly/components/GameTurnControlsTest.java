@@ -49,6 +49,10 @@ class GameTurnControlsTest {
         return getButton(game, "languageButton");
     }
 
+    private static MonopolyButton getPauseButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "pauseButton");
+    }
+
     private static MonopolyButton getButton(Game game, String fieldName) throws ReflectiveOperationException {
         Field field = Game.class.getDeclaredField(fieldName);
         field.setAccessible(true);
@@ -189,13 +193,15 @@ class GameTurnControlsTest {
 
         LayoutMetrics metrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
         MonopolyButton endRoundButton = getEndRoundButton(game);
+        MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
         float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
         float historyHeight = invokeFloatMethod(game, "getSidebarHistoryHeight");
 
         assertEquals(metrics.sidebarX() + 16, endRoundButton.getPosition()[0], 0.0001f);
-        assertEquals(metrics.sidebarX() + 16, languageButton.getPosition()[0], 0.0001f);
+        assertEquals(historyY + historyHeight + 12, pauseButton.getPosition()[1], 0.0001f);
+        assertTrue(pauseButton.getPosition()[0] >= 0f);
         assertEquals(historyY + historyHeight + 12, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
         assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
@@ -235,11 +241,14 @@ class GameTurnControlsTest {
         updateSidebarControlPositions(game);
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
+        MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
 
         assertEquals(16f, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(16f, endRoundButton.getPosition()[1], 0.0001f);
+        assertEquals(156f, pauseButton.getPosition()[1], 0.0001f);
+        assertTrue(pauseButton.getPosition()[0] >= 16f);
         assertTrue(languageButton.getPosition()[0] + languageButton.getWidth() <= runtime.app().width);
         assertEquals(156f, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() <= runtime.app().width);

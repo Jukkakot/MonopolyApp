@@ -75,11 +75,13 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton debugSendToJailButton;
     private final MonopolyButton debugResetTurnButton;
     private final MonopolyButton debugGodModeButton;
+    private final MonopolyButton pauseButton;
     private final MonopolyButton languageButton;
     Board board;
     TurnResult prevTurnResult;
     private DebtState debtState;
     private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
+    private boolean paused;
 
     public Game(MonopolyRuntime runtime) {
         current = this;
@@ -116,6 +118,10 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, DEFAULT_LAYOUT.sidebarDebugButtonRow3Y());
         debugGodModeButton.setSize(300, 36);
         debugGodModeButton.setAutoWidth(180, 28, 300);
+        this.pauseButton = new MonopolyButton(runtime, "pause");
+        pauseButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, runtime.app().height - 96);
+        pauseButton.setSize(140, 36);
+        pauseButton.setAutoWidth(120, 28, 180);
         this.languageButton = new MonopolyButton(runtime, "language");
         languageButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, runtime.app().height - 48);
         languageButton.setSize(220, 36);
@@ -129,6 +135,7 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.hide();
         debugResetTurnButton.hide();
         debugGodModeButton.hide();
+        pauseButton.hide();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
         runtime.eventBus().addListener(this);
         board = new Board(runtime);
@@ -162,6 +169,7 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.addListener(this::debugSendCurrentPlayerToJail);
         debugResetTurnButton.addListener(this::debugResetTurnState);
         debugGodModeButton.addListener(this::openDebugGodModeMenu);
+        pauseButton.addListener(this::togglePause);
         languageButton.addListener(this::openLanguageMenu);
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
@@ -406,6 +414,9 @@ public class Game implements MonopolyEventListener {
         if (animations.isRunning()) {
             return;
         }
+        if (paused) {
+            return;
+        }
         int now = runtime.app().millis();
         boolean shouldApplyDelay = !MonopolyApp.SKIP_ANNIMATIONS && lastComputerActionAt != NO_COMPUTER_ACTION_YET;
         if (shouldApplyDelay && now - lastComputerActionAt < COMPUTER_ACTION_DELAY_MS) {
@@ -561,6 +572,10 @@ public class Game implements MonopolyEventListener {
                 log.debug("Skip animations: {}", MonopolyApp.SKIP_ANNIMATIONS);
                 consumedEvent = true;
             }
+            if (key == 'p') {
+                togglePause();
+                consumedEvent = true;
+            }
         } else if (event instanceof MouseEvent mouseEvent) {
             if (mouseEvent.getAction() == CLICK) {
                 if (runtime.popupService().isAnyVisible()) {
@@ -687,6 +702,7 @@ public class Game implements MonopolyEventListener {
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
         float debugRow2Y = layoutMetrics.sidebarDebugButtonRow2Y();
         float debugRow3Y = layoutMetrics.sidebarDebugButtonRow3Y();
+        float pauseButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
         float languageButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
 
         endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
@@ -697,7 +713,8 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.setPosition(sidebarLeftX, debugRow2Y);
         debugResetTurnButton.setPosition(sidebarRightAlignedX - debugResetTurnButton.getWidth(), debugRow2Y);
         debugGodModeButton.setPosition(sidebarLeftX, debugRow3Y);
-        languageButton.setPosition(sidebarLeftX, languageButtonY);
+        languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), languageButtonY);
+        pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - 8, pauseButtonY);
         DICES.updateLayout(layoutMetrics);
     }
 
@@ -715,6 +732,10 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_3_Y);
         languageButton.setPosition(
                 Math.max(leftX, rightX - languageButton.getWidth()),
+                OVERLAY_SECONDARY_ROW_3_Y
+        );
+        pauseButton.setPosition(
+                Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - 8),
                 OVERLAY_SECONDARY_ROW_3_Y
         );
     }
@@ -799,6 +820,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebugButtons() {
+        pauseButton.show();
         languageButton.show();
         if (!MonopolyApp.DEBUG_MODE) {
             debugAddCashButton.hide();
@@ -824,7 +846,14 @@ public class Game implements MonopolyEventListener {
         debugSendToJailButton.setLabel(text("game.button.debugJail"));
         debugResetTurnButton.setLabel(text("game.button.debugReset"));
         debugGodModeButton.setLabel(text("game.button.godMode"));
+        pauseButton.setLabel(paused ? text("game.button.resume") : text("game.button.pause"));
         languageButton.setLabel(text("language.button.current", text("language.name.current")));
+    }
+
+    private void togglePause() {
+        paused = !paused;
+        refreshLabels();
+        log.info("Game paused={}", paused);
     }
 
     private void openLanguageMenu() {

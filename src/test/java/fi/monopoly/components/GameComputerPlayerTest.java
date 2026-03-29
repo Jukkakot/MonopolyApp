@@ -47,6 +47,12 @@ class GameComputerPlayerTest {
         method.invoke(game);
     }
 
+    private static void invokeTogglePause(Game game) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod("togglePause");
+        method.setAccessible(true);
+        method.invoke(game);
+    }
+
     @SuppressWarnings("unchecked")
     private static List<Player> getPlayerList() throws ReflectiveOperationException {
         Field field = Players.class.getDeclaredField("playerList");
@@ -100,5 +106,28 @@ class GameComputerPlayerTest {
         }
 
         assertNotEquals(botName, Game.players.getTurn().getName());
+    }
+
+    @Test
+    void pausePreventsComputerTurnFromAdvancing() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyApp.SKIP_ANNIMATIONS = true;
+        MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        String botName = Game.players.getTurn().getName();
+        invokeTogglePause(game);
+
+        for (int step = 0; step < 50; step++) {
+            runtime.eventBus().flushPendingChanges();
+            invokeComputerStep(game);
+            runtime.eventBus().flushPendingChanges();
+            if (Game.animations.isRunning()) {
+                Game.animations.finishAllAnimations();
+            }
+        }
+
+        assertEquals(botName, Game.players.getTurn().getName());
     }
 }
