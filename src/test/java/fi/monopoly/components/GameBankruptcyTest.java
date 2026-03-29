@@ -13,6 +13,7 @@ import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GameBankruptcyTest {
 
     @Test
+    @Timeout(5)
     void bankruptcyAgainstPlayerLiquidatesBuildingsThenTransfersAssets() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
@@ -63,6 +65,7 @@ class GameBankruptcyTest {
     }
 
     @Test
+    @Timeout(5)
     void bankruptcyAgainstBankLiquidatesBuildingsAndAuctionsPropertiesToRemainingPlayers() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
@@ -104,6 +107,7 @@ class GameBankruptcyTest {
     }
 
     @Test
+    @Timeout(5)
     void bankruptcyAgainstBankLeavesPropertiesAtBankWhenNobodyCanBid() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
@@ -139,6 +143,7 @@ class GameBankruptcyTest {
     }
 
     @Test
+    @Timeout(5)
     void winnerTokenStaysOnBoardAfterGameEndingBankruptcy() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();

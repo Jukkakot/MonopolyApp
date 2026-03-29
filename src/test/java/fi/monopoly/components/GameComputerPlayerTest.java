@@ -6,6 +6,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 import processing.event.KeyEvent;
@@ -73,6 +74,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
+    @Timeout(5)
     void defaultSeatsUseStrongBotProfile() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
@@ -90,6 +92,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
+    @Timeout(5)
     void defaultBotCanFinishItsTurnWithoutUserInput() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyApp.SKIP_ANNIMATIONS = true;
@@ -115,6 +118,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
+    @Timeout(5)
     void pausePreventsComputerTurnFromAdvancing() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyApp.SKIP_ANNIMATIONS = true;
@@ -138,6 +142,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
+    @Timeout(5)
     void pauseCanBeToggledEvenWhilePopupIsVisible() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
