@@ -141,7 +141,9 @@ public class Dices implements MonopolyEventListener {
     public void rollDice() {
         if (!runtime.popupService().isAnyVisible()) {
             roll();
-            rollDiceButton.hide();
+            // After a successful roll, the button must remain logically hidden until the
+            // game explicitly re-enables rolling for a later phase/turn.
+            hide();
         }
     }
 

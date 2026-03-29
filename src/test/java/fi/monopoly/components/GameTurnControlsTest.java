@@ -308,6 +308,28 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void rollDiceButtonDoesNotReturnAfterPopupClosesIfTurnAlreadyRolled() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+
+        assertTrue(Game.DICES.isVisible());
+
+        Game.DICES.rollDice();
+        assertFalse(Game.DICES.isVisible(), "Roll dice button must hide immediately after rolling");
+
+        runtime.popupService().show("Follow-up popup");
+        updateSidebarControlPositions(game);
+        assertFalse(Game.DICES.isVisible(), "Roll dice button must stay hidden while popup is visible");
+
+        runtime.popupService().triggerPrimaryAction();
+        updateSidebarControlPositions(game);
+
+        assertFalse(Game.DICES.isVisible(),
+                "Roll dice button must not reappear after popup closes once the turn has already rolled");
+    }
+
+    @Test
     void endTurnButtonStaysLeftOfDiceDisplayArea() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
