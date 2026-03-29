@@ -13,18 +13,17 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/monopoly-test.log</file>
+        <file>${LOG_DIR}/monopoly-test-current.log</file>
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/monopoly-test.%i.log.zip</fileNamePattern>
-            <minIndex>1</minIndex>
-            <maxIndex>9</maxIndex>
-        </rollingPolicy>
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/monopoly-test.%d{yyyy-MM-dd_HH-mm-ss}.%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
-        </triggeringPolicy>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>200MB</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
     </appender>
 
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
@@ -34,12 +33,38 @@
         <appender-ref ref="FILE"/>
     </appender>
 
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/ERROR-monopoly-test-current.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/ERROR-monopoly-test.%d{yyyy-MM-dd_HH-mm-ss}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="ASYNC_ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>2048</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="ERROR_FILE"/>
+    </appender>
+
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
     </root>
 
     <logger name="fi.monopoly" level="TRACE" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
     </logger>
 </configuration>
