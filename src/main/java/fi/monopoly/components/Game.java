@@ -932,14 +932,13 @@ public class Game implements MonopolyEventListener {
         List<ButtonProps> buttons = new java.util.ArrayList<>();
         for (int delta : List.of(10, 100, -10, -100)) {
             int nextAmount = Math.max(0, selection.moneyAmount() + delta);
-            if (nextAmount <= editingPlayer.getMoneyAmount()) {
-                String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
-                if (delta > 0) {
-                    buttons.add(new ButtonProps(label, () -> openTradeEditor(
-                            updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(nextAmount)),
-                            editingOfferSide
-                    )));
-                }
+            String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
+            if (delta > 0) {
+                int cappedAmount = Math.min(editingPlayer.getMoneyAmount(), nextAmount);
+                buttons.add(new ButtonProps(label, () -> openTradeEditor(
+                        updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(cappedAmount)),
+                        editingOfferSide
+                )));
             }
         }
         buttons.add(new ButtonProps(text("trade.button.back"), this::openTradeMenu));

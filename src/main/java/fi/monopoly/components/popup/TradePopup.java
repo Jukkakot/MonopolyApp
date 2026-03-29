@@ -66,6 +66,7 @@ public class TradePopup extends Popup {
     private final List<String> activeButtonLabels = new ArrayList<>();
     private final List<ClickableRegion> clickableRegions = new ArrayList<>();
     private final MonopolyButton closeButton;
+    private final MonopolyButton backButton;
     private int totalButtonCount = 0;
     private TradePopupView tradeView;
     private Object hoveredItemKey;
@@ -75,13 +76,22 @@ public class TradePopup extends Popup {
         this.closeButton = new MonopolyButton(runtime, "tradeClose")
                 .addListener(() -> completeAction(null))
                 .setSize(20, 20);
+        this.backButton = new MonopolyButton(runtime, "tradeBack")
+                .addListener(() -> {
+                    if (totalButtonCount > 0) {
+                        customButtons.get(0).pressButton();
+                    }
+                })
+                .setSize(56, 32);
         closeButton.hide();
+        backButton.hide();
         refreshLabels();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
     }
 
     private void refreshLabels() {
         closeButton.setLabel(text("popup.close.label"));
+        backButton.setLabel("<-");
     }
 
     public void setTradeView(TradePopupView tradeView) {
@@ -173,12 +183,12 @@ public class TradePopup extends Popup {
         p.resetMatrix();
 
         p.fill(0);
-        p.textFont(runtime.font20());
+        p.textFont(runtime.font30());
         p.textAlign(CENTER, TOP);
         p.text(tradeView.title(), getPopupCenter().x(), top + TEXT_TOP_OFFSET);
         if (tradeView.subtitle() != null && !tradeView.subtitle().isBlank()) {
-            p.textFont(runtime.font10());
-            p.text(tradeView.subtitle(), getPopupCenter().x(), top + SUBTITLE_TOP_OFFSET);
+            p.textFont(runtime.font20());
+            p.text(tradeView.subtitle(), getPopupCenter().x(), top + SUBTITLE_TOP_OFFSET + 4f);
         }
 
         drawPanel(p, leftPanelX, panelY, panelWidth, PANELS_HEIGHT, tradeView.leftPlayer(), tradeView.leftItems(), tradeView.highlightLeft());
@@ -223,8 +233,8 @@ public class TradePopup extends Popup {
         float itemY = y + PANEL_PADDING + PANEL_HEADER_HEIGHT;
         float maxX = x + width - PANEL_PADDING;
         for (TradePopupItem item : items) {
-            float cardW = item.type() == TradePopupItemType.PROPERTY ? SUMMARY_CARD_W : 112f;
-            float cardH = item.type() == TradePopupItemType.PROPERTY ? SUMMARY_CARD_H : 48f;
+            float cardW = (item.type() == TradePopupItemType.PROPERTY || item.type() == TradePopupItemType.JAIL_CARD) ? SUMMARY_CARD_W : 112f;
+            float cardH = (item.type() == TradePopupItemType.PROPERTY || item.type() == TradePopupItemType.JAIL_CARD) ? SUMMARY_CARD_H : 48f;
             if (itemX + cardW > maxX) {
                 itemX = x + PANEL_PADDING;
                 itemY += cardH + ITEM_GAP;
@@ -305,21 +315,21 @@ public class TradePopup extends Popup {
         p.fill(0);
         p.textFont(runtime.font10());
         p.textAlign(CENTER, TOP);
-        p.text(item.property().getDisplayName(), x + width / 2f, y + height - 28f);
+        p.textLeading(10);
+        p.text(item.property().getDisplayName(), x + width * 0.12f, y + height - 30f, width * 0.76f, 24f);
     }
 
     private void drawJailCardItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
-        drawCardStripe(p, x, y, width, runtime.app().color(70, 120, 80));
-
-        PImage image = MonopolyApp.getImage("Community.png");
+        PImage image = MonopolyApp.getImage("GetOutOfJail.png");
         if (image != null) {
             p.imageMode(CORNER);
-            p.image(image, x + 8f, y + 8f + PROPERTY_COLOR_STRIPE_HEIGHT, width - 16f, height - 48f - PROPERTY_COLOR_STRIPE_HEIGHT);
+            p.image(image, x + 8f, y + 8f, width - 16f, height - 40f);
         }
         p.fill(0);
         p.textFont(runtime.font10());
         p.textAlign(CENTER, TOP);
-        p.text(item.label(), x + width / 2f, y + height - 28f);
+        p.textLeading(10);
+        p.text(item.label(), x + width * 0.12f, y + height - 30f, width * 0.76f, 24f);
     }
 
     private void drawMoneyItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
@@ -436,6 +446,12 @@ public class TradePopup extends Popup {
                     runtime.app().color(76, 204, 90),
                     runtime.app().color(35, 132, 52)
             );
+        } else if (buttonProps.name().equals(text("trade.button.clear"))) {
+            button.setButtonColors(
+                    runtime.app().color(196, 70, 70),
+                    runtime.app().color(222, 98, 98),
+                    runtime.app().color(150, 44, 44)
+            );
         } else {
             button.setButtonColors(
                     runtime.app().color(180, 180, 180),
@@ -482,10 +498,11 @@ public class TradePopup extends Popup {
     private void layoutTradeEditorButtons() {
         int top = Math.round(getButtonAreaTop());
         int rowY = top + Math.max(0, Math.round((getButtonAreaHeight() - BUTTON_HEIGHT) / 2f));
+        customButtons.get(0).hide();
         List<MonopolyButton> positiveButtons = new ArrayList<>();
         List<MonopolyButton> centerButtons = new ArrayList<>();
         List<MonopolyButton> negativeButtons = new ArrayList<>();
-        for (int i = 0; i < totalButtonCount; i++) {
+        for (int i = 1; i < totalButtonCount; i++) {
             MonopolyButton button = customButtons.get(i);
             String label = button.getCaptionLabel().getText();
             if (label.startsWith("+")) {
@@ -499,6 +516,7 @@ public class TradePopup extends Popup {
         layoutButtonGroup(positiveButtons, Math.round(getPopupLeft() + 36), rowY, false);
         layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
         layoutButtonGroup(negativeButtons, Math.round(getPopupRight() - 36), rowY, false, true);
+        backButton.setPosition(getPopupLeft() + 24, getPopupTop() + 18);
     }
 
     private void layoutButtonGroup(List<MonopolyButton> buttons, int anchorX, int rowY, boolean centered) {
@@ -523,7 +541,14 @@ public class TradePopup extends Popup {
         super.show();
         layoutButtons();
         closeButton.show();
+        if (tradeView != null && tradeView.inventoryTitle() != null && totalButtonCount > 0) {
+            backButton.show();
+            customButtons.get(0).hide();
+        }
         for (int i = 0; i < totalButtonCount; i++) {
+            if (tradeView != null && tradeView.inventoryTitle() != null && i == 0) {
+                continue;
+            }
             customButtons.get(i).show();
         }
     }
@@ -532,6 +557,7 @@ public class TradePopup extends Popup {
     protected void hide() {
         super.hide();
         closeButton.hide();
+        backButton.hide();
         customButtons.forEach(MonopolyButton::hide);
         activeButtonLabels.clear();
         clickableRegions.clear();
