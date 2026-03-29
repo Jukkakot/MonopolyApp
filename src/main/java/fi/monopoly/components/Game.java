@@ -1128,6 +1128,16 @@ public class Game implements MonopolyEventListener {
         }
 
         @Override
+        public boolean acceptActivePopup() {
+            return runtime.popupService().triggerPrimaryAction();
+        }
+
+        @Override
+        public boolean declineActivePopup() {
+            return runtime.popupService().triggerSecondaryAction();
+        }
+
+        @Override
         public boolean sellBuilding(SpotType spotType, int count) {
             Property property = PropertyFactory.getProperty(spotType);
             if (!(property instanceof StreetProperty streetProperty)) {
@@ -1167,7 +1177,8 @@ public class Game implements MonopolyEventListener {
                 ? new PopupView(
                 runtime.popupService().activePopupKind(),
                 runtime.popupService().activePopupMessage(),
-                runtime.popupService().activePopupActions()
+                runtime.popupService().activePopupActions(),
+                createPopupPropertyView(currentPlayer)
         )
                 : null;
         DebtView debtView = debtState == null ? null : new DebtView(
@@ -1294,5 +1305,49 @@ public class Game implements MonopolyEventListener {
             return playerTarget.player().getName();
         }
         return paymentRequest.target().getClass().getSimpleName();
+    }
+
+    private PropertyView createPopupPropertyView(Player currentPlayer) {
+        Property offeredProperty = runtime.popupService().activeOfferedProperty();
+        if (offeredProperty == null) {
+            return null;
+        }
+        return new PropertyView(
+                offeredProperty.getSpotType(),
+                offeredProperty.getSpotType().streetType,
+                offeredProperty.getSpotType().streetType.placeType,
+                offeredProperty.getDisplayName(),
+                offeredProperty.getPrice(),
+                offeredProperty.isMortgaged(),
+                offeredProperty.getMortgageValue(),
+                offeredProperty.getLiquidationValue(),
+                0,
+                0,
+                0,
+                estimateOfferedPropertyRent(offeredProperty, currentPlayer),
+                currentPlayer != null && currentPlayer.getOwnedProperties(offeredProperty.getSpotType().streetType).size() + 1
+                        >= SpotType.getNumberOfSpots(offeredProperty.getSpotType().streetType)
+        );
+    }
+
+    private int estimateOfferedPropertyRent(Property property, Player currentPlayer) {
+        if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
+            int utilityCount = currentPlayer == null ? 0 : currentPlayer.getOwnedProperties(property.getSpotType().streetType).size() + 1;
+            return utilityCount >= 2 ? 70 : 28;
+        }
+        Player simulatedVisitor = players.getPlayers().stream()
+                .filter(candidate -> candidate != currentPlayer)
+                .findFirst()
+                .orElse(null);
+        if (simulatedVisitor == null) {
+            return 0;
+        }
+        Player originalOwner = property.getOwnerPlayer();
+        property.setOwnerPlayer(currentPlayer);
+        try {
+            return property.getRent(simulatedVisitor);
+        } finally {
+            property.setOwnerPlayer(originalOwner);
+        }
     }
 }

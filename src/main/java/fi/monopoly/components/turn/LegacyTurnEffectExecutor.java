@@ -40,7 +40,7 @@ public class LegacyTurnEffectExecutor {
                 next.doAction();
             });
         } else if (effect instanceof OfferToBuyPropertyEffect offerToBuyPropertyEffect) {
-            popupService.show(offerToBuyPropertyEffect.message(), () -> {
+            popupService.showPropertyOffer(offerToBuyPropertyEffect.property(), offerToBuyPropertyEffect.message(), () -> {
                 boolean couldBuy = offerToBuyPropertyEffect.player().buyProperty(offerToBuyPropertyEffect.property());
                 if (!couldBuy) {
                     popupService.show(text("property.buy.notEnough", offerToBuyPropertyEffect.property().getDisplayName()), next::doAction);

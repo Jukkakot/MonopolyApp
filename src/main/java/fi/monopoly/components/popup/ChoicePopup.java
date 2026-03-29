@@ -77,8 +77,7 @@ public class ChoicePopup extends Popup {
 
     @Override
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
-        acceptAction();
-        return true;
+        return triggerPrimaryAction();
     }
 
     @Override
@@ -89,6 +88,18 @@ public class ChoicePopup extends Popup {
     @Override
     protected void refreshControlLayout() {
         layoutButtons();
+    }
+
+    @Override
+    protected boolean triggerPrimaryAction() {
+        acceptAction();
+        return true;
+    }
+
+    @Override
+    protected boolean triggerSecondaryAction() {
+        declineAction();
+        return true;
     }
 
     private void layoutButtons() {

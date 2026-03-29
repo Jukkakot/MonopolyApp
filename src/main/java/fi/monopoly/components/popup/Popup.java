@@ -160,6 +160,14 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         return false;
     }
 
+    protected boolean triggerPrimaryAction() {
+        return false;
+    }
+
+    protected boolean triggerSecondaryAction() {
+        return false;
+    }
+
     protected void refreshControlLayout() {
     }
 

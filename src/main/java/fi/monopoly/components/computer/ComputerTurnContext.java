@@ -9,6 +9,10 @@ public interface ComputerTurnContext {
 
     boolean resolveActivePopup();
 
+    boolean acceptActivePopup();
+
+    boolean declineActivePopup();
+
     boolean sellBuilding(SpotType spotType, int count);
 
     boolean toggleMortgage(SpotType spotType);

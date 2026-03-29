@@ -3,6 +3,7 @@ package fi.monopoly.components.popup;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
+import fi.monopoly.components.properties.Property;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -57,6 +58,17 @@ public class PopupService {
         });
     }
 
+    public void showPropertyOffer(Property property, String text, ButtonAction onAccept, ButtonAction onDecline) {
+        enqueue(() -> {
+            PropertyOfferPopup propertyOfferPopup = getInstance(PropertyOfferPopup.class);
+            propertyOfferPopup.setPopupText(text);
+            propertyOfferPopup.setOfferedProperty(property);
+            propertyOfferPopup.setOnAcceptAction(onAccept);
+            propertyOfferPopup.setOnDeclineAction(onDecline);
+            return propertyOfferPopup;
+        });
+    }
+
     public void show(String text, ButtonProps... buttonProps) {
         enqueue(() -> {
             CustomPopup customPopup = getInstance(CustomPopup.class);
@@ -104,6 +116,21 @@ public class PopupService {
         return activePopup == null ? List.of() : activePopup.getVisibleActionLabels();
     }
 
+    public boolean triggerPrimaryAction() {
+        return activePopup != null && activePopup.triggerPrimaryAction();
+    }
+
+    public boolean triggerSecondaryAction() {
+        return activePopup != null && activePopup.triggerSecondaryAction();
+    }
+
+    public Property activeOfferedProperty() {
+        if (activePopup instanceof PropertyOfferPopup propertyOfferPopup) {
+            return propertyOfferPopup.getOfferedProperty();
+        }
+        return null;
+    }
+
     private <T extends Popup> T getInstance(Class<T> clazz) {
         return clazz.cast(popupInstances.computeIfAbsent(clazz, this::createPopup));
     }
@@ -127,6 +154,7 @@ public class PopupService {
         Map<Class<? extends Popup>, Supplier<? extends Popup>> factories = Map.of(
                 OkPopup.class, () -> new OkPopup(runtime),
                 ChoicePopup.class, () -> new ChoicePopup(runtime),
+                PropertyOfferPopup.class, () -> new PropertyOfferPopup(runtime),
                 CustomPopup.class, () -> new CustomPopup(runtime)
         );
         Supplier<? extends Popup> supplier = factories.get(clazz);

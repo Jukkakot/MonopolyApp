@@ -61,8 +61,7 @@ public class OkPopup extends Popup {
 
     @Override
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
-        okAction();
-        return true;
+        return triggerPrimaryAction();
     }
 
     @Override
@@ -73,6 +72,12 @@ public class OkPopup extends Popup {
     @Override
     protected void refreshControlLayout() {
         layoutButtons();
+    }
+
+    @Override
+    protected boolean triggerPrimaryAction() {
+        okAction();
+        return true;
     }
 
     private void layoutButtons() {

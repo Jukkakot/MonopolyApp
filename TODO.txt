@@ -10,7 +10,6 @@ ECONOMY AND MULTIPLAYER
 [High] Add player trading
 [High] Add trade offers for money, property, and jail card
 [High] Add computer players with configurable difficulty profiles
-[High] Add read-only bot evaluation views over game state
 [High] Implement strong computer-player property-buy heuristics
 [High] Implement strong computer-player debt liquidation priorities
 [Medium] Implement strong computer-player building heuristics with cash reserve rules

@@ -148,6 +148,16 @@ public class CustomPopup extends Popup {
 
     @Override
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
+        return triggerPrimaryAction();
+    }
+
+    @Override
+    public List<String> getVisibleActionLabels() {
+        return List.copyOf(activeButtonLabels);
+    }
+
+    @Override
+    protected boolean triggerPrimaryAction() {
         if (totalButtonCount > 0) {
             customButtons.get(0).pressButton();
             return true;
@@ -157,8 +167,9 @@ public class CustomPopup extends Popup {
     }
 
     @Override
-    public List<String> getVisibleActionLabels() {
-        return List.copyOf(activeButtonLabels);
+    protected boolean triggerSecondaryAction() {
+        completeAction(null);
+        return true;
     }
 
     private int getMaxButtonColumns() {

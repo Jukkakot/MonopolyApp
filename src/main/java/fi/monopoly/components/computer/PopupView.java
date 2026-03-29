@@ -5,7 +5,8 @@ import java.util.List;
 public record PopupView(
         String type,
         String message,
-        List<String> actions
+        List<String> actions,
+        PropertyView offeredProperty
 ) {
     public PopupView {
         actions = List.copyOf(actions);
