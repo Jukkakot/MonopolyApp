@@ -952,7 +952,8 @@ public class Game implements MonopolyEventListener {
                 (editingOfferSide
                         ? text("trade.chooseOffer", editingPlayer.getName(), otherPlayer.getName())
                         : text("trade.chooseRequest", editingPlayer.getName(), otherPlayer.getName()))
-                        + "\n" + text("trade.currentSelection", describeTradeSelection(selection)),
+                        + "\n" + text("trade.currentSelection", describeTradeSelection(selection))
+                        + "\n" + buildTradeValueDeltaSummary(draft.toOffer()),
                 buildTradeEditorButtons(draft, editingOfferSide)
         );
     }
@@ -983,7 +984,9 @@ public class Game implements MonopolyEventListener {
             }
         }
         buttons.add(new ButtonProps(
-                selection.jailCard() ? text("trade.button.removeJailCard") : text("trade.button.addJailCard"),
+                selection.jailCard()
+                        ? text("trade.button.selectedJailCard")
+                        : text("trade.button.unselectedJailCard"),
                 () -> openTradeEditor(updateTradeSelection(draft, editingOfferSide, selection.toggleJailCard()), editingOfferSide)
         ));
         if (selection.property() != null) {
@@ -996,7 +999,9 @@ public class Game implements MonopolyEventListener {
                 .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
                 .filter(this::isTradableProperty)
                 .forEach(property -> buttons.add(new ButtonProps(
-                        property.getDisplayName(),
+                        property.equals(selection.property())
+                                ? text("trade.button.selectedAsset", property.getDisplayName())
+                                : property.getDisplayName(),
                         () -> openTradeEditor(updateTradeSelection(draft, editingOfferSide, selection.withProperty(property)), editingOfferSide)
                 )));
         return buttons.toArray(ButtonProps[]::new);
@@ -1088,7 +1093,25 @@ public class Game implements MonopolyEventListener {
     private String buildTradeSummary(TradeOffer offer) {
         return text("trade.summary.header", offer.proposer().getName(), offer.recipient().getName())
                 + "\n" + text("trade.summary.offer", describeTradeSelection(offer.offeredToRecipient()))
-                + "\n" + text("trade.summary.request", describeTradeSelection(offer.requestedFromRecipient()));
+                + "\n" + text("trade.summary.request", describeTradeSelection(offer.requestedFromRecipient()))
+                + "\n" + buildTradeValueDeltaSummary(offer);
+    }
+
+    private String buildTradeValueDeltaSummary(TradeOffer offer) {
+        TradeDecision recipientView = tradeOfferEvaluator.evaluateForRecipient(offer, BotTradeProfile.BALANCED);
+        TradeDecision proposerView = tradeOfferEvaluator.evaluateForRecipient(offer.reversePerspective(), BotTradeProfile.BALANCED);
+        return text(
+                "trade.summary.delta",
+                offer.proposer().getName(),
+                formatTradeDelta(proposerView.score()),
+                offer.recipient().getName(),
+                formatTradeDelta(recipientView.score())
+        );
+    }
+
+    private String formatTradeDelta(double value) {
+        double roundedValue = Math.round(value * 10.0) / 10.0;
+        return (roundedValue >= 0 ? "+" : "") + roundedValue;
     }
 
     private String describeTradeSelection(TradeSelection selection) {
