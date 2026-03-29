@@ -1,11 +1,11 @@
 package fi.monopoly.components.popup;
 
-import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import lombok.Setter;
 
+import static fi.monopoly.MonopolyApp.SPACE;
 import static fi.monopoly.text.UiTexts.text;
 
 public class ChoicePopup extends Popup {
@@ -69,7 +69,7 @@ public class ChoicePopup extends Popup {
 
     @Override
     protected boolean onKeyAction(char key) {
-        if (key == '1' || (MonopolyApp.SKIP_ANNIMATIONS && key == ' ')) {
+        if (key == '1' || key == SPACE) {
             acceptAction();
             return true;
         } else if (key == '2') {
