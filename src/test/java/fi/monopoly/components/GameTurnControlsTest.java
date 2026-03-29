@@ -273,7 +273,7 @@ class GameTurnControlsTest {
 
         assertTrue(game.onEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, 't', 't')));
         assertTrue(runtime.popupService().isAnyVisible());
-        assertEquals("CustomPopup", runtime.popupService().activePopupKind());
+        assertEquals("TradePopup", runtime.popupService().activePopupKind());
     }
 
     @Test

@@ -1,16 +1,20 @@
 package fi.monopoly.components.popup;
 
+import fi.monopoly.components.Player;
+
 import java.util.List;
 
 public record TradePopupView(
         String title,
         String subtitle,
-        String leftPlayerName,
-        List<String> leftItems,
+        Player leftPlayer,
+        List<TradePopupItem> leftItems,
         boolean highlightLeft,
-        String rightPlayerName,
-        List<String> rightItems,
+        Player rightPlayer,
+        List<TradePopupItem> rightItems,
         boolean highlightRight,
-        String footer
+        String footer,
+        String inventoryTitle,
+        List<TradePopupItem> inventoryItems
 ) {
 }

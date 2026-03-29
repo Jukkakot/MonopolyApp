@@ -1,10 +1,17 @@
 package fi.monopoly.components.popup;
 
+import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
+import fi.monopoly.components.Player;
+import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
+import fi.monopoly.utils.MonopolyUtils;
+import javafx.scene.paint.Color;
 import processing.core.PGraphics;
+import processing.core.PImage;
+import processing.event.MouseEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,26 +21,36 @@ import static processing.core.PConstants.CENTER;
 import static processing.core.PConstants.CORNER;
 import static processing.core.PConstants.LEFT;
 import static processing.core.PConstants.TOP;
+import static processing.event.MouseEvent.CLICK;
 
 public class TradePopup extends Popup {
+    private static final int POPUP_WIDTH = 920;
+    private static final int POPUP_HEIGHT = 720;
     private static final int MIN_BUTTON_WIDTH = 100;
     private static final int MAX_BUTTON_WIDTH = 220;
     private static final int BUTTON_HEIGHT = 50;
     private static final int BUTTON_PADDING = 28;
     private static final int BUTTON_GAP_X = 12;
     private static final int BUTTON_GAP_Y = 12;
-    private static final float PANELS_TOP_OFFSET = 74f;
-    private static final float PANELS_BOTTOM_PADDING = 18f;
+    private static final float PANELS_TOP_OFFSET = 82f;
+    private static final float PANELS_HEIGHT = 240f;
     private static final float PANEL_GAP = 18f;
     private static final float PANEL_PADDING = 14f;
-    private static final float PANEL_HEADER_HEIGHT = 28f;
-    private static final float CHIP_HEIGHT = 28f;
-    private static final float CHIP_GAP_X = 8f;
-    private static final float CHIP_GAP_Y = 8f;
-    private static final float SUBTITLE_TOP_OFFSET = 38f;
+    private static final float PANEL_HEADER_HEIGHT = 46f;
+    private static final float ITEM_GAP = 10f;
+    private static final float INVENTORY_TOP_GAP = 18f;
+    private static final float INVENTORY_TITLE_GAP = 28f;
+    private static final float INVENTORY_CARD_W = 122f;
+    private static final float INVENTORY_CARD_H = 156f;
+    private static final float SUMMARY_CARD_W = 108f;
+    private static final float SUMMARY_CARD_H = 138f;
+    private static final float TOKEN_SIZE = 34f;
+    private static final float SUBTITLE_TOP_OFFSET = 40f;
     private static final float FOOTER_BOTTOM_PADDING = 22f;
+
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private final List<String> activeButtonLabels = new ArrayList<>();
+    private final List<ClickableRegion> clickableRegions = new ArrayList<>();
     private final MonopolyButton closeButton;
     private int totalButtonCount = 0;
     private TradePopupView tradeView;
@@ -70,6 +87,213 @@ public class TradePopup extends Popup {
         }
     }
 
+    @Override
+    protected int getPopupWidth() {
+        int availableWidth = Math.round(runtime.app().width) - WINDOW_MARGIN * 2;
+        return Math.max(560, Math.min(POPUP_WIDTH, availableWidth));
+    }
+
+    @Override
+    protected int getPopupHeight() {
+        int availableHeight = runtime.app().height - WINDOW_MARGIN * 2;
+        return Math.max(420, Math.min(POPUP_HEIGHT, availableHeight));
+    }
+
+    @Override
+    protected float getButtonAreaTop() {
+        return getPopupBottom() - 150f;
+    }
+
+    @Override
+    public void draw(PGraphics p) {
+        if (!isVisible || tradeView == null) {
+            return;
+        }
+        refreshControlLayout();
+        clickableRegions.clear();
+        drawBackground(p);
+        drawTradePanels(p);
+    }
+
+    private void drawBackground(PGraphics p) {
+        p.pushMatrix();
+        p.pushStyle();
+        p.resetMatrix();
+        p.fill(p.color(255, 217, 127));
+        p.rectMode(CENTER);
+        p.stroke(0);
+        p.strokeWeight(10);
+        p.rect(getPopupCenter().x(), getPopupCenter().y(), getPopupWidth(), getPopupHeight(), 30);
+        p.popStyle();
+        p.popMatrix();
+    }
+
+    private void drawTradePanels(PGraphics p) {
+        float left = getPopupLeft();
+        float top = getPopupTop();
+        float width = getPopupWidth();
+        float panelWidth = (width - TEXT_SIDE_PADDING * 2f - PANEL_GAP) / 2f;
+        float leftPanelX = left + TEXT_SIDE_PADDING;
+        float rightPanelX = leftPanelX + panelWidth + PANEL_GAP;
+        float panelY = top + PANELS_TOP_OFFSET;
+
+        p.pushMatrix();
+        p.pushStyle();
+        p.resetMatrix();
+
+        p.fill(0);
+        p.textFont(runtime.font20());
+        p.textAlign(CENTER, TOP);
+        p.text(tradeView.title(), getPopupCenter().x(), top + TEXT_TOP_OFFSET);
+        if (tradeView.subtitle() != null && !tradeView.subtitle().isBlank()) {
+            p.textFont(runtime.font10());
+            p.text(tradeView.subtitle(), getPopupCenter().x(), top + SUBTITLE_TOP_OFFSET);
+        }
+
+        drawPanel(p, leftPanelX, panelY, panelWidth, PANELS_HEIGHT, tradeView.leftPlayer(), tradeView.leftItems(), tradeView.highlightLeft());
+        drawPanel(p, rightPanelX, panelY, panelWidth, PANELS_HEIGHT, tradeView.rightPlayer(), tradeView.rightItems(), tradeView.highlightRight());
+
+        float inventoryTitleY = panelY + PANELS_HEIGHT + INVENTORY_TOP_GAP;
+        if (tradeView.inventoryTitle() != null && !tradeView.inventoryTitle().isBlank()) {
+            p.fill(0);
+            p.textFont(runtime.font20());
+            p.textAlign(LEFT, TOP);
+            p.text(tradeView.inventoryTitle(), left + TEXT_SIDE_PADDING, inventoryTitleY);
+        }
+        drawInventory(p, left + TEXT_SIDE_PADDING, inventoryTitleY + INVENTORY_TITLE_GAP, width - TEXT_SIDE_PADDING * 2f, getButtonAreaTop() - (inventoryTitleY + INVENTORY_TITLE_GAP) - 12f);
+
+        if (tradeView.footer() != null && !tradeView.footer().isBlank()) {
+            p.fill(0);
+            p.textFont(runtime.font10());
+            p.textAlign(CENTER, TOP);
+            p.text(tradeView.footer(), getPopupCenter().x(), getButtonAreaTop() - FOOTER_BOTTOM_PADDING);
+        }
+
+        p.popStyle();
+        p.popMatrix();
+    }
+
+    private void drawPanel(PGraphics p, float x, float y, float width, float height, Player player, List<TradePopupItem> items, boolean highlighted) {
+        p.rectMode(CORNER);
+        p.stroke(highlighted ? p.color(214, 112, 26) : p.color(60));
+        p.strokeWeight(highlighted ? 4 : 2);
+        p.fill(highlighted ? p.color(255, 241, 207) : p.color(247, 236, 205));
+        p.rect(x, y, width, height, 18);
+
+        drawPlayerHeader(p, x, y, width, player, highlighted);
+
+        float itemX = x + PANEL_PADDING;
+        float itemY = y + PANEL_PADDING + PANEL_HEADER_HEIGHT;
+        float maxX = x + width - PANEL_PADDING;
+        for (TradePopupItem item : items) {
+            float cardW = item.type() == TradePopupItemType.PROPERTY ? SUMMARY_CARD_W : 112f;
+            float cardH = item.type() == TradePopupItemType.PROPERTY ? SUMMARY_CARD_H : 48f;
+            if (itemX + cardW > maxX) {
+                itemX = x + PANEL_PADDING;
+                itemY += cardH + ITEM_GAP;
+            }
+            drawTradeItem(p, item, itemX, itemY, cardW, cardH, highlighted, false);
+            itemX += cardW + ITEM_GAP;
+        }
+    }
+
+    private void drawPlayerHeader(PGraphics p, float x, float y, float width, Player player, boolean highlighted) {
+        if (player == null) {
+            return;
+        }
+        float tokenX = x + PANEL_PADDING + TOKEN_SIZE / 2f;
+        float tokenY = y + PANEL_PADDING + TOKEN_SIZE / 2f + 2f;
+        drawPlayerToken(p, player, tokenX, tokenY, TOKEN_SIZE);
+        p.fill(highlighted ? p.color(110, 60, 12) : p.color(0));
+        p.textFont(runtime.font20());
+        p.textAlign(LEFT, TOP);
+        p.text(player.getName(), x + PANEL_PADDING + TOKEN_SIZE + 10f, y + PANEL_PADDING);
+    }
+
+    private void drawInventory(PGraphics p, float startX, float startY, float availableWidth, float availableHeight) {
+        List<TradePopupItem> items = tradeView.inventoryItems();
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        int columns = Math.max(1, Math.min(items.size(), (int) Math.floor((availableWidth + ITEM_GAP) / (INVENTORY_CARD_W + ITEM_GAP))));
+        float x = startX;
+        float y = startY;
+        int indexInRow = 0;
+        for (TradePopupItem item : items) {
+            if (indexInRow >= columns) {
+                indexInRow = 0;
+                x = startX;
+                y += INVENTORY_CARD_H + ITEM_GAP;
+            }
+            if (y + INVENTORY_CARD_H > startY + availableHeight) {
+                break;
+            }
+            drawTradeItem(p, item, x, y, INVENTORY_CARD_W, INVENTORY_CARD_H, item.selected(), true);
+            if (item.action() != null) {
+                clickableRegions.add(new ClickableRegion(x, y, INVENTORY_CARD_W, INVENTORY_CARD_H, item.action()));
+            }
+            x += INVENTORY_CARD_W + ITEM_GAP;
+            indexInRow++;
+        }
+    }
+
+    private void drawTradeItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height, boolean highlighted, boolean showLabel) {
+        p.rectMode(CORNER);
+        p.stroke(highlighted || item.selected() ? p.color(214, 112, 26) : p.color(120));
+        p.strokeWeight(item.selected() ? 3f : 1.5f);
+        p.fill(item.selected() ? p.color(255, 231, 186) : p.color(255));
+        p.rect(x, y, width, height, 14);
+
+        switch (item.type()) {
+            case PROPERTY -> drawPropertyItem(p, item, x, y, width, height, showLabel);
+            case PLAYER -> drawPlayerItem(p, item, x, y, width, height);
+            case MONEY, JAIL_CARD, EMPTY -> drawBadgeItem(p, item.label(), x, y, width, height);
+        }
+    }
+
+    private void drawPropertyItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height, boolean showLabel) {
+        PImage image = MonopolyApp.getImage(item.property().getSpotType());
+        if (image != null) {
+            p.imageMode(CORNER);
+            p.image(image, x + 8f, y + 8f, width - 16f, height - (showLabel ? 42f : 16f));
+        }
+        p.fill(0);
+        p.textFont(runtime.font10());
+        p.textAlign(CENTER, TOP);
+        p.text(item.property().getDisplayName(), x + width / 2f, y + height - 28f);
+    }
+
+    private void drawPlayerItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
+        if (item.player() != null) {
+            drawPlayerToken(p, item.player(), x + width / 2f, y + 44f, 42f);
+            p.fill(0);
+            p.textFont(runtime.font10());
+            p.textAlign(CENTER, TOP);
+            p.text(item.player().getName(), x + width / 2f, y + 78f);
+        }
+    }
+
+    private void drawBadgeItem(PGraphics p, String label, float x, float y, float width, float height) {
+        p.fill(0);
+        p.textFont(runtime.font20());
+        p.textAlign(CENTER, CENTER);
+        p.text(label, x + width / 2f, y + height / 2f);
+    }
+
+    private void drawPlayerToken(PGraphics p, Player player, float centerX, float centerY, float size) {
+        PImage tokenImage = MonopolyApp.getImage("Token.png", player.getColor());
+        if (tokenImage != null) {
+            p.imageMode(CENTER);
+            p.image(tokenImage, centerX, centerY, size, size);
+            return;
+        }
+        int colorValue = MonopolyUtils.toColor(runtime.app(), player.getColor());
+        p.fill(colorValue);
+        p.stroke(0);
+        p.strokeWeight(2);
+        p.ellipse(centerX, centerY, size, size);
+    }
+
     private void ensureButtonPoolSize(int requiredCount) {
         while (customButtons.size() < requiredCount) {
             MonopolyButton button = new MonopolyButton(runtime, "tradeCustomButton" + customButtons.size());
@@ -86,119 +310,12 @@ public class TradePopup extends Popup {
         button.setSize(MIN_BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 
-    @Override
-    public void draw(PGraphics p) {
-        if (!isVisible || tradeView == null) {
-            return;
-        }
-        refreshControlLayout();
-        float width = getPopupWidth();
-        float height = getPopupHeight();
-        float centerX = getPopupCenter().x();
-        float centerY = getPopupCenter().y();
-
-        p.pushMatrix();
-        p.pushStyle();
-        p.resetMatrix();
-        p.fill(p.color(255, 217, 127));
-        p.rectMode(CENTER);
-        p.stroke(0);
-        p.strokeWeight(10);
-        p.rect(centerX, centerY, width, height, 30);
-        p.popStyle();
-        p.popMatrix();
-
-        drawTradePanels(p);
-    }
-
-    private void drawTradePanels(PGraphics p) {
-        float left = getPopupLeft();
-        float top = getPopupTop();
-        float width = getPopupWidth();
-        float panelAreaTop = top + PANELS_TOP_OFFSET;
-        float panelAreaHeight = getButtonAreaTop() - panelAreaTop - PANELS_BOTTOM_PADDING;
-        float panelWidth = (width - TEXT_SIDE_PADDING * 2f - PANEL_GAP) / 2f;
-        float panelHeight = Math.max(100f, panelAreaHeight);
-        float leftPanelX = left + TEXT_SIDE_PADDING;
-        float rightPanelX = leftPanelX + panelWidth + PANEL_GAP;
-
-        p.pushMatrix();
-        p.pushStyle();
-        p.resetMatrix();
-
-        p.fill(0);
-        p.textFont(runtime.font20());
-        p.textAlign(CENTER, TOP);
-        p.text(tradeView.title(), getPopupCenter().x(), top + TEXT_TOP_OFFSET);
-        if (tradeView.subtitle() != null && !tradeView.subtitle().isBlank()) {
-            p.textFont(runtime.font20());
-            p.text(tradeView.subtitle(), getPopupCenter().x(), top + SUBTITLE_TOP_OFFSET);
-        }
-
-        drawPanel(p, leftPanelX, panelAreaTop, panelWidth, panelHeight, tradeView.leftPlayerName(), tradeView.leftItems(), tradeView.highlightLeft());
-        drawPanel(p, rightPanelX, panelAreaTop, panelWidth, panelHeight, tradeView.rightPlayerName(), tradeView.rightItems(), tradeView.highlightRight());
-
-        if (tradeView.footer() != null && !tradeView.footer().isBlank()) {
-            p.fill(0);
-            p.textFont(runtime.font20());
-            p.textAlign(CENTER, TOP);
-            p.text(tradeView.footer(), getPopupCenter().x(), panelAreaTop + panelHeight - FOOTER_BOTTOM_PADDING);
-        }
-
-        p.popStyle();
-        p.popMatrix();
-    }
-
-    private void drawPanel(PGraphics p, float x, float y, float width, float height, String title, List<String> items, boolean highlighted) {
-        p.rectMode(CORNER);
-        p.stroke(highlighted ? p.color(214, 112, 26) : p.color(60));
-        p.strokeWeight(highlighted ? 4 : 2);
-        p.fill(highlighted ? p.color(255, 241, 207) : p.color(247, 236, 205));
-        p.rect(x, y, width, height, 18);
-
-        p.fill(0);
-        p.textFont(runtime.font20());
-        p.textAlign(LEFT, TOP);
-        p.text(title, x + PANEL_PADDING, y + PANEL_PADDING);
-
-        float chipX = x + PANEL_PADDING;
-        float chipY = y + PANEL_PADDING + PANEL_HEADER_HEIGHT;
-        float chipMaxX = x + width - PANEL_PADDING;
-
-        for (String item : items) {
-            float chipWidth = measureChipWidth(p, item);
-            if (chipX + chipWidth > chipMaxX) {
-                chipX = x + PANEL_PADDING;
-                chipY += CHIP_HEIGHT + CHIP_GAP_Y;
-            }
-            drawChip(p, chipX, chipY, chipWidth, item, highlighted);
-            chipX += chipWidth + CHIP_GAP_X;
-        }
-    }
-
-    private void drawChip(PGraphics p, float x, float y, float width, String label, boolean highlighted) {
-        p.rectMode(CORNER);
-        p.stroke(highlighted ? p.color(214, 112, 26) : p.color(120));
-        p.strokeWeight(1.5f);
-        p.fill(highlighted ? p.color(255, 221, 170) : p.color(255));
-        p.rect(x, y, width, CHIP_HEIGHT, 12);
-        p.fill(0);
-        p.textFont(runtime.font20());
-        p.textAlign(CENTER, CENTER);
-        p.text(label, x + width / 2f, y + CHIP_HEIGHT / 2f - 2f);
-    }
-
-    private float measureChipWidth(PGraphics p, String label) {
-        p.textFont(runtime.font20());
-        return Math.max(64f, p.textWidth(label) + 18f);
-    }
-
     private void layoutButtons() {
         layoutCloseButton();
         if (totalButtonCount == 0) {
             return;
         }
-        int cols = Math.min(getMaxButtonColumns(), (int) Math.ceil(Math.sqrt(totalButtonCount)));
+        int cols = Math.min(getMaxButtonColumns(), totalButtonCount);
         int rows = (int) Math.ceil((double) totalButtonCount / cols);
         int top = Math.round(getButtonAreaTop());
         int totalHeight = rows * BUTTON_HEIGHT + Math.max(0, rows - 1) * BUTTON_GAP_Y;
@@ -239,6 +356,7 @@ public class TradePopup extends Popup {
         closeButton.hide();
         customButtons.forEach(MonopolyButton::hide);
         activeButtonLabels.clear();
+        clickableRegions.clear();
         totalButtonCount = 0;
         tradeView = null;
     }
@@ -262,6 +380,20 @@ public class TradePopup extends Popup {
                 return true;
             }
         } catch (NumberFormatException ignored) {
+        }
+        return false;
+    }
+
+    @Override
+    protected boolean onMouseAction(MouseEvent event) {
+        if (event.getAction() != CLICK) {
+            return false;
+        }
+        for (ClickableRegion clickableRegion : clickableRegions) {
+            if (clickableRegion.contains(event.getX(), event.getY())) {
+                completeAction(clickableRegion.action());
+                return true;
+            }
         }
         return false;
     }
@@ -293,10 +425,16 @@ public class TradePopup extends Popup {
     }
 
     private int getMaxButtonColumns() {
-        return getPopupWidth() < 420 ? 2 : 3;
+        return getPopupWidth() < 720 ? 3 : 4;
     }
 
     private void layoutCloseButton() {
         closeButton.setPosition(getPopupRight() - 30, getPopupTop() + 10);
+    }
+
+    private record ClickableRegion(float x, float y, float width, float height, ButtonAction action) {
+        private boolean contains(float px, float py) {
+            return px >= x && px <= x + width && py >= y && py <= y + height;
+        }
     }
 }

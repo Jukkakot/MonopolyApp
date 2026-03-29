@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import processing.core.PGraphics;
 import processing.event.Event;
 import processing.event.KeyEvent;
+import processing.event.MouseEvent;
 
 import java.util.List;
 
@@ -130,6 +131,10 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         return false;
     }
 
+    protected boolean onMouseAction(MouseEvent event) {
+        return false;
+    }
+
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
         return false;
     }
@@ -199,6 +204,9 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         }
         if (event instanceof KeyEvent keyEvent) {
             return onKeyAction(keyEvent.getKey());
+        }
+        if (event instanceof MouseEvent mouseEvent) {
+            return onMouseAction(mouseEvent);
         }
         return false;
     }

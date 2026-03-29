@@ -11,6 +11,8 @@ import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.*;
+import fi.monopoly.components.popup.TradePopupItem;
+import fi.monopoly.components.popup.TradePopupItemType;
 import fi.monopoly.components.popup.TradePopupView;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
@@ -886,13 +888,27 @@ public class Game implements MonopolyEventListener {
             runtime.popupService().show(text("trade.noPartners"));
             return;
         }
-        ButtonProps[] partnerButtons = tradePartners.stream()
-                .map(player -> new ButtonProps(player.getName(), () -> openTradeEditor(
-                        new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE),
-                        true
-                )))
-                .toArray(ButtonProps[]::new);
-        runtime.popupService().show(text("trade.choosePartner", proposer.getName()), partnerButtons);
+        runtime.popupService().showTrade(
+                text("trade.choosePartner", proposer.getName()),
+                new TradePopupView(
+                        text("trade.choosePartnerTitle"),
+                        text("trade.choosePartner", proposer.getName()),
+                        proposer,
+                        List.of(TradePopupItem.empty(text("trade.choosePartnerCurrent"))),
+                        true,
+                        null,
+                        List.of(),
+                        false,
+                        text("trade.choosePartnerHint"),
+                        text("trade.choosePartnerList"),
+                        tradePartners.stream()
+                                .map(player -> TradePopupItem.player(
+                                        player,
+                                        () -> openTradeEditor(new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE), true)
+                                ))
+                                .toList()
+                )
+        );
     }
 
     private void openTradeEditor(TradeDraft draft, boolean editingOfferSide) {
@@ -951,13 +967,6 @@ public class Game implements MonopolyEventListener {
                     editingOfferSide
             )));
         }
-        editingPlayer.getOwnedProperties().stream()
-                .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
-                .filter(this::isTradableProperty)
-                .forEach(property -> buttons.add(new ButtonProps(
-                        buildTradePropertyButtonLabel(property, property.equals(selection.property())),
-                        () -> openTradeEditor(updateTradeSelection(draft, editingOfferSide, selection.withProperty(property)), editingOfferSide)
-                )));
         return buttons.toArray(ButtonProps[]::new);
     }
 
@@ -1066,13 +1075,19 @@ public class Game implements MonopolyEventListener {
         return new TradePopupView(
                 title,
                 subtitle,
-                offer.proposer().getName(),
+                offer.proposer(),
                 describeTradeSelectionVisualItems(offer.offeredToRecipient()),
                 Boolean.TRUE.equals(editingOfferSide),
-                offer.recipient().getName(),
+                offer.recipient(),
                 describeTradeSelectionVisualItems(offer.requestedFromRecipient()),
                 Boolean.FALSE.equals(editingOfferSide),
-                buildTradeValueDeltaSummary(offer)
+                buildTradeValueDeltaSummary(offer),
+                editingOfferSide == null
+                        ? null
+                        : text("trade.inventory.title", (editingOfferSide ? offer.proposer() : offer.recipient()).getName()),
+                editingOfferSide == null
+                        ? List.of()
+                        : buildTradeInventoryItems(offer, editingOfferSide)
         );
     }
 
@@ -1117,33 +1132,48 @@ public class Game implements MonopolyEventListener {
     }
 
     private String describeTradeSelectionVisual(TradeSelection selection) {
-        return String.join(" ", describeTradeSelectionVisualItems(selection));
+        return describeTradeSelectionVisualItems(selection).stream()
+                .map(TradePopupItem::label)
+                .reduce((left, right) -> left + " " + right)
+                .orElse(text("trade.option.nothingVisual"));
     }
 
-    private List<String> describeTradeSelectionVisualItems(TradeSelection selection) {
+    private List<TradePopupItem> describeTradeSelectionVisualItems(TradeSelection selection) {
         if (selection.isEmpty()) {
-            return List.of(text("trade.option.nothingVisual"));
+            return List.of(TradePopupItem.empty(text("trade.option.nothingVisual")));
         }
-        List<String> parts = new java.util.ArrayList<>();
+        List<TradePopupItem> parts = new java.util.ArrayList<>();
         if (selection.moneyAmount() > 0) {
-            parts.add(text("trade.option.moneyVisual", selection.moneyAmount()));
+            parts.add(TradePopupItem.money(text("trade.option.moneyVisual", selection.moneyAmount())));
         }
         if (selection.property() != null) {
-            parts.add(buildTradePropertyChip(selection.property()));
+            parts.add(TradePopupItem.property(selection.property(), false, null));
         }
         if (selection.jailCard()) {
-            parts.add(text("trade.option.jailCardVisual"));
+            parts.add(TradePopupItem.jailCard(text("trade.option.jailCardVisual")));
         }
         return parts;
     }
 
-    private String buildTradePropertyButtonLabel(Property property, boolean selected) {
-        String chip = buildTradePropertyChip(property);
-        return selected ? text("trade.button.selectedAsset", chip) : chip;
-    }
-
-    private String buildTradePropertyChip(Property property) {
-        return "[" + property.getSpotType().name() + "]";
+    private List<TradePopupItem> buildTradeInventoryItems(TradeOffer offer, boolean editingOfferSide) {
+        Player editingPlayer = editingOfferSide ? offer.proposer() : offer.recipient();
+        TradeSelection selection = editingOfferSide ? offer.offeredToRecipient() : offer.requestedFromRecipient();
+        return editingPlayer.getOwnedProperties().stream()
+                .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
+                .filter(this::isTradableProperty)
+                .map(property -> TradePopupItem.property(
+                        property,
+                        property.equals(selection.property()),
+                        () -> openTradeEditor(
+                                updateTradeSelection(
+                                        new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient()),
+                                        editingOfferSide,
+                                        selection.withProperty(property)
+                                ),
+                                editingOfferSide
+                        )
+                ))
+                .toList();
     }
 
     private void switchLanguage(Locale locale) {
