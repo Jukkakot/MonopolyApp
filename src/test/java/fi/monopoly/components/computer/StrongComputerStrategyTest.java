@@ -15,6 +15,8 @@ class StrongComputerStrategyTest {
 
     private final StrongPropertyBuyEvaluator evaluator = new StrongPropertyBuyEvaluator(StrongBotConfig.defaults());
     private final StrongComputerStrategy strategy = new StrongComputerStrategy();
+    private final StrongBuildingEvaluator buildingEvaluator = new StrongBuildingEvaluator(StrongBotConfig.defaults());
+    private final StrongJailDecisionEvaluator jailEvaluator = new StrongJailDecisionEvaluator(StrongBotConfig.defaults());
 
     @Test
     void buysPropertyThatCompletesMonopolyEvenBelowNormalReserve() {
@@ -27,6 +29,22 @@ class StrongComputerStrategyTest {
         GameView gameView = gameView(self, offeredProperty, 20);
 
         assertTrue(evaluator.shouldBuy(gameView, self, offeredProperty));
+    }
+
+    @Test
+    void propertyDecisionIncludesReasonAndAction() {
+        PlayerView self = playerView(
+                1,
+                270,
+                List.of(propertyView(SpotType.B1, 60, 2))
+        );
+        PropertyView offeredProperty = propertyView(SpotType.B2, 60, 4);
+        GameView gameView = gameView(self, offeredProperty, 20);
+
+        ComputerDecision decision = evaluator.evaluatePurchase(gameView, self, offeredProperty);
+
+        assertEquals(ComputerAction.ACCEPT_POPUP, decision.action());
+        assertFalse(decision.reason().isBlank());
     }
 
     @Test
@@ -126,6 +144,21 @@ class StrongComputerStrategyTest {
     }
 
     @Test
+    void buildDecisionIncludesReasonAndAction() {
+        PlayerView self = playerView(1, 900, List.of(
+                propertyView(SpotType.O1, 180, 14, 0, true, 100),
+                propertyView(SpotType.O2, 180, 14, 0, true, 100),
+                propertyView(SpotType.O3, 200, 16, 0, true, 100)
+        ));
+
+        BuildPlan plan = buildingEvaluator.evaluateBuild(endTurnGameView(self), self);
+
+        assertTrue(plan != null);
+        assertEquals(ComputerAction.BUILD_ROUND, plan.decision().action());
+        assertFalse(plan.decision().reason().isBlank());
+    }
+
+    @Test
     void strongStrategyAvoidsJailEarlyWhenCashIsSafe() {
         PlayerView self = playerView(1, 600, List.of());
         FakeContext context = new FakeContext(jailPopupGameView(self, 18), self);
@@ -141,6 +174,16 @@ class StrongComputerStrategyTest {
 
         assertTrue(strategy.takeStep(context));
         assertEquals(List.of("decline"), context.operations);
+    }
+
+    @Test
+    void jailDecisionIncludesReasonAndAction() {
+        PlayerView self = playerView(1, 600, 450, List.of());
+
+        ComputerDecision decision = jailEvaluator.evaluateJailDecision(jailPopupGameView(self, 4), self, jailPopupGameView(self, 4).popup());
+
+        assertEquals(ComputerAction.DECLINE_POPUP, decision.action());
+        assertFalse(decision.reason().isBlank());
     }
 
     private static GameView gameView(PlayerView self, PropertyView offeredProperty, int unownedPropertyCount) {

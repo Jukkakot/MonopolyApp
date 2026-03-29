@@ -2,9 +2,11 @@ package fi.monopoly.components.computer;
 
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 
+@Slf4j
 final class StrongDebtResolver {
     boolean resolve(ComputerTurnContext context, GameView view, PlayerView self) {
         int amount = view.debt().amount();
@@ -12,10 +14,20 @@ final class StrongDebtResolver {
             liquidateAssets(context, amount);
         }
         if (context.currentPlayerView().moneyAmount() >= amount) {
+            logDebtDecision(context.currentPlayerView(), new ComputerDecision(
+                    ComputerAction.RETRY_DEBT_PAYMENT,
+                    0,
+                    "Retry debt payment after raising cash to M" + context.currentPlayerView().moneyAmount()
+            ));
             context.retryPendingDebtPayment();
             return true;
         }
         if (view.debt().bankruptcyRisk()) {
+            logDebtDecision(context.currentPlayerView(), new ComputerDecision(
+                    ComputerAction.DECLARE_BANKRUPTCY,
+                    -1000,
+                    "Declare bankruptcy: no liquidation path covers debt M" + amount
+            ));
             context.declareBankruptcy();
             return true;
         }
@@ -25,38 +37,64 @@ final class StrongDebtResolver {
     private void liquidateAssets(ComputerTurnContext context, int targetAmount) {
         while (context.currentPlayerView().moneyAmount() < targetAmount) {
             PlayerView current = context.currentPlayerView();
-            PropertyView buildingSale = selectBuildingSale(current);
-            if (buildingSale != null && context.sellBuilding(buildingSale.spotType(), 1)) {
+            DebtStep buildingSale = selectBuildingSale(current);
+            if (buildingSale != null && context.sellBuilding(buildingSale.property().spotType(), 1)) {
+                logDebtDecision(current, buildingSale.decision());
                 continue;
             }
-            PropertyView mortgage = selectMortgage(current);
-            if (mortgage != null && context.toggleMortgage(mortgage.spotType())) {
+            DebtStep mortgage = selectMortgage(current);
+            if (mortgage != null && context.toggleMortgage(mortgage.property().spotType())) {
+                logDebtDecision(current, mortgage.decision());
                 continue;
             }
             return;
         }
     }
 
-    private PropertyView selectBuildingSale(PlayerView player) {
-        return player.ownedProperties().stream()
-                .filter(property -> property.placeType() == PlaceType.STREET)
-                .filter(property -> property.buildingLevel() > 0)
+    private DebtStep selectBuildingSale(PlayerView player) {
+        PropertyView property = player.ownedProperties().stream()
+                .filter(candidate -> candidate.placeType() == PlaceType.STREET)
+                .filter(candidate -> candidate.buildingLevel() > 0)
                 .min(Comparator
                         .comparingInt(this::buildingSalePriority)
                         .thenComparingInt(PropertyView::rentEstimate)
                         .thenComparingInt(PropertyView::price))
                 .orElse(null);
+        if (property == null) {
+            return null;
+        }
+        int priority = buildingSalePriority(property);
+        return new DebtStep(
+                property,
+                new ComputerDecision(
+                        ComputerAction.SELL_BUILDING,
+                        -priority,
+                        "Sell building on " + property.name() + ": low priority score " + priority + " among build groups"
+                )
+        );
     }
 
-    private PropertyView selectMortgage(PlayerView player) {
-        return player.ownedProperties().stream()
-                .filter(property -> !property.mortgaged())
+    private DebtStep selectMortgage(PlayerView player) {
+        PropertyView property = player.ownedProperties().stream()
+                .filter(candidate -> !candidate.mortgaged())
                 .filter(this::canMortgage)
                 .min(Comparator
                         .comparingInt(this::mortgagePriority)
                         .thenComparingInt(PropertyView::rentEstimate)
                         .thenComparingInt(PropertyView::mortgageValue))
                 .orElse(null);
+        if (property == null) {
+            return null;
+        }
+        int priority = mortgagePriority(property);
+        return new DebtStep(
+                property,
+                new ComputerDecision(
+                        ComputerAction.MORTGAGE_PROPERTY,
+                        -priority,
+                        "Mortgage " + property.name() + ": liquidation priority " + priority
+                )
+        );
     }
 
     private int buildingSalePriority(PropertyView property) {
@@ -105,5 +143,23 @@ final class StrongDebtResolver {
             case BROWN, UTILITY -> 2;
             default -> 1;
         };
+    }
+
+    private void logDebtDecision(PlayerView player, ComputerDecision decision) {
+        log.info("Bot decision: player={}, action={}, score={}, reason={}",
+                player.name(),
+                decision.action(),
+                round(decision.score()),
+                decision.reason());
+    }
+
+    private double round(double value) {
+        return Math.round(value * 10.0) / 10.0;
+    }
+
+    private record DebtStep(
+            PropertyView property,
+            ComputerDecision decision
+    ) {
     }
 }

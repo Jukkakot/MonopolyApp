@@ -15,12 +15,30 @@ final class StrongBuildingEvaluator {
     }
 
     PropertyView selectBuildTarget(GameView view, PlayerView self) {
-        return candidateStreetSets(self).stream()
+        BuildPlan plan = evaluateBuild(view, self);
+        return plan == null ? null : plan.target();
+    }
+
+    BuildPlan evaluateBuild(GameView view, PlayerView self) {
+        PropertyView target = candidateStreetSets(self).stream()
                 .filter(property -> canAffordRound(view, self, property))
                 .max(Comparator.<PropertyView>comparingDouble(property -> buildScore(view, self, property))
                         .thenComparingInt(property -> streetStrength(property.streetType()))
                         .thenComparingInt(PropertyView::housePrice))
                 .orElse(null);
+        if (target == null) {
+            return null;
+        }
+        double score = buildScore(view, self, target);
+        int roundCost = roundCost(self, target.streetType());
+        return new BuildPlan(
+                target,
+                new ComputerDecision(
+                        ComputerAction.BUILD_ROUND,
+                        score,
+                        "Build " + target.streetType().name() + " round: score " + round(score) + ", cost M" + roundCost + ", reserve after build M" + (self.moneyAmount() - roundCost)
+                )
+        );
     }
 
     private List<PropertyView> candidateStreetSets(PlayerView self) {
@@ -110,5 +128,9 @@ final class StrongBuildingEvaluator {
             case DARK_BLUE, BROWN -> 2;
             default -> 1;
         };
+    }
+
+    private double round(double value) {
+        return Math.round(value * 10.0) / 10.0;
     }
 }

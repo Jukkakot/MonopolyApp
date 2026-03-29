@@ -11,22 +11,41 @@ final class StrongPropertyBuyEvaluator {
     }
 
     boolean shouldBuy(GameView gameView, PlayerView self, PropertyView property) {
+        return evaluatePurchase(gameView, self, property).action() == ComputerAction.ACCEPT_POPUP;
+    }
+
+    ComputerDecision evaluatePurchase(GameView gameView, PlayerView self, PropertyView property) {
         if (property == null) {
-            return false;
+            return new ComputerDecision(ComputerAction.DECLINE_POPUP, Double.NEGATIVE_INFINITY, "No property offer to evaluate");
         }
         int reserve = requiredReserve(gameView, self);
         int postPurchaseCash = self.moneyAmount() - property.price();
         if (postPurchaseCash < 0) {
-            return false;
+            return new ComputerDecision(ComputerAction.DECLINE_POPUP, -1000, "Decline " + property.name() + ": cannot afford price M" + property.price());
         }
         boolean completesSet = wouldCompleteSet(self, property);
+        double score = score(gameView, self, property);
         if (completesSet) {
-            return postPurchaseCash >= Math.max(0, reserve - 100);
+            boolean accept = postPurchaseCash >= Math.max(0, reserve - 100);
+            return new ComputerDecision(
+                    accept ? ComputerAction.ACCEPT_POPUP : ComputerAction.DECLINE_POPUP,
+                    score + 10,
+                    (accept ? "Buy " : "Decline ") + property.name() + ": completes set, post-cash M" + postPurchaseCash + ", reserve M" + reserve
+            );
         }
         if (postPurchaseCash < reserve) {
-            return false;
+            return new ComputerDecision(
+                    ComputerAction.DECLINE_POPUP,
+                    score,
+                    "Decline " + property.name() + ": post-cash M" + postPurchaseCash + " falls below reserve M" + reserve
+            );
         }
-        return score(gameView, self, property) >= config.buyThreshold();
+        boolean accept = score >= config.buyThreshold();
+        return new ComputerDecision(
+                accept ? ComputerAction.ACCEPT_POPUP : ComputerAction.DECLINE_POPUP,
+                score,
+                (accept ? "Buy " : "Decline ") + property.name() + ": score " + round(score) + " vs threshold " + round(config.buyThreshold())
+        );
     }
 
     double score(GameView gameView, PlayerView self, PropertyView property) {
@@ -106,5 +125,9 @@ final class StrongPropertyBuyEvaluator {
             case UTILITY -> 2;
             default -> 0;
         };
+    }
+
+    private double round(double value) {
+        return Math.round(value * 10.0) / 10.0;
     }
 }

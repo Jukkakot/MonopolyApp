@@ -1,5 +1,8 @@
 package fi.monopoly.components.computer;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 final class StrongComputerStrategy implements ComputerTurnStrategy {
     private final StrongBotConfig config = StrongBotConfig.defaults();
     private final StrongPropertyBuyEvaluator propertyBuyEvaluator = new StrongPropertyBuyEvaluator(config);
@@ -14,26 +17,48 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
         PlayerView self = context.currentPlayerView();
         PopupView popup = view.popup();
         if (popup != null && popup.offeredProperty() != null) {
-            if (propertyBuyEvaluator.shouldBuy(view, self, popup.offeredProperty())) {
+            ComputerDecision decision = propertyBuyEvaluator.evaluatePurchase(view, self, popup.offeredProperty());
+            logDecision(self, decision);
+            if (decision.action() == ComputerAction.ACCEPT_POPUP) {
                 return context.acceptActivePopup();
             }
             return context.declineActivePopup();
         }
-        if (popup != null && jailDecisionEvaluator.shouldAvoidJail(view, self, popup)) {
-            return context.acceptActivePopup();
-        }
         if (popup != null && popup.message() != null && popup.message().equals(fi.monopoly.text.UiTexts.text("jail.payOrCardPrompt"))) {
+            ComputerDecision decision = jailDecisionEvaluator.evaluateJailDecision(view, self, popup);
+            logDecision(self, decision);
+            if (decision.action() == ComputerAction.ACCEPT_POPUP) {
+                return context.acceptActivePopup();
+            }
             return context.declineActivePopup();
         }
         if (view.debt() != null) {
             return debtResolver.resolve(context, view, self);
         }
         if (view.visibleActions().endTurnVisible()) {
-            PropertyView buildTarget = buildingEvaluator.selectBuildTarget(view, self);
-            if (buildTarget != null && context.buyBuildingRound(buildTarget.spotType())) {
+            BuildPlan buildPlan = buildingEvaluator.evaluateBuild(view, self);
+            if (buildPlan != null) {
+                logDecision(self, buildPlan.decision());
+            }
+            if (buildPlan != null && context.buyBuildingRound(buildPlan.target().spotType())) {
                 return true;
             }
         }
+        if (view.visibleActions().endTurnVisible()) {
+            logDecision(self, new ComputerDecision(ComputerAction.END_TURN, 0, "End turn: no stronger buy/build/debt action available"));
+        }
         return fallbackStrategy.takeStep(context);
+    }
+
+    private void logDecision(PlayerView self, ComputerDecision decision) {
+        log.info("Bot decision: player={}, action={}, score={}, reason={}",
+                self.name(),
+                decision.action(),
+                round(decision.score()),
+                decision.reason());
+    }
+
+    private double round(double value) {
+        return Math.round(value * 10.0) / 10.0;
     }
 }
