@@ -1,11 +1,11 @@
 <configuration>
 
-    <property name="LOG_DIR" value="${user.dir}/logs/test"/>
+    <property name="LOG_DIR" value="${user.dir}/logs/app"/>
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
+            <level>DEBUG</level>
         </filter>
         <encoder>
             <pattern>%highlight(%d{HH:mm:ss.SSS} %-5level %logger{24} - %msg%n)</pattern>
@@ -13,12 +13,12 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/monopoly-test.log</file>
+        <file>${LOG_DIR}/monopoly.log</file>
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/monopoly-test.%i.log.zip</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/monopoly.%i.log.zip</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>9</maxIndex>
         </rollingPolicy>

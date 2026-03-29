@@ -6,6 +6,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 
@@ -32,6 +33,7 @@ class GameBotSimulationTest {
     }
 
     @Test
+    @Timeout(15)
     void strongBotsDoNotDeadlockAcrossRepeatedSimulations() throws ReflectiveOperationException {
         MonopolyApp.SKIP_ANNIMATIONS = true;
 
@@ -78,7 +80,7 @@ class GameBotSimulationTest {
         int stagnantSteps = 0;
         int previousPlayerCount = Game.players.count();
         String previousTurn = currentTurnName();
-        String previousSnapshot = snapshot();
+        String previousSnapshot = snapshot(runtime);
         boolean debtActiveLastStep = false;
 
         for (int step = 0; step < MAX_STEPS_PER_RUN; step++) {
@@ -107,7 +109,7 @@ class GameBotSimulationTest {
                 previousTurn = currentTurn;
             }
 
-            String currentSnapshot = snapshot();
+            String currentSnapshot = snapshot(runtime);
             if (currentSnapshot.equals(previousSnapshot)) {
                 stagnantSteps++;
             } else {
@@ -116,14 +118,14 @@ class GameBotSimulationTest {
             }
 
             if (Game.players.count() <= 1) {
-                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, true);
+                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, true, currentSnapshot);
             }
             if (stagnantSteps >= MAX_STAGNANT_STEPS) {
-                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, true, false);
+                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, true, false, currentSnapshot);
             }
         }
 
-        return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, false);
+        return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, false, previousSnapshot);
     }
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
@@ -173,12 +175,22 @@ class GameBotSimulationTest {
         return turn == null ? "none" : turn.getName();
     }
 
-    private static String snapshot() {
-        return Game.players.getPlayers().stream()
+    private static String snapshot(MonopolyRuntime runtime) {
+        String playerState = Game.players.getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getId))
                 .map(player -> player.getId() + ":" + player.getMoneyAmount() + ":" + player.getSpot().getSpotType() + ":" + player.getOwnedProperties().size())
-                .collect(Collectors.joining("|"))
-                + "|turn=" + currentTurnName();
+                .collect(Collectors.joining("|"));
+        String diceValue = Game.DICES != null && Game.DICES.getValue() != null ? Game.DICES.getValue().toString() : "null";
+        String popupKind = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupKind() : "none";
+        return playerState
+                + "|turn=" + currentTurnName()
+                + "|players=" + Game.players.count()
+                + "|popup=" + runtime.popupService().isAnyVisible()
+                + "|popupKind=" + popupKind
+                + "|diceVisible=" + (Game.DICES != null && Game.DICES.isVisible())
+                + "|dice=" + diceValue
+                + "|animations=" + (Game.animations != null && Game.animations.isRunning())
+                + "|debt=" + Game.isDebtResolutionActive();
     }
 
     private record SimulationResult(
@@ -186,7 +198,8 @@ class GameBotSimulationTest {
             int debtResolutions,
             int bankruptcies,
             boolean stalled,
-            boolean completedGame
+            boolean completedGame,
+            String lastSnapshot
     ) {
     }
 }

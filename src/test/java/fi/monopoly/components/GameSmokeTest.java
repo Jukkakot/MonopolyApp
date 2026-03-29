@@ -1,13 +1,10 @@
 package fi.monopoly.components;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.payment.DebtState;
 import org.junit.jupiter.api.*;
-import org.slf4j.LoggerFactory;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 import processing.event.KeyEvent;
@@ -36,7 +33,6 @@ class GameSmokeTest {
     private static final int MAX_STAGNANT_STEPS = 250;
     private static final int MIN_TURN_SWITCHES = 15;
     private static final int MIN_UNIQUE_SPOTS = 12;
-    private Level previousMonopolyLogLevel;
 
     private static void runAutoConfirmedRollSmokeTest(int targetRollCount) {
         runAutoConfirmedRollSmokeTest(targetRollCount, 1700, 996, false);
@@ -56,6 +52,7 @@ class GameSmokeTest {
         int bankruptcyCount = 0;
         int turnSwitchCount = 0;
         int stagnantStepCount = 0;
+        boolean completedGame = false;
         Set<String> seenTurnPlayers = new HashSet<>();
         Set<String> seenSpotTypes = new HashSet<>();
         String previousTurnName = currentTurnName();
@@ -120,6 +117,10 @@ class GameSmokeTest {
                 previousSnapshot = currentSnapshot;
             }
 
+            if (Game.players.count() <= 1) {
+                completedGame = true;
+                break;
+            }
             assertTrue(stagnantStepCount < MAX_STAGNANT_STEPS, "Game appears stuck. Snapshot: " + currentSnapshot);
         }
 
@@ -127,7 +128,8 @@ class GameSmokeTest {
         settlePendingGameFlow(runtime, game, verifyResponsiveUi);
         assertCoreInvariants(game, initialPlayerCount);
 
-        assertTrue(rollCount >= targetRollCount, "Game did not complete the expected number of rolls");
+        assertTrue(rollCount >= targetRollCount || completedGame,
+                "Game neither completed the expected number of rolls nor reached a finished state");
         assertEquals(3, initialPlayerCount, "Smoke test expects the default three-player setup");
         assertTrue(popupResolutionCount > 0, "Smoke test should encounter at least one popup");
         assertTrue(turnSwitchCount >= MIN_TURN_SWITCHES, "Turns did not appear to advance often enough");
@@ -403,19 +405,11 @@ class GameSmokeTest {
                 + "|debt=" + Game.isDebtResolutionActive();
     }
 
-    @BeforeEach
-    void setSmokeTestLogLevel() {
-        Logger monopolyLogger = (Logger) LoggerFactory.getLogger("fi.monopoly");
-        previousMonopolyLogLevel = monopolyLogger.getLevel();
-        monopolyLogger.setLevel(Level.WARN);
-    }
-
     @AfterEach
     void tearDown() {
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;
         fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.clear();
-        ((Logger) LoggerFactory.getLogger("fi.monopoly")).setLevel(previousMonopolyLogLevel);
     }
 
     @Test
