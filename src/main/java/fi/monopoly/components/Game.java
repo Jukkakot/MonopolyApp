@@ -20,6 +20,7 @@ import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.*;
 import fi.monopoly.types.*;
+import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
@@ -306,6 +307,7 @@ public class Game implements MonopolyEventListener {
 
         app.fill(0);
         app.textFont(runtime.font10());
+        app.textAlign(PConstants.LEFT, PConstants.TOP);
 
         if (recentMessages.isEmpty()) {
             app.text(
@@ -319,19 +321,21 @@ public class Game implements MonopolyEventListener {
         }
 
         float currentY = panelY + 52;
+        float maxTextWidth = panelW - SIDEBAR_HISTORY_TEXT_INSET * 2;
         for (String message : recentMessages) {
             String condensedMessage = message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
             if (condensedMessage.isEmpty()) {
                 continue;
             }
-            app.text(
-                    "- " + condensedMessage,
-                    panelX + SIDEBAR_HISTORY_TEXT_INSET,
-                    currentY,
-                    panelW - SIDEBAR_HISTORY_TEXT_INSET * 2,
-                    SIDEBAR_HISTORY_ENTRY_HEIGHT
-            );
-            currentY += 20;
+            List<String> wrappedLines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth);
+            for (String line : wrappedLines) {
+                app.text(line, panelX + SIDEBAR_HISTORY_TEXT_INSET, currentY);
+                currentY += 14;
+                if (currentY > panelY + historyHeight - 16) {
+                    return;
+                }
+            }
+            currentY += 6;
             if (currentY > panelY + historyHeight - 16) {
                 break;
             }

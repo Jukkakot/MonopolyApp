@@ -8,6 +8,7 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
+import fi.monopoly.utils.TextWrapUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import processing.core.PGraphics;
 import processing.event.Event;
 import processing.event.KeyEvent;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static processing.core.PConstants.CENTER;
@@ -100,7 +100,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     private void drawPopupText(PGraphics p, float centerX, float startY, float maxWidth) {
-        List<String> lines = wrapPopupText(p, popupText, maxWidth);
+        List<String> lines = TextWrapUtils.wrapText(p, popupText, maxWidth);
         for (int i = 0; i < lines.size(); i++) {
             float y = startY + i * TEXT_LINE_HEIGHT;
             if (y + TEXT_LINE_HEIGHT > getPopupTop() + TEXT_TOP_OFFSET + getTextAreaHeight()) {
@@ -108,32 +108,6 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
             }
             p.text(lines.get(i), centerX, y);
         }
-    }
-
-    private List<String> wrapPopupText(PGraphics p, String text, float maxWidth) {
-        List<String> lines = new ArrayList<>();
-        if (text == null || text.isBlank()) {
-            return lines;
-        }
-        for (String paragraph : text.split("\\R", -1)) {
-            if (paragraph.isBlank()) {
-                lines.add("");
-                continue;
-            }
-            String[] words = paragraph.trim().split("\\s+");
-            String currentLine = words[0];
-            for (int i = 1; i < words.length; i++) {
-                String candidate = currentLine + " " + words[i];
-                if (p.textWidth(candidate) <= maxWidth) {
-                    currentLine = candidate;
-                } else {
-                    lines.add(currentLine);
-                    currentLine = words[i];
-                }
-            }
-            lines.add(currentLine);
-        }
-        return lines;
     }
 
     public void setPopupText(String text) {
