@@ -133,15 +133,19 @@ public class Players {
     }
 
     public Player switchTurn() {
-        turnNum = turnNum % playerList.size() + 1;
-        List<Player> players = playerList.stream().filter(p -> p.getTurnNumber() == turnNum).toList();
-        if (players.size() == 1) {
-            selectPlayer(players.get(0));
-            return players.get(0);
-        } else {
-            log.info("Player not found, trying again {}", turnNum);
-            return switchTurn();
+        if (playerList.isEmpty()) {
+            return null;
         }
+        List<Player> sortedPlayers = playerList.stream()
+                .sorted(Comparator.comparingInt(Player::getTurnNumber))
+                .toList();
+        Player nextPlayer = sortedPlayers.stream()
+                .filter(player -> player.getTurnNumber() > turnNum)
+                .findFirst()
+                .orElse(sortedPlayers.get(0));
+        turnNum = nextPlayer.getTurnNumber();
+        selectPlayer(nextPlayer);
+        return nextPlayer;
     }
 
     public Player getTurn() {
@@ -152,8 +156,17 @@ public class Players {
         if (players.size() == 1) {
             return players.get(0);
         } else {
-            log.error("Turn player not found");
-            return null;
+            Player fallbackTurn = playerList.stream()
+                    .min(Comparator.comparingInt(Player::getTurnNumber))
+                    .orElse(null);
+            if (fallbackTurn != null) {
+                log.warn("Turn player not found for turnNumber={}. Falling back to {}", turnNum, fallbackTurn.getName());
+                turnNum = fallbackTurn.getTurnNumber();
+                selectPlayer(fallbackTurn);
+            } else {
+                log.error("Turn player not found");
+            }
+            return fallbackTurn;
         }
     }
 

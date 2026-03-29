@@ -6,15 +6,7 @@ import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.board.Path;
-import fi.monopoly.components.computer.ComputerStrategies;
-import fi.monopoly.components.computer.ComputerPlayerProfile;
-import fi.monopoly.components.computer.ComputerTurnContext;
-import fi.monopoly.components.computer.DebtView;
-import fi.monopoly.components.computer.GameView;
-import fi.monopoly.components.computer.PlayerView;
-import fi.monopoly.components.computer.PopupView;
-import fi.monopoly.components.computer.PropertyView;
-import fi.monopoly.components.computer.VisibleActionsView;
+import fi.monopoly.components.computer.*;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
@@ -27,12 +19,7 @@ import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.*;
-import fi.monopoly.types.PlaceType;
-import fi.monopoly.types.DiceState;
-import fi.monopoly.types.PathMode;
-import fi.monopoly.types.SpotType;
-import fi.monopoly.types.StreetType;
-import fi.monopoly.types.TurnResult;
+import fi.monopoly.types.*;
 import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
@@ -157,11 +144,11 @@ public class Game implements MonopolyEventListener {
 //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
 //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
 
-        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B1));
-        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B2));
-        if (!FORCE_DEBT_DEBUG_SCENARIO) {
-            players.giveRandomDeeds(board);
-        }
+//        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B1));
+//        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B2));
+//        if (!FORCE_DEBT_DEBUG_SCENARIO) {
+//            players.giveRandomDeeds(board);
+//        }
 
         endRoundButton.addListener(e -> {
             if (!runtime.popupService().isAnyVisible() && debtState == null) {
