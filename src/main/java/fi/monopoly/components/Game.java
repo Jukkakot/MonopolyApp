@@ -930,25 +930,29 @@ public class Game implements MonopolyEventListener {
         Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
         TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
         List<ButtonProps> buttons = new java.util.ArrayList<>();
+        for (int delta : List.of(10, 100, -10, -100)) {
+            int nextAmount = Math.max(0, selection.moneyAmount() + delta);
+            if (nextAmount <= editingPlayer.getMoneyAmount()) {
+                String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
+                if (delta > 0) {
+                    buttons.add(new ButtonProps(label, () -> openTradeEditor(
+                            updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(nextAmount)),
+                            editingOfferSide
+                    )));
+                }
+            }
+        }
         buttons.add(new ButtonProps(text("trade.button.back"), this::openTradeMenu));
         buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
         buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
                 editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
                 editingOfferSide
         )));
-        for (int delta : List.of(10, 100, -10, -100)) {
+        for (int delta : List.of(-10, -100)) {
             int nextAmount = Math.max(0, selection.moneyAmount() + delta);
-            if (nextAmount <= editingPlayer.getMoneyAmount()) {
-                String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
-                buttons.add(new ButtonProps(label, () -> openTradeEditor(
-                        updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(nextAmount)),
-                        editingOfferSide
-                )));
-            }
-        }
-        if (selection.property() != null) {
-            buttons.add(new ButtonProps(text("trade.button.clearProperty"), () -> openTradeEditor(
-                    updateTradeSelection(draft, editingOfferSide, selection.withProperty(null)),
+            String label = "-" + text("format.money", Math.abs(delta));
+            buttons.add(new ButtonProps(label, () -> openTradeEditor(
+                    updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(nextAmount)),
                     editingOfferSide
             )));
         }
@@ -1086,20 +1090,19 @@ public class Game implements MonopolyEventListener {
     }
 
     private String buildTradeValueDeltaSummary(TradeOffer offer) {
-        TradeDecision recipientView = tradeOfferEvaluator.evaluateForRecipient(offer, BotTradeProfile.BALANCED);
-        TradeDecision proposerView = tradeOfferEvaluator.evaluateForRecipient(offer.reversePerspective(), BotTradeProfile.BALANCED);
+        int recipientDelta = offer.isEmpty() ? 0 : tradeOfferEvaluator.estimateNetDeltaForRecipient(offer);
+        int proposerDelta = offer.isEmpty() ? 0 : tradeOfferEvaluator.estimateNetDeltaForRecipient(offer.reversePerspective());
         return text(
                 "trade.summary.delta",
                 offer.proposer().getName(),
-                formatTradeDelta(proposerView.score()),
+                formatTradeDelta(proposerDelta),
                 offer.recipient().getName(),
-                formatTradeDelta(recipientView.score())
+                formatTradeDelta(recipientDelta)
         );
     }
 
-    private String formatTradeDelta(double value) {
-        double roundedValue = Math.round(value * 10.0) / 10.0;
-        return (roundedValue >= 0 ? "+" : "") + roundedValue;
+    private String formatTradeDelta(int value) {
+        return (value >= 0 ? "+" : "") + value;
     }
 
     private String describeTradeSelection(TradeSelection selection) {

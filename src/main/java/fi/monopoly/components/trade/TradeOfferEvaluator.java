@@ -16,10 +16,10 @@ public final class TradeOfferEvaluator {
         if (!offer.isValid()) {
             return new TradeDecision(false, -10_000, "Reject trade: invalid offer");
         }
+        double score = estimateNetDeltaForRecipient(offer);
         Player recipient = offer.recipient();
         double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true);
         double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false);
-        double score = gainScore - lossScore;
         boolean accept = score >= profile.acceptThreshold();
         return new TradeDecision(
                 accept,
@@ -68,6 +68,13 @@ public final class TradeOfferEvaluator {
             return null;
         }
         return evaluateForRecipient(counterOffer, profile).accept() ? counterOffer : null;
+    }
+
+    public int estimateNetDeltaForRecipient(TradeOffer offer) {
+        Player recipient = offer.recipient();
+        double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true);
+        double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false);
+        return (int) Math.round(gainScore - lossScore);
     }
 
     private double selectionValue(Player perspective, TradeSelection selection, boolean receiving) {

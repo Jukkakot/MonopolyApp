@@ -67,6 +67,13 @@ public class MonopolyButton extends Button {
         }
     }
 
+    public MonopolyButton setButtonColors(int background, int foreground, int active) {
+        setColorBackground(background);
+        setColorForeground(foreground);
+        setColorActive(active);
+        return this;
+    }
+
     private void applyAutoWidth() {
         if (autoMinWidth == null || getHeight() <= 0) {
             return;

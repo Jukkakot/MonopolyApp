@@ -430,11 +430,28 @@ public class TradePopup extends Popup {
         button.setLabel(buttonProps.name());
         button.addListener(() -> completeAction(buttonProps.buttonAction()));
         button.setSize(MIN_BUTTON_WIDTH, BUTTON_HEIGHT);
+        if (buttonProps.name().equals(text("trade.button.done"))) {
+            button.setButtonColors(
+                    runtime.app().color(56, 176, 72),
+                    runtime.app().color(76, 204, 90),
+                    runtime.app().color(35, 132, 52)
+            );
+        } else {
+            button.setButtonColors(
+                    runtime.app().color(180, 180, 180),
+                    runtime.app().color(220, 220, 220),
+                    runtime.app().color(140, 140, 140)
+            );
+        }
     }
 
     private void layoutButtons() {
         layoutCloseButton();
         if (totalButtonCount == 0) {
+            return;
+        }
+        if (tradeView != null && tradeView.inventoryTitle() != null && totalButtonCount >= 7) {
+            layoutTradeEditorButtons();
             return;
         }
         int cols = Math.min(getMaxButtonColumns(), totalButtonCount);
@@ -459,6 +476,45 @@ public class TradePopup extends Popup {
                 button.setPosition(buttonX, rowY);
                 buttonX += Math.round(button.getWidth()) + BUTTON_GAP_X;
             }
+        }
+    }
+
+    private void layoutTradeEditorButtons() {
+        int top = Math.round(getButtonAreaTop());
+        int rowY = top + Math.max(0, Math.round((getButtonAreaHeight() - BUTTON_HEIGHT) / 2f));
+        List<MonopolyButton> positiveButtons = new ArrayList<>();
+        List<MonopolyButton> centerButtons = new ArrayList<>();
+        List<MonopolyButton> negativeButtons = new ArrayList<>();
+        for (int i = 0; i < totalButtonCount; i++) {
+            MonopolyButton button = customButtons.get(i);
+            String label = button.getCaptionLabel().getText();
+            if (label.startsWith("+")) {
+                positiveButtons.add(button);
+            } else if (label.startsWith("-")) {
+                negativeButtons.add(button);
+            } else {
+                centerButtons.add(button);
+            }
+        }
+        layoutButtonGroup(positiveButtons, Math.round(getPopupLeft() + 36), rowY, false);
+        layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
+        layoutButtonGroup(negativeButtons, Math.round(getPopupRight() - 36), rowY, false, true);
+    }
+
+    private void layoutButtonGroup(List<MonopolyButton> buttons, int anchorX, int rowY, boolean centered) {
+        layoutButtonGroup(buttons, anchorX, rowY, centered, false);
+    }
+
+    private void layoutButtonGroup(List<MonopolyButton> buttons, int anchorX, int rowY, boolean centered, boolean alignRight) {
+        if (buttons.isEmpty()) {
+            return;
+        }
+        int totalWidth = buttons.stream().mapToInt(button -> Math.round(button.getWidth())).sum()
+                + Math.max(0, buttons.size() - 1) * BUTTON_GAP_X;
+        int buttonX = centered ? anchorX - totalWidth / 2 : alignRight ? anchorX - totalWidth : anchorX;
+        for (MonopolyButton button : buttons) {
+            button.setPosition(buttonX, rowY);
+            buttonX += Math.round(button.getWidth()) + BUTTON_GAP_X;
         }
     }
 
