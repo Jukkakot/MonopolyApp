@@ -24,6 +24,7 @@ import static processing.core.PConstants.CORNER;
 import static processing.core.PConstants.LEFT;
 import static processing.core.PConstants.TOP;
 import static processing.event.MouseEvent.CLICK;
+import static processing.event.MouseEvent.MOVE;
 
 public class TradePopup extends Popup {
     private static final int POPUP_WIDTH = 980;
@@ -52,6 +53,7 @@ public class TradePopup extends Popup {
     private static final float PROPERTY_COLOR_STRIPE_HEIGHT = 18f;
     private static final float BUTTON_AREA_BOTTOM_MARGIN = 28f;
     private static final float BUTTON_AREA_TOP_MARGIN = 18f;
+    private static final float POPUP_TOP_MARGIN = 6f;
 
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private final List<String> activeButtonLabels = new ArrayList<>();
@@ -59,6 +61,7 @@ public class TradePopup extends Popup {
     private final MonopolyButton closeButton;
     private int totalButtonCount = 0;
     private TradePopupView tradeView;
+    private Object hoveredItemKey;
 
     protected TradePopup(MonopolyRuntime runtime) {
         super(runtime);
@@ -102,6 +105,16 @@ public class TradePopup extends Popup {
     protected int getPopupHeight() {
         int availableHeight = runtime.app().height - WINDOW_MARGIN * 2;
         return Math.max(420, Math.min(POPUP_HEIGHT, availableHeight));
+    }
+
+    @Override
+    protected fi.monopoly.utils.Coordinates getPopupCenter() {
+        return fi.monopoly.utils.Coordinates.of(runtime.app().width / 2f, getPopupTop() + getPopupHeight() / 2f);
+    }
+
+    @Override
+    protected float getPopupTop() {
+        return POPUP_TOP_MARGIN;
     }
 
     @Override
@@ -238,9 +251,16 @@ public class TradePopup extends Popup {
             if (y + INVENTORY_CARD_H > startY + availableHeight) {
                 break;
             }
-            drawTradeItem(p, item, x, y, INVENTORY_CARD_W, INVENTORY_CARD_H, item.selected(), true);
+            drawTradeItem(p, item, x, y, INVENTORY_CARD_W, INVENTORY_CARD_H, item.selected() || isHovered(item), true);
             if (item.action() != null) {
-                clickableRegions.add(new ClickableRegion(x, y, INVENTORY_CARD_W, INVENTORY_CARD_H, item.action()));
+                clickableRegions.add(new ClickableRegion(
+                        x,
+                        y,
+                        INVENTORY_CARD_W,
+                        INVENTORY_CARD_H,
+                        item.action(),
+                        hoverKey(item)
+                ));
             }
             x += INVENTORY_CARD_W + ITEM_GAP;
             indexInRow++;
@@ -386,6 +406,7 @@ public class TradePopup extends Popup {
         customButtons.forEach(MonopolyButton::hide);
         activeButtonLabels.clear();
         clickableRegions.clear();
+        hoveredItemKey = null;
         totalButtonCount = 0;
         tradeView = null;
     }
@@ -415,16 +436,18 @@ public class TradePopup extends Popup {
 
     @Override
     protected boolean onMouseAction(MouseEvent event) {
-        if (event.getAction() != CLICK) {
-            return false;
-        }
+        hoveredItemKey = null;
         for (ClickableRegion clickableRegion : clickableRegions) {
             if (clickableRegion.contains(event.getX(), event.getY())) {
-                completeAction(clickableRegion.action());
-                return true;
+                hoveredItemKey = clickableRegion.hoverKey();
+                if (event.getAction() == CLICK) {
+                    completeAction(clickableRegion.action());
+                    return true;
+                }
+                return event.getAction() == MOVE;
             }
         }
-        return false;
+        return event.getAction() == MOVE;
     }
 
     @Override
@@ -472,7 +495,22 @@ public class TradePopup extends Popup {
         closeButton.setPosition(getPopupRight() - 30, getPopupTop() + 10);
     }
 
-    private record ClickableRegion(float x, float y, float width, float height, ButtonAction action) {
+    private boolean isHovered(TradePopupItem item) {
+        Object key = hoverKey(item);
+        return key != null && key.equals(hoveredItemKey);
+    }
+
+    private Object hoverKey(TradePopupItem item) {
+        if (item.property() != null) {
+            return item.property();
+        }
+        if (item.player() != null) {
+            return item.player();
+        }
+        return item.label();
+    }
+
+    private record ClickableRegion(float x, float y, float width, float height, ButtonAction action, Object hoverKey) {
         private boolean contains(float px, float py) {
             return px >= x && px <= x + width && py >= y && py <= y + height;
         }
