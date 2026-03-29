@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
+import processing.event.KeyEvent;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static processing.event.KeyEvent.PRESS;
 
 class GameComputerPlayerTest {
 
@@ -51,6 +53,10 @@ class GameComputerPlayerTest {
         var method = Game.class.getDeclaredMethod("togglePause");
         method.setAccessible(true);
         method.invoke(game);
+    }
+
+    private static boolean dispatchKeyToGame(Game game, char key) {
+        return game.onEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
 
     @SuppressWarnings("unchecked")
@@ -126,6 +132,25 @@ class GameComputerPlayerTest {
             if (Game.animations.isRunning()) {
                 Game.animations.finishAllAnimations();
             }
+        }
+
+        assertEquals(botName, Game.players.getTurn().getName());
+    }
+
+    @Test
+    void pauseCanBeToggledEvenWhilePopupIsVisible() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
+        Game game = new Game(runtime);
+        runtime.popupService().show("Pause test");
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(dispatchKeyToGame(game, 'p'));
+
+        String botName = Game.players.getTurn().getName();
+        for (int step = 0; step < 20; step++) {
+            runtime.eventBus().flushPendingChanges();
+            invokeComputerStep(game);
         }
 
         assertEquals(botName, Game.players.getTurn().getName());

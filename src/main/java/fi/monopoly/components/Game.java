@@ -543,6 +543,10 @@ public class Game implements MonopolyEventListener {
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
             char key = Character.toLowerCase(keyEvent.getKey());
+            if (key == 'p') {
+                togglePause();
+                return true;
+            }
             if (runtime.popupService().isAnyVisible()) {
                 return consumedEvent;
             }
@@ -570,10 +574,6 @@ public class Game implements MonopolyEventListener {
             if (key == 'a') {
                 MonopolyApp.SKIP_ANNIMATIONS = !MonopolyApp.SKIP_ANNIMATIONS;
                 log.debug("Skip animations: {}", MonopolyApp.SKIP_ANNIMATIONS);
-                consumedEvent = true;
-            }
-            if (key == 'p') {
-                togglePause();
                 consumedEvent = true;
             }
         } else if (event instanceof MouseEvent mouseEvent) {
