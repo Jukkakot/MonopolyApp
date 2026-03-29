@@ -5,8 +5,6 @@ MONOPOLY RULES
 [Low] Remove random starting deeds from normal game setup
 
 ECONOMY AND MULTIPLAYER
-[High] Add player trading
-[High] Add trade offers for money, property, and jail card
 [High] Add computer players with configurable difficulty profiles
 [Medium] Add configurable strong bot variants like aggressive and defensive
 [Medium] Add player setup UI for choosing human vs computer seats before game start

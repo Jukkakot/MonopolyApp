@@ -53,6 +53,10 @@ class GameTurnControlsTest {
         return getButton(game, "pauseButton");
     }
 
+    private static MonopolyButton getTradeButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "tradeButton");
+    }
+
     private static MonopolyButton getButton(Game game, String fieldName) throws ReflectiveOperationException {
         Field field = Game.class.getDeclaredField(fieldName);
         field.setAccessible(true);
@@ -194,6 +198,7 @@ class GameTurnControlsTest {
         LayoutMetrics metrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton pauseButton = getPauseButton(game);
+        MonopolyButton tradeButton = getTradeButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
         float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
@@ -201,7 +206,9 @@ class GameTurnControlsTest {
 
         assertEquals(metrics.sidebarX() + 16, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(historyY + historyHeight + 12, pauseButton.getPosition()[1], 0.0001f);
+        assertEquals(historyY + historyHeight + 12, tradeButton.getPosition()[1], 0.0001f);
         assertTrue(pauseButton.getPosition()[0] >= 0f);
+        assertTrue(tradeButton.getPosition()[0] < pauseButton.getPosition()[0]);
         assertEquals(historyY + historyHeight + 12, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
         assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
@@ -242,17 +249,31 @@ class GameTurnControlsTest {
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton pauseButton = getPauseButton(game);
+        MonopolyButton tradeButton = getTradeButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
 
         assertEquals(16f, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(16f, endRoundButton.getPosition()[1], 0.0001f);
         assertEquals(156f, pauseButton.getPosition()[1], 0.0001f);
+        assertEquals(156f, tradeButton.getPosition()[1], 0.0001f);
         assertTrue(pauseButton.getPosition()[0] >= 16f);
+        assertTrue(tradeButton.getPosition()[0] >= 16f);
         assertTrue(languageButton.getPosition()[0] + languageButton.getWidth() <= runtime.app().width);
         assertEquals(156f, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() <= runtime.app().width);
         assertTrue(dicePair.getValue().getCoords().x() <= runtime.app().width);
+    }
+
+    @Test
+    void tradeShortcutOpensTradePartnerPopup() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+
+        assertTrue(game.onEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, 't', 't')));
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertEquals("CustomPopup", runtime.popupService().activePopupKind());
     }
 
     @Test

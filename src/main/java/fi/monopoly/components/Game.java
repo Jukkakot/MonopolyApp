@@ -18,6 +18,10 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.components.trade.TradeDecision;
+import fi.monopoly.components.trade.TradeOffer;
+import fi.monopoly.components.trade.TradeOfferEvaluator;
+import fi.monopoly.components.trade.TradeSelection;
 import fi.monopoly.components.turn.*;
 import fi.monopoly.types.*;
 import fi.monopoly.utils.TextWrapUtils;
@@ -77,12 +81,14 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton debugResetTurnButton;
     private final MonopolyButton debugGodModeButton;
     private final MonopolyButton pauseButton;
+    private final MonopolyButton tradeButton;
     private final MonopolyButton languageButton;
     Board board;
     TurnResult prevTurnResult;
     private DebtState debtState;
     private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
     private boolean paused;
+    private final TradeOfferEvaluator tradeOfferEvaluator = new TradeOfferEvaluator();
 
     public Game(MonopolyRuntime runtime) {
         current = this;
@@ -123,6 +129,10 @@ public class Game implements MonopolyEventListener {
         pauseButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, runtime.app().height - 96);
         pauseButton.setSize(140, 36);
         pauseButton.setAutoWidth(120, 28, 180);
+        this.tradeButton = new MonopolyButton(runtime, "trade");
+        tradeButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, runtime.app().height - 96);
+        tradeButton.setSize(140, 36);
+        tradeButton.setAutoWidth(120, 28, 220);
         this.languageButton = new MonopolyButton(runtime, "language");
         languageButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, runtime.app().height - 48);
         languageButton.setSize(220, 36);
@@ -137,6 +147,7 @@ public class Game implements MonopolyEventListener {
         debugResetTurnButton.hide();
         debugGodModeButton.hide();
         pauseButton.hide();
+        tradeButton.hide();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
         runtime.eventBus().addListener(this);
         PropertyFactory.resetState();
@@ -173,6 +184,7 @@ public class Game implements MonopolyEventListener {
         debugResetTurnButton.addListener(this::debugResetTurnState);
         debugGodModeButton.addListener(this::openDebugGodModeMenu);
         pauseButton.addListener(this::togglePause);
+        tradeButton.addListener(this::openTradeMenu);
         languageButton.addListener(this::openLanguageMenu);
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
@@ -563,6 +575,10 @@ public class Game implements MonopolyEventListener {
                 }
                 return false;
             }
+            if (key == 't') {
+                openTradeMenu();
+                consumedEvent = true;
+            }
             if (endRoundButton.isVisible() && (key == MonopolyApp.SPACE || key == MonopolyApp.ENTER)) {
                 endRound(true);
                 consumedEvent = true;
@@ -709,6 +725,7 @@ public class Game implements MonopolyEventListener {
         float debugRow2Y = layoutMetrics.sidebarDebugButtonRow2Y();
         float debugRow3Y = layoutMetrics.sidebarDebugButtonRow3Y();
         float pauseButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
+        float tradeButtonY = pauseButtonY;
         float languageButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
 
         endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
@@ -721,6 +738,7 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setPosition(sidebarLeftX, debugRow3Y);
         languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), languageButtonY);
         pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - 8, pauseButtonY);
+        tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - 8, tradeButtonY);
         DICES.updateLayout(layoutMetrics);
     }
 
@@ -742,6 +760,10 @@ public class Game implements MonopolyEventListener {
         );
         pauseButton.setPosition(
                 Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - 8),
+                OVERLAY_SECONDARY_ROW_3_Y
+        );
+        tradeButton.setPosition(
+                Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - 8),
                 OVERLAY_SECONDARY_ROW_3_Y
         );
     }
@@ -850,6 +872,7 @@ public class Game implements MonopolyEventListener {
 
     private void updateDebugButtons() {
         pauseButton.show();
+        tradeButton.show();
         languageButton.show();
         if (!MonopolyApp.DEBUG_MODE) {
             debugAddCashButton.hide();
@@ -876,6 +899,7 @@ public class Game implements MonopolyEventListener {
         debugResetTurnButton.setLabel(text("game.button.debugReset"));
         debugGodModeButton.setLabel(text("game.button.godMode"));
         pauseButton.setLabel(paused ? text("game.button.resume") : text("game.button.pause"));
+        tradeButton.setLabel(text("game.button.trade"));
         languageButton.setLabel(text("language.button.current", text("language.name.current")));
     }
 
@@ -891,6 +915,127 @@ public class Game implements MonopolyEventListener {
                 new ButtonProps(text("language.menu.english"), () -> switchLanguage(Locale.ENGLISH)),
                 new ButtonProps(text("language.menu.finnish"), () -> switchLanguage(Locale.forLanguageTag("fi")))
         );
+    }
+
+    private void openTradeMenu() {
+        if (runtime.popupService().isAnyVisible() || debtState != null) {
+            return;
+        }
+        Player proposer = players.getTurn();
+        if (proposer == null) {
+            return;
+        }
+        List<Player> tradePartners = players.getPlayers().stream()
+                .filter(player -> player != proposer)
+                .sorted(Comparator.comparingInt(Player::getTurnNumber))
+                .toList();
+        if (tradePartners.isEmpty()) {
+            runtime.popupService().show(text("trade.noPartners"));
+            return;
+        }
+        ButtonProps[] partnerButtons = tradePartners.stream()
+                .map(player -> new ButtonProps(player.getName(), () -> openTradeOfferSelection(proposer, player)))
+                .toArray(ButtonProps[]::new);
+        runtime.popupService().show(text("trade.choosePartner", proposer.getName()), partnerButtons);
+    }
+
+    private void openTradeOfferSelection(Player proposer, Player recipient) {
+        runtime.popupService().show(
+                text("trade.chooseOffer", proposer.getName(), recipient.getName()),
+                buildTradeSelectionButtons(proposer, selection -> openTradeRequestSelection(proposer, recipient, selection))
+        );
+    }
+
+    private void openTradeRequestSelection(Player proposer, Player recipient, TradeSelection offeredSelection) {
+        runtime.popupService().show(
+                text("trade.chooseRequest", recipient.getName(), proposer.getName()),
+                buildTradeSelectionButtons(recipient, selection -> confirmTradeOffer(new TradeOffer(proposer, recipient, offeredSelection, selection)))
+        );
+    }
+
+    private ButtonProps[] buildTradeSelectionButtons(Player owner, java.util.function.Consumer<TradeSelection> onSelect) {
+        List<ButtonProps> buttons = new java.util.ArrayList<>();
+        buttons.add(new ButtonProps(text("trade.option.nothing"), () -> onSelect.accept(TradeSelection.NONE)));
+        for (int amount : List.of(50, 100, 200, 500)) {
+            if (owner.getMoneyAmount() >= amount) {
+                buttons.add(new ButtonProps(text("trade.option.money", amount), () -> onSelect.accept(new TradeSelection(amount, null, false))));
+            }
+        }
+        owner.getOwnedProperties().stream()
+                .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
+                .filter(this::isTradableProperty)
+                .forEach(property -> buttons.add(new ButtonProps(
+                        text("trade.option.property", property.getDisplayName()),
+                        () -> onSelect.accept(new TradeSelection(0, property, false))
+                )));
+        if (owner.hasGetOutOfJailCard()) {
+            buttons.add(new ButtonProps(text("trade.option.jailCard"), () -> onSelect.accept(new TradeSelection(0, null, true))));
+        }
+        return buttons.toArray(ButtonProps[]::new);
+    }
+
+    private boolean isTradableProperty(Property property) {
+        return !(property instanceof StreetProperty streetProperty) || streetProperty.getBuildingLevel() == 0;
+    }
+
+    private void confirmTradeOffer(TradeOffer offer) {
+        if (!offer.isValid()) {
+            runtime.popupService().show(text("trade.invalid"));
+            return;
+        }
+        String summary = buildTradeSummary(offer);
+        if (offer.recipient().isComputerControlled()) {
+            TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer);
+            log.info("Bot trade decision: player={}, accept={}, score={}, reason={}",
+                    offer.recipient().getName(),
+                    decision.accept(),
+                    Math.round(decision.score() * 10.0) / 10.0,
+                    decision.reason());
+            if (decision.accept()) {
+                applyTradeOffer(offer);
+                runtime.popupService().show(text("trade.accepted", offer.recipient().getName()) + "\n" + summary);
+            } else {
+                runtime.popupService().show(text("trade.declined", offer.recipient().getName()) + "\n" + decision.reason());
+            }
+            return;
+        }
+        runtime.popupService().show(
+                text("trade.review", offer.recipient().getName()) + "\n" + summary,
+                () -> {
+                    applyTradeOffer(offer);
+                    runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));
+                },
+                () -> runtime.popupService().show(text("trade.declined", offer.recipient().getName()))
+        );
+    }
+
+    private void applyTradeOffer(TradeOffer offer) {
+        if (!offer.apply()) {
+            runtime.popupService().show(text("trade.invalid"));
+        }
+    }
+
+    private String buildTradeSummary(TradeOffer offer) {
+        return text("trade.summary.header", offer.proposer().getName(), offer.recipient().getName())
+                + "\n" + text("trade.summary.offer", describeTradeSelection(offer.offeredToRecipient()))
+                + "\n" + text("trade.summary.request", describeTradeSelection(offer.requestedFromRecipient()));
+    }
+
+    private String describeTradeSelection(TradeSelection selection) {
+        if (selection.isEmpty()) {
+            return text("trade.option.nothing");
+        }
+        List<String> parts = new java.util.ArrayList<>();
+        if (selection.moneyAmount() > 0) {
+            parts.add(text("trade.option.money", selection.moneyAmount()));
+        }
+        if (selection.property() != null) {
+            parts.add(text("trade.option.property", selection.property().getDisplayName()));
+        }
+        if (selection.jailCard()) {
+            parts.add(text("trade.option.jailCard"));
+        }
+        return String.join(", ", parts);
     }
 
     private void switchLanguage(Locale locale) {

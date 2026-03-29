@@ -164,20 +164,7 @@ public class Player extends PlayerToken {
     public void transferAssetsTo(Player targetPlayer) {
         log.info("Transferring assets from {} to {}", getName(), targetPlayer.getName());
         for (Property property : List.copyOf(getOwnedProperties())) {
-            ownedProperties.removeProperty(property);
-            property.setOwnerPlayer(targetPlayer);
-            targetPlayer.ownedProperties.addProperty(property);
-            log.debug("Transferred property {} to {}. mortgaged={}",
-                    property.getDisplayName(), targetPlayer.getName(), property.isMortgaged());
-            if (property.isMortgaged()) {
-                int interest = property.getMortgageInterest();
-                if (targetPlayer.addMoney(-interest)) {
-                    log.info("Mortgage transfer interest M{} paid by {}", interest, targetPlayer.getName());
-                } else {
-                    log.warn("{} could not pay immediate mortgage transfer interest M{} for {}",
-                            targetPlayer.getName(), interest, property.getDisplayName());
-                }
-            }
+            transferPropertyTo(targetPlayer, property);
         }
         targetPlayer.setGetOutOfJailCardCount(targetPlayer.getGetOutOfJailCardCount() + getOutOfJailCardCount);
         targetPlayer.getOutOfJailCardSources.addAll(getOutOfJailCardSources);
@@ -198,6 +185,36 @@ public class Player extends PlayerToken {
             log.debug("Released property {} to bank", property.getDisplayName());
         }
         moneyAmount = 0;
+    }
+
+    public boolean transferPropertyTo(Player targetPlayer, Property property) {
+        if (targetPlayer == null || property == null || property.getOwnerPlayer() != this) {
+            return false;
+        }
+        ownedProperties.removeProperty(property);
+        property.setOwnerPlayer(targetPlayer);
+        targetPlayer.ownedProperties.addProperty(property);
+        log.debug("Transferred property {} to {}. mortgaged={}",
+                property.getDisplayName(), targetPlayer.getName(), property.isMortgaged());
+        if (property.isMortgaged()) {
+            int interest = property.getMortgageInterest();
+            if (targetPlayer.addMoney(-interest)) {
+                log.info("Mortgage transfer interest M{} paid by {}", interest, targetPlayer.getName());
+            } else {
+                log.warn("{} could not pay immediate mortgage transfer interest M{} for {}",
+                        targetPlayer.getName(), interest, property.getDisplayName());
+            }
+        }
+        return true;
+    }
+
+    public boolean transferGetOutOfJailCardTo(Player targetPlayer) {
+        if (targetPlayer == null || !hasGetOutOfJailCard()) {
+            return false;
+        }
+        targetPlayer.addOutOfJailCard(getOutOfJailCardSources.pollFirst());
+        getOutOfJailCardCount--;
+        return true;
     }
 
     public int liquidateBuildingsToBank() {
