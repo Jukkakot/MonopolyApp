@@ -3,8 +3,10 @@ package fi.monopoly.components.computer;
 import fi.monopoly.types.SpotType;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -61,6 +63,39 @@ class StrongComputerStrategyTest {
         assertFalse(context.accepted);
     }
 
+    @Test
+    void strongStrategySellsWeakBuildingsBeforeTouchingMonopolyGroup() {
+        PropertyView monopoly = propertyView(SpotType.O1, 180, 80, 3, true);
+        PropertyView weakBuild = propertyView(SpotType.B1, 60, 10, 1, false);
+        PlayerView self = playerView(1, 0, List.of(monopoly, weakBuild));
+        FakeContext context = new FakeContext(debtGameView(self, 10), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("sell:B1", "retry"), context.operations);
+        assertFalse(context.bankrupt);
+    }
+
+    @Test
+    void strongStrategyMortgagesIsolatedPropertyBeforeIncompleteSet() {
+        PropertyView isolatedRailroad = propertyView(SpotType.RR1, 200, 25, 0, false);
+        PropertyView promisingStreet = propertyView(SpotType.O1, 180, 14, 0, false);
+        PlayerView self = playerView(1, 0, List.of(promisingStreet, isolatedRailroad));
+        FakeContext context = new FakeContext(debtGameView(self, 100), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("mortgage:RR1", "retry"), context.operations);
+    }
+
+    @Test
+    void strongStrategyDeclaresBankruptcyWhenNoLiquidationPathExists() {
+        PlayerView self = playerView(1, 0, List.of());
+        FakeContext context = new FakeContext(debtGameView(self, 100), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertTrue(context.bankrupt);
+        assertEquals(List.of("bankrupt"), context.operations);
+    }
+
     private static GameView gameView(PlayerView self, PropertyView offeredProperty, int unownedPropertyCount) {
         return new GameView(
                 self.id(),
@@ -72,6 +107,19 @@ class StrongComputerStrategyTest {
                 new PopupView("PropertyOfferPopup", "Offer", List.of("Accept", "Decline"), offeredProperty),
                 null,
                 unownedPropertyCount,
+                32,
+                12
+        );
+    }
+
+    private static GameView debtGameView(PlayerView self, int debtAmount) {
+        return new GameView(
+                self.id(),
+                List.of(self),
+                new VisibleActionsView(false, true, true, false, false),
+                null,
+                new DebtView(debtAmount, "Debt", true, "Bank", "Bank"),
+                8,
                 32,
                 12
         );
@@ -98,6 +146,10 @@ class StrongComputerStrategyTest {
     }
 
     private static PropertyView propertyView(SpotType spotType, int price, int rentEstimate) {
+        return propertyView(spotType, price, rentEstimate, 0, false);
+    }
+
+    private static PropertyView propertyView(SpotType spotType, int price, int rentEstimate, int buildingLevel, boolean completedSet) {
         return new PropertyView(
                 spotType,
                 spotType.streetType,
@@ -106,29 +158,52 @@ class StrongComputerStrategyTest {
                 price,
                 false,
                 price / 2,
-                price / 2,
-                0,
-                0,
-                0,
+                price / 2 + buildingLevel * (price / 4),
+                buildingLevel,
+                buildingLevel == 5 ? 0 : buildingLevel,
+                buildingLevel == 5 ? 1 : 0,
                 rentEstimate,
-                false
+                completedSet
         );
     }
 
     private static final class FakeContext implements ComputerTurnContext {
-        private final GameView gameView;
-        private final PlayerView self;
+        private final List<PlayerView> players;
+        private final VisibleActionsView visibleActions;
+        private final PopupView popup;
+        private final DebtView debt;
+        private final int unownedPropertyCount;
+        private final int bankHousesLeft;
+        private final int bankHotelsLeft;
+        private PlayerView self;
         private boolean accepted;
         private boolean declined;
+        private boolean bankrupt;
+        private final List<String> operations = new ArrayList<>();
 
         private FakeContext(GameView gameView, PlayerView self) {
-            this.gameView = gameView;
+            this.players = new ArrayList<>(gameView.players());
+            this.visibleActions = gameView.visibleActions();
+            this.popup = gameView.popup();
+            this.debt = gameView.debt();
+            this.unownedPropertyCount = gameView.unownedPropertyCount();
+            this.bankHousesLeft = gameView.bankHousesLeft();
+            this.bankHotelsLeft = gameView.bankHotelsLeft();
             this.self = self;
         }
 
         @Override
         public GameView gameView() {
-            return gameView;
+            return new GameView(
+                    self.id(),
+                    List.copyOf(players),
+                    visibleActions,
+                    popup,
+                    debt,
+                    unownedPropertyCount,
+                    bankHousesLeft,
+                    bankHotelsLeft
+            );
         }
 
         @Override
@@ -145,31 +220,114 @@ class StrongComputerStrategyTest {
         @Override
         public boolean acceptActivePopup() {
             accepted = true;
+            operations.add("accept");
             return true;
         }
 
         @Override
         public boolean declineActivePopup() {
             declined = true;
+            operations.add("decline");
             return true;
         }
 
         @Override
         public boolean sellBuilding(SpotType spotType, int count) {
-            return false;
+            PropertyView property = findProperty(spotType);
+            if (property == null || property.buildingLevel() < count) {
+                return false;
+            }
+            int houseCount = Math.max(0, property.houseCount() - count);
+            int newBuildingLevel = Math.max(0, property.buildingLevel() - count);
+            replaceProperty(new PropertyView(
+                    property.spotType(),
+                    property.streetType(),
+                    property.placeType(),
+                    property.name(),
+                    property.price(),
+                    property.mortgaged(),
+                    property.mortgageValue(),
+                    property.liquidationValue(),
+                    newBuildingLevel,
+                    houseCount,
+                    property.hotelCount(),
+                    property.rentEstimate(),
+                    property.completedSet()
+            ));
+            self = new PlayerView(
+                    self.id(),
+                    self.name(),
+                    self.moneyAmount() + count * Math.max(1, property.price() / 4),
+                    self.turnNumber(),
+                    self.computerProfile(),
+                    self.currentSpot(),
+                    self.inJail(),
+                    self.jailRoundsLeft(),
+                    self.getOutOfJailCardCount(),
+                    self.totalHouseCount(),
+                    self.totalHotelCount(),
+                    self.totalLiquidationValue(),
+                    self.boardDangerScore(),
+                    self.completedSets(),
+                    self.ownedProperties()
+            );
+            operations.add("sell:" + spotType.name());
+            replacePlayer();
+            return true;
         }
 
         @Override
         public boolean toggleMortgage(SpotType spotType) {
-            return false;
+            PropertyView property = findProperty(spotType);
+            if (property == null || property.mortgaged()) {
+                return false;
+            }
+            replaceProperty(new PropertyView(
+                    property.spotType(),
+                    property.streetType(),
+                    property.placeType(),
+                    property.name(),
+                    property.price(),
+                    true,
+                    property.mortgageValue(),
+                    property.liquidationValue(),
+                    property.buildingLevel(),
+                    property.houseCount(),
+                    property.hotelCount(),
+                    property.rentEstimate(),
+                    property.completedSet()
+            ));
+            self = new PlayerView(
+                    self.id(),
+                    self.name(),
+                    self.moneyAmount() + property.mortgageValue(),
+                    self.turnNumber(),
+                    self.computerProfile(),
+                    self.currentSpot(),
+                    self.inJail(),
+                    self.jailRoundsLeft(),
+                    self.getOutOfJailCardCount(),
+                    self.totalHouseCount(),
+                    self.totalHotelCount(),
+                    self.totalLiquidationValue(),
+                    self.boardDangerScore(),
+                    self.completedSets(),
+                    self.ownedProperties()
+            );
+            operations.add("mortgage:" + spotType.name());
+            replacePlayer();
+            return true;
         }
 
         @Override
         public void retryPendingDebtPayment() {
+            operations.add("retry");
         }
 
         @Override
         public void declareBankruptcy() {
+            bankrupt = true;
+            operations.add("bankrupt");
         }
 
         @Override
@@ -178,6 +336,41 @@ class StrongComputerStrategyTest {
 
         @Override
         public void endTurn() {
+        }
+
+        private PropertyView findProperty(SpotType spotType) {
+            return self.ownedProperties().stream()
+                    .filter(property -> property.spotType() == spotType)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        private void replaceProperty(PropertyView replacement) {
+            List<PropertyView> properties = self.ownedProperties().stream()
+                    .map(property -> property.spotType() == replacement.spotType() ? replacement : property)
+                    .toList();
+            self = new PlayerView(
+                    self.id(),
+                    self.name(),
+                    self.moneyAmount(),
+                    self.turnNumber(),
+                    self.computerProfile(),
+                    self.currentSpot(),
+                    self.inJail(),
+                    self.jailRoundsLeft(),
+                    self.getOutOfJailCardCount(),
+                    self.totalHouseCount(),
+                    self.totalHotelCount(),
+                    self.totalLiquidationValue(),
+                    self.boardDangerScore(),
+                    self.completedSets(),
+                    properties
+            );
+        }
+
+        private void replacePlayer() {
+            players.clear();
+            players.add(self);
         }
     }
 }
