@@ -55,7 +55,12 @@ public class TradePopup extends Popup {
     private static final float BUTTON_AREA_BOTTOM_MARGIN = 28f;
     private static final float BUTTON_AREA_TOP_MARGIN = 18f;
     private static final float POPUP_TOP_MARGIN = 6f;
-    private static final int CARD_BASE_COLOR = 0xCDE6D1;
+    private static final int CARD_BASE_R = 205;
+    private static final int CARD_BASE_G = 230;
+    private static final int CARD_BASE_B = 209;
+    private static final int CARD_INSET = 4;
+    private static final float CARD_RADIUS = 14f;
+    private static final float CARD_INNER_RADIUS = 11f;
 
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private final List<String> activeButtonLabels = new ArrayList<>();
@@ -270,28 +275,20 @@ public class TradePopup extends Popup {
     }
 
     private void drawTradeItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height, boolean highlighted, boolean showLabel) {
-        p.rectMode(CORNER);
-        p.stroke(highlighted || item.selected() ? p.color(214, 112, 26) : p.color(120));
-        p.strokeWeight(item.selected() ? 3f : 1.5f);
-        p.fill(item.selected() ? p.color(255, 231, 186) : p.color(255));
-        p.rect(x, y, width, height, 14);
+        drawCardFrame(p, x, y, width, height, highlighted, item.selected());
 
         switch (item.type()) {
             case PROPERTY -> drawPropertyItem(p, item, x, y, width, height, showLabel);
+            case MONEY -> drawMoneyItem(p, item, x, y, width, height);
             case PLAYER -> drawPlayerItem(p, item, x, y, width, height);
             case JAIL_CARD -> drawJailCardItem(p, item, x, y, width, height);
-            case MONEY, EMPTY -> drawBadgeItem(p, item.label(), x, y, width, height);
+            case EMPTY -> drawBadgeItem(p, item.label(), x, y, width, height);
         }
     }
 
     private void drawPropertyItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height, boolean showLabel) {
-        p.noStroke();
-        p.fill(runtime.app().color(205, 230, 209));
-        p.rect(x + 3f, y + 3f, width - 6f, height - 6f, 12);
         int stripeColor = resolveTradePropertyStripeColor(item.property());
-        p.noStroke();
-        p.fill(stripeColor);
-        p.rect(x + 4f, y + 4f, width - 8f, PROPERTY_COLOR_STRIPE_HEIGHT, 10, 10, 4, 4);
+        drawCardStripe(p, x, y, width, stripeColor);
 
         PImage image = MonopolyApp.getImage(item.property().getSpotType());
         if (image != null) {
@@ -305,11 +302,7 @@ public class TradePopup extends Popup {
     }
 
     private void drawJailCardItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
-        p.noStroke();
-        p.fill(runtime.app().color(205, 230, 209));
-        p.rect(x + 3f, y + 3f, width - 6f, height - 6f, 12);
-        p.fill(runtime.app().color(70, 120, 80));
-        p.rect(x + 4f, y + 4f, width - 8f, PROPERTY_COLOR_STRIPE_HEIGHT, 10, 10, 4, 4);
+        drawCardStripe(p, x, y, width, runtime.app().color(70, 120, 80));
 
         PImage image = MonopolyApp.getImage("Community.png");
         if (image != null) {
@@ -320,6 +313,17 @@ public class TradePopup extends Popup {
         p.textFont(runtime.font10());
         p.textAlign(CENTER, TOP);
         p.text(item.label(), x + width / 2f, y + height - 28f);
+    }
+
+    private void drawMoneyItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
+        drawCardStripe(p, x, y, width, runtime.app().color(86, 142, 91));
+        p.fill(runtime.app().color(41, 91, 48));
+        p.textFont(runtime.font30());
+        p.textAlign(CENTER, CENTER);
+        p.text("M", x + width / 2f, y + height / 2f - 10f);
+        p.fill(0);
+        p.textFont(runtime.font20());
+        p.text(item.label(), x + width / 2f, y + height - 24f);
     }
 
     private void drawPlayerItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
@@ -365,6 +369,44 @@ public class TradePopup extends Popup {
             return runtime.app().color(120, 160, 170);
         }
         return runtime.app().color(170, 150, 100);
+    }
+
+    private void drawCardFrame(PGraphics p, float x, float y, float width, float height, boolean highlighted, boolean selected) {
+        p.rectMode(CORNER);
+        if (highlighted) {
+            p.noStroke();
+            p.fill(runtime.app().color(255, 214, 138, 130));
+            p.rect(x - 3f, y - 3f, width + 6f, height + 6f, CARD_RADIUS + 2f);
+        }
+        p.stroke(highlighted || selected ? p.color(214, 112, 26) : p.color(0));
+        p.strokeWeight(selected ? 3.5f : highlighted ? 2.5f : 2f);
+        p.fill(selected ? p.color(238, 246, 228) : p.color(245, 250, 241));
+        p.rect(x, y, width, height, CARD_RADIUS);
+
+        p.noStroke();
+        p.fill(runtime.app().color(CARD_BASE_R, CARD_BASE_G, CARD_BASE_B));
+        p.rect(
+                x + CARD_INSET,
+                y + CARD_INSET,
+                width - CARD_INSET * 2f,
+                height - CARD_INSET * 2f,
+                CARD_INNER_RADIUS
+        );
+    }
+
+    private void drawCardStripe(PGraphics p, float x, float y, float width, int stripeColor) {
+        p.noStroke();
+        p.fill(stripeColor);
+        p.rect(
+                x + CARD_INSET + 1f,
+                y + CARD_INSET + 1f,
+                width - (CARD_INSET + 1f) * 2f,
+                PROPERTY_COLOR_STRIPE_HEIGHT,
+                10,
+                10,
+                4,
+                4
+        );
     }
 
     private void ensureButtonPoolSize(int requiredCount) {

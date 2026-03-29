@@ -23,6 +23,10 @@ public record TradePopupItem(
         return new TradePopupItem(label, TradePopupItemType.JAIL_CARD, null, null, false, null);
     }
 
+    public static TradePopupItem jailCard(String label, boolean selected, ButtonAction action) {
+        return new TradePopupItem(label, TradePopupItemType.JAIL_CARD, null, null, selected, action);
+    }
+
     public static TradePopupItem empty(String label) {
         return new TradePopupItem(label, TradePopupItemType.EMPTY, null, null, false, null);
     }

@@ -1160,7 +1160,7 @@ public class Game implements MonopolyEventListener {
     private List<TradePopupItem> buildTradeInventoryItems(TradeOffer offer, boolean editingOfferSide) {
         Player editingPlayer = editingOfferSide ? offer.proposer() : offer.recipient();
         TradeSelection selection = editingOfferSide ? offer.offeredToRecipient() : offer.requestedFromRecipient();
-        return editingPlayer.getOwnedProperties().stream()
+        List<TradePopupItem> items = new java.util.ArrayList<>(editingPlayer.getOwnedProperties().stream()
                 .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
                 .filter(this::isTradableProperty)
                 .map(property -> TradePopupItem.property(
@@ -1175,7 +1175,22 @@ public class Game implements MonopolyEventListener {
                                 editingOfferSide
                         )
                 ))
-                .toList();
+                .toList());
+        if (editingPlayer.hasGetOutOfJailCard()) {
+            items.add(TradePopupItem.jailCard(
+                    text("trade.option.jailCardVisual"),
+                    selection.jailCard(),
+                    () -> openTradeEditor(
+                            updateTradeSelection(draftFromOffer(offer), editingOfferSide, selection.toggleJailCard()),
+                            editingOfferSide
+                    )
+            ));
+        }
+        return items;
+    }
+
+    private TradeDraft draftFromOffer(TradeOffer offer) {
+        return new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient());
     }
 
     private void switchLanguage(Locale locale) {
