@@ -945,15 +945,8 @@ public class Game implements MonopolyEventListener {
     }
 
     private void openTradeEditor(TradeDraft draft, boolean editingOfferSide) {
-        Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
-        Player otherPlayer = editingOfferSide ? draft.recipient() : draft.proposer();
-        TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
         runtime.popupService().show(
-                (editingOfferSide
-                        ? text("trade.chooseOffer", editingPlayer.getName(), otherPlayer.getName())
-                        : text("trade.chooseRequest", editingPlayer.getName(), otherPlayer.getName()))
-                        + "\n" + text("trade.currentSelection", describeTradeSelection(selection))
-                        + "\n" + buildTradeValueDeltaSummary(draft.toOffer()),
+                buildTradeEditorSummary(draft, editingOfferSide),
                 buildTradeEditorButtons(draft, editingOfferSide)
         );
     }
@@ -962,13 +955,19 @@ public class Game implements MonopolyEventListener {
         Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
         TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
         List<ButtonProps> buttons = new java.util.ArrayList<>();
-        buttons.add(new ButtonProps(text("trade.button.done"), () -> {
-            if (editingOfferSide) {
-                openTradeEditor(draft, false);
-            } else {
-                confirmTradeOffer(draft);
-            }
-        }));
+        buttons.add(new ButtonProps(
+                editingOfferSide
+                        ? text("trade.button.selectedEditorSide", draft.proposer().getName())
+                        : text("trade.button.switchEditorSide", draft.proposer().getName()),
+                () -> openTradeEditor(draft, true)
+        ));
+        buttons.add(new ButtonProps(
+                editingOfferSide
+                        ? text("trade.button.switchEditorSide", draft.recipient().getName())
+                        : text("trade.button.selectedEditorSide", draft.recipient().getName()),
+                () -> openTradeEditor(draft, false)
+        ));
+        buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
         buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
                 editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
                 editingOfferSide
@@ -999,9 +998,7 @@ public class Game implements MonopolyEventListener {
                 .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
                 .filter(this::isTradableProperty)
                 .forEach(property -> buttons.add(new ButtonProps(
-                        property.equals(selection.property())
-                                ? text("trade.button.selectedAsset", property.getDisplayName())
-                                : property.getDisplayName(),
+                        buildTradePropertyButtonLabel(property, property.equals(selection.property())),
                         () -> openTradeEditor(updateTradeSelection(draft, editingOfferSide, selection.withProperty(property)), editingOfferSide)
                 )));
         return buttons.toArray(ButtonProps[]::new);
@@ -1095,10 +1092,20 @@ public class Game implements MonopolyEventListener {
     }
 
     private String buildTradeSummary(TradeOffer offer) {
-        return text("trade.summary.header", offer.proposer().getName(), offer.recipient().getName())
-                + "\n" + text("trade.summary.offer", describeTradeSelection(offer.offeredToRecipient()))
-                + "\n" + text("trade.summary.request", describeTradeSelection(offer.requestedFromRecipient()))
+        return buildTradeBoard(offer, text("trade.summary.header", offer.proposer().getName(), offer.recipient().getName()))
                 + "\n" + buildTradeValueDeltaSummary(offer);
+    }
+
+    private String buildTradeEditorSummary(TradeDraft draft, boolean editingOfferSide) {
+        Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
+        return buildTradeBoard(draft.toOffer(), text("trade.editor.header"))
+                + "\n" + text("trade.editor.editing", editingPlayer.getName());
+    }
+
+    private String buildTradeBoard(TradeOffer offer, String title) {
+        return title
+                + "\n" + text("trade.board.side", offer.proposer().getName(), describeTradeSelectionVisual(offer.offeredToRecipient()))
+                + "\n" + text("trade.board.side", offer.recipient().getName(), describeTradeSelectionVisual(offer.requestedFromRecipient()));
     }
 
     private String buildTradeValueDeltaSummary(TradeOffer offer) {
@@ -1133,6 +1140,32 @@ public class Game implements MonopolyEventListener {
             parts.add(text("trade.option.jailCard"));
         }
         return String.join(", ", parts);
+    }
+
+    private String describeTradeSelectionVisual(TradeSelection selection) {
+        if (selection.isEmpty()) {
+            return text("trade.option.nothingVisual");
+        }
+        List<String> parts = new java.util.ArrayList<>();
+        if (selection.moneyAmount() > 0) {
+            parts.add(text("trade.option.moneyVisual", selection.moneyAmount()));
+        }
+        if (selection.property() != null) {
+            parts.add(buildTradePropertyChip(selection.property()));
+        }
+        if (selection.jailCard()) {
+            parts.add(text("trade.option.jailCardVisual"));
+        }
+        return String.join(" ", parts);
+    }
+
+    private String buildTradePropertyButtonLabel(Property property, boolean selected) {
+        String chip = buildTradePropertyChip(property);
+        return selected ? text("trade.button.selectedAsset", chip) : chip;
+    }
+
+    private String buildTradePropertyChip(Property property) {
+        return "[" + property.getSpotType().name() + "]";
     }
 
     private void switchLanguage(Locale locale) {
