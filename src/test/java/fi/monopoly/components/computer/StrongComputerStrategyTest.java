@@ -96,6 +96,34 @@ class StrongComputerStrategyTest {
         assertEquals(List.of("bankrupt"), context.operations);
     }
 
+    @Test
+    void strongStrategyBuildsBestMonopolyBeforeEndingTurn() {
+        PlayerView self = playerView(1, 900, List.of(
+                propertyView(SpotType.O1, 180, 14, 0, true, 100),
+                propertyView(SpotType.O2, 180, 14, 0, true, 100),
+                propertyView(SpotType.O3, 200, 16, 0, true, 100),
+                propertyView(SpotType.B1, 60, 4, 0, true, 50),
+                propertyView(SpotType.B2, 60, 4, 0, true, 50)
+        ));
+        FakeContext context = new FakeContext(endTurnGameView(self), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("build:O1"), context.operations);
+    }
+
+    @Test
+    void strongStrategyKeepsReserveAndEndsTurnWithoutBuilding() {
+        PlayerView self = playerView(1, 320, List.of(
+                propertyView(SpotType.O1, 180, 14, 0, true, 100),
+                propertyView(SpotType.O2, 180, 14, 0, true, 100),
+                propertyView(SpotType.O3, 200, 16, 0, true, 100)
+        ));
+        FakeContext context = new FakeContext(endTurnGameView(self), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("endTurn"), context.operations);
+    }
+
     private static GameView gameView(PlayerView self, PropertyView offeredProperty, int unownedPropertyCount) {
         return new GameView(
                 self.id(),
@@ -107,6 +135,19 @@ class StrongComputerStrategyTest {
                 new PopupView("PropertyOfferPopup", "Offer", List.of("Accept", "Decline"), offeredProperty),
                 null,
                 unownedPropertyCount,
+                32,
+                12
+        );
+    }
+
+    private static GameView endTurnGameView(PlayerView self) {
+        return new GameView(
+                self.id(),
+                List.of(self),
+                new VisibleActionsView(false, false, false, false, true),
+                null,
+                null,
+                4,
                 32,
                 12
         );
@@ -150,6 +191,13 @@ class StrongComputerStrategyTest {
     }
 
     private static PropertyView propertyView(SpotType spotType, int price, int rentEstimate, int buildingLevel, boolean completedSet) {
+        int housePrice = spotType.streetType.placeType == fi.monopoly.types.PlaceType.STREET
+                ? spotType.getIntegerProperty("housePrice")
+                : 0;
+        return propertyView(spotType, price, rentEstimate, buildingLevel, completedSet, housePrice);
+    }
+
+    private static PropertyView propertyView(SpotType spotType, int price, int rentEstimate, int buildingLevel, boolean completedSet, int housePrice) {
         return new PropertyView(
                 spotType,
                 spotType.streetType,
@@ -159,6 +207,7 @@ class StrongComputerStrategyTest {
                 false,
                 price / 2,
                 price / 2 + buildingLevel * (price / 4),
+                housePrice,
                 buildingLevel,
                 buildingLevel == 5 ? 0 : buildingLevel,
                 buildingLevel == 5 ? 1 : 0,
@@ -248,6 +297,7 @@ class StrongComputerStrategyTest {
                     property.mortgaged(),
                     property.mortgageValue(),
                     property.liquidationValue(),
+                    property.housePrice(),
                     newBuildingLevel,
                     houseCount,
                     property.hotelCount(),
@@ -277,6 +327,58 @@ class StrongComputerStrategyTest {
         }
 
         @Override
+        public boolean buyBuildingRound(SpotType spotType) {
+            PropertyView property = findProperty(spotType);
+            if (property == null) {
+                return false;
+            }
+            List<PropertyView> updated = self.ownedProperties().stream()
+                    .map(owned -> owned.streetType() == property.streetType()
+                            ? new PropertyView(
+                            owned.spotType(),
+                            owned.streetType(),
+                            owned.placeType(),
+                            owned.name(),
+                            owned.price(),
+                            owned.mortgaged(),
+                            owned.mortgageValue(),
+                            owned.liquidationValue(),
+                            owned.housePrice(),
+                            owned.buildingLevel() + 1,
+                            owned.houseCount() + 1,
+                            owned.hotelCount(),
+                            owned.rentEstimate() + 20,
+                            owned.completedSet()
+                    )
+                            : owned)
+                    .toList();
+            int roundCost = updated.stream()
+                    .filter(owned -> owned.streetType() == property.streetType())
+                    .mapToInt(PropertyView::housePrice)
+                    .sum();
+            self = new PlayerView(
+                    self.id(),
+                    self.name(),
+                    self.moneyAmount() - roundCost,
+                    self.turnNumber(),
+                    self.computerProfile(),
+                    self.currentSpot(),
+                    self.inJail(),
+                    self.jailRoundsLeft(),
+                    self.getOutOfJailCardCount(),
+                    self.totalHouseCount(),
+                    self.totalHotelCount(),
+                    self.totalLiquidationValue(),
+                    self.boardDangerScore(),
+                    self.completedSets(),
+                    updated
+            );
+            operations.add("build:" + spotType.name());
+            replacePlayer();
+            return true;
+        }
+
+        @Override
         public boolean toggleMortgage(SpotType spotType) {
             PropertyView property = findProperty(spotType);
             if (property == null || property.mortgaged()) {
@@ -291,6 +393,7 @@ class StrongComputerStrategyTest {
                     true,
                     property.mortgageValue(),
                     property.liquidationValue(),
+                    property.housePrice(),
                     property.buildingLevel(),
                     property.houseCount(),
                     property.hotelCount(),
@@ -336,6 +439,7 @@ class StrongComputerStrategyTest {
 
         @Override
         public void endTurn() {
+            operations.add("endTurn");
         }
 
         private PropertyView findProperty(SpotType spotType) {

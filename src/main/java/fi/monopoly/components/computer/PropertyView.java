@@ -13,6 +13,7 @@ public record PropertyView(
         boolean mortgaged,
         int mortgageValue,
         int liquidationValue,
+        int housePrice,
         int buildingLevel,
         int houseCount,
         int hotelCount,

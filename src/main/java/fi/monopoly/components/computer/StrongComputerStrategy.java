@@ -1,7 +1,9 @@
 package fi.monopoly.components.computer;
 
 final class StrongComputerStrategy implements ComputerTurnStrategy {
-    private final StrongPropertyBuyEvaluator propertyBuyEvaluator = new StrongPropertyBuyEvaluator(StrongBotConfig.defaults());
+    private final StrongBotConfig config = StrongBotConfig.defaults();
+    private final StrongPropertyBuyEvaluator propertyBuyEvaluator = new StrongPropertyBuyEvaluator(config);
+    private final StrongBuildingEvaluator buildingEvaluator = new StrongBuildingEvaluator(config);
     private final StrongDebtResolver debtResolver = new StrongDebtResolver();
     private final SmokeTestComputerStrategy fallbackStrategy = new SmokeTestComputerStrategy();
 
@@ -18,6 +20,12 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
         }
         if (view.debt() != null) {
             return debtResolver.resolve(context, view, self);
+        }
+        if (view.visibleActions().endTurnVisible()) {
+            PropertyView buildTarget = buildingEvaluator.selectBuildTarget(view, self);
+            if (buildTarget != null && context.buyBuildingRound(buildTarget.spotType())) {
+                return true;
+            }
         }
         return fallbackStrategy.takeStep(context);
     }

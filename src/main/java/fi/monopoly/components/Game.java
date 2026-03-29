@@ -1147,6 +1147,15 @@ public class Game implements MonopolyEventListener {
         }
 
         @Override
+        public boolean buyBuildingRound(SpotType spotType) {
+            Property property = PropertyFactory.getProperty(spotType);
+            if (!(property instanceof StreetProperty streetProperty)) {
+                return false;
+            }
+            return streetProperty.buyBuildingRoundsAcrossSet(1);
+        }
+
+        @Override
         public boolean toggleMortgage(SpotType spotType) {
             return PropertyFactory.getProperty(spotType).handleMortgaging();
         }
@@ -1241,10 +1250,12 @@ public class Game implements MonopolyEventListener {
     }
 
     private PropertyView createPropertyView(Player owner, Property property) {
+        int housePrice = 0;
         int buildingLevel = 0;
         int houseCount = 0;
         int hotelCount = 0;
         if (property instanceof StreetProperty streetProperty) {
+            housePrice = streetProperty.getHousePrice();
             buildingLevel = streetProperty.getBuildingLevel();
             houseCount = streetProperty.getHouseCount();
             hotelCount = streetProperty.getHotelCount();
@@ -1258,6 +1269,7 @@ public class Game implements MonopolyEventListener {
                 property.isMortgaged(),
                 property.getMortgageValue(),
                 property.getLiquidationValue(),
+                housePrice,
                 buildingLevel,
                 houseCount,
                 hotelCount,
@@ -1321,6 +1333,7 @@ public class Game implements MonopolyEventListener {
                 offeredProperty.isMortgaged(),
                 offeredProperty.getMortgageValue(),
                 offeredProperty.getLiquidationValue(),
+                0,
                 0,
                 0,
                 0,

@@ -10,7 +10,8 @@ public record StrongBotConfig(
         double railroadWeight,
         double utilityWeight,
         double liquidityPenaltyWeight,
-        boolean buyToBlockOpponent
+        boolean buyToBlockOpponent,
+        boolean prioritizeThreeHouses
 ) {
     public static StrongBotConfig defaults() {
         return new StrongBotConfig(
@@ -23,6 +24,7 @@ public record StrongBotConfig(
                 2.5,
                 0.5,
                 3.0,
+                true,
                 true
         );
     }

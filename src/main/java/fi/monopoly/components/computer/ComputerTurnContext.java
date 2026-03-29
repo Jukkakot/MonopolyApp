@@ -15,6 +15,8 @@ public interface ComputerTurnContext {
 
     boolean sellBuilding(SpotType spotType, int count);
 
+    boolean buyBuildingRound(SpotType spotType);
+
     boolean toggleMortgage(SpotType spotType);
 
     void retryPendingDebtPayment();
