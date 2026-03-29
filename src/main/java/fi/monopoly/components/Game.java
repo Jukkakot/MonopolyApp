@@ -11,6 +11,7 @@ import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.*;
+import fi.monopoly.components.popup.TradePopupView;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
@@ -945,8 +946,14 @@ public class Game implements MonopolyEventListener {
     }
 
     private void openTradeEditor(TradeDraft draft, boolean editingOfferSide) {
-        runtime.popupService().show(
+        runtime.popupService().showTrade(
                 buildTradeEditorSummary(draft, editingOfferSide),
+                buildTradePopupView(
+                        draft.toOffer(),
+                        text("trade.editor.header"),
+                        text("trade.editor.editing", (editingOfferSide ? draft.proposer() : draft.recipient()).getName()),
+                        editingOfferSide
+                ),
                 buildTradeEditorButtons(draft, editingOfferSide)
         );
     }
@@ -1040,7 +1047,9 @@ public class Game implements MonopolyEventListener {
             }
             return;
         }
-        runtime.popupService().show(text("trade.review", offer.recipient().getName()) + "\n" + summary,
+        runtime.popupService().showTrade(
+                text("trade.review", offer.recipient().getName()) + "\n" + summary,
+                buildTradePopupView(offer, text("trade.review.header"), text("trade.review", offer.recipient().getName()), null),
                 new ButtonProps(text("popup.choice.accept"), () -> {
                     applyTradeOffer(offer);
                     runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));
@@ -1073,8 +1082,9 @@ public class Game implements MonopolyEventListener {
             }
             return;
         }
-        runtime.popupService().show(
+        runtime.popupService().showTrade(
                 summary,
+                buildTradePopupView(counterOffer, text("trade.countered", counteringPlayerName), text("trade.countered.new"), null),
                 () -> {
                     applyTradeOffer(counterOffer);
                     runtime.popupService().show(text("trade.accepted", counterOffer.proposer().getName()));
@@ -1100,6 +1110,20 @@ public class Game implements MonopolyEventListener {
         Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
         return buildTradeBoard(draft.toOffer(), text("trade.editor.header"))
                 + "\n" + text("trade.editor.editing", editingPlayer.getName());
+    }
+
+    private TradePopupView buildTradePopupView(TradeOffer offer, String title, String subtitle, Boolean editingOfferSide) {
+        return new TradePopupView(
+                title,
+                subtitle,
+                offer.proposer().getName(),
+                describeTradeSelectionVisualItems(offer.offeredToRecipient()),
+                Boolean.TRUE.equals(editingOfferSide),
+                offer.recipient().getName(),
+                describeTradeSelectionVisualItems(offer.requestedFromRecipient()),
+                Boolean.FALSE.equals(editingOfferSide),
+                buildTradeValueDeltaSummary(offer)
+        );
     }
 
     private String buildTradeBoard(TradeOffer offer, String title) {
@@ -1143,8 +1167,12 @@ public class Game implements MonopolyEventListener {
     }
 
     private String describeTradeSelectionVisual(TradeSelection selection) {
+        return String.join(" ", describeTradeSelectionVisualItems(selection));
+    }
+
+    private List<String> describeTradeSelectionVisualItems(TradeSelection selection) {
         if (selection.isEmpty()) {
-            return text("trade.option.nothingVisual");
+            return List.of(text("trade.option.nothingVisual"));
         }
         List<String> parts = new java.util.ArrayList<>();
         if (selection.moneyAmount() > 0) {
@@ -1156,7 +1184,7 @@ public class Game implements MonopolyEventListener {
         if (selection.jailCard()) {
             parts.add(text("trade.option.jailCardVisual"));
         }
-        return String.join(" ", parts);
+        return parts;
     }
 
     private String buildTradePropertyButtonLabel(Property property, boolean selected) {

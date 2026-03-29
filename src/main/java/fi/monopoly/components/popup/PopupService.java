@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static fi.monopoly.text.UiTexts.text;
+
 @Slf4j
 public class PopupService {
     private static final int MAX_HISTORY_ENTRIES = 12;
@@ -80,6 +82,25 @@ public class PopupService {
             customPopup.setButtons(buttonProps);
             return customPopup;
         });
+    }
+
+    public void showTrade(String text, TradePopupView tradeView, ButtonProps... buttonProps) {
+        enqueue(() -> {
+            TradePopup tradePopup = getInstance(TradePopup.class);
+            tradePopup.setPopupText(text);
+            tradePopup.setTradeView(tradeView);
+            tradePopup.setButtons(buttonProps);
+            return tradePopup;
+        });
+    }
+
+    public void showTrade(String text, TradePopupView tradeView, ButtonAction onAccept, ButtonAction onDecline) {
+        showTrade(
+                text,
+                tradeView,
+                new ButtonProps(text("popup.choice.accept"), onAccept),
+                new ButtonProps(text("popup.choice.decline"), onDecline)
+        );
     }
 
     public void hideAll() {
@@ -159,7 +180,8 @@ public class PopupService {
                 OkPopup.class, () -> new OkPopup(runtime),
                 ChoicePopup.class, () -> new ChoicePopup(runtime),
                 PropertyOfferPopup.class, () -> new PropertyOfferPopup(runtime),
-                CustomPopup.class, () -> new CustomPopup(runtime)
+                CustomPopup.class, () -> new CustomPopup(runtime),
+                TradePopup.class, () -> new TradePopup(runtime)
         );
         Supplier<? extends Popup> supplier = factories.get(clazz);
         if (supplier == null) {
