@@ -13,10 +13,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class AnimationTest {
 
     @Test
-    void getNextAnimationCoordsMovesFortyPercentTowardsGoal() {
+    void getNextAnimationCoordsMovesThirtyPercentTowardsGoal() {
         Coordinates next = Animation.getNextAnimationCoords(new Coordinates(0, 0), new Coordinates(10, 20));
 
-        assertEquals(new Coordinates(4, 8, 0), next);
+        assertEquals(new Coordinates(3, 6, 0), next);
     }
 
     @Test
@@ -28,7 +28,7 @@ class AnimationTest {
         boolean running = animation.updateAnimation();
 
         assertTrue(running);
-        assertEquals(new Coordinates(4, 0, 0), drawable.getCoords());
+        assertEquals(new Coordinates(3, 0, 0), drawable.getCoords());
     }
 
     @Test
@@ -41,7 +41,7 @@ class AnimationTest {
 
         assertTrue(running);
         assertEquals(1, path.removePreviousCalls);
-        assertEquals(new Coordinates(4, 0, 0), drawable.getCoords());
+        assertEquals(new Coordinates(3, 0, 0), drawable.getCoords());
     }
 
     @Test

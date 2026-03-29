@@ -90,6 +90,7 @@ class GameComputerViewTest {
         runtime.popupService().show("Test popup", () -> {
         }, () -> {
         });
+        turnPlayer.releaseAssetsToBank();
         turnPlayer.addMoney(40 - turnPlayer.getMoneyAmount());
         Method handlePaymentRequest = Game.class.getDeclaredMethod("handlePaymentRequest", PaymentRequest.class, CallbackAction.class);
         handlePaymentRequest.setAccessible(true);

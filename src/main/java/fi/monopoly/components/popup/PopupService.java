@@ -59,6 +59,10 @@ public class PopupService {
     }
 
     public void showPropertyOffer(Property property, String text, ButtonAction onAccept, ButtonAction onDecline) {
+        if (runtime == null) {
+            show(text, onAccept, onDecline);
+            return;
+        }
         enqueue(() -> {
             PropertyOfferPopup propertyOfferPopup = getInstance(PropertyOfferPopup.class);
             propertyOfferPopup.setPopupText(text);
