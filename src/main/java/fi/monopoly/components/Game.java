@@ -893,6 +893,7 @@ public class Game implements MonopolyEventListener {
                 new TradePopupView(
                         text("trade.choosePartnerTitle"),
                         text("trade.choosePartner", proposer.getName()),
+                        this::openTradeMenu,
                         proposer,
                         List.of(TradePopupItem.empty(text("trade.choosePartnerCurrent"))),
                         true,
@@ -941,7 +942,6 @@ public class Game implements MonopolyEventListener {
                 )));
             }
         }
-        buttons.add(new ButtonProps(text("trade.button.back"), this::openTradeMenu));
         buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
         buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
                 editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
@@ -1064,6 +1064,7 @@ public class Game implements MonopolyEventListener {
         return new TradePopupView(
                 title,
                 subtitle,
+                editingOfferSide == null ? null : this::openTradeMenu,
                 offer.proposer(),
                 describeTradeSelectionVisualItems(offer.offeredToRecipient()),
                 Boolean.TRUE.equals(editingOfferSide),
@@ -1140,7 +1141,7 @@ public class Game implements MonopolyEventListener {
             parts.add(TradePopupItem.property(selection.property(), false, null));
         }
         if (selection.jailCard()) {
-            parts.add(TradePopupItem.jailCard(text("trade.option.jailCardVisual")));
+            parts.add(TradePopupItem.jailCard(""));
         }
         return parts;
     }

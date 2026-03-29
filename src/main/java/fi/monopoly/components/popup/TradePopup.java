@@ -78,8 +78,8 @@ public class TradePopup extends Popup {
                 .setSize(20, 20);
         this.backButton = new MonopolyButton(runtime, "tradeBack")
                 .addListener(() -> {
-                    if (totalButtonCount > 0) {
-                        customButtons.get(0).pressButton();
+                    if (tradeView != null && tradeView.backAction() != null) {
+                        completeAction(tradeView.backAction());
                     }
                 })
                 .setSize(56, 32);
@@ -498,11 +498,10 @@ public class TradePopup extends Popup {
     private void layoutTradeEditorButtons() {
         int top = Math.round(getButtonAreaTop());
         int rowY = top + Math.max(0, Math.round((getButtonAreaHeight() - BUTTON_HEIGHT) / 2f));
-        customButtons.get(0).hide();
         List<MonopolyButton> positiveButtons = new ArrayList<>();
         List<MonopolyButton> centerButtons = new ArrayList<>();
         List<MonopolyButton> negativeButtons = new ArrayList<>();
-        for (int i = 1; i < totalButtonCount; i++) {
+        for (int i = 0; i < totalButtonCount; i++) {
             MonopolyButton button = customButtons.get(i);
             String label = button.getCaptionLabel().getText();
             if (label.startsWith("+")) {
@@ -543,12 +542,8 @@ public class TradePopup extends Popup {
         closeButton.show();
         if (tradeView != null && tradeView.inventoryTitle() != null && totalButtonCount > 0) {
             backButton.show();
-            customButtons.get(0).hide();
         }
         for (int i = 0; i < totalButtonCount; i++) {
-            if (tradeView != null && tradeView.inventoryTitle() != null && i == 0) {
-                continue;
-            }
             customButtons.get(i).show();
         }
     }

@@ -8,6 +8,7 @@ import java.util.List;
 public record TradePopupView(
         String title,
         String subtitle,
+        ButtonAction backAction,
         Player leftPlayer,
         List<TradePopupItem> leftItems,
         boolean highlightLeft,
