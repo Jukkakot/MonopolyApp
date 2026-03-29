@@ -34,9 +34,17 @@ class PopupLayoutTest {
     }
 
     private static MonopolyButton getButton(Object owner, String fieldName) throws ReflectiveOperationException {
-        Field field = owner.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        return (MonopolyButton) field.get(owner);
+        Class<?> type = owner.getClass();
+        while (type != null) {
+            try {
+                Field field = type.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                return (MonopolyButton) field.get(owner);
+            } catch (NoSuchFieldException ignored) {
+                type = type.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(fieldName);
     }
 
     @SuppressWarnings("unchecked")
@@ -101,6 +109,26 @@ class PopupLayoutTest {
         assertTrue(acceptButton.getPosition()[0] + acceptButton.getWidth() <= popup.getPopupRight());
         assertTrue(acceptButton.getPosition()[1] >= popup.getButtonAreaTop());
         assertTrue(acceptButton.getPosition()[1] + acceptButton.getHeight() <= popup.getPopupBottom());
+    }
+
+    @Test
+    void propertyOfferPopupButtonsRemainVisibleAfterChoicePopupExists() throws ReflectiveOperationException {
+        MonopolyRuntime runtime = initHeadlessRuntime(1700, 996);
+        ChoicePopup choicePopup = new ChoicePopup(runtime);
+        choicePopup.setPopupText("Question");
+        choicePopup.show();
+
+        PropertyOfferPopup propertyOfferPopup = new PropertyOfferPopup(runtime);
+        propertyOfferPopup.setPopupText("Buy it?");
+        propertyOfferPopup.show();
+
+        MonopolyButton acceptButton = getButton(propertyOfferPopup, "acceptButton");
+        MonopolyButton declineButton = getButton(propertyOfferPopup, "declineButton");
+
+        assertTrue(acceptButton.isVisible());
+        assertTrue(declineButton.isVisible());
+        assertTrue(acceptButton.getPosition()[0] >= propertyOfferPopup.getPopupLeft());
+        assertTrue(declineButton.getPosition()[0] + declineButton.getWidth() <= propertyOfferPopup.getPopupRight());
     }
 
     @Test

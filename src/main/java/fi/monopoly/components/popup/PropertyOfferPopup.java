@@ -7,7 +7,7 @@ public class PropertyOfferPopup extends ChoicePopup {
     private Property offeredProperty;
 
     protected PropertyOfferPopup(MonopolyRuntime runtime) {
-        super(runtime);
+        super(runtime, "propertyOffer");
     }
 
     public void setOfferedProperty(Property offeredProperty) {

@@ -18,13 +18,17 @@ public class ChoicePopup extends Popup {
     private ButtonAction onDeclineAction;
 
     protected ChoicePopup(MonopolyRuntime runtime) {
+        this(runtime, "choice");
+    }
+
+    protected ChoicePopup(MonopolyRuntime runtime, String controlPrefix) {
         super(runtime);
-        this.acceptButton = new MonopolyButton(runtime, "accept");
+        this.acceptButton = new MonopolyButton(runtime, controlPrefix + "Accept");
         acceptButton.addListener(this::acceptAction);
         acceptButton.setSize(100, 50);
         acceptButton.setAutoWidth(100, 28, 180);
         acceptButton.hide();
-        this.declineButton = new MonopolyButton(runtime, "decline");
+        this.declineButton = new MonopolyButton(runtime, controlPrefix + "Decline");
         declineButton.addListener(this::declineAction);
         declineButton.setSize(100, 50);
         declineButton.setAutoWidth(100, 28, 180);
