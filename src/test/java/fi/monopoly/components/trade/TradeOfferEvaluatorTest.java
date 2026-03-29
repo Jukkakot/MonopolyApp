@@ -27,7 +27,7 @@ class TradeOfferEvaluatorTest {
                 recipient,
                 new TradeSelection(0, b2, false),
                 new TradeSelection(50, null, false)
-        ));
+        ), BotTradeProfile.BALANCED);
 
         assertTrue(decision.accept());
     }
@@ -48,8 +48,42 @@ class TradeOfferEvaluatorTest {
                 recipient,
                 new TradeSelection(50, null, false),
                 new TradeSelection(0, b1, false)
-        ));
+        ), BotTradeProfile.CAUTIOUS);
 
         assertFalse(decision.accept());
+    }
+
+    @Test
+    void profilesUseDifferentAcceptanceThresholds() {
+        Player proposer = new Player("P1", Color.BLACK, 1500, 1);
+        Player recipient = new Player("P2", Color.BLUE, 1500, 2);
+        TradeOffer offer = new TradeOffer(
+                proposer,
+                recipient,
+                new TradeSelection(30, null, false),
+                TradeSelection.NONE
+        );
+
+        assertFalse(evaluator.evaluateForRecipient(offer, BotTradeProfile.CAUTIOUS).accept());
+        assertTrue(evaluator.evaluateForRecipient(offer, BotTradeProfile.BALANCED).accept());
+        assertTrue(evaluator.evaluateForRecipient(offer, BotTradeProfile.AGGRESSIVE).accept());
+    }
+
+    @Test
+    void counterOfferRaisesMoneyToMeetProfileThreshold() {
+        Player proposer = new Player("P1", Color.BLACK, 1500, 1);
+        Player recipient = new Player("P2", Color.BLUE, 1500, 2);
+        TradeOffer offer = new TradeOffer(
+                proposer,
+                recipient,
+                new TradeSelection(30, null, false),
+                TradeSelection.NONE
+        );
+
+        TradeOffer counterOffer = evaluator.proposeCounterOffer(offer, BotTradeProfile.CAUTIOUS);
+
+        assertTrue(counterOffer != null);
+        assertTrue(counterOffer.offeredToRecipient().moneyAmount() >= 60);
+        assertTrue(evaluator.evaluateForRecipient(counterOffer, BotTradeProfile.CAUTIOUS).accept());
     }
 }

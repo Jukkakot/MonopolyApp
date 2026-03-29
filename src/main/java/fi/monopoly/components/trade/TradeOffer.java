@@ -10,6 +10,18 @@ public record TradeOffer(
         TradeSelection offeredToRecipient,
         TradeSelection requestedFromRecipient
 ) {
+    public TradeOffer withOfferedToRecipient(TradeSelection selection) {
+        return new TradeOffer(proposer, recipient, selection, requestedFromRecipient);
+    }
+
+    public TradeOffer withRequestedFromRecipient(TradeSelection selection) {
+        return new TradeOffer(proposer, recipient, offeredToRecipient, selection);
+    }
+
+    public TradeOffer reversePerspective() {
+        return new TradeOffer(recipient, proposer, requestedFromRecipient, offeredToRecipient);
+    }
+
     public boolean isEmpty() {
         return offeredToRecipient.isEmpty() && requestedFromRecipient.isEmpty();
     }

@@ -18,6 +18,7 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.components.trade.BotTradeProfile;
 import fi.monopoly.components.trade.TradeDecision;
 import fi.monopoly.components.trade.TradeDraft;
 import fi.monopoly.components.trade.TradeOffer;
@@ -1017,7 +1018,8 @@ public class Game implements MonopolyEventListener {
         }
         String summary = buildTradeSummary(offer);
         if (offer.recipient().isComputerControlled()) {
-            TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer);
+            BotTradeProfile tradeProfile = resolveTradeProfile(offer.recipient());
+            TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer, tradeProfile);
             log.info("Bot trade decision: player={}, accept={}, score={}, reason={}",
                     offer.recipient().getName(),
                     decision.accept(),
@@ -1027,7 +1029,12 @@ public class Game implements MonopolyEventListener {
                 applyTradeOffer(offer);
                 runtime.popupService().show(text("trade.accepted", offer.recipient().getName()) + "\n" + summary);
             } else {
-                runtime.popupService().show(text("trade.declined", offer.recipient().getName()) + "\n" + decision.reason());
+                TradeOffer counterOffer = tradeOfferEvaluator.proposeCounterOffer(offer, tradeProfile);
+                if (counterOffer != null) {
+                    presentBotCounterOffer(counterOffer, offer.recipient().getName());
+                } else {
+                    runtime.popupService().show(text("trade.declined", offer.recipient().getName()) + "\n" + decision.reason());
+                }
             }
             return;
         }
@@ -1045,6 +1052,37 @@ public class Game implements MonopolyEventListener {
         if (!offer.apply()) {
             runtime.popupService().show(text("trade.invalid"));
         }
+    }
+
+    private void presentBotCounterOffer(TradeOffer counterOffer, String counteringPlayerName) {
+        String summary = text("trade.countered", counteringPlayerName) + "\n" + buildTradeSummary(counterOffer);
+        if (counterOffer.proposer().isComputerControlled()) {
+            BotTradeProfile proposerTradeProfile = resolveTradeProfile(counterOffer.proposer());
+            TradeDecision proposerDecision = tradeOfferEvaluator.evaluateForRecipient(counterOffer.reversePerspective(), proposerTradeProfile);
+            if (proposerDecision.accept()) {
+                applyTradeOffer(counterOffer);
+                runtime.popupService().show(text("trade.accepted", counterOffer.proposer().getName()) + "\n" + summary);
+            } else {
+                runtime.popupService().show(text("trade.declined", counterOffer.proposer().getName()) + "\n" + proposerDecision.reason());
+            }
+            return;
+        }
+        runtime.popupService().show(
+                summary,
+                () -> {
+                    applyTradeOffer(counterOffer);
+                    runtime.popupService().show(text("trade.accepted", counterOffer.proposer().getName()));
+                },
+                () -> runtime.popupService().show(text("trade.declined", counterOffer.proposer().getName()))
+        );
+    }
+
+    private BotTradeProfile resolveTradeProfile(Player player) {
+        return switch (player.getComputerProfile()) {
+            case SMOKE_TEST -> BotTradeProfile.CAUTIOUS;
+            case STRONG -> BotTradeProfile.BALANCED;
+            case HUMAN -> BotTradeProfile.AGGRESSIVE;
+        };
     }
 
     private String buildTradeSummary(TradeOffer offer) {
