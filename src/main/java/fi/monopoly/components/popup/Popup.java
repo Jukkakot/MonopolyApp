@@ -36,7 +36,6 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     protected static final int BUTTON_AREA_TOP_PADDING = 90;
     protected static final int BUTTON_AREA_BOTTOM_PADDING = 30;
     protected final MonopolyRuntime runtime;
-    private static boolean advanceKeyHeld;
     protected String popupText;
     @Getter(AccessLevel.PROTECTED)
     protected boolean isVisible = false;
@@ -204,30 +203,17 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
             return false;
         }
         if (event instanceof KeyEvent keyEvent) {
-            char key = keyEvent.getKey();
-            if (isAdvanceKey(key)) {
-                if (keyEvent.getAction() == processing.event.KeyEvent.RELEASE) {
-                    advanceKeyHeld = false;
-                    return false;
-                }
-                if (advanceKeyHeld) {
-                    return true;
-                }
-                boolean handled = onKeyAction(key);
-                if (handled) {
-                    advanceKeyHeld = true;
-                }
-                return handled;
-            }
+            // Deliberately do not debounce SPACE/ENTER here.
+            // A previous attempt tracked "advance key held" in Popup, but that
+            // broke expected hold-to-advance behavior and leaked state across
+            // popup transitions because the guard lived in the shared base class.
+            // If progression needs throttling, it must be handled in game flow
+            // based on animation/turn state rather than here in popup input.
             return onKeyAction(keyEvent.getKey());
         }
         if (event instanceof MouseEvent mouseEvent) {
             return onMouseAction(mouseEvent);
         }
         return false;
-    }
-
-    private boolean isAdvanceKey(char key) {
-        return key == fi.monopoly.MonopolyApp.SPACE || key == fi.monopoly.MonopolyApp.ENTER;
     }
 }
