@@ -160,7 +160,7 @@ public class Game implements MonopolyEventListener {
         animations = new Animations();
 
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
         players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
         players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
 //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
@@ -1036,7 +1036,7 @@ public class Game implements MonopolyEventListener {
             } else {
                 TradeOffer counterOffer = tradeOfferEvaluator.proposeCounterOffer(offer, tradeProfile);
                 if (counterOffer != null) {
-                    presentBotCounterOffer(counterOffer, offer.recipient().getName());
+                    presentBotCounterOffer(offer, counterOffer, offer.recipient().getName());
                 } else {
                     runtime.popupService().show(text("trade.declined", offer.recipient().getName()) + "\n" + decision.reason());
                 }
@@ -1059,8 +1059,12 @@ public class Game implements MonopolyEventListener {
         }
     }
 
-    private void presentBotCounterOffer(TradeOffer counterOffer, String counteringPlayerName) {
-        String summary = text("trade.countered", counteringPlayerName) + "\n" + buildTradeSummary(counterOffer);
+    private void presentBotCounterOffer(TradeOffer originalOffer, TradeOffer counterOffer, String counteringPlayerName) {
+        String summary = text("trade.countered", counteringPlayerName)
+                + "\n\n" + text("trade.countered.original")
+                + "\n" + buildTradeSummary(originalOffer)
+                + "\n\n" + text("trade.countered.new")
+                + "\n" + buildTradeSummary(counterOffer);
         if (counterOffer.proposer().isComputerControlled()) {
             BotTradeProfile proposerTradeProfile = resolveTradeProfile(counterOffer.proposer());
             TradeDecision proposerDecision = tradeOfferEvaluator.evaluateForRecipient(counterOffer.reversePerspective(), proposerTradeProfile);
