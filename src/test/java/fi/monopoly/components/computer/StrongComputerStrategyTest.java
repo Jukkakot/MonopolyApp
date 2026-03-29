@@ -57,6 +57,15 @@ class StrongComputerStrategyTest {
     }
 
     @Test
+    void buysReasonableStreetPropertyInEarlyGame() {
+        PlayerView self = playerView(1, 1500, List.of());
+        PropertyView offeredProperty = propertyView(SpotType.O1, 180, 14);
+        GameView gameView = gameView(self, offeredProperty, 24);
+
+        assertTrue(evaluator.shouldBuy(gameView, self, offeredProperty));
+    }
+
+    @Test
     void strongStrategyAcceptsGoodPropertyOffer() {
         PlayerView self = playerView(
                 1,
@@ -80,6 +89,17 @@ class StrongComputerStrategyTest {
         assertTrue(strategy.takeStep(context));
         assertTrue(context.declined);
         assertFalse(context.accepted);
+    }
+
+    @Test
+    void strongStrategyAcceptsEarlyGameStreetOffer() {
+        PlayerView self = playerView(1, 1500, List.of());
+        PropertyView offeredProperty = propertyView(SpotType.O1, 180, 14);
+        FakeContext context = new FakeContext(gameView(self, offeredProperty, 24), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertTrue(context.accepted);
+        assertFalse(context.declined);
     }
 
     @Test

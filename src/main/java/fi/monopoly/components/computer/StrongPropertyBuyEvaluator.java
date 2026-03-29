@@ -40,11 +40,12 @@ final class StrongPropertyBuyEvaluator {
                     "Decline " + property.name() + ": post-cash M" + postPurchaseCash + " falls below reserve M" + reserve
             );
         }
-        boolean accept = score >= config.buyThreshold();
+        double threshold = buyThreshold(gameView, property);
+        boolean accept = score >= threshold;
         return new ComputerDecision(
                 accept ? ComputerAction.ACCEPT_POPUP : ComputerAction.DECLINE_POPUP,
                 score,
-                (accept ? "Buy " : "Decline ") + property.name() + ": score " + round(score) + " vs threshold " + round(config.buyThreshold())
+                (accept ? "Buy " : "Decline ") + property.name() + ": score " + round(score) + " vs threshold " + round(threshold)
         );
     }
 
@@ -106,6 +107,26 @@ final class StrongPropertyBuyEvaluator {
         int reserve = requiredReserve(gameView, self);
         int postPurchaseCash = self.moneyAmount() - property.price();
         return Math.max(0, reserve - postPurchaseCash) / 100.0;
+    }
+
+    private double buyThreshold(GameView gameView, PropertyView property) {
+        if (gameView.unownedPropertyCount() > 20) {
+            return switch (property.placeType()) {
+                case STREET -> 1.5;
+                case RAILROAD -> 2.75;
+                case UTILITY -> 2.0;
+                default -> config.buyThreshold();
+            };
+        }
+        if (gameView.unownedPropertyCount() > 10) {
+            return switch (property.placeType()) {
+                case STREET -> 2.5;
+                case RAILROAD -> 3.5;
+                case UTILITY -> 4.5;
+                default -> config.buyThreshold();
+            };
+        }
+        return config.buyThreshold();
     }
 
     private boolean wouldCompleteSet(PlayerView self, PropertyView property) {
