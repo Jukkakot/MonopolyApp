@@ -29,11 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameBankruptcyTest {
-    private TestLogLevels.LogLevelSnapshot logLevelSnapshot;
+    private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
 
     @BeforeEach
     void setWarnOnlyLogging() {
-        logLevelSnapshot = TestLogLevels.forceWarnOnly();
+        logConfigSnapshot = TestLogLevels.useSimulationLogging();
     }
 
     @Test
@@ -179,8 +179,8 @@ class GameBankruptcyTest {
 
     @AfterEach
     void tearDown() {
-        if (logLevelSnapshot != null) {
-            logLevelSnapshot.restore();
+        if (logConfigSnapshot != null) {
+            logConfigSnapshot.restore();
         }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;

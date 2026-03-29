@@ -34,7 +34,7 @@ class GameSmokeTest {
     private static final int MAX_STAGNANT_STEPS = 250;
     private static final int MIN_TURN_SWITCHES = 15;
     private static final int MIN_UNIQUE_SPOTS = 12;
-    private TestLogLevels.LogLevelSnapshot logLevelSnapshot;
+    private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
 
     private static void runAutoConfirmedRollSmokeTest(int targetRollCount) {
         runAutoConfirmedRollSmokeTest(targetRollCount, 1700, 996, false);
@@ -410,13 +410,13 @@ class GameSmokeTest {
 
     @BeforeEach
     void setWarnOnlyLogging() {
-        logLevelSnapshot = TestLogLevels.forceWarnOnly();
+        logConfigSnapshot = TestLogLevels.useSimulationLogging();
     }
 
     @AfterEach
     void tearDown() {
-        if (logLevelSnapshot != null) {
-            logLevelSnapshot.restore();
+        if (logConfigSnapshot != null) {
+            logConfigSnapshot.restore();
         }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;

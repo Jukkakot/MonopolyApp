@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static processing.event.KeyEvent.PRESS;
 
 class GameComputerPlayerTest {
-    private TestLogLevels.LogLevelSnapshot logLevelSnapshot;
+    private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
         MonopolyApp app = new MonopolyApp();
@@ -72,13 +72,13 @@ class GameComputerPlayerTest {
 
     @BeforeEach
     void setWarnOnlyLogging() {
-        logLevelSnapshot = TestLogLevels.forceWarnOnly();
+        logConfigSnapshot = TestLogLevels.useSimulationLogging();
     }
 
     @AfterEach
     void tearDown() {
-        if (logLevelSnapshot != null) {
-            logLevelSnapshot.restore();
+        if (logConfigSnapshot != null) {
+            logConfigSnapshot.restore();
         }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;

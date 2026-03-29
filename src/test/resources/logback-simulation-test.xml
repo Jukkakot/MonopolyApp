@@ -50,11 +50,14 @@
         <appender-ref ref="ERROR_FILE"/>
     </appender>
 
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
     </root>
 
-    <logger name="fi.monopoly" level="DEBUG" additivity="false">
+    <logger name="fi.monopoly" level="WARN" additivity="false">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
     </logger>
 </configuration>

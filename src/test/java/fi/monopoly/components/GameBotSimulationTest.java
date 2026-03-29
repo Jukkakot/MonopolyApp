@@ -27,17 +27,17 @@ class GameBotSimulationTest {
     private static final int MAX_STEPS_PER_RUN = 3000;
     private static final int MAX_STAGNANT_STEPS = 300;
     private static final int MIN_TURN_SWITCHES_PER_RUN = 30;
-    private TestLogLevels.LogLevelSnapshot logLevelSnapshot;
+    private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
 
     @BeforeEach
     void setWarnOnlyLogging() {
-        logLevelSnapshot = TestLogLevels.forceWarnOnly();
+        logConfigSnapshot = TestLogLevels.useSimulationLogging();
     }
 
     @AfterEach
     void tearDown() {
-        if (logLevelSnapshot != null) {
-            logLevelSnapshot.restore();
+        if (logConfigSnapshot != null) {
+            logConfigSnapshot.restore();
         }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;
