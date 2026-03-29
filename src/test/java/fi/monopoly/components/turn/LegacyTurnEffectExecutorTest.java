@@ -2,6 +2,8 @@ package fi.monopoly.components.turn;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.Players;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.popup.ButtonAction;
@@ -10,6 +12,7 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.SpotType;
+import javafx.scene.paint.Color;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +46,7 @@ class LegacyTurnEffectExecutorTest {
     @Test
     void executeCallsOnCompleteImmediatelyWhenNoEffectsExist() {
         TestPopupService popupService = new TestPopupService();
-        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, new Players(null));
         TestCallbackAction callback = new TestCallbackAction();
 
         executor.execute(List.of(), paymentHandler, callback);
@@ -55,7 +58,7 @@ class LegacyTurnEffectExecutorTest {
     @Test
     void showMessageEffectDisplaysMessageAndCompletes() {
         TestPopupService popupService = new TestPopupService();
-        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, new Players(null));
         TestCallbackAction callback = new TestCallbackAction();
 
         executor.execute(List.of(new ShowMessageEffect("hello")), paymentHandler, callback);
@@ -67,7 +70,7 @@ class LegacyTurnEffectExecutorTest {
     @Test
     void adjustPlayerMoneyEffectUpdatesMoneyAfterPopupAccept() {
         TestPopupService popupService = new TestPopupService();
-        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, new Players(null));
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Owner", 1000, 1);
 
@@ -81,10 +84,10 @@ class LegacyTurnEffectExecutorTest {
     @Test
     void offerToBuyPropertyEffectBuysPropertyWhenAccepted() {
         TestPopupService popupService = new TestPopupService();
-        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Buyer", 1500, 1);
         StreetProperty property = new StreetProperty(SpotType.B1);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player));
 
         executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
 
@@ -97,23 +100,72 @@ class LegacyTurnEffectExecutorTest {
     @Test
     void offerToBuyPropertyEffectShowsFailureMessageWhenPlayerCannotAffordProperty() {
         TestPopupService popupService = new TestPopupService();
-        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Buyer", 10, 1);
+        Player auctionWinner = new Player("AuctionWinner", Color.BLACK, 500, 2, ComputerPlayerProfile.SMOKE_TEST);
         StreetProperty property = new StreetProperty(SpotType.B1);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player, auctionWinner));
+
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+
+        assertEquals(auctionWinner, property.getOwnerPlayer());
+        assertEquals(10, player.getMoneyAmount());
+        assertEquals(490, auctionWinner.getMoneyAmount());
+        assertEquals(List.of(
+                "buy it",
+                "You don't have enough money to buy MEDITER- RANEAN AVENUE",
+                "AuctionWinner won the auction for MEDITER- RANEAN AVENUE with M10"
+        ), popupService.messages);
+        assertEquals(1, callback.callCount);
+    }
+
+    @Test
+    void offerToBuyPropertyEffectStartsAuctionWhenPlayerDeclines() {
+        TestPopupService popupService = new TestPopupService();
+        popupService.choiceResponses.add(false);
+        TestCallbackAction callback = new TestCallbackAction();
+        Player player = TestObjectFactory.player("Buyer", 1500, 1);
+        Player smokeBidder = new Player("SmokeBidder", Color.BLACK, 500, 2, ComputerPlayerProfile.SMOKE_TEST);
+        StreetProperty property = new StreetProperty(SpotType.B1);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player, smokeBidder));
+
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+
+        assertEquals(smokeBidder, property.getOwnerPlayer());
+        assertEquals(440, smokeBidder.getMoneyAmount());
+        assertEquals(List.of(
+                "buy it",
+                "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M60"
+        ), popupService.messages);
+        assertEquals(1, callback.callCount);
+    }
+
+    @Test
+    void offerToBuyPropertyEffectLeavesPropertyAtBankWhenNobodyBids() {
+        TestPopupService popupService = new TestPopupService();
+        popupService.choiceResponses.add(false);
+        TestCallbackAction callback = new TestCallbackAction();
+        Player player = TestObjectFactory.player("Buyer", 5, 1);
+        Player brokeBidder = new Player("BrokeBidder", Color.BLACK, 80, 2, ComputerPlayerProfile.SMOKE_TEST);
+        StreetProperty property = new StreetProperty(SpotType.B1);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player, brokeBidder));
 
         executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
 
         assertNull(property.getOwnerPlayer());
-        assertEquals(10, player.getMoneyAmount());
-        assertEquals(List.of("buy it", "You don't have enough money to buy MEDITER- RANEAN AVENUE"), popupService.messages);
+        assertEquals(5, player.getMoneyAmount());
+        assertEquals(80, brokeBidder.getMoneyAmount());
+        assertEquals(List.of(
+                "buy it",
+                "No one bid on MEDITER- RANEAN AVENUE. It remains with the bank."
+        ), popupService.messages);
         assertEquals(1, callback.callCount);
     }
 
     @Test
     void payRentEffectTransfersMoneyAfterPopupAccept() {
         TestPopupService popupService = new TestPopupService();
-        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, new Players(null));
         TestCallbackAction callback = new TestCallbackAction();
         Player from = TestObjectFactory.player("From", 1000, 1);
         Player to = TestObjectFactory.player("To", 1000, 2);

@@ -101,4 +101,9 @@ public abstract class Property {
         }
         return true;
     }
+
+    void resetState() {
+        ownerPlayer = null;
+        isMortgaged = false;
+    }
 }

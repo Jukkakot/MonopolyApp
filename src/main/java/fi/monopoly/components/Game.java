@@ -139,6 +139,8 @@ public class Game implements MonopolyEventListener {
         pauseButton.hide();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
         runtime.eventBus().addListener(this);
+        PropertyFactory.resetState();
+        JailSpot.jailTimeLeftMap.clear();
         board = new Board(runtime);
         DICES = Dices.setRollDice(runtime, this::rollDice);
         players = new Players(runtime);

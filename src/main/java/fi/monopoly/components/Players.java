@@ -5,6 +5,7 @@ import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.properties.Property;
+import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.images.Image;
@@ -132,6 +133,7 @@ public class Players {
         if (p == null) {
             return false;
         }
+        JailSpot.jailTimeLeftMap.remove(p);
         if (p.getSpot() != null) {
             p.getSpot().removePlayer(p);
         }

@@ -132,7 +132,8 @@ class GameSmokeTest {
                 "Game neither completed the expected number of rolls nor reached a finished state");
         assertEquals(3, initialPlayerCount, "Smoke test expects the default three-player setup");
         assertTrue(popupResolutionCount > 0, "Smoke test should encounter at least one popup");
-        assertTrue(turnSwitchCount >= MIN_TURN_SWITCHES, "Turns did not appear to advance often enough");
+        assertTrue(turnSwitchCount >= MIN_TURN_SWITCHES || completedGame,
+                "Turns did not appear to advance often enough");
         assertTrue(seenTurnPlayers.size() >= 2, "Smoke test should rotate through at least two players");
         assertTrue(seenSpotTypes.size() >= MIN_UNIQUE_SPOTS, "Game did not traverse enough of the board to be a useful sanity check");
         assertTrue(debtResolutionCount >= bankruptcyCount, "Bankruptcy count cannot exceed debt resolutions");

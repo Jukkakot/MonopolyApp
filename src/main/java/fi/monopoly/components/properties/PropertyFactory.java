@@ -29,4 +29,8 @@ public class PropertyFactory {
         }
         throw new IllegalArgumentException("Can't make property out of SpotType " + spotType);
     }
+
+    public void resetState() {
+        propertyMap.values().forEach(Property::resetState);
+    }
 }

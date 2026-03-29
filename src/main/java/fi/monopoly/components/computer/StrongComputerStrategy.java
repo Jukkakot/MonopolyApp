@@ -33,6 +33,9 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
             }
             return context.declineActivePopup();
         }
+        if (view.debt() != null && popup != null) {
+            return context.resolveActivePopup();
+        }
         if (view.debt() != null) {
             return debtResolver.resolve(context, view, self);
         }

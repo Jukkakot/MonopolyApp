@@ -15,18 +15,17 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class PropertySpot extends Spot {
     private static final PropertyTurnResolver TURN_RESOLVER = new PropertyTurnResolver();
-    private final LegacyTurnEffectExecutor turnEffectExecutor;
     @Getter
     private final Property property;
 
     public PropertySpot(SpotImage spotImage, SpotType spotType) {
         super(spotImage);
-        this.turnEffectExecutor = new LegacyTurnEffectExecutor(runtime.popupService());
         this.property = PropertyFactory.getProperty(spotType);
     }
 
     @Override
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
+        LegacyTurnEffectExecutor turnEffectExecutor = new LegacyTurnEffectExecutor(runtime.popupService(), gameState.getPlayers());
         turnEffectExecutor.execute(TURN_RESOLVER.resolve(gameState, getName(), property), gameState.getPaymentHandler(), callbackAction);
         return null;
     }

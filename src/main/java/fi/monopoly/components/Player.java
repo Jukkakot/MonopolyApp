@@ -93,12 +93,20 @@ public class Player extends PlayerToken {
     }
 
     public boolean buyProperty(Property property) {
-        if (canBuyProperty(property)) {
-            addMoney(-property.getPrice());
-            giveProperty(property);
-            return true;
+        return buyProperty(property, property.getPrice());
+    }
+
+    public boolean canBuyProperty(Property property, int price) {
+        return property.getOwnerPlayer() == null && price >= 0 && moneyAmount >= price;
+    }
+
+    public boolean buyProperty(Property property, int price) {
+        if (!canBuyProperty(property, price)) {
+            return false;
         }
-        return false;
+        addMoney(-price);
+        giveProperty(property);
+        return true;
     }
 
     public boolean addMoney(Integer amount) {

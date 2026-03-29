@@ -1,6 +1,7 @@
 package fi.monopoly.components.turn;
 
 import fi.monopoly.components.CallbackAction;
+import fi.monopoly.components.Players;
 import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
@@ -14,9 +15,15 @@ import static fi.monopoly.text.UiTexts.text;
 @Slf4j
 public class LegacyTurnEffectExecutor {
     private final PopupService popupService;
+    private final PropertyAuctionResolver propertyAuctionResolver;
 
     public LegacyTurnEffectExecutor(PopupService popupService) {
+        this(popupService, null);
+    }
+
+    public LegacyTurnEffectExecutor(PopupService popupService, Players players) {
         this.popupService = popupService;
+        this.propertyAuctionResolver = new PropertyAuctionResolver(popupService, players);
     }
 
     public void execute(List<TurnEffect> effects, PaymentHandler paymentHandler, CallbackAction onComplete) {
@@ -43,11 +50,21 @@ public class LegacyTurnEffectExecutor {
             popupService.showPropertyOffer(offerToBuyPropertyEffect.property(), offerToBuyPropertyEffect.message(), () -> {
                 boolean couldBuy = offerToBuyPropertyEffect.player().buyProperty(offerToBuyPropertyEffect.property());
                 if (!couldBuy) {
-                    popupService.show(text("property.buy.notEnough", offerToBuyPropertyEffect.property().getDisplayName()), next::doAction);
+                    popupService.show(text("property.buy.notEnough", offerToBuyPropertyEffect.property().getDisplayName()), () ->
+                            propertyAuctionResolver.resolve(
+                                    offerToBuyPropertyEffect.player(),
+                                    offerToBuyPropertyEffect.property(),
+                                    next
+                            )
+                    );
                     return;
                 }
                 next.doAction();
-            }, next::doAction);
+            }, () -> propertyAuctionResolver.resolve(
+                    offerToBuyPropertyEffect.player(),
+                    offerToBuyPropertyEffect.property(),
+                    next
+            ));
         } else if (effect instanceof PayRentEffect payRentEffect) {
             popupService.show(payRentEffect.message(), () -> {
                 paymentHandler.requestPayment(new PaymentRequest(

@@ -182,11 +182,13 @@ class GameBotSimulationTest {
                 .collect(Collectors.joining("|"));
         String diceValue = Game.DICES != null && Game.DICES.getValue() != null ? Game.DICES.getValue().toString() : "null";
         String popupKind = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupKind() : "none";
+        String popupMessage = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupMessage() : "none";
         return playerState
                 + "|turn=" + currentTurnName()
                 + "|players=" + Game.players.count()
                 + "|popup=" + runtime.popupService().isAnyVisible()
                 + "|popupKind=" + popupKind
+                + "|popupMessage=" + popupMessage
                 + "|diceVisible=" + (Game.DICES != null && Game.DICES.isVisible())
                 + "|dice=" + diceValue
                 + "|animations=" + (Game.animations != null && Game.animations.isRunning())

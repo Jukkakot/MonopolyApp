@@ -366,4 +366,11 @@ public class StreetProperty extends Property {
         NO_HOTELS_LEFT,
         NO_HOUSES_TO_BREAK_HOTEL
     }
+
+    @Override
+    void resetState() {
+        super.resetState();
+        houseCount = 0;
+        hotelCount = 0;
+    }
 }
