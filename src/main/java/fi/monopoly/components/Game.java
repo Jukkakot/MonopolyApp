@@ -756,10 +756,16 @@ public class Game implements MonopolyEventListener {
         PaymentRequest request = debtState.paymentRequest();
         log.warn("Declaring bankruptcy: debtor={}, target={}, amount={}",
                 request.debtor().getName(), request.target().getDisplayName(), request.amount());
+        int liquidationCash = request.debtor().liquidateBuildingsToBank();
+        if (liquidationCash > 0) {
+            log.info("Bankruptcy liquidation sold buildings for debtor={} and raised M{}",
+                    request.debtor().getName(), liquidationCash);
+        }
         if (request.target() instanceof PlayerTarget playerTarget) {
             request.debtor().transferAssetsTo(playerTarget.player());
         } else {
             request.debtor().releaseAssetsToBank();
+            log.info("Bankruptcy returned debtor properties to bank. Auction flow remains pending implementation.");
         }
         request.debtor().setGetOutOfJailCardCount(0);
         players.removePlayer(request.debtor());

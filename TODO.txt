@@ -4,6 +4,7 @@ MONOPOLY RULES
 [High] Add starting order by dice roll
 [High] Add property auction when player declines to buy
 [High] Add property auction when player cannot afford to buy
+[High] Add bankruptcy property auction when creditor is bank
 [Low] Remove random starting deeds from normal game setup
 
 ECONOMY AND MULTIPLAYER

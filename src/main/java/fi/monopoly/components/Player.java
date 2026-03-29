@@ -4,6 +4,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.Properties;
 import fi.monopoly.components.properties.Property;
+import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Comparator;
 
 import static fi.monopoly.text.UiTexts.text;
 
@@ -188,6 +190,33 @@ public class Player extends PlayerToken {
             log.debug("Released property {} to bank", property.getDisplayName());
         }
         moneyAmount = 0;
+    }
+
+    public int liquidateBuildingsToBank() {
+        int startingMoney = moneyAmount;
+        boolean soldBuilding;
+        do {
+            soldBuilding = false;
+            List<StreetProperty> streetProperties = getOwnedProperties().stream()
+                    .filter(StreetProperty.class::isInstance)
+                    .map(StreetProperty.class::cast)
+                    .sorted(Comparator.comparingInt(StreetProperty::getBuildingLevel).reversed()
+                            .thenComparingInt(property -> property.getSpotType().ordinal()))
+                    .toList();
+            for (StreetProperty property : streetProperties) {
+                if (property.getBuildingLevel() <= 0 || !property.canSellHouses(1)) {
+                    continue;
+                }
+                if (property.sellHouses(1)) {
+                    soldBuilding = true;
+                }
+            }
+        } while (soldBuilding);
+        int liquidationCash = moneyAmount - startingMoney;
+        if (liquidationCash > 0) {
+            log.info("Liquidated buildings for {} and raised M{}", getName(), liquidationCash);
+        }
+        return liquidationCash;
     }
 
     public void addOutOfJailCard() {
