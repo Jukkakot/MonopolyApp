@@ -5,6 +5,7 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
     private final StrongPropertyBuyEvaluator propertyBuyEvaluator = new StrongPropertyBuyEvaluator(config);
     private final StrongBuildingEvaluator buildingEvaluator = new StrongBuildingEvaluator(config);
     private final StrongDebtResolver debtResolver = new StrongDebtResolver();
+    private final StrongJailDecisionEvaluator jailDecisionEvaluator = new StrongJailDecisionEvaluator(config);
     private final SmokeTestComputerStrategy fallbackStrategy = new SmokeTestComputerStrategy();
 
     @Override
@@ -16,6 +17,12 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
             if (propertyBuyEvaluator.shouldBuy(view, self, popup.offeredProperty())) {
                 return context.acceptActivePopup();
             }
+            return context.declineActivePopup();
+        }
+        if (popup != null && jailDecisionEvaluator.shouldAvoidJail(view, self, popup)) {
+            return context.acceptActivePopup();
+        }
+        if (popup != null && popup.message() != null && popup.message().equals(fi.monopoly.text.UiTexts.text("jail.payOrCardPrompt"))) {
             return context.declineActivePopup();
         }
         if (view.debt() != null) {

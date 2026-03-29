@@ -10,7 +10,6 @@ ECONOMY AND MULTIPLAYER
 [High] Add player trading
 [High] Add trade offers for money, property, and jail card
 [High] Add computer players with configurable difficulty profiles
-[Medium] Implement strong computer-player jail decision rules
 [Medium] Add bot decision logging with score/reason output
 [Medium] Add simulation tests for bot-vs-bot stability and tuning
 [Medium] Add configurable strong bot variants like aggressive and defensive

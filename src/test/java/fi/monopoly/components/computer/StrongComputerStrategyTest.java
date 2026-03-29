@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fi.monopoly.text.UiTexts.text;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -124,6 +125,24 @@ class StrongComputerStrategyTest {
         assertEquals(List.of("endTurn"), context.operations);
     }
 
+    @Test
+    void strongStrategyAvoidsJailEarlyWhenCashIsSafe() {
+        PlayerView self = playerView(1, 600, List.of());
+        FakeContext context = new FakeContext(jailPopupGameView(self, 18), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("accept"), context.operations);
+    }
+
+    @Test
+    void strongStrategyStaysInJailLateWhenBoardIsDangerous() {
+        PlayerView self = playerView(1, 600, 450, List.of());
+        FakeContext context = new FakeContext(jailPopupGameView(self, 4), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("decline"), context.operations);
+    }
+
     private static GameView gameView(PlayerView self, PropertyView offeredProperty, int unownedPropertyCount) {
         return new GameView(
                 self.id(),
@@ -153,6 +172,19 @@ class StrongComputerStrategyTest {
         );
     }
 
+    private static GameView jailPopupGameView(PlayerView self, int unownedPropertyCount) {
+        return new GameView(
+                self.id(),
+                List.of(self),
+                new VisibleActionsView(true, false, false, false, false),
+                new PopupView("ChoicePopup", text("jail.payOrCardPrompt"), List.of("Accept", "Decline"), null),
+                null,
+                unownedPropertyCount,
+                32,
+                12
+        );
+    }
+
     private static GameView debtGameView(PlayerView self, int debtAmount) {
         return new GameView(
                 self.id(),
@@ -167,6 +199,10 @@ class StrongComputerStrategyTest {
     }
 
     private static PlayerView playerView(int id, int money, List<PropertyView> properties) {
+        return playerView(id, money, 280, properties);
+    }
+
+    private static PlayerView playerView(int id, int money, int boardDangerScore, List<PropertyView> properties) {
         return new PlayerView(
                 id,
                 "P" + id,
@@ -180,7 +216,7 @@ class StrongComputerStrategyTest {
                 0,
                 0,
                 properties.stream().mapToInt(PropertyView::liquidationValue).sum(),
-                280,
+                boardDangerScore,
                 List.of(),
                 properties
         );

@@ -11,7 +11,8 @@ public record StrongBotConfig(
         double utilityWeight,
         double liquidityPenaltyWeight,
         boolean buyToBlockOpponent,
-        boolean prioritizeThreeHouses
+        boolean prioritizeThreeHouses,
+        boolean preferJailLateGame
 ) {
     public static StrongBotConfig defaults() {
         return new StrongBotConfig(
@@ -24,6 +25,7 @@ public record StrongBotConfig(
                 2.5,
                 0.5,
                 3.0,
+                true,
                 true,
                 true
         );
