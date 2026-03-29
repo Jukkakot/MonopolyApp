@@ -143,6 +143,7 @@ public class TradePopup extends Popup {
         clickableRegions.clear();
         drawBackground(p);
         drawTradePanels(p);
+        hoveredItemKey = resolveHoveredItemKey(runtime.app().mouseX, runtime.app().mouseY);
     }
 
     private void drawBackground(PGraphics p) {
@@ -502,15 +503,13 @@ public class TradePopup extends Popup {
 
     @Override
     protected boolean onMouseAction(MouseEvent event) {
-        hoveredItemKey = null;
         for (ClickableRegion clickableRegion : clickableRegions) {
             if (clickableRegion.contains(event.getX(), event.getY())) {
-                hoveredItemKey = clickableRegion.hoverKey();
                 if (event.getAction() == CLICK) {
                     completeAction(clickableRegion.action());
                     return true;
                 }
-                return event.getAction() == MOVE;
+                return true;
             }
         }
         return event.getAction() == MOVE;
@@ -564,6 +563,15 @@ public class TradePopup extends Popup {
     private boolean isHovered(TradePopupItem item) {
         Object key = hoverKey(item);
         return key != null && key.equals(hoveredItemKey);
+    }
+
+    private Object resolveHoveredItemKey(float mouseX, float mouseY) {
+        for (ClickableRegion clickableRegion : clickableRegions) {
+            if (clickableRegion.contains(mouseX, mouseY)) {
+                return clickableRegion.hoverKey();
+            }
+        }
+        return null;
     }
 
     private Object hoverKey(TradePopupItem item) {

@@ -956,12 +956,6 @@ public class Game implements MonopolyEventListener {
                 )));
             }
         }
-        buttons.add(new ButtonProps(
-                selection.jailCard()
-                        ? text("trade.button.selectedJailCard")
-                        : text("trade.button.unselectedJailCard"),
-                () -> openTradeEditor(updateTradeSelection(draft, editingOfferSide, selection.toggleJailCard()), editingOfferSide)
-        ));
         if (selection.property() != null) {
             buttons.add(new ButtonProps(text("trade.button.clearProperty"), () -> openTradeEditor(
                     updateTradeSelection(draft, editingOfferSide, selection.withProperty(null)),
@@ -1170,7 +1164,9 @@ public class Game implements MonopolyEventListener {
                                 updateTradeSelection(
                                         new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient()),
                                         editingOfferSide,
-                                        selection.withProperty(property)
+                                        property.equals(selection.property())
+                                                ? selection.withProperty(null)
+                                                : selection.withProperty(property)
                                 ),
                                 editingOfferSide
                         )
