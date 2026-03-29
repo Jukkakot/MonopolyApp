@@ -78,10 +78,6 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton endRoundButton;
     private final MonopolyButton retryDebtButton;
     private final MonopolyButton declareBankruptcyButton;
-    private final MonopolyButton debugAddCashButton;
-    private final MonopolyButton debugDebtScenarioButton;
-    private final MonopolyButton debugSendToJailButton;
-    private final MonopolyButton debugResetTurnButton;
     private final MonopolyButton debugGodModeButton;
     private final MonopolyButton pauseButton;
     private final MonopolyButton tradeButton;
@@ -108,24 +104,8 @@ public class Game implements MonopolyEventListener {
         declareBankruptcyButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, DEFAULT_LAYOUT.sidebarPrimaryButtonY());
         declareBankruptcyButton.setSize(140, 40);
         declareBankruptcyButton.setAutoWidth(140, 28, 220);
-        this.debugAddCashButton = new MonopolyButton(runtime, "debugAddCash");
-        debugAddCashButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, DEFAULT_LAYOUT.sidebarDebugButtonRow1Y());
-        debugAddCashButton.setSize(140, 36);
-        debugAddCashButton.setAutoWidth(140, 28, 220);
-        this.debugDebtScenarioButton = new MonopolyButton(runtime, "debugDebtScenario");
-        debugDebtScenarioButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, DEFAULT_LAYOUT.sidebarDebugButtonRow1Y());
-        debugDebtScenarioButton.setSize(140, 36);
-        debugDebtScenarioButton.setAutoWidth(140, 28, 220);
-        this.debugSendToJailButton = new MonopolyButton(runtime, "debugSendToJail");
-        debugSendToJailButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, DEFAULT_LAYOUT.sidebarDebugButtonRow2Y());
-        debugSendToJailButton.setSize(140, 36);
-        debugSendToJailButton.setAutoWidth(140, 28, 220);
-        this.debugResetTurnButton = new MonopolyButton(runtime, "debugResetTurn");
-        debugResetTurnButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, DEFAULT_LAYOUT.sidebarDebugButtonRow2Y());
-        debugResetTurnButton.setSize(140, 36);
-        debugResetTurnButton.setAutoWidth(140, 28, 220);
         this.debugGodModeButton = new MonopolyButton(runtime, "debugGodMode");
-        debugGodModeButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, DEFAULT_LAYOUT.sidebarDebugButtonRow3Y());
+        debugGodModeButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, DEFAULT_LAYOUT.sidebarDebugButtonRow1Y());
         debugGodModeButton.setSize(300, 36);
         debugGodModeButton.setAutoWidth(180, 28, 300);
         this.pauseButton = new MonopolyButton(runtime, "pause");
@@ -144,10 +124,6 @@ public class Game implements MonopolyEventListener {
         endRoundButton.hide();
         retryDebtButton.hide();
         declareBankruptcyButton.hide();
-        debugAddCashButton.hide();
-        debugDebtScenarioButton.hide();
-        debugSendToJailButton.hide();
-        debugResetTurnButton.hide();
         debugGodModeButton.hide();
         pauseButton.hide();
         tradeButton.hide();
@@ -181,10 +157,6 @@ public class Game implements MonopolyEventListener {
         });
         retryDebtButton.addListener(this::retryPendingDebtPayment);
         declareBankruptcyButton.addListener(this::declareBankruptcy);
-        debugAddCashButton.addListener(this::debugAddCash);
-        debugDebtScenarioButton.addListener(() -> debugStartDebtScenario(200));
-        debugSendToJailButton.addListener(this::debugSendCurrentPlayerToJail);
-        debugResetTurnButton.addListener(this::debugResetTurnState);
         debugGodModeButton.addListener(this::openDebugGodModeMenu);
         pauseButton.addListener(this::togglePause);
         tradeButton.addListener(this::openTradeMenu);
@@ -725,8 +697,6 @@ public class Game implements MonopolyEventListener {
         float sidebarRightAlignedX = layoutMetrics.sidebarRight() - SIDEBAR_MARGIN;
         float primaryButtonY = layoutMetrics.sidebarPrimaryButtonY();
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
-        float debugRow2Y = layoutMetrics.sidebarDebugButtonRow2Y();
-        float debugRow3Y = layoutMetrics.sidebarDebugButtonRow3Y();
         float pauseButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
         float tradeButtonY = pauseButtonY;
         float languageButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
@@ -734,11 +704,7 @@ public class Game implements MonopolyEventListener {
         endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
         retryDebtButton.setPosition(sidebarLeftX, primaryButtonY);
         declareBankruptcyButton.setPosition(sidebarRightAlignedX - declareBankruptcyButton.getWidth(), primaryButtonY);
-        debugAddCashButton.setPosition(sidebarLeftX, debugRow1Y);
-        debugDebtScenarioButton.setPosition(sidebarRightAlignedX - debugDebtScenarioButton.getWidth(), debugRow1Y);
-        debugSendToJailButton.setPosition(sidebarLeftX, debugRow2Y);
-        debugResetTurnButton.setPosition(sidebarRightAlignedX - debugResetTurnButton.getWidth(), debugRow2Y);
-        debugGodModeButton.setPosition(sidebarLeftX, debugRow3Y);
+        debugGodModeButton.setPosition(sidebarLeftX, debugRow1Y);
         languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), languageButtonY);
         pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - 8, pauseButtonY);
         tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - 8, tradeButtonY);
@@ -752,11 +718,7 @@ public class Game implements MonopolyEventListener {
         endRoundButton.setPosition(leftX, OVERLAY_PRIMARY_BUTTON_Y);
         retryDebtButton.setPosition(leftX, OVERLAY_PRIMARY_BUTTON_Y);
         declareBankruptcyButton.setPosition(rightX - declareBankruptcyButton.getWidth(), OVERLAY_PRIMARY_BUTTON_Y);
-        debugAddCashButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_1_Y);
-        debugDebtScenarioButton.setPosition(rightX - debugDebtScenarioButton.getWidth(), OVERLAY_SECONDARY_ROW_1_Y);
-        debugSendToJailButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_2_Y);
-        debugResetTurnButton.setPosition(rightX - debugResetTurnButton.getWidth(), OVERLAY_SECONDARY_ROW_2_Y);
-        debugGodModeButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_3_Y);
+        debugGodModeButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_1_Y);
         languageButton.setPosition(
                 Math.max(leftX, rightX - languageButton.getWidth()),
                 OVERLAY_SECONDARY_ROW_3_Y
@@ -878,17 +840,9 @@ public class Game implements MonopolyEventListener {
         tradeButton.show();
         languageButton.show();
         if (!MonopolyApp.DEBUG_MODE) {
-            debugAddCashButton.hide();
-            debugDebtScenarioButton.hide();
-            debugSendToJailButton.hide();
-            debugResetTurnButton.hide();
             debugGodModeButton.hide();
             return;
         }
-        debugAddCashButton.show();
-        debugDebtScenarioButton.show();
-        debugSendToJailButton.show();
-        debugResetTurnButton.show();
         debugGodModeButton.show();
     }
 
@@ -896,10 +850,6 @@ public class Game implements MonopolyEventListener {
         endRoundButton.setLabel(text("game.button.endRound"));
         retryDebtButton.setLabel(text("game.button.retryDebt"));
         declareBankruptcyButton.setLabel(text("game.button.bankrupt"));
-        debugAddCashButton.setLabel(text("game.button.debugAddCash"));
-        debugDebtScenarioButton.setLabel(text("game.button.debugDebt"));
-        debugSendToJailButton.setLabel(text("game.button.debugJail"));
-        debugResetTurnButton.setLabel(text("game.button.debugReset"));
         debugGodModeButton.setLabel(text("game.button.godMode"));
         pauseButton.setLabel(paused ? text("game.button.resume") : text("game.button.pause"));
         tradeButton.setLabel(text("game.button.trade"));
