@@ -53,6 +53,23 @@ class AnimationsTest {
         assertFalse(animations.isRunning());
     }
 
+    @Test
+    void finishAllAnimationsKeepsFollowUpAnimationsQueuedFromCallbacks() {
+        Animations animations = new Animations();
+        TestDrawable firstDrawable = new TestDrawable(new Coordinates(0, 0));
+        TestDrawable followUpDrawable = new TestDrawable(new Coordinates(5, 5));
+
+        animations.addAnimation(new Animation(
+                firstDrawable,
+                new FixedPath(List.of(new Coordinates(10, 0)), new Coordinates(10, 0)),
+                () -> animations.addAnimation(animationFor(followUpDrawable))
+        ));
+
+        animations.finishAllAnimations();
+
+        assertTrue(animations.isRunning());
+    }
+
     private Animation animationFor(TestDrawable drawable) {
         return new Animation(drawable, new FixedPath(List.of(new Coordinates(10, 0)), new Coordinates(10, 0)), null);
     }

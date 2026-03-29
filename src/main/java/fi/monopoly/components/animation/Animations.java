@@ -23,8 +23,14 @@ public class Animations {
     }
 
     public void finishAllAnimations() {
-        animationList.forEach(Animation::finishAnimation);
-        animationList.clear();
+        // Finish only the animations that were queued at the start of this call.
+        // Callbacks may enqueue follow-up animations (for example forced moves after landing),
+        // and those must remain queued instead of being wiped by a blanket clear().
+        List<Animation> pendingAtStart = new ArrayList<>(animationList);
+        for (Animation animation : pendingAtStart) {
+            animation.finishAnimation();
+            animationList.remove(animation);
+        }
     }
 
     public boolean isRunning() {
