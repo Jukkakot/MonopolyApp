@@ -7,6 +7,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
+import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
 import fi.monopoly.utils.MonopolyUtils;
@@ -43,10 +44,10 @@ public class TradePopup extends Popup {
     private static final float ITEM_GAP = 10f;
     private static final float INVENTORY_TOP_GAP = 18f;
     private static final float INVENTORY_TITLE_GAP = 28f;
-    private static final float INVENTORY_CARD_W = 122f;
-    private static final float INVENTORY_CARD_H = 156f;
-    private static final float SUMMARY_CARD_W = 108f;
-    private static final float SUMMARY_CARD_H = 138f;
+    private static final float INVENTORY_CARD_W = Spot.SPOT_W;
+    private static final float INVENTORY_CARD_H = Spot.SPOT_H;
+    private static final float SUMMARY_CARD_W = Spot.SPOT_W;
+    private static final float SUMMARY_CARD_H = Spot.SPOT_H;
     private static final float TOKEN_SIZE = 34f;
     private static final float SUBTITLE_TOP_OFFSET = 40f;
     private static final float FOOTER_BOTTOM_PADDING = 22f;
@@ -54,6 +55,7 @@ public class TradePopup extends Popup {
     private static final float BUTTON_AREA_BOTTOM_MARGIN = 28f;
     private static final float BUTTON_AREA_TOP_MARGIN = 18f;
     private static final float POPUP_TOP_MARGIN = 6f;
+    private static final int CARD_BASE_COLOR = 0xCDE6D1;
 
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private final List<String> activeButtonLabels = new ArrayList<>();
@@ -277,11 +279,15 @@ public class TradePopup extends Popup {
         switch (item.type()) {
             case PROPERTY -> drawPropertyItem(p, item, x, y, width, height, showLabel);
             case PLAYER -> drawPlayerItem(p, item, x, y, width, height);
-            case MONEY, JAIL_CARD, EMPTY -> drawBadgeItem(p, item.label(), x, y, width, height);
+            case JAIL_CARD -> drawJailCardItem(p, item, x, y, width, height);
+            case MONEY, EMPTY -> drawBadgeItem(p, item.label(), x, y, width, height);
         }
     }
 
     private void drawPropertyItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height, boolean showLabel) {
+        p.noStroke();
+        p.fill(runtime.app().color(205, 230, 209));
+        p.rect(x + 3f, y + 3f, width - 6f, height - 6f, 12);
         int stripeColor = resolveTradePropertyStripeColor(item.property());
         p.noStroke();
         p.fill(stripeColor);
@@ -296,6 +302,24 @@ public class TradePopup extends Popup {
         p.textFont(runtime.font10());
         p.textAlign(CENTER, TOP);
         p.text(item.property().getDisplayName(), x + width / 2f, y + height - 28f);
+    }
+
+    private void drawJailCardItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
+        p.noStroke();
+        p.fill(runtime.app().color(205, 230, 209));
+        p.rect(x + 3f, y + 3f, width - 6f, height - 6f, 12);
+        p.fill(runtime.app().color(70, 120, 80));
+        p.rect(x + 4f, y + 4f, width - 8f, PROPERTY_COLOR_STRIPE_HEIGHT, 10, 10, 4, 4);
+
+        PImage image = MonopolyApp.getImage("Community.png");
+        if (image != null) {
+            p.imageMode(CORNER);
+            p.image(image, x + 8f, y + 8f + PROPERTY_COLOR_STRIPE_HEIGHT, width - 16f, height - 48f - PROPERTY_COLOR_STRIPE_HEIGHT);
+        }
+        p.fill(0);
+        p.textFont(runtime.font10());
+        p.textAlign(CENTER, TOP);
+        p.text(item.label(), x + width / 2f, y + height - 28f);
     }
 
     private void drawPlayerItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
