@@ -58,6 +58,7 @@ final class StrongUnmortgageEvaluator {
             score -= 2.0;
         }
         score *= config.unmortgageAggression();
+        score *= config.mortgageRecoveryPriority();
         score *= config.colorGroupWeight(property.streetType());
         return score;
     }

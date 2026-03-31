@@ -114,6 +114,53 @@ import java.util.Map;
  *                          Higher value means the bot leaves jail more often; lower value means it stays jailed more easily.
  *                          Example: lowering this from {@code 500} to {@code 350} makes the bot camp in jail sooner
  *                          once the board becomes hostile.
+ * @param bankruptcyAversion multiplier for how hard the bot tries to preserve itself before sacrificing strong assets.
+ *                           Higher value means it is more willing to liquidate premium assets to survive;
+ *                           lower value means it preserves premium sets longer even at bankruptcy risk.
+ *                           Example: raising this from {@code 1.0} to {@code 1.5} makes the bot mortgage or strip
+ *                           stronger groups earlier when the alternative is likely elimination.
+ * @param railroadCompletionWeight extra bonus for gaining additional railroad synergy.
+ *                                 Higher value makes the 2nd/3rd/4th railroad much more attractive;
+ *                                 lower value makes railroads behave more like plain cash assets.
+ *                                 Example: raising this from {@code 30} to {@code 70} makes a bot fight much harder
+ *                                 for railroad #3 or #4.
+ * @param utilityCompletionWeight extra bonus for gaining additional utility synergy.
+ *                                Higher value makes dual-utility ownership matter more;
+ *                                lower value keeps utilities as weak fillers.
+ *                                Example: raising this from {@code 20} to {@code 50} makes acquiring the second utility
+ *                                noticeably more attractive.
+ * @param buildRoundCap highest building level the bot is willing to push toward before stopping voluntary development.
+ *                      Lower value keeps the bot around houses, higher value allows freer hotel progression.
+ *                      Example: lowering this from {@code 5} to {@code 3} makes the bot strongly prefer stopping around
+ *                      the classic three-house phase.
+ * @param postMonopolyCashBuffer extra reserve kept once the bot already owns at least one monopoly.
+ *                               Higher value slows down snowball spending after a monopoly is formed;
+ *                               lower value lets the bot press advantage harder.
+ *                               Example: raising this from {@code 125} to {@code 250} keeps much more cash back after
+ *                               a monopoly is online.
+ * @param auctionSetCompletionBonus extra valuation bonus in auctions when the deed would complete a set.
+ *                                  Higher value makes set-completing auction bids far more aggressive;
+ *                                  lower value keeps auction play price-disciplined.
+ *                                  Example: raising this from {@code 90} to {@code 180} means a set-closing deed
+ *                                  can justify bidding well above face liquidation value.
+ * @param tradeLiquidityWeight multiplier for the value of cash inside trade evaluation.
+ *                             Higher value makes cash-in-hand matter more; lower value emphasizes structural assets.
+ *                             Example: raising this from {@code 1.0} to {@code 1.3} makes the bot demand more money
+ *                             in exchange for giving up useful deeds.
+ * @param opponentLeaderPressure multiplier for denial/pressure logic against the leading opponent.
+ *                               Higher value makes the bot more willing to block, overbid, or accept slight inefficiency
+ *                               to slow the leader; lower value keeps play more self-focused.
+ *                               Example: raising this from {@code 1.0} to {@code 1.4} makes leader-denial purchases and
+ *                               auctions happen more often.
+ * @param jailCardHoldBias bonus toward staying in jail and keeping the card when the board is dangerous.
+ *                         Higher value makes the bot hoard the card more often; lower value spends it more freely.
+ *                         Example: raising this from {@code 1.0} to {@code 3.0} makes the bot often save the card for a
+ *                         nastier future spot instead of consuming it immediately.
+ * @param mortgageRecoveryPriority multiplier for how strongly the bot prefers reactivating mortgaged high-quality assets.
+ *                                 Higher value makes key mortgaged sets come back online sooner;
+ *                                 lower value makes the bot sit on cash longer before recovery.
+ *                                 Example: raising this from {@code 1.0} to {@code 1.4} makes completed-set unmortgaging
+ *                                 outrank marginal late-turn passivity more often.
  */
 public record StrongBotConfig(
         double buyThreshold,
@@ -138,7 +185,17 @@ public record StrongBotConfig(
         int tradeFairnessTolerance,
         int tradeSetCompletionWeight,
         Map<StreetType, Double> colorGroupWeights,
-        int jailExitThreshold
+        int jailExitThreshold,
+        double bankruptcyAversion,
+        int railroadCompletionWeight,
+        int utilityCompletionWeight,
+        int buildRoundCap,
+        int postMonopolyCashBuffer,
+        int auctionSetCompletionBonus,
+        double tradeLiquidityWeight,
+        double opponentLeaderPressure,
+        double jailCardHoldBias,
+        double mortgageRecoveryPriority
 ) {
     public static StrongBotConfig defaults() {
         return new StrongBotConfig(
@@ -164,7 +221,17 @@ public record StrongBotConfig(
                 15,
                 220,
                 defaultColorGroupWeights(),
-                500
+                500,
+                1.0,
+                30,
+                20,
+                5,
+                125,
+                90,
+                1.0,
+                1.0,
+                1.0,
+                1.0
         );
     }
 

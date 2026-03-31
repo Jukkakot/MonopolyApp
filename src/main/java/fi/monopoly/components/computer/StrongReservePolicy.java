@@ -20,6 +20,9 @@ final class StrongReservePolicy {
             dynamicDangerReserve += 100;
         }
         dynamicDangerReserve += threateningOpponentMonopolies(view, self) * config.buildReservePerOpponentMonopoly();
+        if (!self.completedSets().isEmpty()) {
+            dynamicDangerReserve += config.postMonopolyCashBuffer();
+        }
 
         int rawReserve = Math.max(reserve, dynamicDangerReserve);
         int toleranceDiscount = (int) Math.round(Math.max(0, rawReserve - config.minCashReserve()) * config.mortgageTolerance());

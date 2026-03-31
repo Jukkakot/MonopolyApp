@@ -187,6 +187,18 @@ class StrongComputerStrategyTest {
     }
 
     @Test
+    void buildRoundCapCanStopFurtherDevelopment() {
+        StrongBuildingEvaluator cappedEvaluator = new StrongBuildingEvaluator(configWithBuildRoundCap(3));
+        PlayerView self = playerView(1, 1500, List.of(
+                propertyView(SpotType.O1, 180, 70, 3, true, 100),
+                propertyView(SpotType.O2, 180, 70, 3, true, 100),
+                propertyView(SpotType.O3, 200, 80, 3, true, 100)
+        ));
+
+        assertNull(cappedEvaluator.evaluateBuild(endTurnGameView(self), self));
+    }
+
+    @Test
     void strongStrategyUnmortgagesCompletedSetWhenCashIsSafe() {
         PlayerView self = playerView(1, 900, List.of(
                 mortgagedPropertyView(SpotType.O1, 180, 14, true, 100),
@@ -212,6 +224,32 @@ class StrongComputerStrategyTest {
         assertNotNull(plan);
         assertEquals(ComputerAction.BUILD_ROUND, plan.decision().action());
         assertFalse(plan.decision().reason().isBlank());
+    }
+
+    @Test
+    void jailCardHoldBiasCanPreferKeepingCardOnDangerousBoard() {
+        StrongJailDecisionEvaluator cautiousJailEvaluator = new StrongJailDecisionEvaluator(configWithJailCardHoldBias(3.0));
+        PlayerView self = new PlayerView(
+                1,
+                "P1",
+                600,
+                1,
+                ComputerPlayerProfile.STRONG,
+                SpotType.GO_SPOT,
+                false,
+                0,
+                1,
+                0,
+                0,
+                0,
+                700,
+                List.of(),
+                List.of()
+        );
+
+        ComputerDecision decision = cautiousJailEvaluator.evaluateJailDecision(jailPopupGameView(self, 4), self, jailPopupGameView(self, 4).popup());
+
+        assertEquals(ComputerAction.DECLINE_POPUP, decision.action());
     }
 
     @Test
@@ -298,6 +336,84 @@ class StrongComputerStrategyTest {
                 8,
                 32,
                 12
+        );
+    }
+
+    private static StrongBotConfig configWithBuildRoundCap(int buildRoundCap) {
+        StrongBotConfig defaults = StrongBotConfig.defaults();
+        return new StrongBotConfig(
+                defaults.buyThreshold(),
+                defaults.minCashReserve(),
+                defaults.dangerCashReserve(),
+                defaults.completionWeight(),
+                defaults.progressWeight(),
+                defaults.opponentBlockWeight(),
+                defaults.railroadWeight(),
+                defaults.utilityWeight(),
+                defaults.liquidityPenaltyWeight(),
+                defaults.buyToBlockOpponent(),
+                defaults.prioritizeThreeHouses(),
+                defaults.preferJailLateGame(),
+                defaults.houseBuildAggression(),
+                defaults.hotelAversion(),
+                defaults.developmentBias(),
+                defaults.mortgageTolerance(),
+                defaults.unmortgageAggression(),
+                defaults.buildReservePerOpponentMonopoly(),
+                defaults.auctionAggression(),
+                defaults.tradeFairnessTolerance(),
+                defaults.tradeSetCompletionWeight(),
+                defaults.colorGroupWeights(),
+                defaults.jailExitThreshold(),
+                defaults.bankruptcyAversion(),
+                defaults.railroadCompletionWeight(),
+                defaults.utilityCompletionWeight(),
+                buildRoundCap,
+                defaults.postMonopolyCashBuffer(),
+                defaults.auctionSetCompletionBonus(),
+                defaults.tradeLiquidityWeight(),
+                defaults.opponentLeaderPressure(),
+                defaults.jailCardHoldBias(),
+                defaults.mortgageRecoveryPriority()
+        );
+    }
+
+    private static StrongBotConfig configWithJailCardHoldBias(double jailCardHoldBias) {
+        StrongBotConfig defaults = StrongBotConfig.defaults();
+        return new StrongBotConfig(
+                defaults.buyThreshold(),
+                defaults.minCashReserve(),
+                defaults.dangerCashReserve(),
+                defaults.completionWeight(),
+                defaults.progressWeight(),
+                defaults.opponentBlockWeight(),
+                defaults.railroadWeight(),
+                defaults.utilityWeight(),
+                defaults.liquidityPenaltyWeight(),
+                defaults.buyToBlockOpponent(),
+                defaults.prioritizeThreeHouses(),
+                defaults.preferJailLateGame(),
+                defaults.houseBuildAggression(),
+                defaults.hotelAversion(),
+                defaults.developmentBias(),
+                defaults.mortgageTolerance(),
+                defaults.unmortgageAggression(),
+                defaults.buildReservePerOpponentMonopoly(),
+                defaults.auctionAggression(),
+                defaults.tradeFairnessTolerance(),
+                defaults.tradeSetCompletionWeight(),
+                defaults.colorGroupWeights(),
+                defaults.jailExitThreshold(),
+                defaults.bankruptcyAversion(),
+                defaults.railroadCompletionWeight(),
+                defaults.utilityCompletionWeight(),
+                defaults.buildRoundCap(),
+                defaults.postMonopolyCashBuffer(),
+                defaults.auctionSetCompletionBonus(),
+                defaults.tradeLiquidityWeight(),
+                defaults.opponentLeaderPressure(),
+                jailCardHoldBias,
+                defaults.mortgageRecoveryPriority()
         );
     }
 

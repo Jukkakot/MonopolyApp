@@ -54,6 +54,7 @@ final class StrongPropertyBuyEvaluator {
         score += config.completionWeight() * completionValue(self, property);
         score += config.progressWeight() * progressValue(self, property);
         score += config.opponentBlockWeight() * blockValue(gameView, self, property);
+        score += transportCompletionValue(self, property);
         score += typeValue(property);
         score += developmentValue(self, property);
         score *= config.colorGroupWeight(property.streetType());
@@ -91,7 +92,7 @@ final class StrongPropertyBuyEvaluator {
                 .mapToInt(player -> ownedInSet(player, property.streetType()))
                 .max()
                 .orElse(0);
-        return bestOpponentCount == setSize - 1 ? 1.0 : 0.0;
+        return bestOpponentCount == setSize - 1 ? leaderAdjustedBlockValue(gameView, self, property, 1.0) : 0.0;
     }
 
     private double typeValue(PropertyView property) {
@@ -111,6 +112,34 @@ final class StrongPropertyBuyEvaluator {
             return config.developmentBias() * 0.5;
         }
         return 0;
+    }
+
+    private double transportCompletionValue(PlayerView self, PropertyView property) {
+        int ownedInSet = ownedInSet(self, property.streetType());
+        return switch (property.placeType()) {
+            case RAILROAD -> ownedInSet * config.railroadCompletionWeight() / 10.0;
+            case UTILITY -> ownedInSet * config.utilityCompletionWeight() / 10.0;
+            default -> 0;
+        };
+    }
+
+    private double leaderAdjustedBlockValue(GameView gameView, PlayerView self, PropertyView property, double baseValue) {
+        PlayerView leader = gameView.players().stream()
+                .filter(player -> player.id() != self.id())
+                .max(java.util.Comparator.comparingInt(this::strategicStrength))
+                .orElse(null);
+        if (leader == null) {
+            return baseValue;
+        }
+        int leaderOwnedInSet = ownedInSet(leader, property.streetType());
+        if (leaderOwnedInSet < setSize(property.streetType()) - 1) {
+            return baseValue;
+        }
+        return baseValue * config.opponentLeaderPressure();
+    }
+
+    private int strategicStrength(PlayerView player) {
+        return player.moneyAmount() + player.totalLiquidationValue() + player.completedSets().size() * 300;
     }
 
     private double liquidityRisk(GameView gameView, PlayerView self, PropertyView property) {

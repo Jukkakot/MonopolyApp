@@ -158,11 +158,18 @@ public class PropertyAuctionResolver {
         int setSize = setSize(property.getSpotType().streetType);
         if (ownedInSet + 1 >= setSize && setSize > 0) {
             multiplier += 0.55;
+            multiplier += STRONG_CONFIG.auctionSetCompletionBonus() / (double) Math.max(1, property.getPrice());
         } else if (ownedInSet > 0) {
             multiplier += 0.2;
         }
         if (bestOpponentCount(bidder, property.getSpotType().streetType) >= setSize - 1 && setSize > 1) {
-            multiplier += 0.25;
+            multiplier += 0.25 * STRONG_CONFIG.opponentLeaderPressure();
+        }
+        if (property.getSpotType().streetType.placeType == fi.monopoly.types.PlaceType.RAILROAD) {
+            multiplier += ownedInSet * STRONG_CONFIG.railroadCompletionWeight() / 100.0;
+        }
+        if (property.getSpotType().streetType.placeType == fi.monopoly.types.PlaceType.UTILITY) {
+            multiplier += ownedInSet * STRONG_CONFIG.utilityCompletionWeight() / 100.0;
         }
         multiplier += (STRONG_CONFIG.auctionAggression() - 1.0);
         multiplier *= STRONG_CONFIG.colorGroupWeight(property.getSpotType().streetType);

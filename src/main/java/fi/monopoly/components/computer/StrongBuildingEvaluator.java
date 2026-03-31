@@ -56,7 +56,9 @@ final class StrongBuildingEvaluator {
 
     private boolean canAffordRound(GameView view, PlayerView self, PropertyView property) {
         int roundCost = roundCost(self, property.streetType());
-        return roundCost > 0 && self.moneyAmount() - roundCost >= requiredReserve(view, self);
+        return roundCost > 0
+                && !reachesBuildCap(self, property.streetType())
+                && self.moneyAmount() - roundCost >= requiredReserve(view, self);
     }
 
     private double buildScore(GameView view, PlayerView self, PropertyView property) {
@@ -128,6 +130,14 @@ final class StrongBuildingEvaluator {
         return self.ownedProperties().stream()
                 .filter(property -> property.streetType() == streetType)
                 .anyMatch(property -> property.buildingLevel() >= 4);
+    }
+
+    private boolean reachesBuildCap(PlayerView self, StreetType streetType) {
+        return self.ownedProperties().stream()
+                .filter(property -> property.streetType() == streetType)
+                .mapToInt(PropertyView::buildingLevel)
+                .max()
+                .orElse(0) >= config.buildRoundCap();
     }
 
     private int streetStrength(StreetType streetType) {

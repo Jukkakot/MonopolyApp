@@ -149,4 +149,62 @@ class TradeOfferEvaluatorTest {
 
         assertTrue(evaluator.evaluateForRecipient(offer, BotTradeProfile.BALANCED, strongConfig).accept());
     }
+
+    @Test
+    void higherTradeLiquidityWeightIncreasesCashHeavyTradeScore() {
+        Player proposer = new Player("P1", Color.BLACK, 1500, 1);
+        Player recipient = new Player("P2", Color.BLUE, 1500, 2);
+        TradeOffer offer = new TradeOffer(
+                proposer,
+                recipient,
+                new TradeSelection(100, java.util.List.of(), false),
+                TradeSelection.NONE
+        );
+
+        StrongBotConfig cashHeavyConfig = configWithTradeLiquidityWeight(1.5);
+
+        assertTrue(
+                evaluator.evaluateForRecipient(offer, BotTradeProfile.BALANCED, cashHeavyConfig).score()
+                        > evaluator.evaluateForRecipient(offer, BotTradeProfile.BALANCED, strongConfig).score()
+        );
+    }
+
+    private static StrongBotConfig configWithTradeLiquidityWeight(double tradeLiquidityWeight) {
+        StrongBotConfig defaults = StrongBotConfig.defaults();
+        return new StrongBotConfig(
+                defaults.buyThreshold(),
+                defaults.minCashReserve(),
+                defaults.dangerCashReserve(),
+                defaults.completionWeight(),
+                defaults.progressWeight(),
+                defaults.opponentBlockWeight(),
+                defaults.railroadWeight(),
+                defaults.utilityWeight(),
+                defaults.liquidityPenaltyWeight(),
+                defaults.buyToBlockOpponent(),
+                defaults.prioritizeThreeHouses(),
+                defaults.preferJailLateGame(),
+                defaults.houseBuildAggression(),
+                defaults.hotelAversion(),
+                defaults.developmentBias(),
+                defaults.mortgageTolerance(),
+                defaults.unmortgageAggression(),
+                defaults.buildReservePerOpponentMonopoly(),
+                defaults.auctionAggression(),
+                defaults.tradeFairnessTolerance(),
+                defaults.tradeSetCompletionWeight(),
+                defaults.colorGroupWeights(),
+                defaults.jailExitThreshold(),
+                defaults.bankruptcyAversion(),
+                defaults.railroadCompletionWeight(),
+                defaults.utilityCompletionWeight(),
+                defaults.buildRoundCap(),
+                defaults.postMonopolyCashBuffer(),
+                defaults.auctionSetCompletionBonus(),
+                tradeLiquidityWeight,
+                defaults.opponentLeaderPressure(),
+                defaults.jailCardHoldBias(),
+                defaults.mortgageRecoveryPriority()
+        );
+    }
 }

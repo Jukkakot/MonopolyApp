@@ -8,6 +8,12 @@ import java.util.Comparator;
 
 @Slf4j
 final class StrongDebtResolver {
+    private final StrongBotConfig config;
+
+    StrongDebtResolver(StrongBotConfig config) {
+        this.config = config;
+    }
+
     boolean resolve(ComputerTurnContext context, GameView view, PlayerView self) {
         int amount = view.debt().amount();
         if (self.moneyAmount() < amount) {
@@ -101,20 +107,20 @@ final class StrongDebtResolver {
     private int buildingSalePriority(PropertyView property) {
         int score = 0;
         if (property.completedSet()) {
-            score += 1000;
+            score += scaledPremiumPenalty(1000);
         }
-        score += property.buildingLevel() >= 3 ? 200 : 50;
-        score += streetStrength(property.streetType()) * 10;
+        score += property.buildingLevel() >= 3 ? scaledPremiumPenalty(200) : scaledPremiumPenalty(50);
+        score += scaledPremiumPenalty(streetStrength(property.streetType()) * 10);
         return score;
     }
 
     private int mortgagePriority(PropertyView property) {
         int score = 0;
         if (property.completedSet()) {
-            score += 1000;
+            score += scaledPremiumPenalty(1000);
         }
-        score += ownsCompetingPieces(property) ? 400 : 0;
-        score += streetStrength(property.streetType()) * 10;
+        score += ownsCompetingPieces(property) ? scaledPremiumPenalty(400) : 0;
+        score += scaledPremiumPenalty(streetStrength(property.streetType()) * 10);
         if (property.placeType() == PlaceType.UTILITY) {
             score -= 20;
         }
@@ -122,6 +128,10 @@ final class StrongDebtResolver {
             score -= 10;
         }
         return score;
+    }
+
+    private int scaledPremiumPenalty(int basePenalty) {
+        return Math.max(10, (int) Math.round(basePenalty / Math.max(0.1, config.bankruptcyAversion())));
     }
 
     private boolean ownsCompetingPieces(PropertyView property) {

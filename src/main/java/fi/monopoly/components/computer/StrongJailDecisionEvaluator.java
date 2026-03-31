@@ -17,7 +17,15 @@ final class StrongJailDecisionEvaluator {
         if (popup == null || popup.message() == null || !popup.message().equals(text("jail.payOrCardPrompt"))) {
             return new ComputerDecision(ComputerAction.DECLINE_POPUP, Double.NEGATIVE_INFINITY, "No jail prompt to evaluate");
         }
+        boolean dangerousBoard = self.boardDangerScore() >= config.jailExitThreshold();
         if (self.getOutOfJailCardCount() > 0) {
+            if (dangerousBoard && view.unownedPropertyCount() <= 8 && config.jailCardHoldBias() > 0) {
+                return new ComputerDecision(
+                        ComputerAction.DECLINE_POPUP,
+                        -2 * config.jailCardHoldBias(),
+                        "Stay in jail: hold get out of jail card for more dangerous future board"
+                );
+            }
             return new ComputerDecision(ComputerAction.ACCEPT_POPUP, 10, "Avoid jail: use get out of jail card");
         }
         if (self.moneyAmount() < 50) {
@@ -27,7 +35,6 @@ final class StrongJailDecisionEvaluator {
             return new ComputerDecision(ComputerAction.ACCEPT_POPUP, 5, "Avoid jail: late-game jail preference disabled");
         }
         boolean earlyGame = view.unownedPropertyCount() > 10;
-        boolean dangerousBoard = self.boardDangerScore() >= config.jailExitThreshold();
         boolean cashSafeAfterPayment = self.moneyAmount() - 50 >= StrongReservePolicy.requiredReserve(config, view, self);
         if (earlyGame && cashSafeAfterPayment) {
             return new ComputerDecision(ComputerAction.ACCEPT_POPUP, 8, "Avoid jail: early game with safe post-cash M" + (self.moneyAmount() - 50));

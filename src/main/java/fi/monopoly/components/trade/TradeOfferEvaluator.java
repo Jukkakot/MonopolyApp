@@ -21,10 +21,14 @@ public final class TradeOfferEvaluator {
         if (!offer.isValid()) {
             return new TradeDecision(false, -10_000, "Reject trade: invalid offer");
         }
-        double score = estimateNetDeltaForRecipient(offer, strongConfig);
         Player recipient = offer.recipient();
         double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true, strongConfig);
         double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false, strongConfig);
+        if (strongConfig != null && isLeadingOpponent(offer.proposer(), recipient)) {
+            gainScore *= 1.0 + Math.max(0, strongConfig.opponentLeaderPressure() - 1.0) * 0.5;
+            lossScore *= strongConfig.opponentLeaderPressure();
+        }
+        double score = gainScore - lossScore;
         int acceptThreshold = profile.acceptThreshold() - (strongConfig == null ? 0 : strongConfig.tradeFairnessTolerance());
         boolean accept = score >= acceptThreshold;
         boolean tooFarForCounter = score < profile.counterOfferFloor();
@@ -100,7 +104,7 @@ public final class TradeOfferEvaluator {
     }
 
     private double selectionValue(Player perspective, TradeSelection selection, boolean receiving, StrongBotConfig strongConfig) {
-        double value = selection.moneyAmount();
+        double value = selection.moneyAmount() * (strongConfig == null ? 1.0 : strongConfig.tradeLiquidityWeight());
         if (selection.jailCard()) {
             value += JAIL_CARD_VALUE;
         }
@@ -131,14 +135,25 @@ public final class TradeOfferEvaluator {
         }
         if (streetType.placeType == PlaceType.RAILROAD) {
             value += ownedInSet * 35;
+            if (strongConfig != null) {
+                value += ownedInSet * strongConfig.railroadCompletionWeight();
+            }
         }
         if (streetType.placeType == PlaceType.UTILITY && ownedInSet >= 2) {
             value += 50;
+        }
+        if (streetType.placeType == PlaceType.UTILITY && strongConfig != null) {
+            value += ownedInSet * strongConfig.utilityCompletionWeight();
         }
         if (strongConfig != null) {
             value *= strongConfig.colorGroupWeight(streetType);
         }
         return value;
+    }
+
+    private boolean isLeadingOpponent(Player proposer, Player recipient) {
+        return proposer.getMoneyAmount() + proposer.getTotalLiquidationValue()
+                > recipient.getMoneyAmount() + recipient.getTotalLiquidationValue();
     }
 
     private double round(double value) {

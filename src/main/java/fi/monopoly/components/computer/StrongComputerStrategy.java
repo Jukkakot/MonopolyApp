@@ -8,7 +8,7 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
     private final StrongPropertyBuyEvaluator propertyBuyEvaluator = new StrongPropertyBuyEvaluator(config);
     private final StrongBuildingEvaluator buildingEvaluator = new StrongBuildingEvaluator(config);
     private final StrongUnmortgageEvaluator unmortgageEvaluator = new StrongUnmortgageEvaluator(config);
-    private final StrongDebtResolver debtResolver = new StrongDebtResolver();
+    private final StrongDebtResolver debtResolver = new StrongDebtResolver(config);
     private final StrongJailDecisionEvaluator jailDecisionEvaluator = new StrongJailDecisionEvaluator(config);
     private final SmokeTestComputerStrategy fallbackStrategy = new SmokeTestComputerStrategy();
 
