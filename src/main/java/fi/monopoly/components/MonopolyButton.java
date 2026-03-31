@@ -9,6 +9,7 @@ import fi.monopoly.utils.MonopolyUtils;
 public class MonopolyButton extends Button {
     private final MonopolyRuntime runtime;
     private ButtonAction buttonAction;
+    private boolean allowedDuringComputerTurn = false;
     private Integer autoMinWidth;
     private Integer autoPadding;
     private Integer autoMaxWidth;
@@ -18,9 +19,7 @@ public class MonopolyButton extends Button {
         this.runtime = runtime;
         setFont(runtime.font20());
         addListener(e -> {
-            if (buttonAction != null) {
-                buttonAction.doAction();
-            }
+            triggerManualAction();
         });
     }
 
@@ -62,9 +61,26 @@ public class MonopolyButton extends Button {
     }
 
     public void pressButton() {
+        triggerManualAction();
+    }
+
+    public MonopolyButton setAllowedDuringComputerTurn(boolean allowedDuringComputerTurn) {
+        this.allowedDuringComputerTurn = allowedDuringComputerTurn;
+        return this;
+    }
+
+    private void triggerManualAction() {
+        if (!isManualActionAllowed()) {
+            return;
+        }
         if (buttonAction != null) {
             buttonAction.doAction();
         }
+    }
+
+    private boolean isManualActionAllowed() {
+        Player turnPlayer = Game.players != null ? Game.players.getTurn() : null;
+        return allowedDuringComputerTurn || turnPlayer == null || !turnPlayer.isComputerControlled();
     }
 
     public MonopolyButton setButtonColors(int background, int foreground, int active) {

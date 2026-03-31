@@ -398,4 +398,24 @@ class GameTurnControlsTest {
         assertFalse(runtime.popupService().isAnyVisible(),
                 "Computer popup resolution must remain available during a bot turn");
     }
+
+    @Test
+    void botTurnBlocksGameAffectingButtonsButAllowsLanguageButton() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Game.players.switchTurn();
+
+        getTradeButton(game).pressButton();
+        runtime.eventBus().flushPendingChanges();
+        assertFalse(runtime.popupService().isAnyVisible(),
+                "Trade button should be blocked during a bot turn");
+
+        getLanguageButton(game).pressButton();
+        runtime.eventBus().flushPendingChanges();
+        assertTrue(runtime.popupService().isAnyVisible(),
+                "Language button should remain usable during a bot turn");
+    }
 }

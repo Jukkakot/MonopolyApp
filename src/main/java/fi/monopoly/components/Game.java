@@ -122,6 +122,7 @@ public class Game implements MonopolyEventListener {
         languageButton.setPosition(SIDEBAR_X + SIDEBAR_MARGIN, runtime.app().height - 48);
         languageButton.setSize(220, 36);
         languageButton.setAutoWidth(180, 28, 280);
+        languageButton.setAllowedDuringComputerTurn(true);
         refreshLabels();
         endRoundButton.hide();
         retryDebtButton.hide();
