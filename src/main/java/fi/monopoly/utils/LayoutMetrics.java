@@ -57,6 +57,9 @@ public record LayoutMetrics(
     private static final int POPUP_CLOSE_BUTTON_SIZE = 20;
     private static final int POPUP_CLOSE_BUTTON_RIGHT_INSET = 30;
     private static final int POPUP_CLOSE_BUTTON_TOP_INSET = 10;
+    private static final int DICE_BUTTON_HEIGHT = 44;
+    private static final int DICE_BUTTON_OFFSET_FROM_PRIMARY = -8;
+    private static final int DICE_STACKED_VERTICAL_OFFSET = 56;
     private static final int TRADE_POPUP_PREFERRED_WIDTH = 980;
     private static final int TRADE_POPUP_PREFERRED_HEIGHT = 820;
     private static final int TRADE_POPUP_MIN_WIDTH = 560;
@@ -265,6 +268,18 @@ public record LayoutMetrics(
 
     public static int popupCloseButtonTopInset() {
         return POPUP_CLOSE_BUTTON_TOP_INSET;
+    }
+
+    public static int diceButtonHeight() {
+        return DICE_BUTTON_HEIGHT;
+    }
+
+    public static int diceButtonOffsetFromPrimary() {
+        return DICE_BUTTON_OFFSET_FROM_PRIMARY;
+    }
+
+    public static int diceStackedVerticalOffset() {
+        return DICE_STACKED_VERTICAL_OFFSET;
     }
 
     public static int tradePopupPreferredWidth() {
