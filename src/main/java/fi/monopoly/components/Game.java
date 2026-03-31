@@ -55,27 +55,12 @@ public class Game implements MonopolyEventListener {
     private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
     private static final LayoutMetrics DEFAULT_LAYOUT = LayoutMetrics.defaultWindow();
     private static final float SIDEBAR_X = DEFAULT_LAYOUT.sidebarX();
-    private static final int SIDEBAR_MARGIN = 16;
-    private static final int SIDEBAR_LABEL_X = 16;
-    private static final int SIDEBAR_VALUE_X = 192;
-    private static final int SIDEBAR_MIN_CONTENT_TOP = 220;
-    private static final int SIDEBAR_HISTORY_HEIGHT = 192;
-    private static final int SIDEBAR_HISTORY_MIN_HEIGHT = 112;
-    private static final int SIDEBAR_HISTORY_HEADER_HEIGHT = 32;
-    private static final int SIDEBAR_HISTORY_TEXT_INSET = 8;
-    private static final int SIDEBAR_HISTORY_ENTRY_HEIGHT = 28;
-    private static final int SIDEBAR_HISTORY_TOP_MARGIN = 16;
-    private static final int SIDEBAR_LINE_HEIGHT = 24;
-    private static final int OVERLAY_MARGIN = 16;
-    private static final int OVERLAY_PRIMARY_BUTTON_Y = 16;
-    private static final int OVERLAY_SECONDARY_ROW_1_Y = 68;
-    private static final int OVERLAY_SECONDARY_ROW_2_Y = 112;
-    private static final int OVERLAY_SECONDARY_ROW_3_Y = 156;
+    private static final int SIDEBAR_MARGIN = LayoutMetrics.spacingMd();
     private static final int COMPUTER_ACTION_DELAY_MS = 1000;
     private static final int NO_COMPUTER_ACTION_YET = -1;
 
     // Shared runtime game state accessed across components
-    private static Game current;
+    private static Game self;
     public static Dices DICES;
     public static Players PLAYERS;
     public static Animations ANIMATIONS;
@@ -104,7 +89,7 @@ public class Game implements MonopolyEventListener {
     private boolean paused;
 
     public Game(MonopolyRuntime runtime) {
-        current = this;
+        self = this;
         this.runtime = runtime;
         this.endRoundButton = new MonopolyButton(runtime, "endRound");
         this.retryDebtButton = new MonopolyButton(runtime, "retryDebt");
@@ -125,7 +110,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void setupButtons() {
-        endRoundButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, DEFAULT_LAYOUT.sidebarPrimaryButtonY());
+        endRoundButton.setPosition(SIDEBAR_X + LayoutMetrics.sidebarValueX(), DEFAULT_LAYOUT.sidebarPrimaryButtonY());
         endRoundButton.setSize(150, 44);
         endRoundButton.setAutoWidth(100, 28, 180);
 
@@ -133,7 +118,7 @@ public class Game implements MonopolyEventListener {
         retryDebtButton.setSize(140, 40);
         retryDebtButton.setAutoWidth(140, 28, 220);
 
-        declareBankruptcyButton.setPosition(SIDEBAR_X + SIDEBAR_VALUE_X, DEFAULT_LAYOUT.sidebarPrimaryButtonY());
+        declareBankruptcyButton.setPosition(SIDEBAR_X + LayoutMetrics.sidebarValueX(), DEFAULT_LAYOUT.sidebarPrimaryButtonY());
         declareBankruptcyButton.setSize(140, 40);
         declareBankruptcyButton.setAutoWidth(140, 28, 220);
 
@@ -214,7 +199,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public static boolean isDebtResolutionActive() {
-        return current != null && current.debtState != null;
+        return self != null && self.debtState != null;
     }
 
     public static boolean isDebtResolutionForCurrentTurn() {
@@ -299,19 +284,19 @@ public class Game implements MonopolyEventListener {
 
         app.fill(0);
         app.textFont(runtime.font20());
-        app.text(text("sidebar.currentPlayer"), sidebarX + SIDEBAR_LABEL_X, layoutMetrics.sidebarHeaderRow1Y());
-        app.text(text("sidebar.turnPhase"), sidebarX + SIDEBAR_LABEL_X, layoutMetrics.sidebarHeaderRow2Y());
-        app.text(text("sidebar.currentSpot"), sidebarX + SIDEBAR_LABEL_X, layoutMetrics.sidebarHeaderRow3Y());
+        app.text(text("sidebar.currentPlayer"), sidebarX + LayoutMetrics.sidebarLabelX(), layoutMetrics.sidebarHeaderRow1Y());
+        app.text(text("sidebar.turnPhase"), sidebarX + LayoutMetrics.sidebarLabelX(), layoutMetrics.sidebarHeaderRow2Y());
+        app.text(text("sidebar.currentSpot"), sidebarX + LayoutMetrics.sidebarLabelX(), layoutMetrics.sidebarHeaderRow3Y());
 
         app.fill(46, 72, 63);
-        float currentPlayerValueX = sidebarX + SIDEBAR_VALUE_X;
+        float currentPlayerValueX = sidebarX + LayoutMetrics.sidebarValueX();
         float currentPlayerValueY = layoutMetrics.sidebarHeaderRow1Y();
         app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), currentPlayerValueX, currentPlayerValueY);
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
             drawComputerBadge(app, currentPlayerValueX + app.textWidth(turnPlayer.getName()) + 12, currentPlayerValueY - 14);
         }
-        app.text(resolveCurrentTurnPhase(), sidebarX + SIDEBAR_VALUE_X, layoutMetrics.sidebarHeaderRow2Y());
-        app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), sidebarX + SIDEBAR_VALUE_X, layoutMetrics.sidebarHeaderRow3Y());
+        app.text(resolveCurrentTurnPhase(), sidebarX + LayoutMetrics.sidebarValueX(), layoutMetrics.sidebarHeaderRow2Y());
+        app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), sidebarX + LayoutMetrics.sidebarValueX(), layoutMetrics.sidebarHeaderRow3Y());
         drawPopupHistoryPanel(app, layoutMetrics);
         app.pop();
     }
@@ -346,11 +331,11 @@ public class Game implements MonopolyEventListener {
 
         app.stroke(193, 178, 140);
         app.strokeWeight(2);
-        app.line(panelX, panelY + SIDEBAR_HISTORY_HEADER_HEIGHT, panelX + panelW, panelY + SIDEBAR_HISTORY_HEADER_HEIGHT);
+        app.line(panelX, panelY + LayoutMetrics.sidebarHistoryHeaderHeight(), panelX + panelW, panelY + LayoutMetrics.sidebarHistoryHeaderHeight());
 
         app.fill(46, 72, 63);
         app.textFont(runtime.font20());
-        app.text(text("sidebar.section.history"), panelX + SIDEBAR_HISTORY_TEXT_INSET, panelY + 24);
+        app.text(text("sidebar.section.history"), panelX + LayoutMetrics.sidebarHistoryTextInset(), panelY + 24);
 
         app.fill(0);
         app.textFont(runtime.font10());
@@ -359,16 +344,16 @@ public class Game implements MonopolyEventListener {
         if (recentMessages.isEmpty()) {
             app.text(
                     text("sidebar.history.empty"),
-                    panelX + SIDEBAR_HISTORY_TEXT_INSET,
+                    panelX + LayoutMetrics.sidebarHistoryTextInset(),
                     panelY + 56,
-                    panelW - SIDEBAR_HISTORY_TEXT_INSET * 2,
+                    panelW - LayoutMetrics.sidebarHistoryTextInset() * 2,
                     historyHeight - 48
             );
             return;
         }
 
         float currentY = panelY + 52;
-        float maxTextWidth = panelW - SIDEBAR_HISTORY_TEXT_INSET * 2;
+        float maxTextWidth = panelW - LayoutMetrics.sidebarHistoryTextInset() * 2;
         for (String message : recentMessages) {
             String condensedMessage = message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
             if (condensedMessage.isEmpty()) {
@@ -376,7 +361,7 @@ public class Game implements MonopolyEventListener {
             }
             List<String> wrappedLines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth);
             for (String line : wrappedLines) {
-                app.text(line, panelX + SIDEBAR_HISTORY_TEXT_INSET, currentY);
+                app.text(line, panelX + LayoutMetrics.sidebarHistoryTextInset(), currentY);
                 currentY += 14;
                 if (currentY > panelY + historyHeight - 16) {
                     return;
@@ -414,8 +399,8 @@ public class Game implements MonopolyEventListener {
         }
         float debugFloor = getSidebarReservedTop();
         float historyTop = getSidebarHistoryPanelY();
-        float availableTop = historyTop - SIDEBAR_HISTORY_TOP_MARGIN;
-        return Math.max(SIDEBAR_MIN_CONTENT_TOP, Math.min(debugFloor, availableTop));
+        float availableTop = historyTop - LayoutMetrics.sidebarHistoryTopMargin();
+        return Math.max(LayoutMetrics.sidebarMinContentTop(), Math.min(debugFloor, availableTop));
     }
 
     private boolean isDebtSidebarMode() {
@@ -438,7 +423,7 @@ public class Game implements MonopolyEventListener {
             return Math.round(getLayoutMetrics().debtTextY());
         }
         int lineCount = buildDebtSidebarText(debtState.paymentRequest()).split("\\R").length;
-        return Math.round(getLayoutMetrics().debtTextY() + lineCount * SIDEBAR_LINE_HEIGHT);
+        return Math.round(getLayoutMetrics().debtTextY() + lineCount * LayoutMetrics.sidebarLineHeight());
     }
 
     private Spot getNewSpot(DiceValue diceValue) {
@@ -755,45 +740,45 @@ public class Game implements MonopolyEventListener {
         float sidebarRightAlignedX = layoutMetrics.sidebarRight() - SIDEBAR_MARGIN;
         float primaryButtonY = layoutMetrics.sidebarPrimaryButtonY();
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
-        float pauseButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
+        float pauseButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + LayoutMetrics.spacingSm();
         float tradeButtonY = pauseButtonY;
-        float languageButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + 12;
+        float languageButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + LayoutMetrics.spacingSm();
 
         endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
         retryDebtButton.setPosition(sidebarLeftX, primaryButtonY);
         declareBankruptcyButton.setPosition(sidebarRightAlignedX - declareBankruptcyButton.getWidth(), primaryButtonY);
         debugGodModeButton.setPosition(sidebarLeftX, debugRow1Y);
         languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), languageButtonY);
-        pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - 8, pauseButtonY);
-        tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - 8, tradeButtonY);
+        pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - LayoutMetrics.spacingXs(), pauseButtonY);
+        tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - LayoutMetrics.spacingXs(), tradeButtonY);
         DICES.updateLayout(layoutMetrics);
     }
 
     private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
-        float leftX = OVERLAY_MARGIN;
-        float rightX = layoutMetrics.boardWidth() - OVERLAY_MARGIN;
+        float leftX = LayoutMetrics.overlayMargin();
+        float rightX = layoutMetrics.boardWidth() - LayoutMetrics.overlayMargin();
 
-        endRoundButton.setPosition(leftX, OVERLAY_PRIMARY_BUTTON_Y);
-        retryDebtButton.setPosition(leftX, OVERLAY_PRIMARY_BUTTON_Y);
-        declareBankruptcyButton.setPosition(rightX - declareBankruptcyButton.getWidth(), OVERLAY_PRIMARY_BUTTON_Y);
-        debugGodModeButton.setPosition(leftX, OVERLAY_SECONDARY_ROW_1_Y);
+        endRoundButton.setPosition(leftX, LayoutMetrics.overlayPrimaryButtonY());
+        retryDebtButton.setPosition(leftX, LayoutMetrics.overlayPrimaryButtonY());
+        declareBankruptcyButton.setPosition(rightX - declareBankruptcyButton.getWidth(), LayoutMetrics.overlayPrimaryButtonY());
+        debugGodModeButton.setPosition(leftX, LayoutMetrics.overlaySecondaryRow1Y());
         languageButton.setPosition(
                 Math.max(leftX, rightX - languageButton.getWidth()),
-                OVERLAY_SECONDARY_ROW_3_Y
+                LayoutMetrics.overlaySecondaryRow3Y()
         );
         pauseButton.setPosition(
-                Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - 8),
-                OVERLAY_SECONDARY_ROW_3_Y
+                Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - LayoutMetrics.spacingXs()),
+                LayoutMetrics.overlaySecondaryRow3Y()
         );
         tradeButton.setPosition(
-                Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - 8),
-                OVERLAY_SECONDARY_ROW_3_Y
+                Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - LayoutMetrics.spacingXs()),
+                LayoutMetrics.overlaySecondaryRow3Y()
         );
     }
 
     private float getSidebarHistoryHeight() {
-        float availableHeight = runtime.app().height - getSidebarReservedTop() - getLayoutMetrics().sidebarHistoryBottomMargin() - SIDEBAR_HISTORY_TOP_MARGIN;
-        return Math.max(SIDEBAR_HISTORY_MIN_HEIGHT, Math.min(SIDEBAR_HISTORY_HEIGHT, availableHeight));
+        float availableHeight = runtime.app().height - getSidebarReservedTop() - getLayoutMetrics().sidebarHistoryBottomMargin() - LayoutMetrics.sidebarHistoryTopMargin();
+        return Math.max(LayoutMetrics.sidebarHistoryMinHeight(), Math.min(LayoutMetrics.sidebarHistoryPreferredHeight(), availableHeight));
     }
 
     private float getSidebarHistoryPanelY() {

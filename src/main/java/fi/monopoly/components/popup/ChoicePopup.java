@@ -7,6 +7,13 @@ import lombok.Setter;
 
 import static fi.monopoly.MonopolyApp.SPACE;
 import static fi.monopoly.text.UiTexts.text;
+import static fi.monopoly.utils.LayoutMetrics.popupButtonGapX;
+import static fi.monopoly.utils.LayoutMetrics.popupButtonGapY;
+import static fi.monopoly.utils.LayoutMetrics.popupButtonHeight;
+import static fi.monopoly.utils.LayoutMetrics.popupButtonMaxWidth;
+import static fi.monopoly.utils.LayoutMetrics.popupButtonMinWidth;
+import static fi.monopoly.utils.LayoutMetrics.popupButtonPadding;
+import static fi.monopoly.utils.LayoutMetrics.popupTextSidePadding;
 
 public class ChoicePopup extends Popup {
     private final MonopolyButton acceptButton;
@@ -25,13 +32,13 @@ public class ChoicePopup extends Popup {
         super(runtime);
         this.acceptButton = new MonopolyButton(runtime, controlPrefix + "Accept");
         acceptButton.addListener(this::acceptAction);
-        acceptButton.setSize(100, 50);
-        acceptButton.setAutoWidth(100, 28, 180);
+        acceptButton.setSize(popupButtonMinWidth(), popupButtonHeight());
+        acceptButton.setAutoWidth(popupButtonMinWidth(), popupButtonPadding(), popupButtonMaxWidth());
         acceptButton.hide();
         this.declineButton = new MonopolyButton(runtime, controlPrefix + "Decline");
         declineButton.addListener(this::declineAction);
-        declineButton.setSize(100, 50);
-        declineButton.setAutoWidth(100, 28, 180);
+        declineButton.setSize(popupButtonMinWidth(), popupButtonHeight());
+        declineButton.setAutoWidth(popupButtonMinWidth(), popupButtonPadding(), popupButtonMaxWidth());
         declineButton.hide();
         refreshLabels();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
@@ -109,19 +116,19 @@ public class ChoicePopup extends Popup {
     private void layoutButtons() {
         float centerX = getPopupCenter().x();
         float buttonY = getButtonAreaTop() + Math.max(0, (getButtonAreaHeight() - acceptButton.getHeight()) / 2f);
-        float combinedWidth = acceptButton.getWidth() + declineButton.getWidth() + 16f;
-        float minInlineX = getPopupLeft() + 20f;
-        float maxInlineRight = getPopupRight() - 20f;
-        if (combinedWidth <= getPopupWidth() - 40f) {
+        float combinedWidth = acceptButton.getWidth() + declineButton.getWidth() + popupButtonGapX();
+        float minInlineX = getPopupLeft() + popupTextSidePadding();
+        float maxInlineRight = getPopupRight() - popupTextSidePadding();
+        if (combinedWidth <= getPopupWidth() - popupTextSidePadding() * 2f) {
             float startX = centerX - combinedWidth / 2f;
             acceptButton.setPosition(Math.max(minInlineX, startX), buttonY);
-            declineButton.setPosition(Math.min(maxInlineRight - declineButton.getWidth(), startX + acceptButton.getWidth() + 16f), buttonY);
+            declineButton.setPosition(Math.min(maxInlineRight - declineButton.getWidth(), startX + acceptButton.getWidth() + popupButtonGapX()), buttonY);
             return;
         }
 
         float stackedX = centerX - Math.max(acceptButton.getWidth(), declineButton.getWidth()) / 2f;
-        float firstY = getButtonAreaTop() + 8f;
+        float firstY = getButtonAreaTop() + fi.monopoly.utils.LayoutMetrics.spacingXs();
         acceptButton.setPosition(stackedX, firstY);
-        declineButton.setPosition(stackedX, firstY + acceptButton.getHeight() + 12f);
+        declineButton.setPosition(stackedX, firstY + acceptButton.getHeight() + popupButtonGapY());
     }
 }

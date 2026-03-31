@@ -10,6 +10,7 @@ import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
+import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
 import javafx.scene.paint.Color;
 import processing.core.PGraphics;
@@ -28,39 +29,39 @@ import static processing.event.MouseEvent.CLICK;
 import static processing.event.MouseEvent.MOVE;
 
 public class TradePopup extends Popup {
-    private static final int POPUP_WIDTH = 980;
-    private static final int POPUP_HEIGHT = 820;
-    private static final int MIN_BUTTON_WIDTH = 100;
-    private static final int MAX_BUTTON_WIDTH = 220;
-    private static final int BUTTON_HEIGHT = 50;
-    private static final int BUTTON_PADDING = 28;
-    private static final int BUTTON_GAP_X = 12;
-    private static final int BUTTON_GAP_Y = 12;
-    private static final float PANELS_TOP_OFFSET = 82f;
-    private static final float PANELS_HEIGHT = 240f;
-    private static final float PANEL_GAP = 18f;
-    private static final float PANEL_PADDING = 14f;
-    private static final float PANEL_HEADER_HEIGHT = 46f;
-    private static final float ITEM_GAP = 10f;
-    private static final float INVENTORY_TOP_GAP = 18f;
-    private static final float INVENTORY_TITLE_GAP = 28f;
+    private static final int POPUP_WIDTH = LayoutMetrics.tradePopupPreferredWidth();
+    private static final int POPUP_HEIGHT = LayoutMetrics.tradePopupPreferredHeight();
+    private static final int MIN_BUTTON_WIDTH = LayoutMetrics.popupButtonMinWidth();
+    private static final int MAX_BUTTON_WIDTH = LayoutMetrics.popupButtonMaxWidth();
+    private static final int BUTTON_HEIGHT = LayoutMetrics.popupButtonHeight();
+    private static final int BUTTON_PADDING = LayoutMetrics.popupButtonPadding();
+    private static final int BUTTON_GAP_X = LayoutMetrics.popupButtonGapX();
+    private static final int BUTTON_GAP_Y = LayoutMetrics.popupButtonGapY();
+    private static final float PANELS_TOP_OFFSET = LayoutMetrics.tradePanelsTopOffset();
+    private static final float PANELS_HEIGHT = LayoutMetrics.tradePanelsHeight();
+    private static final float PANEL_GAP = LayoutMetrics.tradePanelGap();
+    private static final float PANEL_PADDING = LayoutMetrics.tradePanelPadding();
+    private static final float PANEL_HEADER_HEIGHT = LayoutMetrics.tradePanelHeaderHeight();
+    private static final float ITEM_GAP = LayoutMetrics.tradeItemGap();
+    private static final float INVENTORY_TOP_GAP = LayoutMetrics.tradeInventoryTopGap();
+    private static final float INVENTORY_TITLE_GAP = LayoutMetrics.tradeInventoryTitleGap();
     private static final float INVENTORY_CARD_W = Spot.SPOT_W;
     private static final float INVENTORY_CARD_H = Spot.SPOT_H;
     private static final float SUMMARY_CARD_W = Spot.SPOT_W;
     private static final float SUMMARY_CARD_H = Spot.SPOT_H;
-    private static final float TOKEN_SIZE = 34f;
-    private static final float SUBTITLE_TOP_OFFSET = 40f;
-    private static final float FOOTER_BOTTOM_PADDING = 22f;
-    private static final float PROPERTY_COLOR_STRIPE_HEIGHT = 18f;
-    private static final float BUTTON_AREA_BOTTOM_MARGIN = 28f;
-    private static final float BUTTON_AREA_TOP_MARGIN = 18f;
-    private static final float POPUP_TOP_MARGIN = 6f;
+    private static final float TOKEN_SIZE = LayoutMetrics.tradeTokenSize();
+    private static final float SUBTITLE_TOP_OFFSET = LayoutMetrics.tradeSubtitleTopOffset();
+    private static final float FOOTER_BOTTOM_PADDING = LayoutMetrics.tradeFooterBottomPadding();
+    private static final float PROPERTY_COLOR_STRIPE_HEIGHT = LayoutMetrics.tradePropertyColorStripeHeight();
+    private static final float BUTTON_AREA_BOTTOM_MARGIN = LayoutMetrics.tradeButtonAreaBottomMargin();
+    private static final float BUTTON_AREA_TOP_MARGIN = LayoutMetrics.tradeButtonAreaTopMargin();
+    private static final float POPUP_TOP_MARGIN = LayoutMetrics.tradePopupTopMargin();
     private static final int CARD_BASE_R = 205;
     private static final int CARD_BASE_G = 230;
     private static final int CARD_BASE_B = 209;
-    private static final int CARD_INSET = 4;
-    private static final float CARD_RADIUS = 14f;
-    private static final float CARD_INNER_RADIUS = 11f;
+    private static final int CARD_INSET = LayoutMetrics.tradeCardInset();
+    private static final float CARD_RADIUS = LayoutMetrics.tradeCardRadius();
+    private static final float CARD_INNER_RADIUS = LayoutMetrics.tradeCardInnerRadius();
 
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private final List<String> activeButtonLabels = new ArrayList<>();
@@ -76,14 +77,14 @@ public class TradePopup extends Popup {
         super(runtime);
         this.closeButton = new MonopolyButton(runtime, "tradeClose")
                 .addListener(() -> completeManualAction(null))
-                .setSize(20, 20);
+                .setSize(LayoutMetrics.popupCloseButtonSize(), LayoutMetrics.popupCloseButtonSize());
         this.backButton = new MonopolyButton(runtime, "tradeBack")
                 .addListener(() -> {
                     if (tradeView != null && tradeView.backAction() != null) {
                         completeManualAction(tradeView.backAction());
                     }
                 })
-                .setSize(56, 32);
+                .setSize(LayoutMetrics.tradeBackButtonWidth(), LayoutMetrics.tradeBackButtonHeight());
         closeButton.hide();
         backButton.hide();
         refreshLabels();
@@ -118,13 +119,13 @@ public class TradePopup extends Popup {
     @Override
     protected int getPopupWidth() {
         int availableWidth = Math.round(runtime.app().width) - WINDOW_MARGIN * 2;
-        return Math.max(560, Math.min(POPUP_WIDTH, availableWidth));
+        return Math.max(LayoutMetrics.tradePopupMinWidth(), Math.min(POPUP_WIDTH, availableWidth));
     }
 
     @Override
     protected int getPopupHeight() {
         int availableHeight = runtime.app().height - WINDOW_MARGIN * 2;
-        return Math.max(420, Math.min(POPUP_HEIGHT, availableHeight));
+        return Math.max(LayoutMetrics.tradePopupMinHeight(), Math.min(POPUP_HEIGHT, availableHeight));
     }
 
     @Override
@@ -518,7 +519,10 @@ public class TradePopup extends Popup {
         layoutButtonGroup(positiveButtons, Math.round(getPopupLeft() + 36), rowY, false);
         layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
         layoutButtonGroup(negativeButtons, Math.round(getPopupRight() - 36), rowY, false, true);
-        backButton.setPosition(getPopupLeft() + 24, getPopupTop() + 18);
+        backButton.setPosition(
+                getPopupLeft() + LayoutMetrics.tradeBackButtonLeftInset(),
+                getPopupTop() + LayoutMetrics.tradeBackButtonTopInset()
+        );
     }
 
     private void layoutButtonGroup(List<MonopolyButton> buttons, int anchorX, int rowY, boolean centered) {
@@ -651,7 +655,10 @@ public class TradePopup extends Popup {
     }
 
     private void layoutCloseButton() {
-        closeButton.setPosition(getPopupRight() - 30, getPopupTop() + 10);
+        closeButton.setPosition(
+                getPopupRight() - LayoutMetrics.popupCloseButtonRightInset(),
+                getPopupTop() + LayoutMetrics.popupCloseButtonTopInset()
+        );
     }
 
     private boolean isHovered(TradePopupItem item) {

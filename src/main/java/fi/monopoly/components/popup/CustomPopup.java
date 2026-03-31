@@ -15,24 +15,24 @@ import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
 public class CustomPopup extends Popup {
-    private static final int MIN_BUTTON_WIDTH = 100;
-    private static final int MAX_BUTTON_WIDTH = 220;
+    private static final int MIN_BUTTON_WIDTH = fi.monopoly.utils.LayoutMetrics.popupButtonMinWidth();
+    private static final int MAX_BUTTON_WIDTH = fi.monopoly.utils.LayoutMetrics.popupButtonMaxWidth();
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
     private final Button closeButton;
     private final List<String> activeButtonLabels = new ArrayList<>();
     private final List<ButtonAction> activeButtonActions = new ArrayList<>();
-    private static final int BUTTON_HEIGHT = 50;
-    private static final int BUTTON_PADDING = 28;
-    private static final int BUTTON_GAP_X = 12;
-    private static final int BUTTON_GAP_Y = 12;
+    private static final int BUTTON_HEIGHT = fi.monopoly.utils.LayoutMetrics.popupButtonHeight();
+    private static final int BUTTON_PADDING = fi.monopoly.utils.LayoutMetrics.popupButtonPadding();
+    private static final int BUTTON_GAP_X = fi.monopoly.utils.LayoutMetrics.popupButtonGapX();
+    private static final int BUTTON_GAP_Y = fi.monopoly.utils.LayoutMetrics.popupButtonGapY();
 
     protected CustomPopup(MonopolyRuntime runtime) {
         super(runtime);
         this.closeButton = new MonopolyButton(runtime, "close")
                 .addListener(e -> completeManualAction(null))
                 .hide()
-                .setSize(20, 20);
+                .setSize(fi.monopoly.utils.LayoutMetrics.popupCloseButtonSize(), fi.monopoly.utils.LayoutMetrics.popupCloseButtonSize());
         refreshLabels();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
     }
@@ -188,6 +188,9 @@ public class CustomPopup extends Popup {
     }
 
     private void layoutCloseButton() {
-        closeButton.setPosition(getPopupRight() - 30, getPopupTop() + 10);
+        closeButton.setPosition(
+                getPopupRight() - fi.monopoly.utils.LayoutMetrics.popupCloseButtonRightInset(),
+                getPopupTop() + fi.monopoly.utils.LayoutMetrics.popupCloseButtonTopInset()
+        );
     }
 }

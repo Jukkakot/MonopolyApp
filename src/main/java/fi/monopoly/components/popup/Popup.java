@@ -26,17 +26,17 @@ import static processing.core.PConstants.TOP;
 
 @Slf4j
 public abstract class Popup extends Canvas implements MonopolyEventListener {
-    protected static final int DEFAULT_POPUP_WIDTH = 500;
-    protected static final int DEFAULT_POPUP_HEIGHT = 300;
-    protected static final int MIN_POPUP_WIDTH = 320;
-    protected static final int MIN_POPUP_HEIGHT = 220;
-    protected static final int WINDOW_MARGIN = 32;
-    protected static final int TEXT_TOP_OFFSET = 24;
-    protected static final int TEXT_SIDE_PADDING = 20;
-    protected static final int TEXT_BOTTOM_PADDING = 16;
-    protected static final int TEXT_LINE_HEIGHT = 24;
-    protected static final int BUTTON_AREA_TOP_PADDING = 90;
-    protected static final int BUTTON_AREA_BOTTOM_PADDING = 30;
+    protected static final int DEFAULT_POPUP_WIDTH = LayoutMetrics.popupDefaultWidth();
+    protected static final int DEFAULT_POPUP_HEIGHT = LayoutMetrics.popupDefaultHeight();
+    protected static final int MIN_POPUP_WIDTH = LayoutMetrics.popupMinWidth();
+    protected static final int MIN_POPUP_HEIGHT = LayoutMetrics.popupMinHeight();
+    protected static final int WINDOW_MARGIN = LayoutMetrics.popupWindowMargin();
+    protected static final int TEXT_TOP_OFFSET = LayoutMetrics.popupTextTopOffset();
+    protected static final int TEXT_SIDE_PADDING = LayoutMetrics.popupTextSidePadding();
+    protected static final int TEXT_BOTTOM_PADDING = LayoutMetrics.popupTextBottomPadding();
+    protected static final int TEXT_LINE_HEIGHT = LayoutMetrics.popupTextLineHeight();
+    protected static final int BUTTON_AREA_TOP_PADDING = LayoutMetrics.popupButtonAreaTopPadding();
+    protected static final int BUTTON_AREA_BOTTOM_PADDING = LayoutMetrics.popupButtonAreaBottomPadding();
     protected final MonopolyRuntime runtime;
     protected String popupText;
     @Getter(AccessLevel.PROTECTED)
@@ -82,7 +82,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected final boolean isManualInteractionAllowed() {
-        Player turnPlayer = Game.players != null ? Game.players.getTurn() : null;
+        Player turnPlayer = Game.PLAYERS != null ? Game.PLAYERS.getTurn() : null;
         return turnPlayer == null || !turnPlayer.isComputerControlled();
     }
 
