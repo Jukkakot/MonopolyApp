@@ -10,6 +10,7 @@ import fi.monopoly.types.DiceState;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.SpotProps;
+import fi.monopoly.utils.UiTokens;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,20 +36,20 @@ public class Dices implements MonopolyEventListener {
         LayoutMetrics defaultLayout = LayoutMetrics.defaultWindow();
         this.rollDiceButton = new MonopolyButton(runtime, "rollDice")
                 .setPosition(
-                        defaultLayout.sidebarX() + LayoutMetrics.spacingLg(),
-                        defaultLayout.sidebarPrimaryButtonY() + LayoutMetrics.diceButtonOffsetFromPrimary()
+                        defaultLayout.sidebarX() + UiTokens.spacingLg(),
+                        defaultLayout.sidebarPrimaryButtonY() + UiTokens.diceButtonOffsetFromPrimary()
                 )
-                .setSize(150, LayoutMetrics.diceButtonHeight())
+                .setSize(150, UiTokens.diceButtonHeight())
                 .setAutoWidth(100, 28, 180);
         refreshLabels();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
         runtime.eventBus().addListener(this);
         float diceSideLength = Spot.SPOT_W / 2;
         float defaultButtonCenterY = defaultLayout.sidebarPrimaryButtonY()
-                + LayoutMetrics.diceButtonOffsetFromPrimary()
-                + LayoutMetrics.diceButtonHeight() / 2f;
-        float defaultInlineSecondCenterX = defaultLayout.sidebarRight() - LayoutMetrics.spacingMd() - diceSideLength / 2f;
-        float defaultInlineFirstCenterX = defaultInlineSecondCenterX - diceSideLength - LayoutMetrics.spacingMd();
+                + UiTokens.diceButtonOffsetFromPrimary()
+                + UiTokens.diceButtonHeight() / 2f;
+        float defaultInlineSecondCenterX = defaultLayout.sidebarRight() - UiTokens.spacingMd() - diceSideLength / 2f;
+        float defaultInlineFirstCenterX = defaultInlineSecondCenterX - diceSideLength - UiTokens.spacingMd();
         SpotProps sp1 = new SpotProps((int) defaultInlineFirstCenterX, (int) defaultButtonCenterY, diceSideLength, diceSideLength);
         SpotProps sp2 = new SpotProps((int) defaultInlineSecondCenterX, sp1.y(), sp1.w(), sp1.h());
         dices = new Pair<>(new Dice(runtime, sp1), new Dice(runtime, sp2));
@@ -94,15 +95,15 @@ public class Dices implements MonopolyEventListener {
             applyRollDiceButtonVisibility();
             return;
         }
-        float buttonX = layoutMetrics.sidebarX() + LayoutMetrics.spacingLg();
-        float buttonY = layoutMetrics.sidebarPrimaryButtonY() + LayoutMetrics.diceButtonOffsetFromPrimary();
-        float buttonCenterY = buttonY + LayoutMetrics.diceButtonHeight() / 2f;
+        float buttonX = layoutMetrics.sidebarX() + UiTokens.spacingLg();
+        float buttonY = layoutMetrics.sidebarPrimaryButtonY() + UiTokens.diceButtonOffsetFromPrimary();
+        float buttonCenterY = buttonY + UiTokens.diceButtonHeight() / 2f;
         rollDiceButton.setPosition(buttonX, buttonY);
 
         float diceSide = dices.getKey().getUnScaledWidth();
-        float inlineSecondCenterX = layoutMetrics.sidebarRight() - LayoutMetrics.spacingMd() - diceSide / 2f;
-        float inlineFirstCenterX = inlineSecondCenterX - diceSide - LayoutMetrics.spacingMd();
-        float minimumInlineFirstCenterX = buttonX + rollDiceButton.getWidth() + LayoutMetrics.spacingSm() + diceSide / 2f;
+        float inlineSecondCenterX = layoutMetrics.sidebarRight() - UiTokens.spacingMd() - diceSide / 2f;
+        float inlineFirstCenterX = inlineSecondCenterX - diceSide - UiTokens.spacingMd();
+        float minimumInlineFirstCenterX = buttonX + rollDiceButton.getWidth() + UiTokens.spacingSm() + diceSide / 2f;
         if (inlineFirstCenterX >= minimumInlineFirstCenterX) {
             setDicePositions(inlineFirstCenterX, buttonCenterY, inlineSecondCenterX, buttonCenterY);
             applyRollDiceButtonVisibility();
@@ -110,29 +111,29 @@ public class Dices implements MonopolyEventListener {
         }
 
         float stackedFirstCenterX = buttonX + diceSide / 2f;
-        float stackedSecondCenterX = stackedFirstCenterX + diceSide + LayoutMetrics.spacingMd();
-        float stackedCenterY = buttonCenterY + LayoutMetrics.diceStackedVerticalOffset();
+        float stackedSecondCenterX = stackedFirstCenterX + diceSide + UiTokens.spacingMd();
+        float stackedCenterY = buttonCenterY + UiTokens.diceStackedVerticalOffset();
         setDicePositions(stackedFirstCenterX, stackedCenterY, stackedSecondCenterX, stackedCenterY);
         applyRollDiceButtonVisibility();
     }
 
     private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
-        float buttonX = LayoutMetrics.overlayMargin();
-        rollDiceButton.setPosition(buttonX, LayoutMetrics.overlayPrimaryButtonY());
+        float buttonX = UiTokens.overlayMargin();
+        rollDiceButton.setPosition(buttonX, UiTokens.overlayPrimaryButtonY());
 
         float diceSide = dices.getKey().getUnScaledWidth();
-        float inlineFirstCenterX = buttonX + rollDiceButton.getWidth() + LayoutMetrics.spacingSm() + diceSide / 2f;
-        float inlineSecondCenterX = inlineFirstCenterX + diceSide + LayoutMetrics.spacingMd();
-        float maxInlineRight = layoutMetrics.boardWidth() - LayoutMetrics.spacingMd();
-        float overlayButtonCenterY = LayoutMetrics.overlayPrimaryButtonY() + LayoutMetrics.diceButtonHeight() / 2f;
+        float inlineFirstCenterX = buttonX + rollDiceButton.getWidth() + UiTokens.spacingSm() + diceSide / 2f;
+        float inlineSecondCenterX = inlineFirstCenterX + diceSide + UiTokens.spacingMd();
+        float maxInlineRight = layoutMetrics.boardWidth() - UiTokens.spacingMd();
+        float overlayButtonCenterY = UiTokens.overlayPrimaryButtonY() + UiTokens.diceButtonHeight() / 2f;
         if (inlineSecondCenterX + diceSide / 2f <= maxInlineRight) {
             setDicePositions(inlineFirstCenterX, overlayButtonCenterY, inlineSecondCenterX, overlayButtonCenterY);
             return;
         }
 
         float stackedFirstCenterX = buttonX + diceSide / 2f;
-        float stackedSecondCenterX = stackedFirstCenterX + diceSide + LayoutMetrics.spacingMd();
-        float overlayStackedCenterY = overlayButtonCenterY + LayoutMetrics.diceStackedVerticalOffset();
+        float stackedSecondCenterX = stackedFirstCenterX + diceSide + UiTokens.spacingMd();
+        float overlayStackedCenterY = overlayButtonCenterY + UiTokens.diceStackedVerticalOffset();
         setDicePositions(stackedFirstCenterX, overlayStackedCenterY, stackedSecondCenterX, overlayStackedCenterY);
         applyRollDiceButtonVisibility();
     }

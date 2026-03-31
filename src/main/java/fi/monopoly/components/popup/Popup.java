@@ -11,6 +11,7 @@ import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
 import fi.monopoly.utils.TextWrapUtils;
+import fi.monopoly.utils.UiTokens;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -104,8 +105,8 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         p.fill(0);
         p.textFont(runtime.font20());
         p.textAlign(CENTER, TOP);
-        p.textLeading(LayoutMetrics.popupTextLineHeight());
-        drawPopupText(p, centerX, top + LayoutMetrics.popupTextTopOffset(), width - LayoutMetrics.popupTextSidePadding() * 2f);
+        p.textLeading(UiTokens.popupTextLineHeight());
+        drawPopupText(p, centerX, top + UiTokens.popupTextTopOffset(), width - UiTokens.popupTextSidePadding() * 2f);
 
         p.popStyle();
         p.popMatrix();
@@ -114,8 +115,8 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     private void drawPopupText(PGraphics p, float centerX, float startY, float maxWidth) {
         List<String> lines = TextWrapUtils.wrapText(p, popupText, maxWidth);
         for (int i = 0; i < lines.size(); i++) {
-            float y = startY + i * LayoutMetrics.popupTextLineHeight();
-            if (y + LayoutMetrics.popupTextLineHeight() > getPopupTop() + LayoutMetrics.popupTextTopOffset() + getTextAreaHeight()) {
+            float y = startY + i * UiTokens.popupTextLineHeight();
+            if (y + UiTokens.popupTextLineHeight() > getPopupTop() + UiTokens.popupTextTopOffset() + getTextAreaHeight()) {
                 break;
             }
             p.text(lines.get(i), centerX, y);
@@ -168,13 +169,13 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
 
     protected int getPopupWidth() {
         LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
-        int availableWidth = Math.round(layoutMetrics.boardWidth()) - LayoutMetrics.popupWindowMargin() * 2;
-        return Math.max(LayoutMetrics.popupMinWidth(), Math.min(LayoutMetrics.popupDefaultWidth(), availableWidth));
+        int availableWidth = Math.round(layoutMetrics.boardWidth()) - UiTokens.popupWindowMargin() * 2;
+        return Math.max(UiTokens.popupMinWidth(), Math.min(UiTokens.popupDefaultWidth(), availableWidth));
     }
 
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - LayoutMetrics.popupWindowMargin() * 2;
-        return Math.max(LayoutMetrics.popupMinHeight(), Math.min(LayoutMetrics.popupDefaultHeight(), availableHeight));
+        int availableHeight = runtime.app().height - UiTokens.popupWindowMargin() * 2;
+        return Math.max(UiTokens.popupMinHeight(), Math.min(UiTokens.popupDefaultHeight(), availableHeight));
     }
 
     protected float getPopupLeft() {
@@ -196,16 +197,16 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     protected float getTextAreaHeight() {
         return Math.max(
                 0,
-                getButtonAreaTop() - getPopupTop() - LayoutMetrics.popupTextTopOffset() - LayoutMetrics.popupTextBottomPadding()
+                getButtonAreaTop() - getPopupTop() - UiTokens.popupTextTopOffset() - UiTokens.popupTextBottomPadding()
         );
     }
 
     protected float getButtonAreaTop() {
-        return getPopupTop() + LayoutMetrics.popupButtonAreaTopPadding();
+        return getPopupTop() + UiTokens.popupButtonAreaTopPadding();
     }
 
     protected float getButtonAreaHeight() {
-        return Math.max(0, getPopupHeight() - LayoutMetrics.popupButtonAreaTopPadding() - LayoutMetrics.popupButtonAreaBottomPadding());
+        return Math.max(0, getPopupHeight() - UiTokens.popupButtonAreaTopPadding() - UiTokens.popupButtonAreaBottomPadding());
     }
 
     @Override

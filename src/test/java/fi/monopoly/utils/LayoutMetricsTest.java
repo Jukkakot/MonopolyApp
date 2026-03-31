@@ -23,8 +23,8 @@ class LayoutMetricsTest {
 
     @Test
     void fixedLayoutMinimumWindowMatchesCurrentSafeBaseline() {
-        assertEquals(MonopolyApp.DEFAULT_WINDOW_WIDTH, LayoutMetrics.minimumFixedLayoutWindowWidth());
-        assertEquals(MonopolyApp.DEFAULT_WINDOW_HEIGHT, LayoutMetrics.minimumFixedLayoutWindowHeight());
+        assertEquals(MonopolyApp.DEFAULT_WINDOW_WIDTH, UiTokens.minimumFixedLayoutWindowWidth());
+        assertEquals(MonopolyApp.DEFAULT_WINDOW_HEIGHT, UiTokens.minimumFixedLayoutWindowHeight());
     }
 
     @Test

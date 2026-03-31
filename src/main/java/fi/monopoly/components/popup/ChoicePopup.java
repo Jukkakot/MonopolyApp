@@ -3,17 +3,18 @@ package fi.monopoly.components.popup;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.utils.UiTokens;
 import lombok.Setter;
 
 import static fi.monopoly.MonopolyApp.SPACE;
 import static fi.monopoly.text.UiTexts.text;
-import static fi.monopoly.utils.LayoutMetrics.popupButtonGapX;
-import static fi.monopoly.utils.LayoutMetrics.popupButtonGapY;
-import static fi.monopoly.utils.LayoutMetrics.popupButtonHeight;
-import static fi.monopoly.utils.LayoutMetrics.popupButtonMaxWidth;
-import static fi.monopoly.utils.LayoutMetrics.popupButtonMinWidth;
-import static fi.monopoly.utils.LayoutMetrics.popupButtonPadding;
-import static fi.monopoly.utils.LayoutMetrics.popupTextSidePadding;
+import static fi.monopoly.utils.UiTokens.popupButtonGapX;
+import static fi.monopoly.utils.UiTokens.popupButtonGapY;
+import static fi.monopoly.utils.UiTokens.popupButtonHeight;
+import static fi.monopoly.utils.UiTokens.popupButtonMaxWidth;
+import static fi.monopoly.utils.UiTokens.popupButtonMinWidth;
+import static fi.monopoly.utils.UiTokens.popupButtonPadding;
+import static fi.monopoly.utils.UiTokens.popupTextSidePadding;
 
 public class ChoicePopup extends Popup {
     private final MonopolyButton acceptButton;
@@ -127,7 +128,7 @@ public class ChoicePopup extends Popup {
         }
 
         float stackedX = centerX - Math.max(acceptButton.getWidth(), declineButton.getWidth()) / 2f;
-        float firstY = getButtonAreaTop() + fi.monopoly.utils.LayoutMetrics.spacingXs();
+        float firstY = getButtonAreaTop() + UiTokens.spacingXs();
         acceptButton.setPosition(stackedX, firstY);
         declineButton.setPosition(stackedX, firstY + acceptButton.getHeight() + popupButtonGapY());
     }

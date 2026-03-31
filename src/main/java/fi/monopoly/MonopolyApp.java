@@ -6,6 +6,7 @@ import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.LayoutMetrics;
+import fi.monopoly.utils.UiTokens;
 import fi.monopoly.utils.MonopolyUtils;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
@@ -110,8 +111,8 @@ public class MonopolyApp extends MonopolyEventObserver {
         Object nativeSurface = surface.getNative();
         if (nativeSurface instanceof PSurfaceAWT.SmoothCanvas smoothCanvas && smoothCanvas.getFrame() != null) {
             smoothCanvas.getFrame().setMinimumSize(new Dimension(
-                    LayoutMetrics.minimumFixedLayoutWindowWidth(),
-                    LayoutMetrics.minimumFixedLayoutWindowHeight()
+                    UiTokens.minimumFixedLayoutWindowWidth(),
+                    UiTokens.minimumFixedLayoutWindowHeight()
             ));
             smoothCanvas.getFrame().addComponentListener(new ComponentAdapter() {
                 @Override
@@ -137,11 +138,11 @@ public class MonopolyApp extends MonopolyEventObserver {
             return;
         }
         Stage stage = (Stage) fxCanvas.getScene().getWindow();
-        stage.setMinWidth(LayoutMetrics.minimumFixedLayoutWindowWidth());
-        stage.setMinHeight(LayoutMetrics.minimumFixedLayoutWindowHeight());
+        stage.setMinWidth(UiTokens.minimumFixedLayoutWindowWidth());
+        stage.setMinHeight(UiTokens.minimumFixedLayoutWindowHeight());
         log.info("Applied FX minimum window size: {}x{}",
-                LayoutMetrics.minimumFixedLayoutWindowWidth(),
-                LayoutMetrics.minimumFixedLayoutWindowHeight());
+                UiTokens.minimumFixedLayoutWindowWidth(),
+                UiTokens.minimumFixedLayoutWindowHeight());
     }
 
     public void draw() {

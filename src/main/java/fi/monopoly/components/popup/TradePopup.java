@@ -12,6 +12,7 @@ import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
+import fi.monopoly.utils.UiTokens;
 import javafx.scene.paint.Color;
 import processing.core.PGraphics;
 import processing.core.PImage;
@@ -51,14 +52,14 @@ public class TradePopup extends Popup {
         super(runtime);
         this.closeButton = new MonopolyButton(runtime, "tradeClose")
                 .addListener(() -> completeManualAction(null))
-                .setSize(LayoutMetrics.popupCloseButtonSize(), LayoutMetrics.popupCloseButtonSize());
+                .setSize(UiTokens.popupCloseButtonSize(), UiTokens.popupCloseButtonSize());
         this.backButton = new MonopolyButton(runtime, "tradeBack")
                 .addListener(() -> {
                     if (tradeView != null && tradeView.backAction() != null) {
                         completeManualAction(tradeView.backAction());
                     }
                 })
-                .setSize(LayoutMetrics.tradeBackButtonWidth(), LayoutMetrics.tradeBackButtonHeight());
+                .setSize(UiTokens.tradeBackButtonWidth(), UiTokens.tradeBackButtonHeight());
         closeButton.hide();
         backButton.hide();
         refreshLabels();
@@ -92,14 +93,14 @@ public class TradePopup extends Popup {
 
     @Override
     protected int getPopupWidth() {
-        int availableWidth = Math.round(runtime.app().width) - LayoutMetrics.popupWindowMargin() * 2;
-        return Math.max(LayoutMetrics.tradePopupMinWidth(), Math.min(LayoutMetrics.tradePopupPreferredWidth(), availableWidth));
+        int availableWidth = Math.round(runtime.app().width) - UiTokens.popupWindowMargin() * 2;
+        return Math.max(UiTokens.tradePopupMinWidth(), Math.min(UiTokens.tradePopupPreferredWidth(), availableWidth));
     }
 
     @Override
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - LayoutMetrics.popupWindowMargin() * 2;
-        return Math.max(LayoutMetrics.tradePopupMinHeight(), Math.min(LayoutMetrics.tradePopupPreferredHeight(), availableHeight));
+        int availableHeight = runtime.app().height - UiTokens.popupWindowMargin() * 2;
+        return Math.max(UiTokens.tradePopupMinHeight(), Math.min(UiTokens.tradePopupPreferredHeight(), availableHeight));
     }
 
     @Override
@@ -109,12 +110,12 @@ public class TradePopup extends Popup {
 
     @Override
     protected float getPopupTop() {
-        return LayoutMetrics.tradePopupTopMargin();
+        return UiTokens.tradePopupTopMargin();
     }
 
     @Override
     protected float getButtonAreaTop() {
-        return getPopupBottom() - LayoutMetrics.tradeButtonAreaBottomMargin() - requiredButtonAreaHeight();
+        return getPopupBottom() - UiTokens.tradeButtonAreaBottomMargin() - requiredButtonAreaHeight();
     }
 
     @Override
@@ -151,10 +152,10 @@ public class TradePopup extends Popup {
         float left = getPopupLeft();
         float top = getPopupTop();
         float width = getPopupWidth();
-        float panelWidth = (width - LayoutMetrics.popupTextSidePadding() * 2f - LayoutMetrics.tradePanelGap()) / 2f;
-        float leftPanelX = left + LayoutMetrics.popupTextSidePadding();
-        float rightPanelX = leftPanelX + panelWidth + LayoutMetrics.tradePanelGap();
-        float panelY = top + LayoutMetrics.tradePanelsTopOffset();
+        float panelWidth = (width - UiTokens.popupTextSidePadding() * 2f - UiTokens.tradePanelGap()) / 2f;
+        float leftPanelX = left + UiTokens.popupTextSidePadding();
+        float rightPanelX = leftPanelX + panelWidth + UiTokens.tradePanelGap();
+        float panelY = top + UiTokens.tradePanelsTopOffset();
 
         p.pushMatrix();
         p.pushStyle();
@@ -163,41 +164,41 @@ public class TradePopup extends Popup {
         p.fill(0);
         p.textFont(runtime.font30());
         p.textAlign(CENTER, TOP);
-        p.text(tradeView.title(), getPopupCenter().x(), top + LayoutMetrics.popupTextTopOffset());
+        p.text(tradeView.title(), getPopupCenter().x(), top + UiTokens.popupTextTopOffset());
         if (tradeView.subtitle() != null && !tradeView.subtitle().isBlank()) {
             p.textFont(runtime.font20());
-            p.text(tradeView.subtitle(), getPopupCenter().x(), top + LayoutMetrics.tradeSubtitleTopOffset() + 4f);
+            p.text(tradeView.subtitle(), getPopupCenter().x(), top + UiTokens.tradeSubtitleTopOffset() + 4f);
         }
 
-        drawPanel(p, leftPanelX, panelY, panelWidth, LayoutMetrics.tradePanelsHeight(), tradeView.leftPlayer(), tradeView.leftItems(), tradeView.highlightLeft());
-        drawPanel(p, rightPanelX, panelY, panelWidth, LayoutMetrics.tradePanelsHeight(), tradeView.rightPlayer(), tradeView.rightItems(), tradeView.highlightRight());
+        drawPanel(p, leftPanelX, panelY, panelWidth, UiTokens.tradePanelsHeight(), tradeView.leftPlayer(), tradeView.leftItems(), tradeView.highlightLeft());
+        drawPanel(p, rightPanelX, panelY, panelWidth, UiTokens.tradePanelsHeight(), tradeView.rightPlayer(), tradeView.rightItems(), tradeView.highlightRight());
         if (tradeView.leftAction() != null) {
-            clickableRegions.add(new ClickableRegion(leftPanelX, panelY, panelWidth, LayoutMetrics.tradePanelsHeight(), tradeView.leftAction(), tradeView.leftPlayer()));
+            clickableRegions.add(new ClickableRegion(leftPanelX, panelY, panelWidth, UiTokens.tradePanelsHeight(), tradeView.leftAction(), tradeView.leftPlayer()));
         }
         if (tradeView.rightAction() != null) {
-            clickableRegions.add(new ClickableRegion(rightPanelX, panelY, panelWidth, LayoutMetrics.tradePanelsHeight(), tradeView.rightAction(), tradeView.rightPlayer()));
+            clickableRegions.add(new ClickableRegion(rightPanelX, panelY, panelWidth, UiTokens.tradePanelsHeight(), tradeView.rightAction(), tradeView.rightPlayer()));
         }
 
-        float inventoryTitleY = panelY + LayoutMetrics.tradePanelsHeight() + LayoutMetrics.tradeInventoryTopGap();
+        float inventoryTitleY = panelY + UiTokens.tradePanelsHeight() + UiTokens.tradeInventoryTopGap();
         if (tradeView.inventoryTitle() != null && !tradeView.inventoryTitle().isBlank()) {
             p.fill(0);
             p.textFont(runtime.font20());
             p.textAlign(LEFT, TOP);
-            p.text(tradeView.inventoryTitle(), left + LayoutMetrics.popupTextSidePadding(), inventoryTitleY);
+            p.text(tradeView.inventoryTitle(), left + UiTokens.popupTextSidePadding(), inventoryTitleY);
         }
         drawInventory(
                 p,
-                left + LayoutMetrics.popupTextSidePadding(),
-                inventoryTitleY + LayoutMetrics.tradeInventoryTitleGap(),
-                width - LayoutMetrics.popupTextSidePadding() * 2f,
-                getButtonAreaTop() - (inventoryTitleY + LayoutMetrics.tradeInventoryTitleGap()) - LayoutMetrics.spacingSm()
+                left + UiTokens.popupTextSidePadding(),
+                inventoryTitleY + UiTokens.tradeInventoryTitleGap(),
+                width - UiTokens.popupTextSidePadding() * 2f,
+                getButtonAreaTop() - (inventoryTitleY + UiTokens.tradeInventoryTitleGap()) - UiTokens.spacingSm()
         );
 
         if (tradeView.footer() != null && !tradeView.footer().isBlank()) {
             p.fill(p.color(85, 42, 0));
             p.textFont(runtime.font20());
             p.textAlign(CENTER, TOP);
-            p.text(tradeView.footer(), getPopupCenter().x(), getButtonAreaTop() - LayoutMetrics.tradeFooterBottomPadding() - 6f);
+            p.text(tradeView.footer(), getPopupCenter().x(), getButtonAreaTop() - UiTokens.tradeFooterBottomPadding() - 6f);
         }
 
         p.popStyle();
@@ -213,18 +214,18 @@ public class TradePopup extends Popup {
 
         drawPlayerHeader(p, x, y, width, player, highlighted);
 
-        float itemX = x + LayoutMetrics.tradePanelPadding();
-        float itemY = y + LayoutMetrics.tradePanelPadding() + LayoutMetrics.tradePanelHeaderHeight();
-        float maxX = x + width - LayoutMetrics.tradePanelPadding();
+        float itemX = x + UiTokens.tradePanelPadding();
+        float itemY = y + UiTokens.tradePanelPadding() + UiTokens.tradePanelHeaderHeight();
+        float maxX = x + width - UiTokens.tradePanelPadding();
         for (TradePopupItem item : items) {
             float cardW = (item.type() == TradePopupItemType.PROPERTY || item.type() == TradePopupItemType.JAIL_CARD) ? SUMMARY_CARD_W : 112f;
             float cardH = (item.type() == TradePopupItemType.PROPERTY || item.type() == TradePopupItemType.JAIL_CARD) ? SUMMARY_CARD_H : 48f;
             if (itemX + cardW > maxX) {
-                itemX = x + LayoutMetrics.tradePanelPadding();
-                itemY += cardH + LayoutMetrics.tradeItemGap();
+                itemX = x + UiTokens.tradePanelPadding();
+                itemY += cardH + UiTokens.tradeItemGap();
             }
             drawTradeItem(p, item, itemX, itemY, cardW, cardH, highlighted, false);
-            itemX += cardW + LayoutMetrics.tradeItemGap();
+            itemX += cardW + UiTokens.tradeItemGap();
         }
     }
 
@@ -232,13 +233,13 @@ public class TradePopup extends Popup {
         if (player == null) {
             return;
         }
-        float tokenX = x + LayoutMetrics.tradePanelPadding() + LayoutMetrics.tradeTokenSize() / 2f;
-        float tokenY = y + LayoutMetrics.tradePanelPadding() + LayoutMetrics.tradeTokenSize() / 2f + 2f;
-        drawPlayerToken(p, player, tokenX, tokenY, LayoutMetrics.tradeTokenSize());
+        float tokenX = x + UiTokens.tradePanelPadding() + UiTokens.tradeTokenSize() / 2f;
+        float tokenY = y + UiTokens.tradePanelPadding() + UiTokens.tradeTokenSize() / 2f + 2f;
+        drawPlayerToken(p, player, tokenX, tokenY, UiTokens.tradeTokenSize());
         p.fill(highlighted ? p.color(110, 60, 12) : p.color(0));
         p.textFont(runtime.font20());
         p.textAlign(LEFT, TOP);
-        p.text(player.getName(), x + LayoutMetrics.tradePanelPadding() + LayoutMetrics.tradeTokenSize() + 10f, y + LayoutMetrics.tradePanelPadding());
+        p.text(player.getName(), x + UiTokens.tradePanelPadding() + UiTokens.tradeTokenSize() + 10f, y + UiTokens.tradePanelPadding());
     }
 
     private void drawInventory(PGraphics p, float startX, float startY, float availableWidth, float availableHeight) {
@@ -246,7 +247,7 @@ public class TradePopup extends Popup {
         if (items == null || items.isEmpty()) {
             return;
         }
-        int columns = Math.max(1, Math.min(items.size(), (int) Math.floor((availableWidth + LayoutMetrics.tradeItemGap()) / (INVENTORY_CARD_W + LayoutMetrics.tradeItemGap()))));
+        int columns = Math.max(1, Math.min(items.size(), (int) Math.floor((availableWidth + UiTokens.tradeItemGap()) / (INVENTORY_CARD_W + UiTokens.tradeItemGap()))));
         float x = startX;
         float y = startY;
         int indexInRow = 0;
@@ -254,7 +255,7 @@ public class TradePopup extends Popup {
             if (indexInRow >= columns) {
                 indexInRow = 0;
                 x = startX;
-                y += INVENTORY_CARD_H + LayoutMetrics.tradeItemGap();
+                y += INVENTORY_CARD_H + UiTokens.tradeItemGap();
             }
             if (y + INVENTORY_CARD_H > startY + availableHeight) {
                 break;
@@ -270,7 +271,7 @@ public class TradePopup extends Popup {
                         hoverKey(item)
                 ));
             }
-            x += INVENTORY_CARD_W + LayoutMetrics.tradeItemGap();
+            x += INVENTORY_CARD_W + UiTokens.tradeItemGap();
             indexInRow++;
         }
     }
@@ -294,7 +295,7 @@ public class TradePopup extends Popup {
         PImage image = MonopolyApp.getImage(item.property().getSpotType());
         if (image != null) {
             p.imageMode(CORNER);
-            p.image(image, x + 8f, y + 8f + LayoutMetrics.tradePropertyColorStripeHeight(), width - 16f, height - (showLabel ? 42f : 16f) - LayoutMetrics.tradePropertyColorStripeHeight());
+            p.image(image, x + 8f, y + 8f + UiTokens.tradePropertyColorStripeHeight(), width - 16f, height - (showLabel ? 42f : 16f) - UiTokens.tradePropertyColorStripeHeight());
         }
         p.fill(0);
         p.textFont(runtime.font10());
@@ -377,21 +378,21 @@ public class TradePopup extends Popup {
         if (highlighted) {
             p.noStroke();
             p.fill(runtime.app().color(255, 214, 138, 130));
-            p.rect(x - 3f, y - 3f, width + 6f, height + 6f, LayoutMetrics.tradeCardRadius() + 2f);
+            p.rect(x - 3f, y - 3f, width + 6f, height + 6f, UiTokens.tradeCardRadius() + 2f);
         }
         p.stroke(highlighted || selected ? p.color(214, 112, 26) : p.color(0));
         p.strokeWeight(selected ? 3.5f : highlighted ? 2.5f : 2f);
         p.fill(selected ? p.color(238, 246, 228) : p.color(245, 250, 241));
-        p.rect(x, y, width, height, LayoutMetrics.tradeCardRadius());
+        p.rect(x, y, width, height, UiTokens.tradeCardRadius());
 
         p.noStroke();
         p.fill(runtime.app().color(CARD_BASE_R, CARD_BASE_G, CARD_BASE_B));
         p.rect(
-                x + LayoutMetrics.tradeCardInset(),
-                y + LayoutMetrics.tradeCardInset(),
-                width - LayoutMetrics.tradeCardInset() * 2f,
-                height - LayoutMetrics.tradeCardInset() * 2f,
-                LayoutMetrics.tradeCardInnerRadius()
+                x + UiTokens.tradeCardInset(),
+                y + UiTokens.tradeCardInset(),
+                width - UiTokens.tradeCardInset() * 2f,
+                height - UiTokens.tradeCardInset() * 2f,
+                UiTokens.tradeCardInnerRadius()
         );
     }
 
@@ -399,10 +400,10 @@ public class TradePopup extends Popup {
         p.noStroke();
         p.fill(stripeColor);
         p.rect(
-                x + LayoutMetrics.tradeCardInset() + 1f,
-                y + LayoutMetrics.tradeCardInset() + 1f,
-                width - (LayoutMetrics.tradeCardInset() + 1f) * 2f,
-                LayoutMetrics.tradePropertyColorStripeHeight(),
+                x + UiTokens.tradeCardInset() + 1f,
+                y + UiTokens.tradeCardInset() + 1f,
+                width - (UiTokens.tradeCardInset() + 1f) * 2f,
+                UiTokens.tradePropertyColorStripeHeight(),
                 10,
                 10,
                 4,
@@ -413,8 +414,8 @@ public class TradePopup extends Popup {
     private void ensureButtonPoolSize(int requiredCount) {
         while (customButtons.size() < requiredCount) {
             MonopolyButton button = new MonopolyButton(runtime, "tradeCustomButton" + customButtons.size());
-            button.setSize(LayoutMetrics.popupButtonMinWidth(), LayoutMetrics.popupButtonHeight());
-            button.setAutoWidth(LayoutMetrics.popupButtonMinWidth(), LayoutMetrics.popupButtonPadding(), LayoutMetrics.popupButtonMaxWidth());
+            button.setSize(UiTokens.popupButtonMinWidth(), UiTokens.popupButtonHeight());
+            button.setAutoWidth(UiTokens.popupButtonMinWidth(), UiTokens.popupButtonPadding(), UiTokens.popupButtonMaxWidth());
             button.hide();
             customButtons.add(button);
         }
@@ -423,7 +424,7 @@ public class TradePopup extends Popup {
     private void configureButton(MonopolyButton button, ButtonProps buttonProps) {
         button.setLabel(buttonProps.name());
         button.addListener(() -> completeManualAction(buttonProps.buttonAction()));
-        button.setSize(LayoutMetrics.popupButtonMinWidth(), LayoutMetrics.popupButtonHeight());
+        button.setSize(UiTokens.popupButtonMinWidth(), UiTokens.popupButtonHeight());
         if (buttonProps.name().equals(text("trade.button.done"))) {
             button.setButtonColors(
                     runtime.app().color(56, 176, 72),
@@ -457,7 +458,7 @@ public class TradePopup extends Popup {
         int cols = Math.min(getMaxButtonColumns(), totalButtonCount);
         int rows = (int) Math.ceil((double) totalButtonCount / cols);
         int top = Math.round(getButtonAreaTop());
-        int totalHeight = rows * LayoutMetrics.popupButtonHeight() + Math.max(0, rows - 1) * LayoutMetrics.popupButtonGapY();
+        int totalHeight = rows * UiTokens.popupButtonHeight() + Math.max(0, rows - 1) * UiTokens.popupButtonGapY();
         int startY = top + Math.max(0, Math.round((getButtonAreaHeight() - totalHeight) / 2f));
 
         for (int row = 0; row < rows; row++) {
@@ -467,21 +468,21 @@ public class TradePopup extends Popup {
             for (int i = rowStart; i < rowEnd; i++) {
                 rowWidth += Math.round(customButtons.get(i).getWidth());
             }
-            rowWidth += Math.max(0, rowEnd - rowStart - 1) * LayoutMetrics.popupButtonGapX();
+            rowWidth += Math.max(0, rowEnd - rowStart - 1) * UiTokens.popupButtonGapX();
             int startX = Math.round(getPopupCenter().x() - rowWidth / 2f);
-            int rowY = startY + row * (LayoutMetrics.popupButtonHeight() + LayoutMetrics.popupButtonGapY());
+            int rowY = startY + row * (UiTokens.popupButtonHeight() + UiTokens.popupButtonGapY());
             int buttonX = startX;
             for (int i = rowStart; i < rowEnd; i++) {
                 MonopolyButton button = customButtons.get(i);
                 button.setPosition(buttonX, rowY);
-                buttonX += Math.round(button.getWidth()) + LayoutMetrics.popupButtonGapX();
+                buttonX += Math.round(button.getWidth()) + UiTokens.popupButtonGapX();
             }
         }
     }
 
     private void layoutTradeEditorButtons() {
         int top = Math.round(getButtonAreaTop());
-        int rowY = top + Math.max(0, Math.round((getButtonAreaHeight() - LayoutMetrics.popupButtonHeight()) / 2f));
+        int rowY = top + Math.max(0, Math.round((getButtonAreaHeight() - UiTokens.popupButtonHeight()) / 2f));
         List<MonopolyButton> positiveButtons = new ArrayList<>();
         List<MonopolyButton> centerButtons = new ArrayList<>();
         List<MonopolyButton> negativeButtons = new ArrayList<>();
@@ -500,8 +501,8 @@ public class TradePopup extends Popup {
         layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
         layoutButtonGroup(negativeButtons, Math.round(getPopupRight() - 36), rowY, false, true);
         backButton.setPosition(
-                getPopupLeft() + LayoutMetrics.tradeBackButtonLeftInset(),
-                getPopupTop() + LayoutMetrics.tradeBackButtonTopInset()
+                getPopupLeft() + UiTokens.tradeBackButtonLeftInset(),
+                getPopupTop() + UiTokens.tradeBackButtonTopInset()
         );
     }
 
@@ -514,11 +515,11 @@ public class TradePopup extends Popup {
             return;
         }
         int totalWidth = buttons.stream().mapToInt(button -> Math.round(button.getWidth())).sum()
-                + Math.max(0, buttons.size() - 1) * LayoutMetrics.popupButtonGapX();
+                + Math.max(0, buttons.size() - 1) * UiTokens.popupButtonGapX();
         int buttonX = centered ? anchorX - totalWidth / 2 : alignRight ? anchorX - totalWidth : anchorX;
         for (MonopolyButton button : buttons) {
             button.setPosition(buttonX, rowY);
-            buttonX += Math.round(button.getWidth()) + LayoutMetrics.popupButtonGapX();
+            buttonX += Math.round(button.getWidth()) + UiTokens.popupButtonGapX();
         }
     }
 
@@ -625,19 +626,19 @@ public class TradePopup extends Popup {
 
     private float requiredButtonAreaHeight() {
         if (totalButtonCount <= 0) {
-            return LayoutMetrics.popupButtonHeight() + LayoutMetrics.tradeButtonAreaTopMargin();
+            return UiTokens.popupButtonHeight() + UiTokens.tradeButtonAreaTopMargin();
         }
         int cols = Math.min(getMaxButtonColumns(), totalButtonCount);
         int rows = (int) Math.ceil((double) totalButtonCount / cols);
-        return rows * LayoutMetrics.popupButtonHeight()
-                + Math.max(0, rows - 1) * LayoutMetrics.popupButtonGapY()
-                + LayoutMetrics.tradeButtonAreaTopMargin();
+        return rows * UiTokens.popupButtonHeight()
+                + Math.max(0, rows - 1) * UiTokens.popupButtonGapY()
+                + UiTokens.tradeButtonAreaTopMargin();
     }
 
     private void layoutCloseButton() {
         closeButton.setPosition(
-                getPopupRight() - LayoutMetrics.popupCloseButtonRightInset(),
-                getPopupTop() + LayoutMetrics.popupCloseButtonTopInset()
+                getPopupRight() - UiTokens.popupCloseButtonRightInset(),
+                getPopupTop() + UiTokens.popupCloseButtonTopInset()
         );
     }
 

@@ -6,6 +6,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.utils.LayoutMetrics;
+import fi.monopoly.utils.UiTokens;
 import org.junit.jupiter.api.Test;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
@@ -64,7 +65,7 @@ class PopupLayoutTest {
         assertEquals(180f, popup.getPopupCenter().x(), 0.0001f);
         assertEquals(130f, popup.getPopupCenter().y(), 0.0001f);
         assertTrue(popup.getTextAreaHeight() > 0);
-        assertTrue(popup.getPopupTop() + LayoutMetrics.popupTextTopOffset() + popup.getTextAreaHeight() <= popup.getButtonAreaTop());
+        assertTrue(popup.getPopupTop() + UiTokens.popupTextTopOffset() + popup.getTextAreaHeight() <= popup.getButtonAreaTop());
     }
 
     @Test
