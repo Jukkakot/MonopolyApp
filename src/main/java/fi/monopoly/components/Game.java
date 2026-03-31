@@ -85,6 +85,8 @@ public class Game implements MonopolyEventListener {
     private DebtState debtState;
     private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
     private boolean paused;
+    private boolean gameOver;
+    private Player winner;
 
     public Game(MonopolyRuntime runtime) {
         self = this;
@@ -203,6 +205,10 @@ public class Game implements MonopolyEventListener {
 
     public static boolean isDebtResolutionForCurrentTurn() {
         return isDebtResolutionActive();
+    }
+
+    public static boolean isGameOverActive() {
+        return self != null && self.gameOver;
     }
 
     public void draw() {
@@ -374,6 +380,9 @@ public class Game implements MonopolyEventListener {
     }
 
     private String resolveCurrentTurnPhase() {
+        if (gameOver) {
+            return text("sidebar.phase.gameOver");
+        }
         if (debtState != null) {
             return text("sidebar.phase.debt");
         }
@@ -442,6 +451,9 @@ public class Game implements MonopolyEventListener {
     }
 
     private void runComputerPlayerStep() {
+        if (gameOver) {
+            return;
+        }
         Player turnPlayer = PLAYERS.getTurn();
         if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
             return;
@@ -466,6 +478,10 @@ public class Game implements MonopolyEventListener {
     }
 
     private void endRound(boolean switchTurns) {
+        if (gameOver) {
+            hidePrimaryTurnControls();
+            return;
+        }
         Player currentTurn = PLAYERS.getTurn();
         prevTurnResult = null;
         if (switchTurns) {
@@ -578,6 +594,9 @@ public class Game implements MonopolyEventListener {
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
             char key = Character.toLowerCase(keyEvent.getKey());
+            if (gameOver) {
+                return false;
+            }
             if (key == 'p') {
                 togglePause();
                 return true;
@@ -835,15 +854,7 @@ public class Game implements MonopolyEventListener {
 
     private void completeBankruptcyFlow(PaymentRequest request) {
         if (PLAYERS.count() <= 1) {
-            Player winner = PLAYERS.getPlayers().stream().findFirst().orElse(null);
-            if (winner != null && winner.getSpot() != null) {
-                winner.setCoords(winner.getSpot().getTokenCoords(winner));
-                PLAYERS.focusPlayer(winner);
-            }
-            String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
-            log.info("Game over after bankruptcy. winner={}", winnerName);
-            runtime.popupService().show(text("game.bankruptcy.gameOver", winnerName));
-            hidePrimaryTurnControls();
+            declareWinner(PLAYERS.getPlayers().stream().findFirst().orElse(null));
             return;
         }
 
@@ -878,6 +889,13 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebugButtons() {
+        if (gameOver) {
+            debugGodModeButton.hide();
+            pauseButton.hide();
+            tradeButton.hide();
+            languageButton.show();
+            return;
+        }
         pauseButton.show();
         tradeButton.show();
         languageButton.show();
@@ -899,6 +917,9 @@ public class Game implements MonopolyEventListener {
     }
 
     private void togglePause() {
+        if (gameOver) {
+            return;
+        }
         paused = !paused;
         refreshLabels();
         log.info("Game paused={}", paused);
@@ -912,7 +933,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void openTradeMenu() {
-        if (runtime.popupService().isAnyVisible() || debtState != null) {
+        if (gameOver || runtime.popupService().isAnyVisible() || debtState != null) {
             return;
         }
         Player proposer = PLAYERS.getTurn();
@@ -1460,6 +1481,10 @@ public class Game implements MonopolyEventListener {
     }
 
     private void showRollDiceControl() {
+        if (gameOver) {
+            hidePrimaryTurnControls();
+            return;
+        }
         DICES.reset();
         Player turnPlayer = PLAYERS.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
@@ -1471,6 +1496,10 @@ public class Game implements MonopolyEventListener {
     }
 
     private void showEndTurnControl() {
+        if (gameOver) {
+            hidePrimaryTurnControls();
+            return;
+        }
         Player turnPlayer = PLAYERS.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
             hidePrimaryTurnControls();
@@ -1483,6 +1512,25 @@ public class Game implements MonopolyEventListener {
     private void hidePrimaryTurnControls() {
         DICES.hide();
         endRoundButton.hide();
+    }
+
+    private void declareWinner(Player winningPlayer) {
+        gameOver = true;
+        winner = winningPlayer;
+        paused = false;
+        prevTurnResult = null;
+        debtState = null;
+        updateDebtButtons();
+        hidePrimaryTurnControls();
+        refreshLabels();
+        if (winner != null && winner.getSpot() != null) {
+            winner.setCoords(winner.getSpot().getTokenCoords(winner));
+            PLAYERS.focusPlayer(winner);
+        }
+        String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
+        log.info("Game over. winner={}", winnerName);
+        runtime.popupService().show(text("game.victory.popup", winnerName), () -> {
+        });
     }
 
     private void enforcePrimaryTurnControlInvariant() {

@@ -72,6 +72,9 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected final boolean isManualInteractionAllowed() {
+        if (Game.isGameOverActive()) {
+            return true;
+        }
         Player turnPlayer = Game.PLAYERS != null ? Game.PLAYERS.getTurn() : null;
         return turnPlayer == null || !turnPlayer.isComputerControlled();
     }

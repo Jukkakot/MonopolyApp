@@ -209,7 +209,23 @@ class GameBankruptcyTest {
 
         assertEquals(1, Game.PLAYERS.count());
         assertEquals(winner, Game.PLAYERS.getPlayers().get(0));
+        assertTrue(getBooleanField(game, "gameOver"));
         assertEquals(winner.getSpot().getTokenCoords(winner), winner.getCoords());
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertNotNull(runtime.popupService().activePopupMessage());
+        assertTrue(runtime.popupService().activePopupMessage().contains(winner.getName()));
+
+        runtime.popupService().triggerPrimaryAction();
+
+        assertFalse(runtime.popupService().isAnyVisible());
+        assertFalse(Game.DICES.isVisible());
+        assertFalse(getEndRoundButton(game).isVisible());
+
+        invokeEndRound(game);
+
+        assertEquals(winner, Game.PLAYERS.getTurn());
+        assertFalse(Game.DICES.isVisible());
+        assertFalse(getEndRoundButton(game).isVisible());
     }
 
     private static void setDebtState(Game game, DebtState debtState) throws ReflectiveOperationException {
@@ -218,10 +234,28 @@ class GameBankruptcyTest {
         field.set(game, debtState);
     }
 
+    private static boolean getBooleanField(Game game, String fieldName) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field.getBoolean(game);
+    }
+
+    private static MonopolyButton getEndRoundButton(Game game) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField("endRoundButton");
+        field.setAccessible(true);
+        return (MonopolyButton) field.get(game);
+    }
+
     private static void invokeDeclareBankruptcy(Game game) throws ReflectiveOperationException {
         Method method = Game.class.getDeclaredMethod("declareBankruptcy");
         method.setAccessible(true);
         method.invoke(game);
+    }
+
+    private static void invokeEndRound(Game game) throws ReflectiveOperationException {
+        Method method = Game.class.getDeclaredMethod("endRound", boolean.class);
+        method.setAccessible(true);
+        method.invoke(game, true);
     }
 
     private static void settlePopupQueue(MonopolyRuntime runtime) {
