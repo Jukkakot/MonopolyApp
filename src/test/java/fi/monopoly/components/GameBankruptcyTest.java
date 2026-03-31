@@ -108,8 +108,8 @@ class GameBankruptcyTest {
 
         assertEquals(2, Game.PLAYERS.count());
         assertFalse(getPlayers().contains(debtor));
-        assertEquals(auctionWinner, b1.getOwnerPlayer());
-        assertEquals(auctionWinner, b2.getOwnerPlayer());
+        assertTrue(auctionWinner.getOwnedProperties().stream().anyMatch(property -> property.getSpotType() == SpotType.B1));
+        assertTrue(auctionWinner.getOwnedProperties().stream().anyMatch(property -> property.getSpotType() == SpotType.B2));
         assertFalse(b1.isMortgaged());
         assertFalse(b2.isMortgaged());
         assertEquals(0, b1.getBuildingLevel());
@@ -229,9 +229,7 @@ class GameBankruptcyTest {
     }
 
     private static void setDebtState(Game game, DebtState debtState) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("debtState");
-        field.setAccessible(true);
-        field.set(game, debtState);
+        game.debtController().setDebtStateForTest(debtState);
     }
 
     private static boolean getBooleanField(Game game, String fieldName) throws ReflectiveOperationException {
@@ -247,9 +245,7 @@ class GameBankruptcyTest {
     }
 
     private static void invokeDeclareBankruptcy(Game game) throws ReflectiveOperationException {
-        Method method = Game.class.getDeclaredMethod("declareBankruptcy");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.debtController().declareBankruptcy();
     }
 
     private static void invokeEndRound(Game game) throws ReflectiveOperationException {
@@ -264,7 +260,12 @@ class GameBankruptcyTest {
             if (!runtime.popupService().isAnyVisible()) {
                 return;
             }
-            runtime.popupService().triggerPrimaryAction();
+            Player turnPlayer = Game.PLAYERS.getTurn();
+            if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+                runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+            } else {
+                runtime.popupService().triggerPrimaryAction();
+            }
         }
     }
 }

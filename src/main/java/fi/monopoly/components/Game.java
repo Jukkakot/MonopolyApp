@@ -12,7 +12,6 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.*;
 import fi.monopoly.components.popup.ButtonAction;
-import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
@@ -61,8 +60,9 @@ public class Game implements MonopolyEventListener {
     // Core services
     private final MonopolyRuntime runtime;
     private final TurnEngine turnEngine = new TurnEngine();
-    private final PaymentResolver paymentResolver = new PaymentResolver();
-    private final TradeController tradeController;
+    private TradeController tradeController;
+    private DebtController debtController;
+    private DebugController debugController;
 
     // UI controls
     private final MonopolyButton endRoundButton;
@@ -76,7 +76,6 @@ public class Game implements MonopolyEventListener {
     // Mutable game state
     private Board board;
     private TurnResult prevTurnResult;
-    private DebtState debtState;
     private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
     private boolean paused;
     private boolean gameOver;
@@ -92,20 +91,14 @@ public class Game implements MonopolyEventListener {
         this.pauseButton = new MonopolyButton(runtime, "pause");
         this.tradeButton = new MonopolyButton(runtime, "trade");
         this.languageButton = new MonopolyButton(runtime, "language");
-        this.tradeController = new TradeController(
-                runtime,
-                () -> !gameOver && !runtime.popupService().isAnyVisible() && debtState == null,
-                () -> PLAYERS != null ? PLAYERS.getTurn() : null,
-                () -> PLAYERS != null ? PLAYERS.getPlayers() : List.of()
-        );
-
         setupButtons();
         setupRuntimeDependencies();
+        setupControllers();
         setupDefaultGameState();
         setupButtonActions();
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
-            initializeDebtDebugScenario();
+            debugController.initializeDebtDebugScenario();
         }
     }
 
@@ -160,6 +153,32 @@ public class Game implements MonopolyEventListener {
         ANIMATIONS = new Animations();
     }
 
+    private void setupControllers() {
+        debtController = new DebtController(
+                runtime,
+                PLAYERS,
+                this::hidePrimaryTurnControls,
+                this::showRollDiceControl,
+                this::updateDebtButtons,
+                this::declareWinner
+        );
+        tradeController = new TradeController(
+                runtime,
+                () -> !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null,
+                () -> PLAYERS != null ? PLAYERS.getTurn() : null,
+                () -> PLAYERS != null ? PLAYERS.getPlayers() : List.of()
+        );
+        debugController = new DebugController(
+                runtime,
+                board,
+                () -> PLAYERS != null ? PLAYERS.getTurn() : null,
+                this::debugResetTurnState,
+                this::restoreNormalTurnControls,
+                debtController::retryPendingDebtPayment,
+                this::handlePaymentRequest
+        );
+    }
+
     private void setupDefaultGameState() {
         setupDebugGameConfigs(runtime);
     }
@@ -168,15 +187,19 @@ public class Game implements MonopolyEventListener {
         return board;
     }
 
+    DebtController debtController() {
+        return debtController;
+    }
+
     private void setupButtonActions() {
         endRoundButton.addListener(e -> {
-            if (!runtime.popupService().isAnyVisible() && debtState == null) {
+            if (!runtime.popupService().isAnyVisible() && debtController.debtState() == null) {
                 endRound(true);
             }
         });
-        retryDebtButton.addListener(this::retryPendingDebtPayment);
-        declareBankruptcyButton.addListener(this::declareBankruptcy);
-        debugGodModeButton.addListener(this::openDebugGodModeMenu);
+        retryDebtButton.addListener(debtController::retryPendingDebtPayment);
+        declareBankruptcyButton.addListener(debtController::declareBankruptcy);
+        debugGodModeButton.addListener(debugController::openGodModeMenu);
         pauseButton.addListener(this::togglePause);
         tradeButton.addListener(tradeController::openTradeMenu);
         languageButton.addListener(this::toggleLanguage);
@@ -200,7 +223,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public static boolean isDebtResolutionActive() {
-        return self != null && self.debtState != null;
+        return self != null && self.debtController != null && self.debtController.debtState() != null;
     }
 
     public static boolean isDebtResolutionForCurrentTurn() {
@@ -231,7 +254,7 @@ public class Game implements MonopolyEventListener {
             DICES.draw(null);
         }
         if (hasSidebarSpace && isDebtSidebarMode()) {
-            PLAYERS.focusPlayer(debtState.paymentRequest().debtor());
+            PLAYERS.focusPlayer(debtController.debtState().paymentRequest().debtor());
         }
         if (hasSidebarSpace) {
             PLAYERS.draw(getSidebarContentTop(), !isDebtSidebarMode(), !isDebtSidebarMode());
@@ -383,7 +406,7 @@ public class Game implements MonopolyEventListener {
         if (gameOver) {
             return text("sidebar.phase.gameOver");
         }
-        if (debtState != null) {
+        if (debtController.debtState() != null) {
             return text("sidebar.phase.debt");
         }
         if (runtime.popupService().isAnyVisible()) {
@@ -402,7 +425,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private float getSidebarContentTop() {
-        if (debtState != null) {
+        if (debtController.debtState() != null) {
             return getDebtSectionBottom() + 20;
         }
         float debugFloor = getSidebarReservedTop();
@@ -412,7 +435,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private boolean isDebtSidebarMode() {
-        return debtState != null;
+        return debtController.debtState() != null;
     }
 
     private String buildDebtSidebarText(PaymentRequest request) {
@@ -427,6 +450,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private int getDebtSectionBottom() {
+        DebtState debtState = debtController.debtState();
         if (debtState == null) {
             return Math.round(getLayoutMetrics().debtTextY());
         }
@@ -441,9 +465,9 @@ public class Game implements MonopolyEventListener {
     }
 
     private void rollDice() {
-        if (runtime.popupService().isAnyVisible() || debtState != null) {
+        if (runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
             log.trace("Ignoring rollDice because popupVisible={} debtStateActive={}",
-                    runtime.popupService().isAnyVisible(), debtState != null);
+                    runtime.popupService().isAnyVisible(), debtController.debtState() != null);
             return;
         }
         log.debug("Starting turn roll for player {}", PLAYERS.getTurn().getName());
@@ -604,9 +628,9 @@ public class Game implements MonopolyEventListener {
             if (runtime.popupService().isAnyVisible()) {
                 return consumedEvent;
             }
-            if (debtState != null) {
+            if (debtController.debtState() != null) {
                 if (key == MonopolyApp.SPACE || key == MonopolyApp.ENTER) {
-                    retryPendingDebtPayment();
+                    debtController.retryPendingDebtPayment();
                     return true;
                 }
                 return false;
@@ -626,7 +650,7 @@ public class Game implements MonopolyEventListener {
                 consumedEvent = true;
             }
             if (MonopolyApp.DEBUG_MODE && key == 'g') {
-                openDebugGodModeMenu();
+                debugController.openGodModeMenu();
                 consumedEvent = true;
             }
             if (key == 'a') {
@@ -654,71 +678,11 @@ public class Game implements MonopolyEventListener {
     }
 
     private void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
-        log.debug("Handling payment request in Game: debtor={}, target={}, amount={}, reason={}",
-                request.debtor().getName(), request.target().getDisplayName(), request.amount(), request.reason());
-        PaymentResult result = paymentResolver.tryPay(request);
-        if (result.status() == PaymentStatus.PAID) {
-            log.trace("Payment completed immediately in Game");
-            onResolved.doAction();
-            return;
-        }
-
-        debtState = new DebtState(request, onResolved, result.status() == PaymentStatus.BANKRUPT);
-        hidePrimaryTurnControls();
-        updateDebtButtons();
-        log.info("Entering debt resolution: debtor={}, target={}, amount={}, bankruptcyRisk={}",
-                request.debtor().getName(), request.target().getDisplayName(), request.amount(), debtState.bankruptcyRisk());
-        runtime.popupService().show(buildDebtMessage(result));
-    }
-
-    private void retryPendingDebtPayment() {
-        if (debtState == null) {
-            return;
-        }
-
-        log.debug("Retrying pending debt payment for debtor={} amount={}",
-                debtState.paymentRequest().debtor().getName(), debtState.paymentRequest().amount());
-        PaymentResult result = paymentResolver.tryPay(debtState.paymentRequest());
-        if (result.status() == PaymentStatus.PAID) {
-            DebtState resolvedDebt = debtState;
-            debtState = null;
-            updateDebtButtons();
-            log.info("Debt resolved for {}", resolvedDebt.paymentRequest().debtor().getName());
-            runtime.popupService().show(text("game.debt.paid", resolvedDebt.paymentRequest().reason()), resolvedDebt.onResolved()::doAction);
-            return;
-        }
-
-        debtState = new DebtState(debtState.paymentRequest(), debtState.onResolved(), result.status() == PaymentStatus.BANKRUPT);
-        updateDebtButtons();
-        log.info("Debt still unresolved for {}. bankruptcyRisk={}",
-                debtState.paymentRequest().debtor().getName(), debtState.bankruptcyRisk());
-        runtime.popupService().show(buildDebtMessage(result));
-    }
-
-    // Auto-mortgage removed: player must choose which properties to mortgage manually
-
-    private String buildDebtMessage(PaymentResult result) {
-        if (debtState == null) {
-            return text("game.debt.couldNotComplete");
-        }
-
-        PaymentRequest request = debtState.paymentRequest();
-        StringBuilder text = new StringBuilder(text(
-                "game.debt.message",
-                request.debtor().getName(),
-                request.amount(),
-                request.target().getDisplayName(),
-                request.reason(),
-                request.debtor().getMoneyAmount(),
-                result.missingAmount()
-        ));
-        if (result.status() == PaymentStatus.BANKRUPT) {
-            text.append(text("game.debt.message.bankruptcyLine"));
-        }
-        return text.toString();
+        debtController.handlePaymentRequest(request, onResolved);
     }
 
     private void drawDebtState() {
+        DebtState debtState = debtController.debtState();
         if (debtState == null) {
             return;
         }
@@ -807,64 +771,8 @@ public class Game implements MonopolyEventListener {
         return getLayoutMetrics().sidebarReservedTop(MonopolyApp.DEBUG_MODE);
     }
 
-    private void declareBankruptcy() {
-        if (debtState == null) {
-            return;
-        }
-        if (!debtState.bankruptcyRisk()) {
-            runtime.popupService().show(text("game.debt.assetsCover"));
-            return;
-        }
-        PaymentRequest request = debtState.paymentRequest();
-        log.warn("Declaring bankruptcy: debtor={}, target={}, amount={}",
-                request.debtor().getName(), request.target().getDisplayName(), request.amount());
-        int liquidationCash = request.debtor().liquidateBuildingsToBank();
-        if (liquidationCash > 0) {
-            log.info("Bankruptcy liquidation sold buildings for debtor={} and raised M{}",
-                    request.debtor().getName(), liquidationCash);
-        }
-        if (request.target() instanceof PlayerTarget playerTarget) {
-            request.debtor().transferAssetsTo(playerTarget.player());
-            finishBankruptcyFlow(request);
-        } else {
-            List<Property> bankAuctionProperties = List.copyOf(request.debtor().getOwnedProperties());
-            request.debtor().releaseAssetsToBank();
-            finishBankruptcyFlowAfterBankRelease(request, bankAuctionProperties);
-            return;
-        }
-    }
-
-    private void finishBankruptcyFlowAfterBankRelease(PaymentRequest request, List<Property> bankAuctionProperties) {
-        log.info("Bankruptcy returned {} debtor properties to bank for auction", bankAuctionProperties.size());
-        removeBankruptPlayerFromGame(request);
-        new PropertyAuctionResolver(runtime.popupService(), PLAYERS).resolveAll(bankAuctionProperties, () -> completeBankruptcyFlow(request));
-    }
-
-    private void finishBankruptcyFlow(PaymentRequest request) {
-        removeBankruptPlayerFromGame(request);
-        completeBankruptcyFlow(request);
-    }
-
-    private void removeBankruptPlayerFromGame(PaymentRequest request) {
-        request.debtor().setGetOutOfJailCardCount(0);
-        PLAYERS.removePlayer(request.debtor());
-        debtState = null;
-        updateDebtButtons();
-    }
-
-    private void completeBankruptcyFlow(PaymentRequest request) {
-        if (PLAYERS.count() <= 1) {
-            declareWinner(PLAYERS.getPlayers().stream().findFirst().orElse(null));
-            return;
-        }
-
-        PLAYERS.switchTurn();
-        showRollDiceControl();
-        log.info("Bankruptcy handled. Next turn player={}", PLAYERS.getTurn() != null ? PLAYERS.getTurn().getName() : "none");
-        runtime.popupService().show(text("game.bankruptcy.playerWent", request.debtor().getName()));
-    }
-
     private void updateDebtButtons() {
+        DebtState debtState = debtController.debtState();
         if (debtState == null) {
             retryDebtButton.hide();
             declareBankruptcyButton.hide();
@@ -876,16 +784,6 @@ public class Game implements MonopolyEventListener {
         } else {
             declareBankruptcyButton.hide();
         }
-    }
-
-    private void initializeDebtDebugScenario() {
-        Player turnPlayer = PLAYERS.getTurn();
-        turnPlayer.buyProperty(PropertyFactory.getProperty(SpotType.RR1));
-        turnPlayer.addMoney(-(turnPlayer.getMoneyAmount() - 40));
-        handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.tax", 200)),
-                this::restoreNormalTurnControls
-        );
     }
 
     private void updateDebugButtons() {
@@ -936,235 +834,19 @@ public class Game implements MonopolyEventListener {
         fi.monopoly.text.UiTexts.setLocale(locale);
     }
 
-    private void debugAddCash() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer != null) {
-            log.debug("Debug action: add cash to {}", turnPlayer.getName());
-            turnPlayer.addMoney(500);
-            runtime.popupService().show(text("game.debug.receivedCash", turnPlayer.getName(), 500));
-        }
-    }
-
-    private void debugStartDebtScenario() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        log.debug("Debug action: start debt scenario for {}", turnPlayer.getName());
-        turnPlayer.addMoney(-(turnPlayer.getMoneyAmount() - 40));
-        handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.tax", 200)),
-                this::restoreNormalTurnControls
-        );
-    }
-
-    private void debugSendCurrentPlayerToJail() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        log.debug("Debug action: send player {} to jail", turnPlayer.getName());
-        Spot jailSpot = board.getPathWithCriteria(SpotType.JAIL);
-        JailSpot.jailTimeLeftMap.put(turnPlayer, JailSpot.JAIL_ROUND_NUMBER);
-        turnPlayer.setSpot(jailSpot);
-        turnPlayer.setCoords(jailSpot.getTokenCoords(turnPlayer));
-        runtime.popupService().show(text("game.debug.sentToJail", turnPlayer.getName()));
-    }
-
     private void debugResetTurnState() {
         log.debug("Debug action: reset turn state");
         ANIMATIONS.finishAllAnimations();
-        debtState = null;
+        debtController.clearDebtState();
         updateDebtButtons();
         runtime.popupService().hideAll();
         showRollDiceControl();
         runtime.popupService().show(text("game.debug.reset"));
     }
 
-    private void openDebugGodModeMenu() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        runtime.popupService().show(
-                text("game.debug.godMode.title", turnPlayer.getName()),
-                new ButtonProps(text("game.debug.button.money"), this::openDebugMoneyMenu),
-                new ButtonProps(text("game.debug.button.move"), this::openDebugMoveMenu),
-                new ButtonProps(text("game.debug.button.debt"), this::openDebugDebtMenu),
-                new ButtonProps(text("game.debug.button.jail"), this::openDebugJailMenu),
-                new ButtonProps(text("game.debug.button.scenarios"), this::openDebugScenarioMenu)
-        );
-    }
-
-    private void openDebugMoneyMenu() {
-        runtime.popupService().show(
-                text("game.debug.money.title"),
-                new ButtonProps(text("game.debug.money.add500"), () -> debugAdjustCurrentPlayerMoney(500)),
-                new ButtonProps(text("game.debug.money.minus100"), () -> debugAdjustCurrentPlayerMoney(-100)),
-                new ButtonProps(text("game.debug.money.set0"), () -> debugSetCurrentPlayerMoney(0)),
-                new ButtonProps(text("game.debug.money.set50"), () -> debugSetCurrentPlayerMoney(50)),
-                new ButtonProps(text("game.debug.money.set1500"), () -> debugSetCurrentPlayerMoney(1500))
-        );
-    }
-
-    private void openDebugMoveMenu() {
-        ButtonProps[] spotButtons = SpotType.SPOT_TYPES.stream()
-                .map(spotType -> new ButtonProps(spotType.name(), () -> debugMoveCurrentPlayerTo(spotType)))
-                .toArray(ButtonProps[]::new);
-        runtime.popupService().show(text("game.debug.move.title"), spotButtons);
-    }
-
-    private void openDebugDebtMenu() {
-        runtime.popupService().show(
-                text("game.debug.debt.title"),
-                new ButtonProps(text("game.debug.debt.50"), () -> debugStartDebtScenario(50)),
-                new ButtonProps(text("game.debug.debt.100"), () -> debugStartDebtScenario(100)),
-                new ButtonProps(text("game.debug.debt.200"), () -> debugStartDebtScenario(200)),
-                new ButtonProps(text("game.debug.debt.500"), () -> debugStartDebtScenario(500)),
-                new ButtonProps(text("game.button.retryDebt"), this::retryPendingDebtPayment)
-        );
-    }
-
-    private void openDebugJailMenu() {
-        runtime.popupService().show(
-                text("game.debug.jail.title"),
-                new ButtonProps(text("game.debug.jail.send"), this::debugSendCurrentPlayerToJail),
-                new ButtonProps(text("game.debug.jail.oneRound"), () -> debugSetCurrentPlayerJailRounds(1)),
-                new ButtonProps(text("game.debug.jail.threeRounds"), () -> debugSetCurrentPlayerJailRounds(JailSpot.JAIL_ROUND_NUMBER)),
-                new ButtonProps(text("game.debug.jail.release"), this::debugReleaseCurrentPlayerFromJail)
-        );
-    }
-
-    private void openDebugScenarioMenu() {
-        runtime.popupService().show(
-                text("game.debug.scenario.title"),
-                new ButtonProps(text("game.debug.scenario.brownMonopoly"), this::debugGiveBrownMonopoly),
-                new ButtonProps(text("game.debug.scenario.brownDebt"), this::debugSetupBrownDebtScenario),
-                new ButtonProps(text("game.debug.scenario.railDebt"), this::debugSetupRailroadDebtScenario),
-                new ButtonProps(text("game.debug.scenario.resetUi"), this::debugResetTurnState)
-        );
-    }
-
-    private void debugAdjustCurrentPlayerMoney(int delta) {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        int targetMoney = Math.max(0, turnPlayer.getMoneyAmount() + delta);
-        debugSetCurrentPlayerMoney(targetMoney);
-    }
-
-    private void debugSetCurrentPlayerMoney(int targetMoney) {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        turnPlayer.addMoney(targetMoney - turnPlayer.getMoneyAmount());
-        runtime.popupService().show(text("game.debug.money.nowHas", turnPlayer.getName(), turnPlayer.getMoneyAmount()));
-    }
-
-    private void debugMoveCurrentPlayerTo(SpotType spotType) {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        Spot targetSpot = board.getPathWithCriteria(spotType);
-        if (turnPlayer.isInJail()) {
-            JailSpot.jailTimeLeftMap.remove(turnPlayer);
-        }
-        turnPlayer.setSpot(targetSpot);
-        turnPlayer.setCoords(targetSpot.getTokenCoords(turnPlayer));
-        runtime.popupService().show(text("game.debug.move.moved", turnPlayer.getName(), spotType.name()));
-    }
-
-    private void debugStartDebtScenario(int amount) {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        log.debug("Debug action: start custom debt scenario for {} amount={}", turnPlayer.getName(), amount);
-        handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, amount, text("game.debug.reason.tax", amount)),
-                this::restoreNormalTurnControls
-        );
-    }
-
-    private void debugSetCurrentPlayerJailRounds(int roundsLeft) {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        Spot jailSpot = board.getPathWithCriteria(SpotType.JAIL);
-        JailSpot.jailTimeLeftMap.put(turnPlayer, roundsLeft);
-        turnPlayer.setSpot(jailSpot);
-        turnPlayer.setCoords(jailSpot.getTokenCoords(turnPlayer));
-        runtime.popupService().show(text("game.debug.jail.rounds", turnPlayer.getName(), roundsLeft));
-    }
-
-    private void debugReleaseCurrentPlayerFromJail() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        JailSpot.jailTimeLeftMap.remove(turnPlayer);
-        runtime.popupService().show(text("game.debug.jail.released", turnPlayer.getName()));
-    }
-
-    private void debugGiveBrownMonopoly() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        debugAssignProperty(turnPlayer, SpotType.B1);
-        debugAssignProperty(turnPlayer, SpotType.B2);
-        runtime.popupService().show(text("game.debug.scenario.brownOwned", turnPlayer.getName()));
-    }
-
-    private void debugSetupBrownDebtScenario() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        debugGiveBrownMonopoly();
-        StreetProperty b1 = (StreetProperty) PropertyFactory.getProperty(SpotType.B1);
-        StreetProperty b2 = (StreetProperty) PropertyFactory.getProperty(SpotType.B2);
-        debugSetCurrentPlayerMoney(1500);
-        b1.buyHouses(2);
-        b2.buyHouses(2);
-        debugSetCurrentPlayerMoney(50);
-        handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 300, text("game.debug.reason.brownDebt")),
-                this::restoreNormalTurnControls
-        );
-    }
-
-    private void debugSetupRailroadDebtScenario() {
-        Player turnPlayer = PLAYERS.getTurn();
-        if (turnPlayer == null) {
-            return;
-        }
-        debugAssignProperty(turnPlayer, SpotType.RR1);
-        debugSetCurrentPlayerMoney(40);
-        handlePaymentRequest(
-                new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.railDebt")),
-                this::restoreNormalTurnControls
-        );
-    }
-
-    private void debugAssignProperty(Player player, SpotType spotType) {
-        Property property = PropertyFactory.getProperty(spotType);
-        Player previousOwner = property.getOwnerPlayer();
-        if (previousOwner != null && previousOwner != player) {
-            previousOwner.removeOwnedProperty(property);
-        }
-        property.setMortgaged(false);
-        player.addOwnedProperty(property);
-    }
-
     private void restoreNormalTurnControls() {
         log.trace("Restoring normal turn controls");
-        debtState = null;
-        updateDebtButtons();
+        debtController.clearDebtState();
         showRollDiceControl();
     }
 
@@ -1207,7 +889,7 @@ public class Game implements MonopolyEventListener {
         winner = winningPlayer;
         paused = false;
         prevTurnResult = null;
-        debtState = null;
+        debtController.clearDebtState();
         updateDebtButtons();
         hidePrimaryTurnControls();
         refreshLabels();
@@ -1222,7 +904,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void enforcePrimaryTurnControlInvariant() {
-        if (debtState != null) {
+        if (debtController.debtState() != null) {
             hidePrimaryTurnControls();
             return;
         }
@@ -1289,12 +971,12 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public void retryPendingDebtPayment() {
-            Game.this.retryPendingDebtPayment();
+            debtController.retryPendingDebtPayment();
         }
 
         @Override
         public void declareBankruptcy() {
-            Game.this.declareBankruptcy();
+            debtController.declareBankruptcy();
         }
 
         @Override
@@ -1317,6 +999,7 @@ public class Game implements MonopolyEventListener {
                 createPopupPropertyView(currentPlayer)
         )
                 : null;
+        DebtState debtState = debtController.debtState();
         DebtView debtView = debtState == null ? null : new DebtView(
                 debtState.paymentRequest().amount(),
                 debtState.paymentRequest().reason(),
@@ -1377,7 +1060,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private boolean isRollDiceActionAvailable(Player currentPlayer) {
-        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtState != null) {
+        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
             return false;
         }
         if (!currentPlayer.isComputerControlled()) {
@@ -1387,7 +1070,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private boolean isEndTurnActionAvailable(Player currentPlayer) {
-        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtState != null) {
+        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
             return false;
         }
         if (!currentPlayer.isComputerControlled()) {
