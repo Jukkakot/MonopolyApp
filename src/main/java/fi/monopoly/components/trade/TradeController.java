@@ -2,6 +2,7 @@ package fi.monopoly.components.trade;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.components.ButtonProps;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,38 +55,49 @@ public final class TradeController {
                 tradeUiBuilder.buildPartnerSelectionView(
                         proposer,
                         tradePartners,
-                        player -> () -> openTradeEditor(new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE), true)
+                        player -> () -> openTradeEditor(
+                                new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE),
+                                true,
+                                null,
+                                this::openTradeMenu,
+                                null
+                        )
                 )
         );
     }
 
-    private void openTradeEditor(TradeDraft draft, boolean editingOfferSide) {
+    private void openTradeEditor(
+            TradeDraft draft,
+            boolean editingOfferSide,
+            String editorNotice,
+            ButtonAction backAction,
+            String reviewSubtitle
+    ) {
         runtime.popupService().showTrade(
-                tradeUiBuilder.buildTradeEditorSummary(draft, editingOfferSide),
+                tradeUiBuilder.buildTradeEditorSummary(draft, editingOfferSide, editorNotice),
                 tradeUiBuilder.buildTradePopupView(
                         draft.toOffer(),
                         text("trade.editor.header"),
-                        text("trade.editor.editing", (editingOfferSide ? draft.proposer() : draft.recipient()).getName()),
+                        buildTradeEditorSubtitle(draft, editingOfferSide, editorNotice),
                         editingOfferSide,
-                        this::openTradeMenu,
-                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide)
+                        backAction,
+                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, editorNotice, backAction, reviewSubtitle)
                 ),
                 tradeUiBuilder.buildTradeEditorButtons(
                         draft,
                         editingOfferSide,
-                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide),
-                        nextDraft -> () -> confirmTradeOffer(nextDraft)
+                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, editorNotice, backAction, reviewSubtitle),
+                        nextDraft -> () -> confirmTradeOffer(nextDraft, reviewSubtitle)
                 )
         );
     }
 
-    private void confirmTradeOffer(TradeDraft draft) {
+    private void confirmTradeOffer(TradeDraft draft, String reviewSubtitle) {
         TradeOffer offer = draft.toOffer();
         if (!offer.isValid()) {
             runtime.popupService().show(text("trade.invalid"));
             return;
         }
-        String summary = tradeUiBuilder.buildTradeSummary(offer);
         if (offer.recipient().isComputerControlled()) {
             BotTradeProfile tradeProfile = resolveTradeProfile(offer.recipient());
             TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer, tradeProfile);
@@ -96,33 +108,25 @@ public final class TradeController {
                     decision.reason());
             if (decision.accept()) {
                 applyTradeOffer(offer);
-                runtime.popupService().show(text("trade.accepted", offer.recipient().getName()) + "\n" + summary);
+                runtime.popupService().show(text("trade.accepted", offer.recipient().getName()) + "\n" + tradeUiBuilder.buildTradeSummary(offer));
             } else {
                 TradeOffer counterOffer = tradeOfferEvaluator.proposeCounterOffer(offer, tradeProfile);
                 if (counterOffer != null) {
-                    presentBotCounterOffer(offer, counterOffer, offer.recipient().getName());
+                    showHumanTradeReview(
+                            counterOffer,
+                            draftFromOffer(counterOffer),
+                            text("trade.review.countered", offer.recipient().getName(), counterOffer.recipient().getName())
+                    );
                 } else {
                     runtime.popupService().show(text("trade.declined", offer.recipient().getName()) + "\n" + decision.reason());
                 }
             }
             return;
         }
-        runtime.popupService().showTrade(
-                text("trade.review", offer.recipient().getName()) + "\n" + summary,
-                tradeUiBuilder.buildTradePopupView(
-                        offer,
-                        text("trade.review.header"),
-                        text("trade.review", offer.recipient().getName()),
-                        null,
-                        () -> openTradeEditor(draft, false),
-                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide)
-                ),
-                new ButtonProps(text("popup.choice.accept"), () -> {
-                    applyTradeOffer(offer);
-                    runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));
-                }),
-                new ButtonProps(text("popup.choice.decline"), () -> runtime.popupService().show(text("trade.declined", offer.recipient().getName()))),
-                new ButtonProps(text("trade.button.counterOffer"), () -> openTradeEditor(draft.asCounterOffer(), true))
+        showHumanTradeReview(
+                offer,
+                draft,
+                reviewSubtitle != null ? reviewSubtitle : text("trade.review", offer.recipient().getName())
         );
     }
 
@@ -132,35 +136,32 @@ public final class TradeController {
         }
     }
 
-    private void presentBotCounterOffer(TradeOffer originalOffer, TradeOffer counterOffer, String counteringPlayerName) {
-        String summary = tradeUiBuilder.buildCounterOfferSummary(originalOffer, counterOffer, counteringPlayerName);
-        if (counterOffer.proposer().isComputerControlled()) {
-            BotTradeProfile proposerTradeProfile = resolveTradeProfile(counterOffer.proposer());
-            TradeDecision proposerDecision = tradeOfferEvaluator.evaluateForRecipient(counterOffer.reversePerspective(), proposerTradeProfile);
-            if (proposerDecision.accept()) {
-                applyTradeOffer(counterOffer);
-                runtime.popupService().show(text("trade.accepted", counterOffer.proposer().getName()) + "\n" + summary);
-            } else {
-                runtime.popupService().show(text("trade.declined", counterOffer.proposer().getName()) + "\n" + proposerDecision.reason());
-            }
-            return;
-        }
+    private void showHumanTradeReview(TradeOffer offer, TradeDraft draft, String subtitle) {
         runtime.popupService().showTrade(
-                summary,
+                subtitle + "\n" + tradeUiBuilder.buildTradeSummary(offer),
                 tradeUiBuilder.buildTradePopupView(
-                        counterOffer,
-                        text("trade.countered", counteringPlayerName),
-                        text("trade.countered.new"),
+                        offer,
+                        text("trade.review.header"),
+                        subtitle,
                         null,
-                        () -> openTradeEditor(draftFromOffer(counterOffer), false),
-                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide)
+                        () -> openTradeEditor(draft, false, null, this::openTradeMenu, subtitle),
+                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, null, this::openTradeMenu, subtitle)
                 ),
                 new ButtonProps(text("popup.choice.accept"), () -> {
-                    applyTradeOffer(counterOffer);
-                    runtime.popupService().show(text("trade.accepted", counterOffer.proposer().getName()));
+                    applyTradeOffer(offer);
+                    runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));
                 }),
-                new ButtonProps(text("popup.choice.decline"), () -> runtime.popupService().show(text("trade.declined", counterOffer.proposer().getName()))),
-                new ButtonProps(text("trade.button.counterOffer"), () -> openTradeEditor(draftFromOffer(counterOffer), true))
+                new ButtonProps(text("popup.choice.decline"), () -> runtime.popupService().show(text("trade.declined", offer.recipient().getName()))),
+                new ButtonProps(
+                        text("trade.button.counterOffer"),
+                        () -> openTradeEditor(
+                                draft.asCounterOffer(),
+                                true,
+                                text("trade.editor.countering", offer.recipient().getName(), offer.proposer().getName()),
+                                () -> showHumanTradeReview(offer, draft, subtitle),
+                                text("trade.review.countered", offer.recipient().getName(), offer.proposer().getName())
+                        )
+                )
         );
     }
 
@@ -174,5 +175,13 @@ public final class TradeController {
 
     private TradeDraft draftFromOffer(TradeOffer offer) {
         return new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient());
+    }
+
+    private String buildTradeEditorSubtitle(TradeDraft draft, boolean editingOfferSide, String editorNotice) {
+        String subtitle = text("trade.editor.editing", (editingOfferSide ? draft.proposer() : draft.recipient()).getName());
+        if (editorNotice == null || editorNotice.isBlank()) {
+            return subtitle;
+        }
+        return subtitle + "\n" + editorNotice;
     }
 }

@@ -18,6 +18,3 @@ PLAYER SETUP
 
 ECONOMY AND PACING
 [Low] Review long-game economy and bankruptcy pacing
-
-RANDOM
-[High] Language button as "toggle" between available languages, no need to open popup.

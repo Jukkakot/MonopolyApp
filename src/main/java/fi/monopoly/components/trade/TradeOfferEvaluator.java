@@ -21,11 +21,15 @@ public final class TradeOfferEvaluator {
         double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true);
         double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false);
         boolean accept = score >= profile.acceptThreshold();
+        boolean tooFarForCounter = score < profile.counterOfferFloor();
         return new TradeDecision(
                 accept,
                 score,
                 accept
                         ? "Accept trade (" + profile.name() + "): receive value " + round(gainScore) + " vs give " + round(lossScore)
+                        : tooFarForCounter
+                        ? "Reject trade (" + profile.name() + "): too one-sided for a counteroffer, receive value "
+                        + round(gainScore) + " vs give " + round(lossScore)
                         : "Reject trade (" + profile.name() + "): receive value " + round(gainScore) + " vs give " + round(lossScore)
         );
     }
@@ -33,6 +37,9 @@ public final class TradeOfferEvaluator {
     public TradeOffer proposeCounterOffer(TradeOffer offer, BotTradeProfile profile) {
         TradeDecision currentDecision = evaluateForRecipient(offer, profile);
         if (currentDecision.accept()) {
+            return null;
+        }
+        if (currentDecision.score() < profile.counterOfferFloor()) {
             return null;
         }
         int adjustment = Math.min(profile.maxCounterAdjustment(), roundUpToNearestTen(profile.acceptThreshold() - currentDecision.score()));

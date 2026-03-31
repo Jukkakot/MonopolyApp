@@ -53,18 +53,14 @@ public final class TradeUiBuilder {
                 + "\n" + buildTradeValueDeltaSummary(offer);
     }
 
-    public String buildCounterOfferSummary(TradeOffer originalOffer, TradeOffer counterOffer, String counteringPlayerName) {
-        return text("trade.countered", counteringPlayerName)
-                + "\n\n" + text("trade.countered.original")
-                + "\n" + buildTradeSummary(originalOffer)
-                + "\n\n" + text("trade.countered.new")
-                + "\n" + buildTradeSummary(counterOffer);
-    }
-
-    public String buildTradeEditorSummary(TradeDraft draft, boolean editingOfferSide) {
+    public String buildTradeEditorSummary(TradeDraft draft, boolean editingOfferSide, String notice) {
         Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
-        return buildTradeBoard(draft.toOffer(), text("trade.editor.header"))
+        String summary = buildTradeBoard(draft.toOffer(), text("trade.editor.header"))
                 + "\n" + text("trade.editor.editing", editingPlayer.getName());
+        if (notice == null || notice.isBlank()) {
+            return summary;
+        }
+        return summary + "\n" + notice;
     }
 
     public TradePopupView buildTradePopupView(

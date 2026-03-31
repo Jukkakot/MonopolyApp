@@ -8,6 +8,7 @@ import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TradeOfferEvaluatorTest {
@@ -85,6 +86,26 @@ class TradeOfferEvaluatorTest {
         assertTrue(counterOffer != null);
         assertTrue(counterOffer.offeredToRecipient().moneyAmount() >= 60);
         assertTrue(evaluator.evaluateForRecipient(counterOffer, BotTradeProfile.CAUTIOUS).accept());
+    }
+
+    @Test
+    void counterOfferIsSkippedWhenTradeIsFarTooOneSided() {
+        Player proposer = new Player("P1", Color.BLACK, 1500, 1);
+        Player recipient = new Player("P2", Color.BLUE, 1500, 2);
+        StreetProperty b1 = new StreetProperty(SpotType.B1);
+        StreetProperty b2 = new StreetProperty(SpotType.B2);
+        TestObjectFactory.giveProperty(recipient, b1);
+        TestObjectFactory.giveProperty(recipient, b2);
+
+        TradeOffer offer = new TradeOffer(
+                proposer,
+                recipient,
+                TradeSelection.NONE,
+                new TradeSelection(0, java.util.List.of(b1, b2), false)
+        );
+
+        assertNull(evaluator.proposeCounterOffer(offer, BotTradeProfile.CAUTIOUS));
+        assertFalse(evaluator.evaluateForRecipient(offer, BotTradeProfile.CAUTIOUS).accept());
     }
 
     @Test
