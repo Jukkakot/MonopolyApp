@@ -65,6 +65,12 @@ class GameComputerPlayerTest {
         method.invoke(game, animationWasRunning);
     }
 
+    private static void invokeShowRollDiceControl(Game game) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod("showRollDiceControl");
+        method.setAccessible(true);
+        method.invoke(game);
+    }
+
     private static int getLastComputerActionAt(Game game) throws ReflectiveOperationException {
         Field field = Game.class.getDeclaredField("lastComputerActionAt");
         field.setAccessible(true);
@@ -200,5 +206,24 @@ class GameComputerPlayerTest {
 
         assertTrue(getLastComputerActionAt(game) >= 0,
                 "Finishing a bot animation should add a cooldown before the next computer action");
+    }
+
+    @Test
+    @Timeout(5)
+    void botTurnStartClearsPreviousPlayerDiceState() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyApp.SKIP_ANNIMATIONS = true;
+        MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Game.DICES.rollDice();
+        assertTrue(Game.DICES.getValue() != null);
+
+        Game.players.switchTurn();
+        invokeShowRollDiceControl(game);
+
+        assertEquals(null, Game.DICES.getValue(),
+                "Bot turn must not inherit a stale dice result from the previous player");
     }
 }

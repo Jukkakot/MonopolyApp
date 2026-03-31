@@ -1433,12 +1433,12 @@ public class Game implements MonopolyEventListener {
     }
 
     private void showRollDiceControl() {
+        DICES.reset();
         Player turnPlayer = players.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
             hidePrimaryTurnControls();
             return;
         }
-        DICES.reset();
         DICES.show();
         endRoundButton.hide();
     }
