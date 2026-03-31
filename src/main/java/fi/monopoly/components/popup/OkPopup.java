@@ -33,7 +33,7 @@ public class OkPopup extends Popup {
     }
 
     private void okAction() {
-        completeAction(onOkAction);
+        completeManualAction(onOkAction);
     }
 
     @Override

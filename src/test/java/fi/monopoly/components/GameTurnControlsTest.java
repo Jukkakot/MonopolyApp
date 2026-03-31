@@ -360,4 +360,24 @@ class GameTurnControlsTest {
         assertFalse(Game.DICES.isVisible(), "Roll dice must stay hidden on bot turns");
         assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
     }
+
+    @Test
+    void botTurnIgnoresManualPopupAdvanceKeys() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Game.players.switchTurn();
+        runtime.popupService().show("Bot popup");
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+
+        dispatchKey(runtime, '1');
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible(),
+                "User input must not close or accept popups during a bot turn");
+    }
 }

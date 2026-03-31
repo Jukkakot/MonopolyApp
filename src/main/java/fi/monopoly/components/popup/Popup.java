@@ -3,6 +3,8 @@ package fi.monopoly.components.popup;
 
 import controlP5.Canvas;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.Game;
+import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.utils.Coordinates;
@@ -66,6 +68,18 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
             action.doAction();
         }
         runtime.popupService().showNextPending();
+    }
+
+    protected final void completeManualAction(ButtonAction action) {
+        if (!isManualInteractionAllowed()) {
+            return;
+        }
+        completeAction(action);
+    }
+
+    protected final boolean isManualInteractionAllowed() {
+        Player turnPlayer = Game.players != null ? Game.players.getTurn() : null;
+        return turnPlayer == null || !turnPlayer.isComputerControlled();
     }
 
     @Override
@@ -200,6 +214,9 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     @Override
     public final boolean onEvent(Event event) {
         if (!isVisible) {
+            return false;
+        }
+        if (!isManualInteractionAllowed()) {
             return false;
         }
         if (event instanceof KeyEvent keyEvent) {

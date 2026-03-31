@@ -74,12 +74,12 @@ public class TradePopup extends Popup {
     protected TradePopup(MonopolyRuntime runtime) {
         super(runtime);
         this.closeButton = new MonopolyButton(runtime, "tradeClose")
-                .addListener(() -> completeAction(null))
+                .addListener(() -> completeManualAction(null))
                 .setSize(20, 20);
         this.backButton = new MonopolyButton(runtime, "tradeBack")
                 .addListener(() -> {
                     if (tradeView != null && tradeView.backAction() != null) {
-                        completeAction(tradeView.backAction());
+                        completeManualAction(tradeView.backAction());
                     }
                 })
                 .setSize(56, 32);
@@ -438,7 +438,7 @@ public class TradePopup extends Popup {
 
     private void configureButton(MonopolyButton button, ButtonProps buttonProps) {
         button.setLabel(buttonProps.name());
-        button.addListener(() -> completeAction(buttonProps.buttonAction()));
+        button.addListener(() -> completeManualAction(buttonProps.buttonAction()));
         button.setSize(MIN_BUTTON_WIDTH, BUTTON_HEIGHT);
         if (buttonProps.name().equals(text("trade.button.done"))) {
             button.setButtonColors(
@@ -570,7 +570,7 @@ public class TradePopup extends Popup {
     protected boolean onKeyAction(char key) {
         char normalizedKey = Character.toLowerCase(key);
         if (normalizedKey == 'x') {
-            completeAction(null);
+            completeManualAction(null);
             return true;
         }
         try {
@@ -589,7 +589,7 @@ public class TradePopup extends Popup {
         for (ClickableRegion clickableRegion : clickableRegions) {
             if (clickableRegion.contains(event.getX(), event.getY())) {
                 if (event.getAction() == CLICK) {
-                    completeAction(clickableRegion.action());
+                    completeManualAction(clickableRegion.action());
                     return true;
                 }
                 return true;

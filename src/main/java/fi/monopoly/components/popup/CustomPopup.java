@@ -29,7 +29,7 @@ public class CustomPopup extends Popup {
     protected CustomPopup(MonopolyRuntime runtime) {
         super(runtime);
         this.closeButton = new MonopolyButton(runtime, "close")
-                .addListener(e -> completeAction(null))
+                .addListener(e -> completeManualAction(null))
                 .hide()
                 .setSize(20, 20);
         refreshLabels();
@@ -102,7 +102,7 @@ public class CustomPopup extends Popup {
     }
 
     private void getButtonAction(ButtonAction buttonAction) {
-        completeAction(buttonAction);
+        completeManualAction(buttonAction);
     }
 
     @Override
@@ -132,7 +132,7 @@ public class CustomPopup extends Popup {
     protected boolean onKeyAction(char key) {
         char normalizedKey = Character.toLowerCase(key);
         if (normalizedKey == 'x') {
-            completeAction(null);
+            completeManualAction(null);
             return true;
         }
         try {

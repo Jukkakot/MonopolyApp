@@ -43,11 +43,11 @@ public class ChoicePopup extends Popup {
     }
 
     private void acceptAction() {
-        completeAction(onAcceptAction);
+        completeManualAction(onAcceptAction);
     }
 
     private void declineAction() {
-        completeAction(onDeclineAction);
+        completeManualAction(onDeclineAction);
     }
 
     @Override
