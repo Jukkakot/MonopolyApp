@@ -79,7 +79,7 @@ public class MonopolyButton extends Button {
     }
 
     private boolean isManualActionAllowed() {
-        Player turnPlayer = Game.players != null ? Game.players.getTurn() : null;
+        Player turnPlayer = Game.PLAYERS != null ? Game.PLAYERS.getTurn() : null;
         return allowedDuringComputerTurn || turnPlayer == null || !turnPlayer.isComputerControlled();
     }
 

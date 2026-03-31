@@ -33,7 +33,7 @@ public abstract class AbstractClickable implements MonopolyEventListener, Clicka
 
     @Override
     public final boolean onEvent(Event event) {
-        if (Game.animations.isRunning()) {
+        if (Game.ANIMATIONS.isRunning()) {
             return false;
         }
         if (runtime.popupService().isAnyVisible()) {

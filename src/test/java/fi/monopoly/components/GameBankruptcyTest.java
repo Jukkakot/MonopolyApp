@@ -7,10 +7,9 @@ import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
-import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.StreetProperty;
-import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.support.TestLogLevels;
+import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,10 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GameBankruptcyTest {
     private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
@@ -34,6 +30,13 @@ class GameBankruptcyTest {
     @BeforeEach
     void setWarnOnlyLogging() {
         logConfigSnapshot = TestLogLevels.useSimulationLogging();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Player> getPlayers() throws ReflectiveOperationException {
+        Field field = Players.class.getDeclaredField("playerList");
+        field.setAccessible(true);
+        return (List<Player>) field.get(Game.PLAYERS);
     }
 
     @Test
@@ -63,7 +66,7 @@ class GameBankruptcyTest {
 
         invokeDeclareBankruptcy(game);
 
-        assertEquals(2, Game.players.count());
+        assertEquals(2, Game.PLAYERS.count());
         assertFalse(getPlayers().contains(debtor));
         assertEquals(1_600, creditor.getMoneyAmount());
         assertEquals(1, creditor.getGetOutOfJailCardCount());
@@ -103,7 +106,7 @@ class GameBankruptcyTest {
         invokeDeclareBankruptcy(game);
         settlePopupQueue(runtime);
 
-        assertEquals(2, Game.players.count());
+        assertEquals(2, Game.PLAYERS.count());
         assertFalse(getPlayers().contains(debtor));
         assertEquals(auctionWinner, b1.getOwnerPlayer());
         assertEquals(auctionWinner, b2.getOwnerPlayer());
@@ -142,39 +145,12 @@ class GameBankruptcyTest {
         invokeDeclareBankruptcy(game);
         settlePopupQueue(runtime);
 
-        assertEquals(2, Game.players.count());
+        assertEquals(2, Game.PLAYERS.count());
         assertFalse(getPlayers().contains(debtor));
         assertNull(b1.getOwnerPlayer());
         assertNull(b2.getOwnerPlayer());
         assertFalse(b1.isMortgaged());
         assertFalse(b2.isMortgaged());
-    }
-
-    @Test
-    @Timeout(5)
-    void winnerTokenStaysOnBoardAfterGameEndingBankruptcy() throws ReflectiveOperationException {
-        resetNextPlayerId();
-        MonopolyRuntime runtime = initHeadlessRuntime();
-        Game game = new Game(runtime);
-
-        List<Player> players = getPlayers();
-        Player debtor = players.get(0);
-        Player winner = players.get(1);
-        Player third = players.get(2);
-        Game.players.removePlayer(third);
-
-        setDebtState(game, new DebtState(
-                new PaymentRequest(debtor, new PlayerTarget(winner), 2_000, "Bankruptcy"),
-                () -> {
-                },
-                true
-        ));
-
-        invokeDeclareBankruptcy(game);
-
-        assertEquals(1, Game.players.count());
-        assertEquals(winner, Game.players.getPlayers().get(0));
-        assertEquals(winner.getSpot().getTokenCoords(winner), winner.getCoords());
     }
 
     @AfterEach
@@ -209,11 +185,31 @@ class GameBankruptcyTest {
         field.setInt(null, 0);
     }
 
-    @SuppressWarnings("unchecked")
-    private static List<Player> getPlayers() throws ReflectiveOperationException {
-        Field field = Players.class.getDeclaredField("playerList");
-        field.setAccessible(true);
-        return (List<Player>) field.get(Game.players);
+    @Test
+    @Timeout(5)
+    void winnerTokenStaysOnBoardAfterGameEndingBankruptcy() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+
+        List<Player> players = getPlayers();
+        Player debtor = players.get(0);
+        Player winner = players.get(1);
+        Player third = players.get(2);
+        Game.PLAYERS.removePlayer(third);
+
+        setDebtState(game, new DebtState(
+                new PaymentRequest(debtor, new PlayerTarget(winner), 2_000, "Bankruptcy"),
+                () -> {
+                },
+                true
+        ));
+
+        invokeDeclareBankruptcy(game);
+
+        assertEquals(1, Game.PLAYERS.count());
+        assertEquals(winner, Game.PLAYERS.getPlayers().get(0));
+        assertEquals(winner.getSpot().getTokenCoords(winner), winner.getCoords());
     }
 
     private static void setDebtState(Game game, DebtState debtState) throws ReflectiveOperationException {

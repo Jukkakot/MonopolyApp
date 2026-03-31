@@ -1,7 +1,7 @@
 <configuration>
 
     <property name="LOG_DIR" value="${user.dir}/logs/app"/>
-    <property name="LOG_PATTERN" value="%highlight(%d{HH:mm:ss.SSS} %-5level (%file:%line) - %msg%n)"/>
+    <property name="LOG_PATTERN" value="%highlight(%d{HH:mm:ss.SSS} %-5level %file:%line - %msg%n)"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">

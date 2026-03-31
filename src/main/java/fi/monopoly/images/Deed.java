@@ -26,7 +26,7 @@ public class Deed extends AbstractClickable {
     @Override
     public void onClick() {
         super.onClick();
-        if (!property.isOwner(Game.players.getTurn())) {
+        if (!property.isOwner(Game.PLAYERS.getTurn())) {
             //No actions if player not owner of the deed
             return;
         }

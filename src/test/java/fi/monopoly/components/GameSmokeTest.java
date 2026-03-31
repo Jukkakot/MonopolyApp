@@ -47,7 +47,7 @@ class GameSmokeTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        int initialPlayerCount = Game.players.count();
+        int initialPlayerCount = Game.PLAYERS.count();
         int rollCount = 0;
         int popupResolutionCount = 0;
         int debtResolutionCount = 0;
@@ -69,8 +69,8 @@ class GameSmokeTest {
                 assertResponsiveUiState(game, runtime);
             }
 
-            if (Game.animations.isRunning()) {
-                Game.animations.finishAllAnimations();
+            if (Game.ANIMATIONS.isRunning()) {
+                Game.ANIMATIONS.finishAllAnimations();
             } else if (runtime.popupService().isAnyVisible()) {
                 popupResolutionCount++;
                 dispatchKey(runtime, '1');
@@ -119,7 +119,7 @@ class GameSmokeTest {
                 previousSnapshot = currentSnapshot;
             }
 
-            if (Game.players.count() <= 1) {
+            if (Game.PLAYERS.count() <= 1) {
                 completedGame = true;
                 break;
             }
@@ -139,7 +139,7 @@ class GameSmokeTest {
         assertTrue(seenTurnPlayers.size() >= 2, "Smoke test should rotate through at least two players");
         assertTrue(seenSpotTypes.size() >= MIN_UNIQUE_SPOTS, "Game did not traverse enough of the board to be a useful sanity check");
         assertTrue(debtResolutionCount >= bankruptcyCount, "Bankruptcy count cannot exceed debt resolutions");
-        assertFalse(Game.animations.isRunning(), "Animations should not be left running at the end of the smoke test");
+        assertFalse(Game.ANIMATIONS.isRunning(), "Animations should not be left running at the end of the smoke test");
         assertFalse(runtime.popupService().isAnyVisible(), "Popup should not be left open at the end of the smoke test");
         assertFalse(isDebtResolutionActive(game), "Debt resolution should not be left active at the end of the smoke test");
 
@@ -154,8 +154,8 @@ class GameSmokeTest {
             if (verifyResponsiveUi) {
                 assertResponsiveUiState(game, runtime);
             }
-            if (Game.animations.isRunning()) {
-                Game.animations.finishAllAnimations();
+            if (Game.ANIMATIONS.isRunning()) {
+                Game.ANIMATIONS.finishAllAnimations();
                 continue;
             }
             if (runtime.popupService().isAnyVisible()) {
@@ -197,18 +197,18 @@ class GameSmokeTest {
     }
 
     private static void assertCoreInvariants(Game game, int initialPlayerCount) {
-        assertNotNull(Game.players, "Players collection should exist");
+        assertNotNull(Game.PLAYERS, "Players collection should exist");
         assertNotNull(Game.DICES, "Dice controls should exist");
-        assertNotNull(Game.animations, "Animation controller should exist");
+        assertNotNull(Game.ANIMATIONS, "Animation controller should exist");
 
-        int playerCount = Game.players.count();
+        int playerCount = Game.PLAYERS.count();
         assertTrue(playerCount >= 1, "At least one player should remain in the game");
         assertTrue(playerCount <= initialPlayerCount, "Player count should not increase during the game");
 
         List<Player> players = getPlayers();
         assertEquals(playerCount, players.size(), "Player list size should match Players.count()");
-        assertNotNull(Game.players.getTurn(), "Current turn player should always exist while the game is running");
-        assertTrue(players.contains(Game.players.getTurn()), "Turn player should belong to the active player list");
+        assertNotNull(Game.PLAYERS.getTurn(), "Current turn player should always exist while the game is running");
+        assertTrue(players.contains(Game.PLAYERS.getTurn()), "Turn player should belong to the active player list");
 
         Set<Integer> playerIds = new HashSet<>();
         Set<Integer> turnNumbers = new HashSet<>();
@@ -235,7 +235,7 @@ class GameSmokeTest {
         try {
             Field field = Players.class.getDeclaredField("playerList");
             field.setAccessible(true);
-            return List.copyOf((List<Player>) field.get(Game.players));
+            return List.copyOf((List<Player>) field.get(Game.PLAYERS));
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -363,12 +363,12 @@ class GameSmokeTest {
     }
 
     private static String currentTurnName() {
-        Player turn = Game.players.getTurn();
+        Player turn = Game.PLAYERS.getTurn();
         return turn != null ? turn.getName() : null;
     }
 
     private static String currentTurnSpotType() {
-        Player turn = Game.players.getTurn();
+        Player turn = Game.PLAYERS.getTurn();
         return turn != null && turn.getSpot() != null ? turn.getSpot().getSpotType().name() : null;
     }
 
@@ -392,7 +392,7 @@ class GameSmokeTest {
     }
 
     private static String snapshot() {
-        Player turn = Game.players.getTurn();
+        Player turn = Game.PLAYERS.getTurn();
         String turnName = turn != null ? turn.getName() : "none";
         String turnSpot = turn != null && turn.getSpot() != null ? turn.getSpot().getSpotType().name() : "none";
         int turnMoney = turn != null ? turn.getMoneyAmount() : -1;
@@ -403,8 +403,8 @@ class GameSmokeTest {
                 + "|popup=" + MonopolyRuntime.get().popupService().isAnyVisible()
                 + "|diceVisible=" + Game.DICES.isVisible()
                 + "|dice=" + diceValue
-                + "|animations=" + Game.animations.isRunning()
-                + "|players=" + Game.players.count()
+                + "|animations=" + Game.ANIMATIONS.isRunning()
+                + "|players=" + Game.PLAYERS.count()
                 + "|debt=" + Game.isDebtResolutionActive();
     }
 

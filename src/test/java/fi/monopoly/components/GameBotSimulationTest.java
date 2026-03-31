@@ -15,12 +15,10 @@ import processing.core.PFont;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GameBotSimulationTest {
     private static final int SIMULATION_RUNS = 3;
@@ -68,7 +66,7 @@ class GameBotSimulationTest {
             totalBankruptcies += result.bankruptcies();
             completedGames += result.completedGame() ? 1 : 0;
 
-            assertTrue(!result.stalled(), "Strong bot simulation stalled. " + result);
+            assertFalse(result.stalled(), "Strong bot simulation stalled. " + result);
             assertTrue(result.turnSwitches() >= MIN_TURN_SWITCHES_PER_RUN || result.completedGame(),
                     "Strong bot simulation did not progress enough. " + result);
         }
@@ -89,7 +87,7 @@ class GameBotSimulationTest {
         int debtResolutions = 0;
         int bankruptcies = 0;
         int stagnantSteps = 0;
-        int previousPlayerCount = Game.players.count();
+        int previousPlayerCount = Game.PLAYERS.count();
         String previousTurn = currentTurnName();
         String previousSnapshot = snapshot(runtime);
         boolean debtActiveLastStep = false;
@@ -98,8 +96,8 @@ class GameBotSimulationTest {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (Game.animations.isRunning()) {
-                Game.animations.finishAllAnimations();
+            if (Game.ANIMATIONS.isRunning()) {
+                Game.ANIMATIONS.finishAllAnimations();
             }
 
             boolean debtActive = isDebtResolutionActive(game);
@@ -108,7 +106,7 @@ class GameBotSimulationTest {
             }
             debtActiveLastStep = debtActive;
 
-            int playerCount = Game.players.count();
+            int playerCount = Game.PLAYERS.count();
             if (playerCount < previousPlayerCount) {
                 bankruptcies += previousPlayerCount - playerCount;
                 previousPlayerCount = playerCount;
@@ -128,7 +126,7 @@ class GameBotSimulationTest {
                 stagnantSteps = 0;
             }
 
-            if (Game.players.count() <= 1) {
+            if (Game.PLAYERS.count() <= 1) {
                 return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, true, currentSnapshot);
             }
             if (stagnantSteps >= MAX_STAGNANT_STEPS) {
@@ -176,18 +174,18 @@ class GameBotSimulationTest {
     private static void promoteAllPlayersToStrongBots() throws ReflectiveOperationException {
         Field field = Player.class.getDeclaredField("computerProfile");
         field.setAccessible(true);
-        for (Player player : Game.players.getPlayers()) {
+        for (Player player : Game.PLAYERS.getPlayers()) {
             field.set(player, ComputerPlayerProfile.STRONG);
         }
     }
 
     private static String currentTurnName() {
-        Player turn = Game.players.getTurn();
+        Player turn = Game.PLAYERS.getTurn();
         return turn == null ? "none" : turn.getName();
     }
 
     private static String snapshot(MonopolyRuntime runtime) {
-        String playerState = Game.players.getPlayers().stream()
+        String playerState = Game.PLAYERS.getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getId))
                 .map(player -> player.getId() + ":" + player.getMoneyAmount() + ":" + player.getSpot().getSpotType() + ":" + player.getOwnedProperties().size())
                 .collect(Collectors.joining("|"));
@@ -196,13 +194,13 @@ class GameBotSimulationTest {
         String popupMessage = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupMessage() : "none";
         return playerState
                 + "|turn=" + currentTurnName()
-                + "|players=" + Game.players.count()
+                + "|players=" + Game.PLAYERS.count()
                 + "|popup=" + runtime.popupService().isAnyVisible()
                 + "|popupKind=" + popupKind
                 + "|popupMessage=" + popupMessage
                 + "|diceVisible=" + (Game.DICES != null && Game.DICES.isVisible())
                 + "|dice=" + diceValue
-                + "|animations=" + (Game.animations != null && Game.animations.isRunning())
+                + "|animations=" + (Game.ANIMATIONS != null && Game.ANIMATIONS.isRunning())
                 + "|debt=" + Game.isDebtResolutionActive();
     }
 

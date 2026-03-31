@@ -16,7 +16,7 @@ class StreetPropertyTest {
 
     @AfterEach
     void clearGamePlayers() {
-        Game.players = null;
+        Game.PLAYERS = null;
     }
 
     @Test
@@ -223,7 +223,7 @@ class StreetPropertyTest {
         setBuildingState(fillerA, 16, 0);
         setBuildingState(fillerB, 16, 0);
 
-        Game.players = TestObjectFactory.playersWithTurn(owner, other);
+        Game.PLAYERS = TestObjectFactory.playersWithTurn(owner, other);
 
         assertFalse(first.buyHouses(1));
         assertEquals(0, first.getHouseCount());
@@ -251,7 +251,7 @@ class StreetPropertyTest {
             setBuildingState(property, 0, 1);
         }
 
-        Game.players = TestObjectFactory.playersWithTurn(owner, hotelOwner);
+        Game.PLAYERS = TestObjectFactory.playersWithTurn(owner, hotelOwner);
 
         assertFalse(first.buyHouses(1));
         assertEquals(4, first.getHouseCount());
@@ -273,7 +273,7 @@ class StreetPropertyTest {
         TestObjectFactory.giveProperty(other, filler);
         setBuildingState(filler, 29, 0);
 
-        Game.players = TestObjectFactory.playersWithTurn(owner, other);
+        Game.PLAYERS = TestObjectFactory.playersWithTurn(owner, other);
 
         assertFalse(first.sellHouses(1));
         assertEquals(0, first.getHouseCount());

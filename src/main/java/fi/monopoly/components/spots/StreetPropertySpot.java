@@ -22,7 +22,7 @@ public class StreetPropertySpot extends PropertySpot {
     @Override
     public void onClick() {
         super.onClick();
-        Player turnPlayer = Game.players.getTurn();
+        Player turnPlayer = Game.PLAYERS.getTurn();
         if (!property.isOwner(turnPlayer)) {
             //Player not owner of this property
             return;

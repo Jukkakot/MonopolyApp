@@ -3,14 +3,9 @@ package fi.monopoly.components.spots;
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.components.CallbackAction;
-import fi.monopoly.components.Game;
-import fi.monopoly.components.GameState;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.Players;
+import fi.monopoly.components.*;
 import fi.monopoly.components.cards.Card;
 import fi.monopoly.components.cards.Cards;
-import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
@@ -44,7 +39,7 @@ class PickCardSpotTest {
     void setUp() {
         setLocale(Locale.ENGLISH);
         runtime = initHeadlessRuntime();
-        Game.animations = new fi.monopoly.components.animation.Animations();
+        Game.ANIMATIONS = new fi.monopoly.components.animation.Animations();
     }
 
     @AfterEach

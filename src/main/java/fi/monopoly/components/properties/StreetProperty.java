@@ -341,17 +341,17 @@ public class StreetProperty extends Property {
     }
 
     private int getBuiltHouseCount() {
-        if (Game.players == null) {
+        if (Game.PLAYERS == null) {
             return 0;
         }
-        return Game.players.getTotalHouseCount();
+        return Game.PLAYERS.getTotalHouseCount();
     }
 
     private int getBuiltHotelCount() {
-        if (Game.players == null) {
+        if (Game.PLAYERS == null) {
             return 0;
         }
-        return Game.players.getTotalHotelCount();
+        return Game.PLAYERS.getTotalHotelCount();
     }
 
     private enum BuildValidationResult {

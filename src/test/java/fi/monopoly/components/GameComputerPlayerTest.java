@@ -17,9 +17,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static processing.event.KeyEvent.PRESS;
 
 class GameComputerPlayerTest {
@@ -85,7 +83,7 @@ class GameComputerPlayerTest {
     private static List<Player> getPlayerList() throws ReflectiveOperationException {
         Field field = Players.class.getDeclaredField("playerList");
         field.setAccessible(true);
-        return (List<Player>) field.get(Game.players);
+        return (List<Player>) field.get(Game.PLAYERS);
     }
 
     @BeforeEach
@@ -129,21 +127,21 @@ class GameComputerPlayerTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.players.switchTurn();
-        Game.players.switchTurn();
-        Player bot = Game.players.getTurn();
+        Game.PLAYERS.switchTurn();
+        Game.PLAYERS.switchTurn();
+        Player bot = Game.PLAYERS.getTurn();
         String botName = bot.getName();
 
-        for (int step = 0; step < 200 && Objects.equals(botName, Game.players.getTurn().getName()); step++) {
+        for (int step = 0; step < 200 && Objects.equals(botName, Game.PLAYERS.getTurn().getName()); step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (Game.animations.isRunning()) {
-                Game.animations.finishAllAnimations();
+            if (Game.ANIMATIONS.isRunning()) {
+                Game.ANIMATIONS.finishAllAnimations();
             }
         }
 
-        assertNotEquals(botName, Game.players.getTurn().getName());
+        assertNotEquals(botName, Game.PLAYERS.getTurn().getName());
     }
 
     @Test
@@ -155,19 +153,19 @@ class GameComputerPlayerTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        String botName = Game.players.getTurn().getName();
+        String botName = Game.PLAYERS.getTurn().getName();
         invokeTogglePause(game);
 
         for (int step = 0; step < 50; step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (Game.animations.isRunning()) {
-                Game.animations.finishAllAnimations();
+            if (Game.ANIMATIONS.isRunning()) {
+                Game.ANIMATIONS.finishAllAnimations();
             }
         }
 
-        assertEquals(botName, Game.players.getTurn().getName());
+        assertEquals(botName, Game.PLAYERS.getTurn().getName());
     }
 
     @Test
@@ -181,13 +179,13 @@ class GameComputerPlayerTest {
 
         assertTrue(dispatchKeyToGame(game, 'p'));
 
-        String botName = Game.players.getTurn().getName();
+        String botName = Game.PLAYERS.getTurn().getName();
         for (int step = 0; step < 20; step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
         }
 
-        assertEquals(botName, Game.players.getTurn().getName());
+        assertEquals(botName, Game.PLAYERS.getTurn().getName());
     }
 
     @Test
@@ -198,7 +196,7 @@ class GameComputerPlayerTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.players.switchTurn();
+        Game.PLAYERS.switchTurn();
 
         assertEquals(-1, getLastComputerActionAt(game));
 
@@ -218,12 +216,11 @@ class GameComputerPlayerTest {
         runtime.eventBus().flushPendingChanges();
 
         Game.DICES.rollDice();
-        assertTrue(Game.DICES.getValue() != null);
+        assertNotNull(Game.DICES.getValue());
 
-        Game.players.switchTurn();
+        Game.PLAYERS.switchTurn();
         invokeShowRollDiceControl(game);
 
-        assertEquals(null, Game.DICES.getValue(),
-                "Bot turn must not inherit a stale dice result from the previous player");
+        assertNull(Game.DICES.getValue(), "Bot turn must not inherit a stale dice result from the previous player");
     }
 }
