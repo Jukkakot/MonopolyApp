@@ -400,6 +400,23 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void botTurnPopupAllowsExplicitComputerPrimaryTrigger() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Game.players.switchTurn();
+        runtime.popupService().show("Bot popup");
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertTrue(runtime.popupService().triggerPrimaryComputerAction());
+        assertFalse(runtime.popupService().isAnyVisible(),
+                "Explicit computer trigger should resolve popup without using manual action path");
+    }
+
+    @Test
     void botTurnBlocksGameAffectingButtonsButAllowsLanguageButton() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();

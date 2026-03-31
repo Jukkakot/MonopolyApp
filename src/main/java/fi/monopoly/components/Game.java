@@ -1494,12 +1494,12 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public boolean acceptActivePopup() {
-            return runtime.popupService().triggerPrimaryAction();
+            return runtime.popupService().triggerPrimaryComputerAction();
         }
 
         @Override
         public boolean declineActivePopup() {
-            return runtime.popupService().triggerSecondaryAction();
+            return runtime.popupService().triggerSecondaryComputerAction();
         }
 
         @Override

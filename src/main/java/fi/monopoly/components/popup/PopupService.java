@@ -149,6 +149,14 @@ public class PopupService {
         return activePopup != null && activePopup.triggerSecondaryAction(PopupActionTrigger.MANUAL);
     }
 
+    public boolean triggerPrimaryComputerAction() {
+        return activePopup != null && activePopup.triggerPrimaryAction(PopupActionTrigger.COMPUTER);
+    }
+
+    public boolean triggerSecondaryComputerAction() {
+        return activePopup != null && activePopup.triggerSecondaryAction(PopupActionTrigger.COMPUTER);
+    }
+
     public Property activeOfferedProperty() {
         if (activePopup instanceof PropertyOfferPopup propertyOfferPopup) {
             return propertyOfferPopup.getOfferedProperty();
