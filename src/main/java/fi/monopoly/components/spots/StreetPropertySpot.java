@@ -1,6 +1,6 @@
 package fi.monopoly.components.spots;
 
-import fi.monopoly.components.Game;
+import fi.monopoly.components.GameSession;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
@@ -22,7 +22,11 @@ public class StreetPropertySpot extends PropertySpot {
     @Override
     public void onClick() {
         super.onClick();
-        Player turnPlayer = Game.PLAYERS.getTurn();
+        GameSession session = runtime.gameSessionOrNull();
+        if (session == null || session.players() == null) {
+            return;
+        }
+        Player turnPlayer = session.players().getTurn();
         if (!property.isOwner(turnPlayer)) {
             //Player not owner of this property
             return;
@@ -39,7 +43,7 @@ public class StreetPropertySpot extends PropertySpot {
             runtime.popupService().show(text("streetProperty.requireFullSet"));
             return;
         }
-        if (Game.isDebtResolutionForCurrentTurn()) {
+        if (session.isDebtResolutionActive()) {
             if (property.hasBuildings()) {
                 handleSellBuildings();
             } else {

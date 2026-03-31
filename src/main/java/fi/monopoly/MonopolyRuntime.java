@@ -2,6 +2,7 @@ package fi.monopoly;
 
 import controlP5.ControlP5;
 import fi.monopoly.components.event.MonopolyEventBus;
+import fi.monopoly.components.GameSession;
 import fi.monopoly.components.popup.PopupService;
 import processing.core.PFont;
 
@@ -15,6 +16,7 @@ public final class MonopolyRuntime {
     private final PFont font30;
     private final MonopolyEventBus eventBus;
     private final PopupService popupService;
+    private GameSession gameSession;
 
     private MonopolyRuntime(MonopolyApp app, ControlP5 controlP5, PFont font10, PFont font20, PFont font30) {
         this.app = app;
@@ -68,5 +70,20 @@ public final class MonopolyRuntime {
 
     public PopupService popupService() {
         return popupService;
+    }
+
+    public void setGameSession(GameSession gameSession) {
+        this.gameSession = gameSession;
+    }
+
+    public GameSession gameSession() {
+        if (gameSession == null) {
+            throw new IllegalStateException("GameSession has not been initialized yet");
+        }
+        return gameSession;
+    }
+
+    public GameSession gameSessionOrNull() {
+        return gameSession;
     }
 }

@@ -1,6 +1,6 @@
 package fi.monopoly.components.properties;
 
-import fi.monopoly.components.Game;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.types.SpotType;
@@ -17,7 +17,12 @@ public class UtilityProperty extends Property {
     @Override
     public Integer getRent(Player player) {
         if (hasOwner() && isNotOwner(player)) {
-            return getRentForDiceValue(player, Game.DICES.getValue().value());
+            MonopolyRuntime runtime = MonopolyRuntime.peek();
+            if (runtime == null || runtime.gameSessionOrNull() == null || runtime.gameSessionOrNull().dices() == null
+                    || runtime.gameSessionOrNull().dices().getValue() == null) {
+                return 0;
+            }
+            return getRentForDiceValue(player, runtime.gameSessionOrNull().dices().getValue().value());
         }
         return 0;
     }

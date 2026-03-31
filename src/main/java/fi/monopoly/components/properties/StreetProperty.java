@@ -1,7 +1,8 @@
 package fi.monopoly.components.properties;
 
-import fi.monopoly.components.Game;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.Players;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
 import lombok.Getter;
@@ -72,7 +73,7 @@ public class StreetProperty extends Property {
     }
 
     public boolean buyHouses(int count) {
-        if (fi.monopoly.components.Game.isDebtResolutionForCurrentTurn()) {
+        if (isDebtResolutionActive()) {
             showPopup("streetProperty.debt.noBuy");
             return false;
         }
@@ -341,17 +342,32 @@ public class StreetProperty extends Property {
     }
 
     private int getBuiltHouseCount() {
-        if (Game.PLAYERS == null) {
+        Players players = getPlayersOrNull();
+        if (players == null) {
             return 0;
         }
-        return Game.PLAYERS.getTotalHouseCount();
+        return players.getTotalHouseCount();
     }
 
     private int getBuiltHotelCount() {
-        if (Game.PLAYERS == null) {
+        Players players = getPlayersOrNull();
+        if (players == null) {
             return 0;
         }
-        return Game.PLAYERS.getTotalHotelCount();
+        return players.getTotalHotelCount();
+    }
+
+    private boolean isDebtResolutionActive() {
+        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        return runtime != null && runtime.gameSessionOrNull() != null && runtime.gameSessionOrNull().isDebtResolutionActive();
+    }
+
+    private Players getPlayersOrNull() {
+        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        if (runtime == null || runtime.gameSessionOrNull() == null) {
+            return null;
+        }
+        return runtime.gameSessionOrNull().players();
     }
 
     private enum BuildValidationResult {

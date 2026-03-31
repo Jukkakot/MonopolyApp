@@ -50,13 +50,6 @@ public class Game implements MonopolyEventListener {
     private static final int COMPUTER_ACTION_DELAY_MS = 1000;
     private static final int NO_COMPUTER_ACTION_YET = -1;
 
-    // Shared runtime game state accessed across components
-    private static Game self;
-    public static Dices DICES;
-    public static Players PLAYERS;
-    public static Animations ANIMATIONS;
-    public static int GO_MONEY_AMOUNT = 200;
-
     // Core services
     private final MonopolyRuntime runtime;
     private final TurnEngine turnEngine = new TurnEngine();
@@ -74,6 +67,10 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton languageButton;
 
     // Mutable game state
+    private Players players;
+    private Dices dices;
+    private Animations animations;
+    private int goMoneyAmount = 200;
     private Board board;
     private TurnResult prevTurnResult;
     private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
@@ -82,7 +79,6 @@ public class Game implements MonopolyEventListener {
     private Player winner;
 
     public Game(MonopolyRuntime runtime) {
-        self = this;
         this.runtime = runtime;
         this.endRoundButton = new MonopolyButton(runtime, "endRound");
         this.retryDebtButton = new MonopolyButton(runtime, "retryDebt");
@@ -94,6 +90,7 @@ public class Game implements MonopolyEventListener {
         setupButtons();
         setupRuntimeDependencies();
         setupControllers();
+        registerGameSession();
         setupDefaultGameState();
         setupButtonActions();
 
@@ -148,15 +145,15 @@ public class Game implements MonopolyEventListener {
         PropertyFactory.resetState();
         JailSpot.jailTimeLeftMap.clear();
         board = new Board(runtime);
-        DICES = Dices.setRollDice(runtime, this::rollDice);
-        PLAYERS = new Players(runtime);
-        ANIMATIONS = new Animations();
+        dices = Dices.setRollDice(runtime, this::rollDice);
+        players = new Players(runtime);
+        animations = new Animations();
     }
 
     private void setupControllers() {
         debtController = new DebtController(
                 runtime,
-                PLAYERS,
+                players,
                 this::hidePrimaryTurnControls,
                 this::showRollDiceControl,
                 this::updateDebtButtons,
@@ -165,18 +162,27 @@ public class Game implements MonopolyEventListener {
         tradeController = new TradeController(
                 runtime,
                 () -> !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null,
-                () -> PLAYERS != null ? PLAYERS.getTurn() : null,
-                () -> PLAYERS != null ? PLAYERS.getPlayers() : List.of()
+                () -> players != null ? players.getTurn() : null,
+                () -> players != null ? players.getPlayers() : List.of()
         );
         debugController = new DebugController(
                 runtime,
                 board,
-                () -> PLAYERS != null ? PLAYERS.getTurn() : null,
+                () -> players != null ? players.getTurn() : null,
                 this::debugResetTurnState,
                 this::restoreNormalTurnControls,
                 debtController::retryPendingDebtPayment,
                 this::handlePaymentRequest
         );
+    }
+
+    private void registerGameSession() {
+        runtime.setGameSession(new GameSession(players, dices, animations)
+                .withStateSuppliers(
+                        () -> debtController != null && debtController.debtState() != null,
+                        () -> gameOver,
+                        () -> goMoneyAmount
+                ));
     }
 
     private void setupDefaultGameState() {
@@ -207,9 +213,9 @@ public class Game implements MonopolyEventListener {
 
     private void setupDebugGameConfigs(MonopolyRuntime runtime) {
         Spot spot = board.getSpots().get(0);
-        PLAYERS.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
-        PLAYERS.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
-        PLAYERS.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
 
         //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
         //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
@@ -222,27 +228,27 @@ public class Game implements MonopolyEventListener {
         //        }
     }
 
-    public static boolean isDebtResolutionActive() {
-        return self != null && self.debtController != null && self.debtController.debtState() != null;
+    Players players() {
+        return players;
     }
 
-    public static boolean isDebtResolutionForCurrentTurn() {
-        return isDebtResolutionActive();
+    Dices dices() {
+        return dices;
     }
 
-    public static boolean isGameOverActive() {
-        return self != null && self.gameOver;
+    Animations animations() {
+        return animations;
     }
 
     public void draw() {
         LayoutMetrics layoutMetrics = getLayoutMetrics();
         boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
-        boolean animationWasRunning = ANIMATIONS.isRunning();
+        boolean animationWasRunning = animations.isRunning();
         if (MonopolyApp.SKIP_ANNIMATIONS) {
-            ANIMATIONS.finishAllAnimations();
+            animations.finishAllAnimations();
         }
         if (!runtime.popupService().isAnyVisible()) {
-            ANIMATIONS.updateAnimations();
+            animations.updateAnimations();
         }
         applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
         updateSidebarControlPositions();
@@ -251,15 +257,15 @@ public class Game implements MonopolyEventListener {
             drawSidebarPanel();
         }
         if (!isDebtSidebarMode()) {
-            DICES.draw(null);
+            dices.draw(null);
         }
         if (hasSidebarSpace && isDebtSidebarMode()) {
-            PLAYERS.focusPlayer(debtController.debtState().paymentRequest().debtor());
+            players.focusPlayer(debtController.debtState().paymentRequest().debtor());
         }
         if (hasSidebarSpace) {
-            PLAYERS.draw(getSidebarContentTop(), !isDebtSidebarMode(), !isDebtSidebarMode());
+            players.draw(getSidebarContentTop(), !isDebtSidebarMode(), !isDebtSidebarMode());
         } else {
-            PLAYERS.drawTokens();
+            players.drawTokens();
         }
         updateDebugButtons();
         enforcePrimaryTurnControlInvariant();
@@ -270,10 +276,10 @@ public class Game implements MonopolyEventListener {
     }
 
     private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
-        if (MonopolyApp.SKIP_ANNIMATIONS || !animationWasRunning || ANIMATIONS.isRunning()) {
+        if (MonopolyApp.SKIP_ANNIMATIONS || !animationWasRunning || animations.isRunning()) {
             return;
         }
-        Player turnPlayer = PLAYERS.getTurn();
+        Player turnPlayer = players.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
             lastComputerActionAt = runtime.app().millis();
         }
@@ -304,7 +310,7 @@ public class Game implements MonopolyEventListener {
             app.line(sidebarX + UiTokens.spacingMd(), getDebtSectionBottom(), sidebarX + sidebarWidth - UiTokens.spacingMd(), getDebtSectionBottom());
         }
 
-        Player turnPlayer = PLAYERS.getTurn();
+        Player turnPlayer = players.getTurn();
         app.fill(46, 72, 63);
         app.textAlign(PConstants.LEFT);
         app.textFont(runtime.font30());
@@ -412,13 +418,13 @@ public class Game implements MonopolyEventListener {
         if (runtime.popupService().isAnyVisible()) {
             return text("sidebar.phase.popup");
         }
-        if (ANIMATIONS.isRunning()) {
+        if (animations.isRunning()) {
             return text("sidebar.phase.animation");
         }
         if (endRoundButton.isVisible()) {
             return text("sidebar.phase.endTurn");
         }
-        if (DICES.isVisible()) {
+        if (dices.isVisible()) {
             return text("sidebar.phase.roll");
         }
         return text("sidebar.phase.resolving");
@@ -459,7 +465,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private Spot getNewSpot(DiceValue diceValue) {
-        Player turn = PLAYERS.getTurn();
+        Player turn = players.getTurn();
         Spot oldSpot = turn.getSpot();
         return board.getNewSpot(oldSpot, diceValue.value(), PathMode.NORMAL);
     }
@@ -470,19 +476,19 @@ public class Game implements MonopolyEventListener {
                     runtime.popupService().isAnyVisible(), debtController.debtState() != null);
             return;
         }
-        log.debug("Starting turn roll for player {}", PLAYERS.getTurn().getName());
-        playRound(DICES.getValue());
+        log.debug("Starting turn roll for player {}", players.getTurn().getName());
+        playRound(dices.getValue());
     }
 
     private void runComputerPlayerStep() {
         if (gameOver) {
             return;
         }
-        Player turnPlayer = PLAYERS.getTurn();
+        Player turnPlayer = players.getTurn();
         if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
             return;
         }
-        if (ANIMATIONS.isRunning()) {
+        if (animations.isRunning()) {
             return;
         }
         if (paused) {
@@ -506,20 +512,20 @@ public class Game implements MonopolyEventListener {
             hidePrimaryTurnControls();
             return;
         }
-        Player currentTurn = PLAYERS.getTurn();
+        Player currentTurn = players.getTurn();
         prevTurnResult = null;
         if (switchTurns) {
-            PLAYERS.switchTurn();
+            players.switchTurn();
         }
         showRollDiceControl();
         log.debug("Ending round. previousTurnPlayer={}, switchTurns={}, nextTurnPlayer={}",
                 currentTurn != null ? currentTurn.getName() : "none",
                 switchTurns,
-                PLAYERS.getTurn() != null ? PLAYERS.getTurn().getName() : "none");
+                players.getTurn() != null ? players.getTurn().getName() : "none");
     }
 
     private void playRound(DiceValue diceValue) {
-        Player turnPlayer = PLAYERS.getTurn();
+        Player turnPlayer = players.getTurn();
         log.debug("Playing round for player {} with diceState={} value={}",
                 turnPlayer.getName(), diceValue.diceState(), diceValue.value());
         if (turnPlayer.isInJail()) {
@@ -539,12 +545,12 @@ public class Game implements MonopolyEventListener {
     }
 
     private void addAnimationAndHandleSpot(Path path, CallbackAction onAnimationEnd) {
-        PlayerToken turnPlayer = PLAYERS.getTurn();
-        ANIMATIONS.addAnimation(new Animation(turnPlayer, path, onAnimationEnd));
+        PlayerToken turnPlayer = players.getTurn();
+        animations.addAnimation(new Animation(turnPlayer, path, onAnimationEnd));
     }
 
     private boolean playRound(Spot newSpot, DiceState diceState) {
-        Player turnPlayer = PLAYERS.getTurn();
+        Player turnPlayer = players.getTurn();
         if (newSpot.equals(turnPlayer.getSpot())) {
             runtime.popupService().show(text("game.move.sameSpot"));
             return false;
@@ -559,7 +565,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private boolean playRound(Path path, DiceState diceState) {
-        Player turnPlayer = PLAYERS.getTurn();
+        Player turnPlayer = players.getTurn();
         log.trace("Animating player {} along path to {} with diceState={}",
                 turnPlayer.getName(), path.getLastSpot().getSpotType(), diceState);
         addAnimationAndHandleSpot(path, () -> {
@@ -570,8 +576,8 @@ public class Game implements MonopolyEventListener {
             };
             if (path.passesGoSpot()) {
                 log.info("Player {} passed GO", turnPlayer.getName());
-                runtime.popupService().show(text("game.go.reward", GO_MONEY_AMOUNT), () -> {
-                    turnPlayer.addMoney(GO_MONEY_AMOUNT);
+                runtime.popupService().show(text("game.go.reward", goMoneyAmount), () -> {
+                    turnPlayer.addMoney(goMoneyAmount);
                     completeTurnMove.doAction();
                 });
                 return;
@@ -583,8 +589,8 @@ public class Game implements MonopolyEventListener {
 
     private void handleSpotLogic(DiceState diceState, Spot spot) {
         log.debug("Handling spot logic for player {} on spot {} with diceState={}",
-                PLAYERS.getTurn().getName(), spot.getSpotType(), diceState);
-        GameState gameState = new GameState(PLAYERS, DICES, board, TurnResult.copyOf(prevTurnResult), this::handlePaymentRequest);
+                players.getTurn().getName(), spot.getSpotType(), diceState);
+        GameState gameState = new GameState(players, dices, board, TurnResult.copyOf(prevTurnResult), this::handlePaymentRequest);
         prevTurnResult = null; //Important to clear previous turn result before getting next one!
         prevTurnResult = spot.handleTurn(gameState, () -> doTurnEndEvent(diceState));
         log.trace("Spot handling produced prevTurnResult={}", prevTurnResult);
@@ -592,8 +598,8 @@ public class Game implements MonopolyEventListener {
 
     private void doTurnEndEvent(DiceState diceState) {
         log.trace("Running turn end event for player {} with diceState={} prevTurnResult={}",
-                PLAYERS.getTurn().getName(), diceState, prevTurnResult);
-        applyTurnPlan(turnEngine.createFollowUpPlan(PLAYERS.getTurn(), board, prevTurnResult, diceState));
+                players.getTurn().getName(), diceState, prevTurnResult);
+        applyTurnPlan(turnEngine.createFollowUpPlan(players.getTurn(), board, prevTurnResult, diceState));
     }
 
     private void applyTurnPlan(TurnPlan turnPlan) {
@@ -645,7 +651,7 @@ public class Game implements MonopolyEventListener {
             }
             if (MonopolyApp.DEBUG_MODE && key == 'e') {
                 log.debug("Ending round");
-                ANIMATIONS.finishAllAnimations();
+                animations.finishAllAnimations();
                 endRound(true);
                 consumedEvent = true;
             }
@@ -665,11 +671,11 @@ public class Game implements MonopolyEventListener {
                 }
                 Spot hoveredSpot = board.getHoveredSpot();
                 //Debugging "flying mechanic"
-                if (hoveredSpot != null && MonopolyApp.DEBUG_MODE && DICES.isVisible()) {
-                    DICES.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
+                if (hoveredSpot != null && MonopolyApp.DEBUG_MODE && dices.isVisible()) {
+                    dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
                     if (playRound(hoveredSpot, DiceState.DEBUG_REROLL)) {
                         consumedEvent = true;
-                        DICES.hide();
+                        dices.hide();
                     }
                 }
             }
@@ -714,7 +720,7 @@ public class Game implements MonopolyEventListener {
         LayoutMetrics layoutMetrics = getLayoutMetrics();
         if (!layoutMetrics.hasSidebarSpace()) {
             layoutOverlayControls(layoutMetrics);
-            DICES.updateLayout(layoutMetrics);
+            dices.updateLayout(layoutMetrics);
             return;
         }
 
@@ -733,7 +739,7 @@ public class Game implements MonopolyEventListener {
         languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), languageButtonY);
         pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs(), pauseButtonY);
         tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), tradeButtonY);
-        DICES.updateLayout(layoutMetrics);
+        dices.updateLayout(layoutMetrics);
     }
 
     private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
@@ -836,7 +842,7 @@ public class Game implements MonopolyEventListener {
 
     private void debugResetTurnState() {
         log.debug("Debug action: reset turn state");
-        ANIMATIONS.finishAllAnimations();
+        animations.finishAllAnimations();
         debtController.clearDebtState();
         updateDebtButtons();
         runtime.popupService().hideAll();
@@ -855,13 +861,13 @@ public class Game implements MonopolyEventListener {
             hidePrimaryTurnControls();
             return;
         }
-        DICES.reset();
-        Player turnPlayer = PLAYERS.getTurn();
+        dices.reset();
+        Player turnPlayer = players.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
             hidePrimaryTurnControls();
             return;
         }
-        DICES.show();
+        dices.show();
         endRoundButton.hide();
     }
 
@@ -870,17 +876,17 @@ public class Game implements MonopolyEventListener {
             hidePrimaryTurnControls();
             return;
         }
-        Player turnPlayer = PLAYERS.getTurn();
+        Player turnPlayer = players.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
             hidePrimaryTurnControls();
             return;
         }
-        DICES.hide();
+        dices.hide();
         endRoundButton.show();
     }
 
     private void hidePrimaryTurnControls() {
-        DICES.hide();
+        dices.hide();
         endRoundButton.hide();
     }
 
@@ -895,7 +901,7 @@ public class Game implements MonopolyEventListener {
         refreshLabels();
         if (winner != null && winner.getSpot() != null) {
             winner.setCoords(winner.getSpot().getTokenCoords(winner));
-            PLAYERS.focusPlayer(winner);
+            players.focusPlayer(winner);
         }
         String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
         log.info("Game over. winner={}", winnerName);
@@ -908,9 +914,9 @@ public class Game implements MonopolyEventListener {
             hidePrimaryTurnControls();
             return;
         }
-        if (endRoundButton.isVisible() && DICES.isVisible()) {
+        if (endRoundButton.isVisible() && dices.isVisible()) {
             log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.");
-            DICES.hide();
+            dices.hide();
         }
     }
 
@@ -981,7 +987,7 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public void rollDice() {
-            DICES.rollDice();
+            dices.rollDice();
         }
 
         @Override
@@ -1009,7 +1015,7 @@ public class Game implements MonopolyEventListener {
         );
         return new GameView(
                 currentPlayer.getId(),
-                PLAYERS.getPlayers().stream()
+                players.getPlayers().stream()
                         .map(this::createPlayerView)
                         .sorted(Comparator.comparingInt(PlayerView::turnNumber))
                         .toList(),
@@ -1023,8 +1029,8 @@ public class Game implements MonopolyEventListener {
                 popupView,
                 debtView,
                 countUnownedProperties(),
-                StreetProperty.BANK_HOUSE_SUPPLY - PLAYERS.getTotalHouseCount(),
-                StreetProperty.BANK_HOTEL_SUPPLY - PLAYERS.getTotalHotelCount()
+                StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount(),
+                StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount()
         );
     }
 
@@ -1064,9 +1070,9 @@ public class Game implements MonopolyEventListener {
             return false;
         }
         if (!currentPlayer.isComputerControlled()) {
-            return DICES.isVisible();
+            return dices.isVisible();
         }
-        return DICES.getValue() == null;
+        return dices.getValue() == null;
     }
 
     private boolean isEndTurnActionAvailable(Player currentPlayer) {
@@ -1076,7 +1082,7 @@ public class Game implements MonopolyEventListener {
         if (!currentPlayer.isComputerControlled()) {
             return endRoundButton.isVisible();
         }
-        return DICES.getValue() != null;
+        return dices.getValue() != null;
     }
 
     private PropertyView createPropertyView(Player owner, Property property) {
@@ -1115,7 +1121,7 @@ public class Game implements MonopolyEventListener {
                 default -> 28;
             };
         }
-        Player nonOwner = PLAYERS.getPlayers().stream()
+        Player nonOwner = players.getPlayers().stream()
                 .filter(candidate -> candidate != owner)
                 .findFirst()
                 .orElse(null);
@@ -1178,7 +1184,7 @@ public class Game implements MonopolyEventListener {
             int utilityCount = currentPlayer == null ? 0 : currentPlayer.getOwnedProperties(property.getSpotType().streetType).size() + 1;
             return utilityCount >= 2 ? 70 : 28;
         }
-        Player simulatedVisitor = PLAYERS.getPlayers().stream()
+        Player simulatedVisitor = players.getPlayers().stream()
                 .filter(candidate -> candidate != currentPlayer)
                 .findFirst()
                 .orElse(null);

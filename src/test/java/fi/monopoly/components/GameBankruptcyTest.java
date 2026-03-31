@@ -33,10 +33,10 @@ class GameBankruptcyTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<Player> getPlayers() throws ReflectiveOperationException {
+    private static List<Player> getPlayers(Game game) throws ReflectiveOperationException {
         Field field = Players.class.getDeclaredField("playerList");
         field.setAccessible(true);
-        return (List<Player>) field.get(Game.PLAYERS);
+        return (List<Player>) field.get(game.players());
     }
 
     @Test
@@ -46,8 +46,8 @@ class GameBankruptcyTest {
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
 
-        Player debtor = getPlayers().get(0);
-        Player creditor = getPlayers().get(1);
+        Player debtor = getPlayers(game).get(0);
+        Player creditor = getPlayers(game).get(1);
         StreetProperty b1 = new StreetProperty(SpotType.B1);
         StreetProperty b2 = new StreetProperty(SpotType.B2);
         TestObjectFactory.giveProperty(debtor, b1);
@@ -66,8 +66,8 @@ class GameBankruptcyTest {
 
         invokeDeclareBankruptcy(game);
 
-        assertEquals(2, Game.PLAYERS.count());
-        assertFalse(getPlayers().contains(debtor));
+        assertEquals(2, game.players().count());
+        assertFalse(getPlayers(game).contains(debtor));
         assertEquals(1_600, creditor.getMoneyAmount());
         assertEquals(1, creditor.getGetOutOfJailCardCount());
         assertTrue(creditor.getOwnedProperties().containsAll(List.of(b1, b2)));
@@ -82,9 +82,9 @@ class GameBankruptcyTest {
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
 
-        Player debtor = getPlayers().get(0);
-        Player auctionWinner = getPlayers().get(1);
-        Player brokePlayer = getPlayers().get(2);
+        Player debtor = getPlayers(game).get(0);
+        Player auctionWinner = getPlayers(game).get(1);
+        Player brokePlayer = getPlayers(game).get(2);
         StreetProperty b1 = new StreetProperty(SpotType.B1);
         StreetProperty b2 = new StreetProperty(SpotType.B2);
         TestObjectFactory.giveProperty(debtor, b1);
@@ -106,8 +106,8 @@ class GameBankruptcyTest {
         invokeDeclareBankruptcy(game);
         settlePopupQueue(runtime);
 
-        assertEquals(2, Game.PLAYERS.count());
-        assertFalse(getPlayers().contains(debtor));
+        assertEquals(2, game.players().count());
+        assertFalse(getPlayers(game).contains(debtor));
         assertTrue(auctionWinner.getOwnedProperties().stream().anyMatch(property -> property.getSpotType() == SpotType.B1));
         assertTrue(auctionWinner.getOwnedProperties().stream().anyMatch(property -> property.getSpotType() == SpotType.B2));
         assertFalse(b1.isMortgaged());
@@ -124,9 +124,9 @@ class GameBankruptcyTest {
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
 
-        Player debtor = getPlayers().get(0);
-        Player other1 = getPlayers().get(1);
-        Player other2 = getPlayers().get(2);
+        Player debtor = getPlayers(game).get(0);
+        Player other1 = getPlayers(game).get(1);
+        Player other2 = getPlayers(game).get(2);
         StreetProperty b1 = new StreetProperty(SpotType.B1);
         StreetProperty b2 = new StreetProperty(SpotType.B2);
         TestObjectFactory.giveProperty(debtor, b1);
@@ -145,8 +145,8 @@ class GameBankruptcyTest {
         invokeDeclareBankruptcy(game);
         settlePopupQueue(runtime);
 
-        assertEquals(2, Game.PLAYERS.count());
-        assertFalse(getPlayers().contains(debtor));
+        assertEquals(2, game.players().count());
+        assertFalse(getPlayers(game).contains(debtor));
         assertNull(b1.getOwnerPlayer());
         assertNull(b2.getOwnerPlayer());
         assertFalse(b1.isMortgaged());
@@ -192,11 +192,11 @@ class GameBankruptcyTest {
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
 
-        List<Player> players = getPlayers();
+        List<Player> players = getPlayers(game);
         Player debtor = players.get(0);
         Player winner = players.get(1);
         Player third = players.get(2);
-        Game.PLAYERS.removePlayer(third);
+        game.players().removePlayer(third);
 
         setDebtState(game, new DebtState(
                 new PaymentRequest(debtor, new PlayerTarget(winner), 2_000, "Bankruptcy"),
@@ -207,8 +207,8 @@ class GameBankruptcyTest {
 
         invokeDeclareBankruptcy(game);
 
-        assertEquals(1, Game.PLAYERS.count());
-        assertEquals(winner, Game.PLAYERS.getPlayers().get(0));
+        assertEquals(1, game.players().count());
+        assertEquals(winner, game.players().getPlayers().get(0));
         assertTrue(getBooleanField(game, "gameOver"));
         assertEquals(winner.getSpot().getTokenCoords(winner), winner.getCoords());
         assertTrue(runtime.popupService().isAnyVisible());
@@ -218,13 +218,13 @@ class GameBankruptcyTest {
         runtime.popupService().triggerPrimaryAction();
 
         assertFalse(runtime.popupService().isAnyVisible());
-        assertFalse(Game.DICES.isVisible());
+        assertFalse(game.dices().isVisible());
         assertFalse(getEndRoundButton(game).isVisible());
 
         invokeEndRound(game);
 
-        assertEquals(winner, Game.PLAYERS.getTurn());
-        assertFalse(Game.DICES.isVisible());
+        assertEquals(winner, game.players().getTurn());
+        assertFalse(game.dices().isVisible());
         assertFalse(getEndRoundButton(game).isVisible());
     }
 
@@ -260,7 +260,7 @@ class GameBankruptcyTest {
             if (!runtime.popupService().isAnyVisible()) {
                 return;
             }
-            Player turnPlayer = Game.PLAYERS.getTurn();
+            Player turnPlayer = runtime.gameSession().players().getTurn();
             if (turnPlayer != null && turnPlayer.isComputerControlled()) {
                 runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
             } else {

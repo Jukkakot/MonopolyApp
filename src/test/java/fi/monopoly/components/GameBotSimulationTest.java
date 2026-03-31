@@ -61,7 +61,7 @@ class GameBotSimulationTest {
             resetNextPlayerId();
             MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
             Game game = new Game(runtime);
-            promoteAllPlayersToStrongBots();
+            promoteAllPlayersToStrongBots(game);
             runtime.eventBus().flushPendingChanges();
 
             SimulationResult result = simulateGame(runtime, game);
@@ -95,11 +95,11 @@ class GameBotSimulationTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
-        configureHeadsUpProfiles(ComputerPlayerProfile.STRONG, ComputerPlayerProfile.SMOKE_TEST);
-        Player strongPlayer = Game.PLAYERS.getPlayers().stream()
+        configureHeadsUpProfiles(game, ComputerPlayerProfile.STRONG, ComputerPlayerProfile.SMOKE_TEST);
+        Player strongPlayer = game.players().getPlayers().stream()
                 .min(Comparator.comparingInt(Player::getTurnNumber))
                 .orElseThrow();
-        Player smokePlayer = Game.PLAYERS.getPlayers().stream()
+        Player smokePlayer = game.players().getPlayers().stream()
                 .filter(player -> player != strongPlayer)
                 .findFirst()
                 .orElseThrow();
@@ -122,17 +122,17 @@ class GameBotSimulationTest {
         int debtResolutions = 0;
         int bankruptcies = 0;
         int stagnantSteps = 0;
-        int previousPlayerCount = Game.PLAYERS.count();
-        String previousTurn = currentTurnName();
-        String previousSnapshot = snapshot(runtime);
+        int previousPlayerCount = game.players().count();
+        String previousTurn = currentTurnName(game);
+        String previousSnapshot = snapshot(runtime, game);
         boolean debtActiveLastStep = false;
 
         for (int step = 0; step < maxSteps; step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (Game.ANIMATIONS.isRunning()) {
-                Game.ANIMATIONS.finishAllAnimations();
+            if (game.animations().isRunning()) {
+                game.animations().finishAllAnimations();
             }
 
             boolean debtActive = isDebtResolutionActive(game);
@@ -141,19 +141,19 @@ class GameBotSimulationTest {
             }
             debtActiveLastStep = debtActive;
 
-            int playerCount = Game.PLAYERS.count();
+            int playerCount = game.players().count();
             if (playerCount < previousPlayerCount) {
                 bankruptcies += previousPlayerCount - playerCount;
                 previousPlayerCount = playerCount;
             }
 
-            String currentTurn = currentTurnName();
+            String currentTurn = currentTurnName(game);
             if (!Objects.equals(previousTurn, currentTurn)) {
                 turnSwitches++;
                 previousTurn = currentTurn;
             }
 
-            String currentSnapshot = snapshot(runtime);
+            String currentSnapshot = snapshot(runtime, game);
             if (currentSnapshot.equals(previousSnapshot)) {
                 stagnantSteps++;
             } else {
@@ -161,15 +161,15 @@ class GameBotSimulationTest {
                 stagnantSteps = 0;
             }
 
-            if (Game.PLAYERS.count() <= 1) {
-                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, true, currentSnapshot, currentTurnName());
+            if (game.players().count() <= 1) {
+                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, true, currentSnapshot, currentTurnName(game));
             }
             if (stagnantSteps >= maxStagnantSteps) {
-                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, true, false, currentSnapshot, currentTurnName());
+                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, true, false, currentSnapshot, currentTurnName(game));
             }
         }
 
-        return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, false, previousSnapshot, currentTurnName());
+        return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, false, previousSnapshot, currentTurnName(game));
     }
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
@@ -200,29 +200,27 @@ class GameBotSimulationTest {
         method.invoke(game);
     }
 
-    private static boolean isDebtResolutionActive(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("debtState");
-        field.setAccessible(true);
-        return field.get(game) != null;
+    private static boolean isDebtResolutionActive(Game game) {
+        return game.debtController().debtState() != null;
     }
 
-    private static void promoteAllPlayersToStrongBots() throws ReflectiveOperationException {
+    private static void promoteAllPlayersToStrongBots(Game game) throws ReflectiveOperationException {
         Field field = Player.class.getDeclaredField("computerProfile");
         field.setAccessible(true);
-        for (Player player : Game.PLAYERS.getPlayers()) {
+        for (Player player : game.players().getPlayers()) {
             field.set(player, ComputerPlayerProfile.STRONG);
         }
     }
 
-    private static void configureHeadsUpProfiles(ComputerPlayerProfile firstProfile, ComputerPlayerProfile secondProfile) throws ReflectiveOperationException {
+    private static void configureHeadsUpProfiles(Game game, ComputerPlayerProfile firstProfile, ComputerPlayerProfile secondProfile) throws ReflectiveOperationException {
         Field field = Player.class.getDeclaredField("computerProfile");
         field.setAccessible(true);
-        var players = Game.PLAYERS.getPlayers().stream()
+        var players = game.players().getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getTurnNumber))
                 .collect(Collectors.toCollection(java.util.ArrayList::new));
         while (players.size() > 2) {
             Player removed = players.remove(players.size() - 1);
-            Game.PLAYERS.removePlayer(removed);
+            game.players().removePlayer(removed);
         }
         field.set(players.get(0), firstProfile);
         field.set(players.get(1), secondProfile);
@@ -245,32 +243,32 @@ class GameBotSimulationTest {
                 .filter(spot -> spot.getSpotType() == SpotType.RR2)
                 .findFirst()
                 .orElseThrow());
-        Game.PLAYERS.focusPlayer(strongPlayer);
+        game.players().focusPlayer(strongPlayer);
     }
 
-    private static String currentTurnName() {
-        Player turn = Game.PLAYERS.getTurn();
+    private static String currentTurnName(Game game) {
+        Player turn = game.players().getTurn();
         return turn == null ? "none" : turn.getName();
     }
 
-    private static String snapshot(MonopolyRuntime runtime) {
-        String playerState = Game.PLAYERS.getPlayers().stream()
+    private static String snapshot(MonopolyRuntime runtime, Game game) {
+        String playerState = game.players().getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getId))
                 .map(player -> player.getId() + ":" + player.getMoneyAmount() + ":" + player.getSpot().getSpotType() + ":" + player.getOwnedProperties().size())
                 .collect(Collectors.joining("|"));
-        String diceValue = Game.DICES != null && Game.DICES.getValue() != null ? Game.DICES.getValue().toString() : "null";
+        String diceValue = game.dices() != null && game.dices().getValue() != null ? game.dices().getValue().toString() : "null";
         String popupKind = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupKind() : "none";
         String popupMessage = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupMessage() : "none";
         return playerState
-                + "|turn=" + currentTurnName()
-                + "|players=" + Game.PLAYERS.count()
+                + "|turn=" + currentTurnName(game)
+                + "|players=" + game.players().count()
                 + "|popup=" + runtime.popupService().isAnyVisible()
                 + "|popupKind=" + popupKind
                 + "|popupMessage=" + popupMessage
-                + "|diceVisible=" + (Game.DICES != null && Game.DICES.isVisible())
+                + "|diceVisible=" + (game.dices() != null && game.dices().isVisible())
                 + "|dice=" + diceValue
-                + "|animations=" + (Game.ANIMATIONS != null && Game.ANIMATIONS.isRunning())
-                + "|debt=" + Game.isDebtResolutionActive();
+                + "|animations=" + (game.animations() != null && game.animations().isRunning())
+                + "|debt=" + (game.debtController().debtState() != null);
     }
 
     private record SimulationResult(

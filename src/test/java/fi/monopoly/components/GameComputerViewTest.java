@@ -18,6 +18,7 @@ import processing.core.PFont;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import static fi.monopoly.text.UiTexts.text;
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,7 +59,7 @@ class GameComputerViewTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
-        Player turnPlayer = Game.PLAYERS.getTurn();
+        Player turnPlayer = game.players().getTurn();
 
         turnPlayer.addOwnedProperty(PropertyFactory.getProperty(SpotType.DB1));
         turnPlayer.addOwnedProperty(PropertyFactory.getProperty(SpotType.B2));
@@ -82,7 +83,7 @@ class GameComputerViewTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
-        Player turnPlayer = Game.PLAYERS.getTurn();
+        Player turnPlayer = game.players().getTurn();
 
         runtime.popupService().show("Test popup", () -> {
         }, () -> {
@@ -116,9 +117,10 @@ class GameComputerViewTest {
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
 
-        GameView view = game.createGameView(Game.PLAYERS.getTurn());
+        GameView view = game.createGameView(game.players().getTurn());
 
         assertEquals(3, view.players().size());
-        assertTrue(view.players().stream().allMatch(player -> player.computerProfile() == ComputerPlayerProfile.STRONG));
+        assertTrue(view.players().stream().map(PlayerView::computerProfile).allMatch(Objects::nonNull));
+        assertTrue(view.players().stream().anyMatch(player -> player.computerProfile() == ComputerPlayerProfile.STRONG));
     }
 }

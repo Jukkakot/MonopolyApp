@@ -1,7 +1,7 @@
 package fi.monopoly.images;
 
 import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.components.Game;
+import fi.monopoly.components.GameSession;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.types.SpotType;
 import lombok.Getter;
@@ -33,7 +33,8 @@ public abstract class AbstractClickable implements MonopolyEventListener, Clicka
 
     @Override
     public final boolean onEvent(Event event) {
-        if (Game.ANIMATIONS.isRunning()) {
+        GameSession session = runtime.gameSessionOrNull();
+        if (session != null && session.animations() != null && session.animations().isRunning()) {
             return false;
         }
         if (runtime.popupService().isAnyVisible()) {

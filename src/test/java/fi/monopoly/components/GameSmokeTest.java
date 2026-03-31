@@ -47,7 +47,7 @@ class GameSmokeTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        int initialPlayerCount = Game.PLAYERS.count();
+        int initialPlayerCount = players().count();
         int rollCount = 0;
         int popupResolutionCount = 0;
         int debtResolutionCount = 0;
@@ -69,11 +69,16 @@ class GameSmokeTest {
                 assertResponsiveUiState(game, runtime);
             }
 
-            if (Game.ANIMATIONS.isRunning()) {
-                Game.ANIMATIONS.finishAllAnimations();
+            if (animations().isRunning()) {
+                animations().finishAllAnimations();
             } else if (runtime.popupService().isAnyVisible()) {
                 popupResolutionCount++;
-                dispatchKey(runtime, '1');
+                Player turnPlayer = players().getTurn();
+                if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+                    runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                } else {
+                    dispatchKey(runtime, '1');
+                }
             } else if (isDebtResolutionActive(game)) {
                 debtResolutionCount++;
                 if (isBankruptcyRisk(game)) {
@@ -84,9 +89,14 @@ class GameSmokeTest {
                     invokeRetryPendingDebtPayment(game);
                 }
             } else {
-                Object previousDiceValue = Game.DICES.getValue();
-                dispatchKey(runtime, MonopolyApp.SPACE);
-                if (Game.DICES.getValue() != null && Game.DICES.getValue() != previousDiceValue) {
+                Player turnPlayer = players().getTurn();
+                Object previousDiceValue = dices().getValue();
+                if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+                    invokeNoArgMethod(game, "runComputerPlayerStep");
+                } else {
+                    dispatchKey(runtime, MonopolyApp.SPACE);
+                }
+                if (dices().getValue() != null && dices().getValue() != previousDiceValue) {
                     rollCount++;
                 }
             }
@@ -119,7 +129,7 @@ class GameSmokeTest {
                 previousSnapshot = currentSnapshot;
             }
 
-            if (Game.PLAYERS.count() <= 1) {
+            if (players().count() <= 1) {
                 completedGame = true;
                 break;
             }
@@ -139,7 +149,7 @@ class GameSmokeTest {
         assertTrue(seenTurnPlayers.size() >= 2, "Smoke test should rotate through at least two players");
         assertTrue(seenSpotTypes.size() >= MIN_UNIQUE_SPOTS, "Game did not traverse enough of the board to be a useful sanity check");
         assertTrue(debtResolutionCount >= bankruptcyCount, "Bankruptcy count cannot exceed debt resolutions");
-        assertFalse(Game.ANIMATIONS.isRunning(), "Animations should not be left running at the end of the smoke test");
+        assertFalse(animations().isRunning(), "Animations should not be left running at the end of the smoke test");
         assertFalse(runtime.popupService().isAnyVisible(), "Popup should not be left open at the end of the smoke test");
         assertFalse(isDebtResolutionActive(game), "Debt resolution should not be left active at the end of the smoke test");
 
@@ -154,12 +164,17 @@ class GameSmokeTest {
             if (verifyResponsiveUi) {
                 assertResponsiveUiState(game, runtime);
             }
-            if (Game.ANIMATIONS.isRunning()) {
-                Game.ANIMATIONS.finishAllAnimations();
+            if (animations().isRunning()) {
+                animations().finishAllAnimations();
                 continue;
             }
             if (runtime.popupService().isAnyVisible()) {
-                dispatchKey(runtime, '1');
+                Player turnPlayer = players().getTurn();
+                if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+                    runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                } else {
+                    dispatchKey(runtime, '1');
+                }
                 continue;
             }
             if (isDebtResolutionActive(game)) {
@@ -169,6 +184,11 @@ class GameSmokeTest {
                     topUpDebtDebtorCash(game);
                     invokeRetryPendingDebtPayment(game);
                 }
+                continue;
+            }
+            Player turnPlayer = players().getTurn();
+            if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+                invokeNoArgMethod(game, "runComputerPlayerStep");
                 continue;
             }
             return;
@@ -197,18 +217,18 @@ class GameSmokeTest {
     }
 
     private static void assertCoreInvariants(Game game, int initialPlayerCount) {
-        assertNotNull(Game.PLAYERS, "Players collection should exist");
-        assertNotNull(Game.DICES, "Dice controls should exist");
-        assertNotNull(Game.ANIMATIONS, "Animation controller should exist");
+        assertNotNull(players(), "Players collection should exist");
+        assertNotNull(dices(), "Dice controls should exist");
+        assertNotNull(animations(), "Animation controller should exist");
 
-        int playerCount = Game.PLAYERS.count();
+        int playerCount = players().count();
         assertTrue(playerCount >= 1, "At least one player should remain in the game");
         assertTrue(playerCount <= initialPlayerCount, "Player count should not increase during the game");
 
         List<Player> players = getPlayers();
         assertEquals(playerCount, players.size(), "Player list size should match Players.count()");
-        assertNotNull(Game.PLAYERS.getTurn(), "Current turn player should always exist while the game is running");
-        assertTrue(players.contains(Game.PLAYERS.getTurn()), "Turn player should belong to the active player list");
+        assertNotNull(players().getTurn(), "Current turn player should always exist while the game is running");
+        assertTrue(players.contains(players().getTurn()), "Turn player should belong to the active player list");
 
         Set<Integer> playerIds = new HashSet<>();
         Set<Integer> turnNumbers = new HashSet<>();
@@ -223,9 +243,9 @@ class GameSmokeTest {
         }
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
-        assertFalse(endRoundButton.isVisible() && Game.DICES.isVisible(), "Roll dice and end turn controls cannot both be visible");
+        assertFalse(endRoundButton.isVisible() && dices().isVisible(), "Roll dice and end turn controls cannot both be visible");
         if (isDebtResolutionActive(game)) {
-            assertFalse(Game.DICES.isVisible(), "Roll dice should be hidden during debt resolution");
+            assertFalse(dices().isVisible(), "Roll dice should be hidden during debt resolution");
             assertFalse(endRoundButton.isVisible(), "End turn should be hidden during debt resolution");
         }
     }
@@ -235,7 +255,7 @@ class GameSmokeTest {
         try {
             Field field = Players.class.getDeclaredField("playerList");
             field.setAccessible(true);
-            return List.copyOf((List<Player>) field.get(Game.PLAYERS));
+            return List.copyOf((List<Player>) field.get(players()));
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -276,27 +296,33 @@ class GameSmokeTest {
         return MonopolyRuntime.initialize(app, controlP5, font, font, font);
     }
 
+    private static Players players() {
+        return MonopolyRuntime.get().gameSession().players();
+    }
+
+    private static fi.monopoly.components.dices.Dices dices() {
+        return MonopolyRuntime.get().gameSession().dices();
+    }
+
+    private static fi.monopoly.components.animation.Animations animations() {
+        return MonopolyRuntime.get().gameSession().animations();
+    }
+
     private static void dispatchKey(MonopolyRuntime runtime, char key) {
         runtime.eventBus().sendConsumableEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
 
     private static boolean isDebtResolutionActive(Game game) {
-        return getDebtState(game) != null;
+        return game.debtController().debtState() != null;
     }
 
     private static boolean isBankruptcyRisk(Game game) {
-        DebtState debtState = getDebtState(game);
+        DebtState debtState = game.debtController().debtState();
         return debtState != null && debtState.bankruptcyRisk();
     }
 
     private static DebtState getDebtState(Game game) {
-        try {
-            Field field = Game.class.getDeclaredField("debtState");
-            field.setAccessible(true);
-            return (DebtState) field.get(game);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
+        return game.debtController().debtState();
     }
 
     private static void topUpDebtDebtorCash(Game game) {
@@ -311,11 +337,11 @@ class GameSmokeTest {
     }
 
     private static void invokeRetryPendingDebtPayment(Game game) {
-        invokeNoArgMethod(game, "retryPendingDebtPayment");
+        game.debtController().retryPendingDebtPayment();
     }
 
     private static void invokeDeclareBankruptcy(Game game) {
-        invokeNoArgMethod(game, "declareBankruptcy");
+        game.debtController().declareBankruptcy();
     }
 
     private static void invokePrimaryControlInvariant(Game game) {
@@ -363,12 +389,12 @@ class GameSmokeTest {
     }
 
     private static String currentTurnName() {
-        Player turn = Game.PLAYERS.getTurn();
+        Player turn = players().getTurn();
         return turn != null ? turn.getName() : null;
     }
 
     private static String currentTurnSpotType() {
-        Player turn = Game.PLAYERS.getTurn();
+        Player turn = players().getTurn();
         return turn != null && turn.getSpot() != null ? turn.getSpot().getSpotType().name() : null;
     }
 
@@ -392,20 +418,20 @@ class GameSmokeTest {
     }
 
     private static String snapshot() {
-        Player turn = Game.PLAYERS.getTurn();
+        Player turn = players().getTurn();
         String turnName = turn != null ? turn.getName() : "none";
         String turnSpot = turn != null && turn.getSpot() != null ? turn.getSpot().getSpotType().name() : "none";
         int turnMoney = turn != null ? turn.getMoneyAmount() : -1;
-        String diceValue = Game.DICES.getValue() != null ? Game.DICES.getValue().toString() : "null";
+        String diceValue = dices().getValue() != null ? dices().getValue().toString() : "null";
         return turnName
                 + "|spot=" + turnSpot
                 + "|money=" + turnMoney
                 + "|popup=" + MonopolyRuntime.get().popupService().isAnyVisible()
-                + "|diceVisible=" + Game.DICES.isVisible()
+                + "|diceVisible=" + dices().isVisible()
                 + "|dice=" + diceValue
-                + "|animations=" + Game.ANIMATIONS.isRunning()
-                + "|players=" + Game.PLAYERS.count()
-                + "|debt=" + Game.isDebtResolutionActive();
+                + "|animations=" + animations().isRunning()
+                + "|players=" + players().count()
+                + "|debt=" + MonopolyRuntime.get().gameSession().isDebtResolutionActive();
     }
 
     @BeforeEach

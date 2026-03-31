@@ -4,6 +4,7 @@ import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.*;
+import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.cards.Card;
 import fi.monopoly.components.cards.Cards;
 import fi.monopoly.components.payment.PaymentHandler;
@@ -39,7 +40,7 @@ class PickCardSpotTest {
     void setUp() {
         setLocale(Locale.ENGLISH);
         runtime = initHeadlessRuntime();
-        Game.ANIMATIONS = new fi.monopoly.components.animation.Animations();
+        runtime.setGameSession(new GameSession(null, null, new Animations()));
     }
 
     @AfterEach

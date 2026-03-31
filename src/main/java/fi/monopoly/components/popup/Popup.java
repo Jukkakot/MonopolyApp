@@ -3,7 +3,7 @@ package fi.monopoly.components.popup;
 
 import controlP5.Canvas;
 import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.components.Game;
+import fi.monopoly.components.GameSession;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.event.MonopolyEventListener;
@@ -72,10 +72,11 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected final boolean isManualInteractionAllowed() {
-        if (Game.isGameOverActive()) {
+        GameSession session = runtime.gameSessionOrNull();
+        if (session != null && session.isGameOverActive()) {
             return true;
         }
-        Player turnPlayer = Game.PLAYERS != null ? Game.PLAYERS.getTurn() : null;
+        Player turnPlayer = session != null && session.players() != null ? session.players().getTurn() : null;
         return turnPlayer == null || !turnPlayer.isComputerControlled();
     }
 

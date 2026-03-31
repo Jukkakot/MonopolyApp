@@ -1,11 +1,17 @@
 package fi.monopoly.components.properties;
 
+import controlP5.ControlP5;
+import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Game;
+import fi.monopoly.components.GameSession;
 import fi.monopoly.components.Player;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import processing.awt.PGraphicsJava2D;
+import processing.core.PFont;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -16,7 +22,24 @@ class StreetPropertyTest {
 
     @AfterEach
     void clearGamePlayers() {
-        Game.PLAYERS = null;
+        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        if (runtime != null) {
+            runtime.setGameSession(null);
+        }
+    }
+
+    private static MonopolyRuntime initHeadlessRuntime() {
+        MonopolyApp app = new MonopolyApp();
+        app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;
+        app.height = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
+        PGraphicsJava2D graphics = new PGraphicsJava2D();
+        graphics.setParent(app);
+        graphics.setPrimary(true);
+        graphics.setSize(app.width, app.height);
+        app.g = graphics;
+        ControlP5 controlP5 = new ControlP5(app);
+        PFont font = app.createFont("Arial", 20);
+        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
     }
 
     @Test
@@ -223,7 +246,8 @@ class StreetPropertyTest {
         setBuildingState(fillerA, 16, 0);
         setBuildingState(fillerB, 16, 0);
 
-        Game.PLAYERS = TestObjectFactory.playersWithTurn(owner, other);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        runtime.setGameSession(new GameSession(TestObjectFactory.playersWithTurn(owner, other), null, null));
 
         assertFalse(first.buyHouses(1));
         assertEquals(0, first.getHouseCount());
@@ -251,7 +275,8 @@ class StreetPropertyTest {
             setBuildingState(property, 0, 1);
         }
 
-        Game.PLAYERS = TestObjectFactory.playersWithTurn(owner, hotelOwner);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        runtime.setGameSession(new GameSession(TestObjectFactory.playersWithTurn(owner, hotelOwner), null, null));
 
         assertFalse(first.buyHouses(1));
         assertEquals(4, first.getHouseCount());
@@ -273,7 +298,8 @@ class StreetPropertyTest {
         TestObjectFactory.giveProperty(other, filler);
         setBuildingState(filler, 29, 0);
 
-        Game.PLAYERS = TestObjectFactory.playersWithTurn(owner, other);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        runtime.setGameSession(new GameSession(TestObjectFactory.playersWithTurn(owner, other), null, null));
 
         assertFalse(first.sellHouses(1));
         assertEquals(0, first.getHouseCount());

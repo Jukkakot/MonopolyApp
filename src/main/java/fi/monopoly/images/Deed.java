@@ -1,7 +1,7 @@
 package fi.monopoly.images;
 
 import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.components.Game;
+import fi.monopoly.components.GameSession;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
@@ -26,14 +26,15 @@ public class Deed extends AbstractClickable {
     @Override
     public void onClick() {
         super.onClick();
-        if (!property.isOwner(Game.PLAYERS.getTurn())) {
+        GameSession session = runtime.gameSessionOrNull();
+        if (session == null || session.players() == null || !property.isOwner(session.players().getTurn())) {
             //No actions if player not owner of the deed
             return;
         }
         if (property instanceof StreetProperty streetProperty) {
             if (!streetProperty.hasBuildings()) {
                 handleMortgaging();
-            } else if (Game.isDebtResolutionForCurrentTurn()) {
+            } else if (session.isDebtResolutionActive()) {
                 runtime.popupService().show(
                         text("deed.sellBeforeMortgage", property.getDisplayName(), getHouseSellValue(streetProperty)),
                         getSellHouseButtons(streetProperty)
@@ -66,8 +67,9 @@ public class Deed extends AbstractClickable {
     }
 
     private void handleMortgaging() {
+        GameSession session = runtime.gameSessionOrNull();
         if (property.isMortgaged()) {
-            if (Game.isDebtResolutionForCurrentTurn()) {
+            if (session != null && session.isDebtResolutionActive()) {
                 runtime.popupService().show(text("deed.cannotUnmortgageDuringDebt"));
                 return;
             }

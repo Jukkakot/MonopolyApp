@@ -7,6 +7,7 @@ import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.dices.Dice;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.support.TestGameSessions;
 import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
@@ -126,8 +127,9 @@ class GameTurnControlsTest {
 
     private static void configureSingleHumanTurn(Game game, MonopolyRuntime runtime) throws ReflectiveOperationException {
         Spot spot = game.getBoard().getSpots().get(0);
-        Game.PLAYERS = new Players(runtime);
-        Game.PLAYERS.addPlayer(new Player(runtime, "Human", Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
+        Players players = new Players(runtime);
+        players.addPlayer(new Player(runtime, "Human", Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
+        TestGameSessions.install(runtime, players, game.dices(), game.animations());
         invokeShowRollDiceControl(game);
         runtime.eventBus().flushPendingChanges();
     }
@@ -147,13 +149,13 @@ class GameTurnControlsTest {
         runtime.eventBus().flushPendingChanges();
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
-        Game.DICES.show();
+        game.dices().show();
         endRoundButton.show();
 
         invokePrimaryControlInvariant(game);
 
         assertTrue(endRoundButton.isVisible());
-        assertFalse(Game.DICES.isVisible());
+        assertFalse(game.dices().isVisible());
     }
 
     @Test
@@ -231,7 +233,7 @@ class GameTurnControlsTest {
         MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton tradeButton = getTradeButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
         float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
         float historyHeight = invokeFloatMethod(game, "getSidebarHistoryHeight");
 
@@ -257,7 +259,7 @@ class GameTurnControlsTest {
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton debugGodModeButton = getDebugGodModeButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
         float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
 
         float lowestDiceBottom = Math.max(
@@ -282,7 +284,7 @@ class GameTurnControlsTest {
         MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton tradeButton = getTradeButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
 
         assertEquals(16f, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(16f, endRoundButton.getPosition()[1], 0.0001f);
@@ -314,17 +316,17 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         configureSingleHumanTurn(game, runtime);
 
-        assertTrue(Game.DICES.isVisible());
+        assertTrue(game.dices().isVisible());
 
         runtime.popupService().show("Test popup");
         updateSidebarControlPositions(game);
 
-        assertFalse(Game.DICES.isVisible(), "Roll dice button should never remain above an active popup");
+        assertFalse(game.dices().isVisible(), "Roll dice button should never remain above an active popup");
 
         runtime.popupService().triggerPrimaryAction();
         updateSidebarControlPositions(game);
 
-        assertTrue(Game.DICES.isVisible(), "Roll dice button should return after popup closes when rolling is still allowed");
+        assertTrue(game.dices().isVisible(), "Roll dice button should return after popup closes when rolling is still allowed");
     }
 
     @Test
@@ -334,19 +336,19 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         configureSingleHumanTurn(game, runtime);
 
-        assertTrue(Game.DICES.isVisible());
+        assertTrue(game.dices().isVisible());
 
-        Game.DICES.rollDice();
-        assertFalse(Game.DICES.isVisible(), "Roll dice button must hide immediately after rolling");
+        game.dices().rollDice();
+        assertFalse(game.dices().isVisible(), "Roll dice button must hide immediately after rolling");
 
         runtime.popupService().show("Follow-up popup");
         updateSidebarControlPositions(game);
-        assertFalse(Game.DICES.isVisible(), "Roll dice button must stay hidden while popup is visible");
+        assertFalse(game.dices().isVisible(), "Roll dice button must stay hidden while popup is visible");
 
         runtime.popupService().triggerPrimaryAction();
         updateSidebarControlPositions(game);
 
-        assertFalse(Game.DICES.isVisible(),
+        assertFalse(game.dices().isVisible(),
                 "Roll dice button must not reappear after popup closes once the turn has already rolled");
     }
 
@@ -359,7 +361,7 @@ class GameTurnControlsTest {
         updateSidebarControlPositions(game);
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(Game.DICES);
+        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
         float firstDiceLeft = dicePair.getKey().getCoords().x() - dicePair.getKey().getUnScaledWidth() / 2f;
 
         assertTrue(endRoundButton.getPosition()[0] + endRoundButton.getWidth() < firstDiceLeft,
@@ -372,13 +374,13 @@ class GameTurnControlsTest {
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
 
-        Game.PLAYERS.switchTurn();
+        game.players().switchTurn();
         invokeShowRollDiceControl(game);
-        assertFalse(Game.DICES.isVisible(), "Roll dice must stay hidden on bot turns");
+        assertFalse(game.dices().isVisible(), "Roll dice must stay hidden on bot turns");
         assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
 
         invokeShowEndTurnControl(game);
-        assertFalse(Game.DICES.isVisible(), "Roll dice must stay hidden on bot turns");
+        assertFalse(game.dices().isVisible(), "Roll dice must stay hidden on bot turns");
         assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
     }
 
@@ -386,10 +388,10 @@ class GameTurnControlsTest {
     void botTurnIgnoresManualPopupAdvanceKeys() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
-        new Game(runtime);
+        Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.PLAYERS.switchTurn();
+        game.players().switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -406,10 +408,10 @@ class GameTurnControlsTest {
     void botTurnPopupStillResolvesThroughComputerChannel() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
-        new Game(runtime);
+        Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.PLAYERS.switchTurn();
+        game.players().switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -423,10 +425,10 @@ class GameTurnControlsTest {
     void botTurnPopupAllowsExplicitComputerPrimaryTrigger() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
-        new Game(runtime);
+        Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.PLAYERS.switchTurn();
+        game.players().switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -444,7 +446,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.PLAYERS.switchTurn();
+        game.players().switchTurn();
 
         getTradeButton(game).pressButton();
         runtime.eventBus().flushPendingChanges();

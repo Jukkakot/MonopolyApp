@@ -52,7 +52,7 @@ class JailSpotTest {
     void setUp() {
         UiTexts.setLocale(Locale.ENGLISH);
         runtime = initHeadlessRuntime();
-        Game.ANIMATIONS = new Animations();
+        runtime.setGameSession(new GameSession(null, null, new Animations()));
         jailSpot = new JailSpot(new SpotImage(runtime, new Coordinates(100, 100), SpotType.JAIL));
         JailSpot.jailTimeLeftMap.clear();
     }
