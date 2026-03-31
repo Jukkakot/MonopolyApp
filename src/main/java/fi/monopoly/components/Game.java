@@ -10,8 +10,10 @@ import fi.monopoly.components.computer.*;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
-import fi.monopoly.components.payment.*;
-import fi.monopoly.components.popup.ButtonAction;
+import fi.monopoly.components.payment.DebtController;
+import fi.monopoly.components.payment.DebtState;
+import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
@@ -22,8 +24,8 @@ import fi.monopoly.components.trade.TradeController;
 import fi.monopoly.components.turn.*;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
-import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.LayoutMetrics;
+import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.UiTokens;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
@@ -213,7 +215,7 @@ public class Game implements MonopolyEventListener {
 
     private void setupDebugGameConfigs(MonopolyRuntime runtime) {
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
         players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
         players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
 

@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static fi.monopoly.text.UiTexts.text;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class StrongComputerStrategyTest {
 
@@ -126,6 +124,18 @@ class StrongComputerStrategyTest {
     }
 
     @Test
+    void strongStrategySellsHighestBuiltPropertyFirstToRespectEvenSelling() {
+        PropertyView orange1 = propertyView(SpotType.O1, 180, 60, 2, true, 100);
+        PropertyView orange2 = propertyView(SpotType.O2, 180, 40, 1, true, 100);
+        PropertyView orange3 = propertyView(SpotType.O3, 200, 40, 1, true, 100);
+        PlayerView self = playerView(1, 0, List.of(orange1, orange2, orange3));
+        FakeContext context = new FakeContext(debtGameView(self, 50), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("sell:O1", "sell:O2", "retry"), context.operations);
+    }
+
+    @Test
     void strongStrategyDeclaresBankruptcyWhenNoLiquidationPathExists() {
         PlayerView self = playerView(1, 0, List.of());
         FakeContext context = new FakeContext(debtGameView(self, 100), self);
@@ -186,7 +196,7 @@ class StrongComputerStrategyTest {
 
         BuildPlan plan = buildingEvaluator.evaluateBuild(endTurnGameView(self), self);
 
-        assertTrue(plan != null);
+        assertNotNull(plan);
         assertEquals(ComputerAction.BUILD_ROUND, plan.decision().action());
         assertFalse(plan.decision().reason().isBlank());
     }

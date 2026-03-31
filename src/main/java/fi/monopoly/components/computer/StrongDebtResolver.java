@@ -55,6 +55,7 @@ final class StrongDebtResolver {
         PropertyView property = player.ownedProperties().stream()
                 .filter(candidate -> candidate.placeType() == PlaceType.STREET)
                 .filter(candidate -> candidate.buildingLevel() > 0)
+                .filter(candidate -> canSellBuilding(player, candidate))
                 .min(Comparator
                         .comparingInt(this::buildingSalePriority)
                         .thenComparingInt(PropertyView::rentEstimate)
@@ -77,7 +78,7 @@ final class StrongDebtResolver {
     private DebtStep selectMortgage(PlayerView player) {
         PropertyView property = player.ownedProperties().stream()
                 .filter(candidate -> !candidate.mortgaged())
-                .filter(this::canMortgage)
+                .filter(candidate -> canMortgage(player, candidate))
                 .min(Comparator
                         .comparingInt(this::mortgagePriority)
                         .thenComparingInt(PropertyView::rentEstimate)
@@ -131,8 +132,25 @@ final class StrongDebtResolver {
         };
     }
 
-    private boolean canMortgage(PropertyView property) {
-        return property.placeType() != PlaceType.STREET || property.buildingLevel() == 0;
+    private boolean canSellBuilding(PlayerView player, PropertyView property) {
+        if (property.placeType() != PlaceType.STREET || property.buildingLevel() <= 0) {
+            return false;
+        }
+        int maxGroupLevel = player.ownedProperties().stream()
+                .filter(candidate -> candidate.streetType() == property.streetType())
+                .mapToInt(PropertyView::buildingLevel)
+                .max()
+                .orElse(property.buildingLevel());
+        return property.buildingLevel() == maxGroupLevel;
+    }
+
+    private boolean canMortgage(PlayerView player, PropertyView property) {
+        if (property.placeType() != PlaceType.STREET) {
+            return true;
+        }
+        return player.ownedProperties().stream()
+                .filter(candidate -> candidate.streetType() == property.streetType())
+                .noneMatch(candidate -> candidate.buildingLevel() > 0);
     }
 
     private int streetStrength(StreetType streetType) {
