@@ -20,7 +20,8 @@ public class PropertyAuctionResolver {
     private static final int AUCTION_BID_INCREMENT = 10;
     private static final int AUCTION_OPENING_BID = 10;
     private static final int DEFAULT_RESERVE = 100;
-    private static final int STRONG_RESERVE = 200;
+    private static final int STRONG_RESERVE = 350;
+    private static AuctionMetrics metrics = new AuctionMetrics(0, 0, 0);
 
     private final PopupService popupService;
     private final Players players;
@@ -47,6 +48,15 @@ public class PropertyAuctionResolver {
                 text("property.auction.won", winningBid.player().getName(), property.getDisplayName(), winningBid.amount()),
                 onComplete::doAction
         );
+        recordAuctionOutcome(property, winningBid.amount());
+    }
+
+    public static synchronized void resetMetrics() {
+        metrics = new AuctionMetrics(0, 0, 0);
+    }
+
+    public static synchronized AuctionMetrics metrics() {
+        return metrics;
     }
 
     public void resolveAll(List<Property> properties, CallbackAction onComplete) {
@@ -186,6 +196,27 @@ public class PropertyAuctionResolver {
         return Math.max(AUCTION_OPENING_BID, (amount / AUCTION_BID_INCREMENT) * AUCTION_BID_INCREMENT);
     }
 
+    private static synchronized void recordAuctionOutcome(Property property, int winningBid) {
+        metrics = new AuctionMetrics(
+                metrics.completedAuctions() + 1,
+                metrics.totalMarketPrice() + property.getPrice(),
+                metrics.totalWinningBid() + winningBid
+        );
+    }
+
     private record AuctionBid(Player player, int amount) {
+    }
+
+    public record AuctionMetrics(
+            int completedAuctions,
+            int totalMarketPrice,
+            int totalWinningBid
+    ) {
+        public double discountRate() {
+            if (completedAuctions <= 0 || totalMarketPrice <= 0) {
+                return 0.0;
+            }
+            return 1.0 - (totalWinningBid / (double) totalMarketPrice);
+        }
     }
 }

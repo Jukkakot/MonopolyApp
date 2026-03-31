@@ -60,9 +60,7 @@ final class StrongPropertyBuyEvaluator {
     }
 
     private int requiredReserve(GameView gameView, PlayerView self) {
-        return self.boardDangerScore() >= config.dangerCashReserve() || gameView.unownedPropertyCount() <= 10
-                ? config.dangerCashReserve()
-                : config.minCashReserve();
+        return StrongReservePolicy.requiredReserve(config, gameView, self);
     }
 
     private double completionValue(PlayerView self, PropertyView property) {

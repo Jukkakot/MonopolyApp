@@ -39,9 +39,7 @@ final class StrongUnmortgageEvaluator {
     }
 
     private int requiredReserve(GameView view, PlayerView self) {
-        return self.boardDangerScore() >= config.dangerCashReserve() || view.unownedPropertyCount() <= 10
-                ? config.dangerCashReserve()
-                : config.minCashReserve();
+        return StrongReservePolicy.requiredReserve(config, view, self);
     }
 
     private double score(GameView view, PlayerView self, PropertyView property) {

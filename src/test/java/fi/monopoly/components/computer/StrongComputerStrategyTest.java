@@ -174,6 +174,19 @@ class StrongComputerStrategyTest {
     }
 
     @Test
+    void strongStrategyKeepsLargerLateGameReserveWhenBoardDangerIsExtreme() {
+        PlayerView self = playerView(1, 950, 1_200, List.of(
+                propertyView(SpotType.O1, 180, 14, 0, true, 100),
+                propertyView(SpotType.O2, 180, 14, 0, true, 100),
+                propertyView(SpotType.O3, 200, 16, 0, true, 100)
+        ));
+        FakeContext context = new FakeContext(endTurnGameView(self, 3), self);
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("endTurn"), context.operations);
+    }
+
+    @Test
     void strongStrategyUnmortgagesCompletedSetWhenCashIsSafe() {
         PlayerView self = playerView(1, 900, List.of(
                 mortgagedPropertyView(SpotType.O1, 180, 14, true, 100),
@@ -246,13 +259,17 @@ class StrongComputerStrategyTest {
     }
 
     private static GameView endTurnGameView(PlayerView self) {
+        return endTurnGameView(self, 4);
+    }
+
+    private static GameView endTurnGameView(PlayerView self, int unownedPropertyCount) {
         return new GameView(
                 self.id(),
                 List.of(self),
                 new VisibleActionsView(false, false, false, false, true),
                 null,
                 null,
-                4,
+                unownedPropertyCount,
                 32,
                 12
         );

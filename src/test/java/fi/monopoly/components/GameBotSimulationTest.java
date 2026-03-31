@@ -6,6 +6,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
+import fi.monopoly.components.turn.PropertyAuctionResolver;
 import fi.monopoly.support.TestLogLevels;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
@@ -56,6 +57,12 @@ class GameBotSimulationTest {
         int totalDebtResolutions = 0;
         int totalBankruptcies = 0;
         int completedGames = 0;
+        int runsWithRecordedCashAt100 = 0;
+        double totalAverageCashAt100Turns = 0;
+        double totalAuctionDiscountRate = 0;
+        double totalWinnerNetWorthShare = 0;
+        int totalFirstBankruptcyTurns = 0;
+        int runsWithBankruptcy = 0;
 
         for (int run = 0; run < SIMULATION_RUNS; run++) {
             resetNextPlayerId();
@@ -63,6 +70,7 @@ class GameBotSimulationTest {
             Game game = new Game(runtime);
             promoteAllPlayersToStrongBots(game);
             runtime.eventBus().flushPendingChanges();
+            PropertyAuctionResolver.resetMetrics();
 
             SimulationResult result = simulateGame(runtime, game);
             stalledRuns += result.stalled() ? 1 : 0;
@@ -70,6 +78,18 @@ class GameBotSimulationTest {
             totalDebtResolutions += result.debtResolutions();
             totalBankruptcies += result.bankruptcies();
             completedGames += result.completedGame() ? 1 : 0;
+            if (!Double.isNaN(result.averageCashAfter100Turns())) {
+                runsWithRecordedCashAt100++;
+                totalAverageCashAt100Turns += result.averageCashAfter100Turns();
+            }
+            totalAuctionDiscountRate += result.auctionDiscountRate();
+            if (!Double.isNaN(result.winnerNetWorthShare())) {
+                totalWinnerNetWorthShare += result.winnerNetWorthShare();
+            }
+            if (result.turnsToFirstBankruptcy() >= 0) {
+                runsWithBankruptcy++;
+                totalFirstBankruptcyTurns += result.turnsToFirstBankruptcy();
+            }
 
             assertFalse(result.stalled(), "Strong bot simulation stalled. " + result);
             assertTrue(result.turnSwitches() >= MIN_TURN_SWITCHES_PER_RUN || result.completedGame(),
@@ -77,11 +97,19 @@ class GameBotSimulationTest {
         }
 
         double averageTurnSwitches = totalTurnSwitches / (double) SIMULATION_RUNS;
+        double averageCashAt100Turns = runsWithRecordedCashAt100 == 0 ? Double.NaN : totalAverageCashAt100Turns / runsWithRecordedCashAt100;
+        double averageAuctionDiscountRate = totalAuctionDiscountRate / SIMULATION_RUNS;
+        double averageWinnerNetWorthShare = completedGames == 0 ? Double.NaN : totalWinnerNetWorthShare / completedGames;
+        double averageTurnsToFirstBankruptcy = runsWithBankruptcy == 0 ? Double.NaN : totalFirstBankruptcyTurns / (double) runsWithBankruptcy;
         System.out.println("Strong bot simulation metrics: runs=" + SIMULATION_RUNS
                 + ", avgTurnSwitches=" + averageTurnSwitches
                 + ", debtResolutions=" + totalDebtResolutions
                 + ", bankruptcies=" + totalBankruptcies
                 + ", completedGames=" + completedGames
+                + ", avgTurnsToFirstBankruptcy=" + formatMetric(averageTurnsToFirstBankruptcy)
+                + ", avgCashAfter100Turns=" + formatMetric(averageCashAt100Turns)
+                + ", avgAuctionDiscountRate=" + formatMetric(averageAuctionDiscountRate)
+                + ", avgWinnerNetWorthShare=" + formatMetric(averageWinnerNetWorthShare)
                 + ", stalledRuns=" + stalledRuns);
 
         assertEquals(0, stalledRuns, "No simulation run should stall");
@@ -96,6 +124,7 @@ class GameBotSimulationTest {
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         configureHeadsUpProfiles(game, ComputerPlayerProfile.STRONG, ComputerPlayerProfile.SMOKE_TEST);
+        PropertyAuctionResolver.resetMetrics();
         Player strongPlayer = game.players().getPlayers().stream()
                 .min(Comparator.comparingInt(Player::getTurnNumber))
                 .orElseThrow();
@@ -126,6 +155,8 @@ class GameBotSimulationTest {
         String previousTurn = currentTurnName(game);
         String previousSnapshot = snapshot(runtime, game);
         boolean debtActiveLastStep = false;
+        int turnsToFirstBankruptcy = -1;
+        double averageCashAfter100Turns = Double.NaN;
 
         for (int step = 0; step < maxSteps; step++) {
             runtime.eventBus().flushPendingChanges();
@@ -144,6 +175,9 @@ class GameBotSimulationTest {
             int playerCount = game.players().count();
             if (playerCount < previousPlayerCount) {
                 bankruptcies += previousPlayerCount - playerCount;
+                if (turnsToFirstBankruptcy < 0) {
+                    turnsToFirstBankruptcy = turnSwitches;
+                }
                 previousPlayerCount = playerCount;
             }
 
@@ -151,6 +185,9 @@ class GameBotSimulationTest {
             if (!Objects.equals(previousTurn, currentTurn)) {
                 turnSwitches++;
                 previousTurn = currentTurn;
+                if (Double.isNaN(averageCashAfter100Turns) && turnSwitches >= 100) {
+                    averageCashAfter100Turns = averageCash(game);
+                }
             }
 
             String currentSnapshot = snapshot(runtime, game);
@@ -162,14 +199,50 @@ class GameBotSimulationTest {
             }
 
             if (game.players().count() <= 1) {
-                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, true, currentSnapshot, currentTurnName(game));
+                return new SimulationResult(
+                        turnSwitches,
+                        debtResolutions,
+                        bankruptcies,
+                        false,
+                        true,
+                        currentSnapshot,
+                        currentTurnName(game),
+                        turnsToFirstBankruptcy,
+                        averageCashAfter100Turns,
+                        PropertyAuctionResolver.metrics().discountRate(),
+                        winnerNetWorthShare(game)
+                );
             }
             if (stagnantSteps >= maxStagnantSteps) {
-                return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, true, false, currentSnapshot, currentTurnName(game));
+                return new SimulationResult(
+                        turnSwitches,
+                        debtResolutions,
+                        bankruptcies,
+                        true,
+                        false,
+                        currentSnapshot,
+                        currentTurnName(game),
+                        turnsToFirstBankruptcy,
+                        averageCashAfter100Turns,
+                        PropertyAuctionResolver.metrics().discountRate(),
+                        Double.NaN
+                );
             }
         }
 
-        return new SimulationResult(turnSwitches, debtResolutions, bankruptcies, false, false, previousSnapshot, currentTurnName(game));
+        return new SimulationResult(
+                turnSwitches,
+                debtResolutions,
+                bankruptcies,
+                false,
+                false,
+                previousSnapshot,
+                currentTurnName(game),
+                turnsToFirstBankruptcy,
+                averageCashAfter100Turns,
+                PropertyAuctionResolver.metrics().discountRate(),
+                Double.NaN
+        );
     }
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
@@ -271,6 +344,38 @@ class GameBotSimulationTest {
                 + "|debt=" + (game.debtController().debtState() != null);
     }
 
+    private static double averageCash(Game game) {
+        return game.players().getPlayers().stream()
+                .mapToInt(Player::getMoneyAmount)
+                .average()
+                .orElse(Double.NaN);
+    }
+
+    private static double winnerNetWorthShare(Game game) {
+        if (game.players().count() != 1) {
+            return Double.NaN;
+        }
+        int totalNetWorth = game.players().getPlayers().stream()
+                .mapToInt(GameBotSimulationTest::netWorth)
+                .sum();
+        if (totalNetWorth <= 0) {
+            return Double.NaN;
+        }
+        Player winner = game.players().getPlayers().get(0);
+        return netWorth(winner) / (double) totalNetWorth;
+    }
+
+    private static int netWorth(Player player) {
+        return player.getMoneyAmount() + player.getTotalLiquidationValue();
+    }
+
+    private static String formatMetric(double value) {
+        if (Double.isNaN(value)) {
+            return "n/a";
+        }
+        return String.format(java.util.Locale.US, "%.2f", value);
+    }
+
     private record SimulationResult(
             int turnSwitches,
             int debtResolutions,
@@ -278,7 +383,11 @@ class GameBotSimulationTest {
             boolean stalled,
             boolean completedGame,
             String lastSnapshot,
-            String winnerName
+            String winnerName,
+            int turnsToFirstBankruptcy,
+            double averageCashAfter100Turns,
+            double auctionDiscountRate,
+            double winnerNetWorthShare
     ) {
     }
 }
