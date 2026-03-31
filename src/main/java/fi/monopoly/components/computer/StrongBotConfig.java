@@ -1,5 +1,10 @@
 package fi.monopoly.components.computer;
 
+import fi.monopoly.types.StreetType;
+
+import java.util.EnumMap;
+import java.util.Map;
+
 /**
  * Tunable weights and switches for the {@code STRONG} computer player.
  *
@@ -60,6 +65,55 @@ package fi.monopoly.components.computer;
  *                           states instead of always paying to get out.
  *                           {@code true} makes the bot avoid high-rent boards more often;
  *                           {@code false} makes it play more actively even when the board is lethal.
+ * @param houseBuildAggression multiplier for development score when considering house building.
+ *                             Higher value makes the bot convert monopolies into houses sooner;
+ *                             lower value makes it preserve cash and delay development.
+ *                             Example: raising this from {@code 1.0} to {@code 1.4} makes a decent
+ *                             orange-set build look compelling earlier in the mid-game.
+ * @param hotelAversion penalty applied when a build round would push a set into hotel territory.
+ *                      Higher value slows down hotel upgrades and keeps the bot at strong house levels longer;
+ *                      lower value makes hotel conversion more acceptable.
+ *                      Example: raising this from {@code 4.0} to {@code 8.0} makes a 4-house set less likely
+ *                      to upgrade immediately even if cash is available.
+ * @param developmentBias bonus for actions that improve already-owned monopolies or near-monopolies.
+ *                        Higher value pushes cash toward deepening strong sets; lower value keeps the bot more
+ *                        open to broad expansion and safer balance-sheet play.
+ *                        Example: raising this from {@code 2.0} to {@code 5.0} makes orange/red build and
+ *                        unmortgage actions outrank side-grade property buys more often.
+ * @param mortgageTolerance factor that reduces effective reserve pressure for risk-tolerant play.
+ *                          Higher value allows thinner cash positions and more mortgage-prone states;
+ *                          lower value keeps the bot conservative.
+ *                          Example: raising this from {@code 0.15} to {@code 0.35} means a dangerous board still
+ *                          demands reserve, but not the full raw amount from the reserve policy.
+ * @param unmortgageAggression multiplier for unmortgage score.
+ *                             Higher value reactivates mortgaged assets sooner; lower value hoards cash longer.
+ *                             Example: raising this from {@code 1.0} to {@code 1.5} makes completed-set unmortgages
+ *                             happen earlier after a cash windfall.
+ * @param buildReservePerOpponentMonopoly extra reserve added for each threatening opponent monopoly on the board.
+ *                                        Higher value makes the bot spend more defensively when opponents have sets;
+ *                                        lower value makes it keep building through danger.
+ *                                        Example: with value {@code 80}, two opponent monopolies add M160 extra reserve.
+ * @param auctionAggression multiplier for strong-bot auction valuation.
+ *                          Higher value bids closer to strategic ceiling; lower value drops out earlier.
+ *                          Example: raising this from {@code 1.0} to {@code 1.2} lets a strong bot stretch further
+ *                          for a set-completing railroad or color-group piece.
+ * @param tradeFairnessTolerance points of unfairness the bot is willing to tolerate for strategic upside.
+ *                               Higher value accepts more uneven trades; lower value demands cleaner value parity.
+ *                               Example: raising this from {@code 15} to {@code 40} makes the bot accept a modestly
+ *                               losing trade if it meaningfully improves position.
+ * @param tradeSetCompletionWeight bonus applied when a trade completes or breaks a set.
+ *                                 Higher value makes monopoly-shaping trades much more important; lower value keeps
+ *                                 raw cash/liquidation value dominant.
+ *                                 Example: raising this from {@code 220} to {@code 320} makes set-completing trades
+ *                                 far more likely to be accepted despite small cash imbalance.
+ * @param colorGroupWeights per-group value multipliers for build, buy, trade, unmortgage, and auction evaluation.
+ *                          Higher value prioritizes that group more, lower value de-emphasizes it.
+ *                          Example: setting {@code ORANGE -> 1.2} and {@code UTILITY -> 0.8} pushes the bot toward
+ *                          stronger classic monopoly groups and away from marginal utility plays.
+ * @param jailExitThreshold danger threshold above which the bot prefers staying in jail in late-game states.
+ *                          Higher value means the bot leaves jail more often; lower value means it stays jailed more easily.
+ *                          Example: lowering this from {@code 500} to {@code 350} makes the bot camp in jail sooner
+ *                          once the board becomes hostile.
  */
 public record StrongBotConfig(
         double buyThreshold,
@@ -73,7 +127,18 @@ public record StrongBotConfig(
         double liquidityPenaltyWeight,
         boolean buyToBlockOpponent,
         boolean prioritizeThreeHouses,
-        boolean preferJailLateGame
+        boolean preferJailLateGame,
+        double houseBuildAggression,
+        double hotelAversion,
+        double developmentBias,
+        double mortgageTolerance,
+        double unmortgageAggression,
+        int buildReservePerOpponentMonopoly,
+        double auctionAggression,
+        int tradeFairnessTolerance,
+        int tradeSetCompletionWeight,
+        Map<StreetType, Double> colorGroupWeights,
+        int jailExitThreshold
 ) {
     public static StrongBotConfig defaults() {
         return new StrongBotConfig(
@@ -88,7 +153,41 @@ public record StrongBotConfig(
                 3.0,
                 true,
                 true,
-                true
+                true,
+                1.0,
+                4.0,
+                2.0,
+                0.15,
+                1.0,
+                80,
+                1.0,
+                15,
+                220,
+                defaultColorGroupWeights(),
+                500
         );
+    }
+
+    public StrongBotConfig {
+        colorGroupWeights = Map.copyOf(colorGroupWeights);
+    }
+
+    public double colorGroupWeight(StreetType streetType) {
+        return colorGroupWeights.getOrDefault(streetType, 1.0);
+    }
+
+    private static Map<StreetType, Double> defaultColorGroupWeights() {
+        EnumMap<StreetType, Double> weights = new EnumMap<>(StreetType.class);
+        weights.put(StreetType.BROWN, 0.95);
+        weights.put(StreetType.LIGHT_BLUE, 1.0);
+        weights.put(StreetType.PURPLE, 1.0);
+        weights.put(StreetType.ORANGE, 1.2);
+        weights.put(StreetType.RED, 1.15);
+        weights.put(StreetType.YELLOW, 1.05);
+        weights.put(StreetType.GREEN, 0.95);
+        weights.put(StreetType.DARK_BLUE, 1.05);
+        weights.put(StreetType.RAILROAD, 1.1);
+        weights.put(StreetType.UTILITY, 0.8);
+        return Map.copyOf(weights);
     }
 }

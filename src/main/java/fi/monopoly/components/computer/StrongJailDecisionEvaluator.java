@@ -27,8 +27,8 @@ final class StrongJailDecisionEvaluator {
             return new ComputerDecision(ComputerAction.ACCEPT_POPUP, 5, "Avoid jail: late-game jail preference disabled");
         }
         boolean earlyGame = view.unownedPropertyCount() > 10;
-        boolean dangerousBoard = self.boardDangerScore() >= config.dangerCashReserve();
-        boolean cashSafeAfterPayment = self.moneyAmount() - 50 >= config.minCashReserve();
+        boolean dangerousBoard = self.boardDangerScore() >= config.jailExitThreshold();
+        boolean cashSafeAfterPayment = self.moneyAmount() - 50 >= StrongReservePolicy.requiredReserve(config, view, self);
         if (earlyGame && cashSafeAfterPayment) {
             return new ComputerDecision(ComputerAction.ACCEPT_POPUP, 8, "Avoid jail: early game with safe post-cash M" + (self.moneyAmount() - 50));
         }

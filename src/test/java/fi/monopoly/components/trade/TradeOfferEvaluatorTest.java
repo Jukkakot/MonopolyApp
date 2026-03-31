@@ -1,6 +1,7 @@
 package fi.monopoly.components.trade;
 
 import fi.monopoly.components.Player;
+import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TradeOfferEvaluatorTest {
     private final TradeOfferEvaluator evaluator = new TradeOfferEvaluator();
+    private final StrongBotConfig strongConfig = StrongBotConfig.defaults();
 
     @Test
     void evaluatorAcceptsTradeThatCompletesRecipientSet() {
@@ -125,5 +127,26 @@ class TradeOfferEvaluatorTest {
         ), BotTradeProfile.BALANCED);
 
         assertTrue(decision.accept());
+    }
+
+    @Test
+    void strongConfigAcceptsSlightlyUnevenTradeWhenItCompletesSet() {
+        Player proposer = new Player("P1", Color.BLACK, 1500, 1);
+        Player recipient = new Player("P2", Color.BLUE, 1500, 2);
+        StreetProperty o1 = new StreetProperty(SpotType.O1);
+        StreetProperty o2 = new StreetProperty(SpotType.O2);
+        StreetProperty o3 = new StreetProperty(SpotType.O3);
+        TestObjectFactory.giveProperty(proposer, o3);
+        TestObjectFactory.giveProperty(recipient, o1);
+        TestObjectFactory.giveProperty(recipient, o2);
+
+        TradeOffer offer = new TradeOffer(
+                proposer,
+                recipient,
+                new TradeSelection(0, java.util.List.of(o3), false),
+                new TradeSelection(150, java.util.List.of(), false)
+        );
+
+        assertTrue(evaluator.evaluateForRecipient(offer, BotTradeProfile.BALANCED, strongConfig).accept());
     }
 }

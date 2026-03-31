@@ -67,8 +67,12 @@ final class StrongBuildingEvaluator {
         double score = streetStrength(property.streetType()) * 3.0;
         score += expectedRentGrowth(self, property.streetType()) / (double) roundCost * 100.0;
         score += cheapHouseBonus(self, property.streetType());
+        score += config.developmentBias();
         if (config.prioritizeThreeHouses() && averageLevel(self, property.streetType()) < 3.0) {
             score += 4.0;
+        }
+        if (wouldPushIntoHotels(self, property.streetType())) {
+            score -= config.hotelAversion();
         }
         if (view.unownedPropertyCount() > 8) {
             score -= 2.0;
@@ -76,6 +80,8 @@ final class StrongBuildingEvaluator {
         if (self.boardDangerScore() >= config.dangerCashReserve()) {
             score -= 6.0;
         }
+        score *= config.houseBuildAggression();
+        score *= config.colorGroupWeight(property.streetType());
         return score;
     }
 
@@ -116,6 +122,12 @@ final class StrongBuildingEvaluator {
 
     private double cheapHouseBonus(PlayerView self, StreetType streetType) {
         return 100.0 / Math.max(1, roundCost(self, streetType));
+    }
+
+    private boolean wouldPushIntoHotels(PlayerView self, StreetType streetType) {
+        return self.ownedProperties().stream()
+                .filter(property -> property.streetType() == streetType)
+                .anyMatch(property -> property.buildingLevel() >= 4);
     }
 
     private int streetStrength(StreetType streetType) {

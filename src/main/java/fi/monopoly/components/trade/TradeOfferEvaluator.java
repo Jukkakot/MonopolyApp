@@ -1,6 +1,7 @@
 package fi.monopoly.components.trade;
 
 import fi.monopoly.components.Player;
+import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
@@ -13,14 +14,19 @@ public final class TradeOfferEvaluator {
     }
 
     public TradeDecision evaluateForRecipient(TradeOffer offer, BotTradeProfile profile) {
+        return evaluateForRecipient(offer, profile, null);
+    }
+
+    public TradeDecision evaluateForRecipient(TradeOffer offer, BotTradeProfile profile, StrongBotConfig strongConfig) {
         if (!offer.isValid()) {
             return new TradeDecision(false, -10_000, "Reject trade: invalid offer");
         }
-        double score = estimateNetDeltaForRecipient(offer);
+        double score = estimateNetDeltaForRecipient(offer, strongConfig);
         Player recipient = offer.recipient();
-        double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true);
-        double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false);
-        boolean accept = score >= profile.acceptThreshold();
+        double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true, strongConfig);
+        double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false, strongConfig);
+        int acceptThreshold = profile.acceptThreshold() - (strongConfig == null ? 0 : strongConfig.tradeFairnessTolerance());
+        boolean accept = score >= acceptThreshold;
         boolean tooFarForCounter = score < profile.counterOfferFloor();
         return new TradeDecision(
                 accept,
@@ -35,14 +41,19 @@ public final class TradeOfferEvaluator {
     }
 
     public TradeOffer proposeCounterOffer(TradeOffer offer, BotTradeProfile profile) {
-        TradeDecision currentDecision = evaluateForRecipient(offer, profile);
+        return proposeCounterOffer(offer, profile, null);
+    }
+
+    public TradeOffer proposeCounterOffer(TradeOffer offer, BotTradeProfile profile, StrongBotConfig strongConfig) {
+        TradeDecision currentDecision = evaluateForRecipient(offer, profile, strongConfig);
         if (currentDecision.accept()) {
             return null;
         }
         if (currentDecision.score() < profile.counterOfferFloor()) {
             return null;
         }
-        int adjustment = Math.min(profile.maxCounterAdjustment(), roundUpToNearestTen(profile.acceptThreshold() - currentDecision.score()));
+        int acceptThreshold = profile.acceptThreshold() - (strongConfig == null ? 0 : strongConfig.tradeFairnessTolerance());
+        int adjustment = Math.min(profile.maxCounterAdjustment(), roundUpToNearestTen(acceptThreshold - currentDecision.score()));
         if (adjustment <= 0) {
             return null;
         }
@@ -74,28 +85,32 @@ public final class TradeOfferEvaluator {
         if (!counterOffer.isValid()) {
             return null;
         }
-        return evaluateForRecipient(counterOffer, profile).accept() ? counterOffer : null;
+        return evaluateForRecipient(counterOffer, profile, strongConfig).accept() ? counterOffer : null;
     }
 
     public int estimateNetDeltaForRecipient(TradeOffer offer) {
+        return estimateNetDeltaForRecipient(offer, null);
+    }
+
+    public int estimateNetDeltaForRecipient(TradeOffer offer, StrongBotConfig strongConfig) {
         Player recipient = offer.recipient();
-        double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true);
-        double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false);
+        double gainScore = selectionValue(recipient, offer.offeredToRecipient(), true, strongConfig);
+        double lossScore = selectionValue(recipient, offer.requestedFromRecipient(), false, strongConfig);
         return (int) Math.round(gainScore - lossScore);
     }
 
-    private double selectionValue(Player perspective, TradeSelection selection, boolean receiving) {
+    private double selectionValue(Player perspective, TradeSelection selection, boolean receiving, StrongBotConfig strongConfig) {
         double value = selection.moneyAmount();
         if (selection.jailCard()) {
             value += JAIL_CARD_VALUE;
         }
         for (Property property : selection.properties()) {
-            value += propertyValue(perspective, property, receiving);
+            value += propertyValue(perspective, property, receiving, strongConfig);
         }
         return value;
     }
 
-    private double propertyValue(Player perspective, Property property, boolean receiving) {
+    private double propertyValue(Player perspective, Property property, boolean receiving, StrongBotConfig strongConfig) {
         double value = property.getLiquidationValue();
         if (property.isMortgaged()) {
             value -= property.getMortgageInterest();
@@ -107,18 +122,21 @@ public final class TradeOfferEvaluator {
         }
         int setSize = fi.monopoly.types.SpotType.getNumberOfSpots(streetType);
         if (streetType.placeType == PlaceType.STREET && ownedInSet >= setSize) {
-            value += 220;
+            value += strongConfig == null ? 220 : strongConfig.tradeSetCompletionWeight();
         } else if (ownedInSet > 0) {
             value += 70;
         }
         if (!receiving && perspective.ownsAllStreetProperties(streetType)) {
-            value += 220;
+            value += strongConfig == null ? 220 : strongConfig.tradeSetCompletionWeight();
         }
         if (streetType.placeType == PlaceType.RAILROAD) {
             value += ownedInSet * 35;
         }
         if (streetType.placeType == PlaceType.UTILITY && ownedInSet >= 2) {
             value += 50;
+        }
+        if (strongConfig != null) {
+            value *= strongConfig.colorGroupWeight(streetType);
         }
         return value;
     }

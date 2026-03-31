@@ -4,6 +4,7 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.StreetType;
@@ -20,8 +21,8 @@ public class PropertyAuctionResolver {
     private static final int AUCTION_BID_INCREMENT = 10;
     private static final int AUCTION_OPENING_BID = 10;
     private static final int DEFAULT_RESERVE = 100;
-    private static final int STRONG_RESERVE = 350;
     private static AuctionMetrics metrics = new AuctionMetrics(0, 0, 0);
+    private static final StrongBotConfig STRONG_CONFIG = StrongBotConfig.defaults();
 
     private final PopupService popupService;
     private final Players players;
@@ -163,6 +164,8 @@ public class PropertyAuctionResolver {
         if (bestOpponentCount(bidder, property.getSpotType().streetType) >= setSize - 1 && setSize > 1) {
             multiplier += 0.25;
         }
+        multiplier += (STRONG_CONFIG.auctionAggression() - 1.0);
+        multiplier *= STRONG_CONFIG.colorGroupWeight(property.getSpotType().streetType);
         return (int) Math.floor(Math.min(cashLimit, property.getPrice() * multiplier));
     }
 
@@ -186,7 +189,9 @@ public class PropertyAuctionResolver {
     }
 
     private int reserveFor(Player bidder) {
-        return bidder.getComputerProfile() == ComputerPlayerProfile.STRONG ? STRONG_RESERVE : DEFAULT_RESERVE;
+        return bidder.getComputerProfile() == ComputerPlayerProfile.STRONG
+                ? STRONG_CONFIG.dangerCashReserve() + 50
+                : DEFAULT_RESERVE;
     }
 
     private int roundDownToIncrement(int amount) {

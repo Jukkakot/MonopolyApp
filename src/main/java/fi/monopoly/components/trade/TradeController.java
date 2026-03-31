@@ -2,6 +2,7 @@ package fi.monopoly.components.trade;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.components.ButtonProps;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
 public final class TradeController {
+    private static final StrongBotConfig STRONG_CONFIG = StrongBotConfig.defaults();
     private final MonopolyRuntime runtime;
     private final BooleanSupplier canOpenTrade;
     private final Supplier<Player> currentPlayerSupplier;
@@ -100,7 +102,8 @@ public final class TradeController {
         }
         if (offer.recipient().isComputerControlled()) {
             BotTradeProfile tradeProfile = resolveTradeProfile(offer.recipient());
-            TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer, tradeProfile);
+            StrongBotConfig strongConfig = resolveStrongTradeConfig(offer.recipient());
+            TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer, tradeProfile, strongConfig);
             log.info("Bot trade decision: player={}, accept={}, score={}, reason={}",
                     offer.recipient().getName(),
                     decision.accept(),
@@ -110,7 +113,7 @@ public final class TradeController {
                 applyTradeOffer(offer);
                 runtime.popupService().show(text("trade.accepted", offer.recipient().getName()) + "\n" + tradeUiBuilder.buildTradeSummary(offer));
             } else {
-                TradeOffer counterOffer = tradeOfferEvaluator.proposeCounterOffer(offer, tradeProfile);
+                TradeOffer counterOffer = tradeOfferEvaluator.proposeCounterOffer(offer, tradeProfile, strongConfig);
                 if (counterOffer != null) {
                     showHumanTradeReview(
                             counterOffer,
@@ -171,6 +174,10 @@ public final class TradeController {
             case STRONG -> BotTradeProfile.BALANCED;
             case HUMAN -> BotTradeProfile.AGGRESSIVE;
         };
+    }
+
+    private StrongBotConfig resolveStrongTradeConfig(Player player) {
+        return player.getComputerProfile() == fi.monopoly.components.computer.ComputerPlayerProfile.STRONG ? STRONG_CONFIG : null;
     }
 
     private TradeDraft draftFromOffer(TradeOffer offer) {

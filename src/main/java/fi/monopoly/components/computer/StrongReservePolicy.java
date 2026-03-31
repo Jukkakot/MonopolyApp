@@ -19,7 +19,17 @@ final class StrongReservePolicy {
         if (view.unownedPropertyCount() <= 5) {
             dynamicDangerReserve += 100;
         }
+        dynamicDangerReserve += threateningOpponentMonopolies(view, self) * config.buildReservePerOpponentMonopoly();
 
-        return Math.max(reserve, dynamicDangerReserve);
+        int rawReserve = Math.max(reserve, dynamicDangerReserve);
+        int toleranceDiscount = (int) Math.round(Math.max(0, rawReserve - config.minCashReserve()) * config.mortgageTolerance());
+        return Math.max(config.minCashReserve(), rawReserve - toleranceDiscount);
+    }
+
+    private static int threateningOpponentMonopolies(GameView view, PlayerView self) {
+        return view.players().stream()
+                .filter(player -> player.id() != self.id())
+                .mapToInt(player -> player.completedSets().size())
+                .sum();
     }
 }

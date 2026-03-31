@@ -55,6 +55,8 @@ final class StrongPropertyBuyEvaluator {
         score += config.progressWeight() * progressValue(self, property);
         score += config.opponentBlockWeight() * blockValue(gameView, self, property);
         score += typeValue(property);
+        score += developmentValue(self, property);
+        score *= config.colorGroupWeight(property.streetType());
         score -= config.liquidityPenaltyWeight() * liquidityRisk(gameView, self, property);
         return score;
     }
@@ -99,6 +101,16 @@ final class StrongPropertyBuyEvaluator {
             case STREET -> property.rentEstimate() >= 20 ? 1.5 : 0.5;
             default -> 0;
         };
+    }
+
+    private double developmentValue(PlayerView self, PropertyView property) {
+        if (wouldCompleteSet(self, property)) {
+            return config.developmentBias();
+        }
+        if (ownedInSet(self, property.streetType()) > 0) {
+            return config.developmentBias() * 0.5;
+        }
+        return 0;
     }
 
     private double liquidityRisk(GameView gameView, PlayerView self, PropertyView property) {

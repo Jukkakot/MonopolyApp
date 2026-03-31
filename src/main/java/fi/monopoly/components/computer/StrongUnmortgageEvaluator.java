@@ -46,7 +46,7 @@ final class StrongUnmortgageEvaluator {
         double score = streetStrength(property.streetType()) * 2.5;
         score += property.rentEstimate() / 20.0;
         if (property.completedSet()) {
-            score += 12.0;
+            score += 12.0 + config.developmentBias();
         }
         if (property.placeType() == PlaceType.RAILROAD) {
             score += 2.0;
@@ -57,6 +57,8 @@ final class StrongUnmortgageEvaluator {
         if (view.unownedPropertyCount() > 10) {
             score -= 2.0;
         }
+        score *= config.unmortgageAggression();
+        score *= config.colorGroupWeight(property.streetType());
         return score;
     }
 
