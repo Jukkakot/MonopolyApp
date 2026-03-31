@@ -502,9 +502,9 @@ public class TradePopup extends Popup {
                 centerButtons.add(button);
             }
         }
-        layoutButtonGroup(positiveButtons, Math.round(getPopupLeft() + 36), rowY, false);
+        layoutButtonGroup(negativeButtons, Math.round(getPopupLeft() + 36), rowY, false);
         layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
-        layoutButtonGroup(negativeButtons, Math.round(getPopupRight() - 36), rowY, false, true);
+        layoutButtonGroup(positiveButtons, Math.round(getPopupRight() - 36), rowY, false, true);
     }
 
     private void layoutBackButton() {

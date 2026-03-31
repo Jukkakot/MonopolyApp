@@ -55,15 +55,13 @@ public record TradeOffer(
         if (selection.jailCard() && !from.hasGetOutOfJailCard()) {
             return false;
         }
-        Property property = selection.property();
-        if (property == null) {
-            return true;
-        }
-        if (property.getOwnerPlayer() != from) {
-            return false;
-        }
-        if (property instanceof StreetProperty streetProperty && streetProperty.getBuildingLevel() > 0) {
-            return false;
+        for (Property property : selection.properties()) {
+            if (property.getOwnerPlayer() != from) {
+                return false;
+            }
+            if (property instanceof StreetProperty streetProperty && streetProperty.getBuildingLevel() > 0) {
+                return false;
+            }
         }
         return true;
     }
@@ -72,8 +70,8 @@ public record TradeOffer(
         if (selection.moneyAmount() > 0) {
             to.giveMoney(from, selection.moneyAmount());
         }
-        if (selection.property() != null) {
-            from.transferPropertyTo(to, selection.property());
+        for (Property property : selection.properties()) {
+            from.transferPropertyTo(to, property);
         }
         if (selection.jailCard()) {
             from.transferGetOutOfJailCardTo(to);

@@ -82,8 +82,8 @@ public final class TradeOfferEvaluator {
         if (selection.jailCard()) {
             value += JAIL_CARD_VALUE;
         }
-        if (selection.property() != null) {
-            value += propertyValue(perspective, selection.property(), receiving);
+        for (Property property : selection.properties()) {
+            value += propertyValue(perspective, property, receiving);
         }
         return value;
     }

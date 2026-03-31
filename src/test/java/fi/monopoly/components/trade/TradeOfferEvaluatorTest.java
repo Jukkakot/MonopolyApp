@@ -25,8 +25,8 @@ class TradeOfferEvaluatorTest {
         TradeDecision decision = evaluator.evaluateForRecipient(new TradeOffer(
                 proposer,
                 recipient,
-                new TradeSelection(0, b2, false),
-                new TradeSelection(50, null, false)
+                new TradeSelection(0, java.util.List.of(b2), false),
+                new TradeSelection(50, java.util.List.of(), false)
         ), BotTradeProfile.BALANCED);
 
         assertTrue(decision.accept());
@@ -46,8 +46,8 @@ class TradeOfferEvaluatorTest {
         TradeDecision decision = evaluator.evaluateForRecipient(new TradeOffer(
                 proposer,
                 recipient,
-                new TradeSelection(50, null, false),
-                new TradeSelection(0, b1, false)
+                new TradeSelection(50, java.util.List.of(), false),
+                new TradeSelection(0, java.util.List.of(b1), false)
         ), BotTradeProfile.CAUTIOUS);
 
         assertFalse(decision.accept());
@@ -60,7 +60,7 @@ class TradeOfferEvaluatorTest {
         TradeOffer offer = new TradeOffer(
                 proposer,
                 recipient,
-                new TradeSelection(30, null, false),
+                new TradeSelection(30, java.util.List.of(), false),
                 TradeSelection.NONE
         );
 
@@ -76,7 +76,7 @@ class TradeOfferEvaluatorTest {
         TradeOffer offer = new TradeOffer(
                 proposer,
                 recipient,
-                new TradeSelection(30, null, false),
+                new TradeSelection(30, java.util.List.of(), false),
                 TradeSelection.NONE
         );
 
@@ -85,5 +85,24 @@ class TradeOfferEvaluatorTest {
         assertTrue(counterOffer != null);
         assertTrue(counterOffer.offeredToRecipient().moneyAmount() >= 60);
         assertTrue(evaluator.evaluateForRecipient(counterOffer, BotTradeProfile.CAUTIOUS).accept());
+    }
+
+    @Test
+    void evaluatorValuesMultipleIncomingProperties() {
+        Player proposer = new Player("P1", Color.BLACK, 1500, 1);
+        Player recipient = new Player("P2", Color.BLUE, 1500, 2);
+        StreetProperty b1 = new StreetProperty(SpotType.B1);
+        StreetProperty b2 = new StreetProperty(SpotType.B2);
+        TestObjectFactory.giveProperty(proposer, b1);
+        TestObjectFactory.giveProperty(proposer, b2);
+
+        TradeDecision decision = evaluator.evaluateForRecipient(new TradeOffer(
+                proposer,
+                recipient,
+                new TradeSelection(0, java.util.List.of(b1, b2), false),
+                TradeSelection.NONE
+        ), BotTradeProfile.BALANCED);
+
+        assertTrue(decision.accept());
     }
 }

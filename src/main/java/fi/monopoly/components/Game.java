@@ -954,7 +954,7 @@ public class Game implements MonopolyEventListener {
                 new TradePopupView(
                         text("trade.choosePartnerTitle"),
                         text("trade.choosePartner", proposer.getName()),
-                        this::openTradeMenu,
+                        null,
                         proposer,
                         List.of(TradePopupItem.empty(text("trade.choosePartnerCurrent"))),
                         true,
@@ -993,22 +993,6 @@ public class Game implements MonopolyEventListener {
         Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
         TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
         List<ButtonProps> buttons = new java.util.ArrayList<>();
-        for (int delta : List.of(10, 100, -10, -100)) {
-            int nextAmount = Math.max(0, selection.moneyAmount() + delta);
-            String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
-            if (delta > 0) {
-                int cappedAmount = Math.min(editingPlayer.getMoneyAmount(), nextAmount);
-                buttons.add(new ButtonProps(label, () -> openTradeEditor(
-                        updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(cappedAmount)),
-                        editingOfferSide
-                )));
-            }
-        }
-        buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
-        buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
-                editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
-                editingOfferSide
-        )));
         for (int delta : List.of(-10, -100)) {
             int nextAmount = Math.max(0, selection.moneyAmount() + delta);
             String label = "-" + text("format.money", Math.abs(delta));
@@ -1017,6 +1001,20 @@ public class Game implements MonopolyEventListener {
                     editingOfferSide
             )));
         }
+        for (int delta : List.of(10, 100)) {
+            int nextAmount = Math.max(0, selection.moneyAmount() + delta);
+            String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
+            int cappedAmount = Math.min(editingPlayer.getMoneyAmount(), nextAmount);
+            buttons.add(new ButtonProps(label, () -> openTradeEditor(
+                    updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(cappedAmount)),
+                    editingOfferSide
+            )));
+        }
+        buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
+        buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
+                editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
+                editingOfferSide
+        )));
         return buttons.toArray(ButtonProps[]::new);
     }
 
@@ -1187,8 +1185,8 @@ public class Game implements MonopolyEventListener {
         if (selection.moneyAmount() > 0) {
             parts.add(text("trade.option.money", selection.moneyAmount()));
         }
-        if (selection.property() != null) {
-            parts.add(selection.property().getDisplayName());
+        for (Property property : selection.properties()) {
+            parts.add(property.getDisplayName());
         }
         if (selection.jailCard()) {
             parts.add(text("trade.option.jailCard"));
@@ -1211,8 +1209,8 @@ public class Game implements MonopolyEventListener {
         if (selection.moneyAmount() > 0) {
             parts.add(TradePopupItem.money(text("trade.option.moneyVisual", selection.moneyAmount())));
         }
-        if (selection.property() != null) {
-            parts.add(TradePopupItem.property(selection.property(), false, null));
+        for (Property property : selection.properties()) {
+            parts.add(TradePopupItem.property(property, false, null));
         }
         if (selection.jailCard()) {
             parts.add(TradePopupItem.jailCard(""));
@@ -1228,11 +1226,11 @@ public class Game implements MonopolyEventListener {
         if (selection.moneyAmount() > 0) {
             parts.add(TradePopupItem.money(text("trade.option.moneyVisual", selection.moneyAmount())));
         }
-        if (selection.property() != null) {
+        for (Property property : selection.properties()) {
             parts.add(TradePopupItem.property(
-                    selection.property(),
+                    property,
                     true,
-                    editingOfferSide == null ? null : () -> openTradeEditor(clearTradeProperty(draft, offerSide), offerSide)
+                    editingOfferSide == null ? null : () -> openTradeEditor(removeTradeProperty(draft, offerSide, property), offerSide)
             ));
         }
         if (selection.jailCard()) {
@@ -1251,14 +1249,14 @@ public class Game implements MonopolyEventListener {
         List<TradePopupItem> items = new java.util.ArrayList<>(editingPlayer.getOwnedProperties().stream()
                 .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
                 .filter(this::isTradableProperty)
-                .filter(property -> !property.equals(selection.property()))
+                .filter(property -> !selection.containsProperty(property))
                 .map(property -> TradePopupItem.property(
                         property,
                         () -> openTradeEditor(
                                 updateTradeSelection(
                                         new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient()),
                                         editingOfferSide,
-                                        selection.withProperty(property)
+                                        selection.withAddedProperty(property)
                                 ),
                                 editingOfferSide
                         )
@@ -1280,9 +1278,9 @@ public class Game implements MonopolyEventListener {
         return new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient());
     }
 
-    private TradeDraft clearTradeProperty(TradeDraft draft, boolean offerSide) {
+    private TradeDraft removeTradeProperty(TradeDraft draft, boolean offerSide, Property property) {
         TradeSelection selection = offerSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
-        return updateTradeSelection(draft, offerSide, selection.withProperty(null));
+        return updateTradeSelection(draft, offerSide, selection.withRemovedProperty(property));
     }
 
     private TradeDraft toggleTradeJailCard(TradeDraft draft, boolean offerSide) {
