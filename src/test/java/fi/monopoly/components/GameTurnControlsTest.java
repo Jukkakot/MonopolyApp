@@ -6,7 +6,9 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.dices.Dice;
 import fi.monopoly.components.dices.Dices;
+import fi.monopoly.components.spots.Spot;
 import fi.monopoly.utils.LayoutMetrics;
+import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import processing.event.KeyEvent;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static processing.event.KeyEvent.PRESS;
@@ -121,10 +124,19 @@ class GameTurnControlsTest {
         runtime.eventBus().sendConsumableEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
 
+    private static void configureSingleHumanTurn(Game game, MonopolyRuntime runtime) throws ReflectiveOperationException {
+        Spot spot = game.board.getSpots().get(0);
+        Game.players = new Players(runtime);
+        Game.players.addPlayer(new Player(runtime, "Human", Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
+        invokeShowRollDiceControl(game);
+        runtime.eventBus().flushPendingChanges();
+    }
+
     @AfterEach
     void tearDown() {
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;
+        fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
     }
 
     @Test
@@ -147,6 +159,12 @@ class GameTurnControlsTest {
     @Test
     void popupServiceKeepsShownPopupTextsInRecentHistory() {
         MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        try {
+            configureSingleHumanTurn(game, runtime);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
 
         runtime.popupService().show("First popup");
         runtime.popupService().show("Second popup");
@@ -294,6 +312,7 @@ class GameTurnControlsTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
+        configureSingleHumanTurn(game, runtime);
 
         assertTrue(Game.DICES.isVisible());
 
@@ -313,6 +332,7 @@ class GameTurnControlsTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
+        configureSingleHumanTurn(game, runtime);
 
         assertTrue(Game.DICES.isVisible());
 
@@ -419,6 +439,7 @@ class GameTurnControlsTest {
     @Test
     void botTurnBlocksGameAffectingButtonsButAllowsLanguageButton() throws ReflectiveOperationException {
         resetNextPlayerId();
+        fi.monopoly.text.UiTexts.setLocale(Locale.forLanguageTag("fi"));
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
@@ -432,7 +453,25 @@ class GameTurnControlsTest {
 
         getLanguageButton(game).pressButton();
         runtime.eventBus().flushPendingChanges();
-        assertTrue(runtime.popupService().isAnyVisible(),
+        assertEquals(Locale.ENGLISH, fi.monopoly.text.UiTexts.getLocale(),
                 "Language button should remain usable during a bot turn");
+        assertFalse(runtime.popupService().isAnyVisible(),
+                "Language button should not open a popup during a bot turn");
+    }
+
+    @Test
+    void languageButtonCyclesToNextSupportedLocaleWithoutPopup() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        fi.monopoly.text.UiTexts.setLocale(Locale.forLanguageTag("fi"));
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        getLanguageButton(game).pressButton();
+        runtime.eventBus().flushPendingChanges();
+
+        assertEquals(Locale.ENGLISH, fi.monopoly.text.UiTexts.getLocale());
+        assertFalse(runtime.popupService().isAnyVisible(),
+                "Language button should switch locale directly without opening a popup");
     }
 }
