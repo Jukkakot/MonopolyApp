@@ -13,6 +13,7 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.*;
 import fi.monopoly.components.popup.TradePopupItem;
 import fi.monopoly.components.popup.TradePopupView;
+import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
@@ -981,7 +982,8 @@ public class Game implements MonopolyEventListener {
                         draft.toOffer(),
                         text("trade.editor.header"),
                         text("trade.editor.editing", (editingOfferSide ? draft.proposer() : draft.recipient()).getName()),
-                        editingOfferSide
+                        editingOfferSide,
+                        this::openTradeMenu
                 ),
                 buildTradeEditorButtons(draft, editingOfferSide)
         );
@@ -1056,8 +1058,13 @@ public class Game implements MonopolyEventListener {
         }
         runtime.popupService().showTrade(
                 text("trade.review", offer.recipient().getName()) + "\n" + summary,
-                buildTradePopupView(offer, text("trade.review.header"), text("trade.review", offer.recipient().getName()), null),
-                new ButtonProps(text("trade.button.back"), () -> openTradeEditor(draft, false)),
+                buildTradePopupView(
+                        offer,
+                        text("trade.review.header"),
+                        text("trade.review", offer.recipient().getName()),
+                        null,
+                        () -> openTradeEditor(draft, false)
+                ),
                 new ButtonProps(text("popup.choice.accept"), () -> {
                     applyTradeOffer(offer);
                     runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));
@@ -1092,7 +1099,13 @@ public class Game implements MonopolyEventListener {
         }
         runtime.popupService().showTrade(
                 summary,
-                buildTradePopupView(counterOffer, text("trade.countered", counteringPlayerName), text("trade.countered.new"), null),
+                buildTradePopupView(
+                        counterOffer,
+                        text("trade.countered", counteringPlayerName),
+                        text("trade.countered.new"),
+                        null,
+                        () -> openTradeEditor(draftFromOffer(counterOffer), false)
+                ),
                 () -> {
                     applyTradeOffer(counterOffer);
                     runtime.popupService().show(text("trade.accepted", counterOffer.proposer().getName()));
@@ -1120,19 +1133,20 @@ public class Game implements MonopolyEventListener {
                 + "\n" + text("trade.editor.editing", editingPlayer.getName());
     }
 
-    private TradePopupView buildTradePopupView(TradeOffer offer, String title, String subtitle, Boolean editingOfferSide) {
+    private TradePopupView buildTradePopupView(TradeOffer offer, String title, String subtitle, Boolean editingOfferSide, ButtonAction backAction) {
+        TradeDraft draft = draftFromOffer(offer);
         return new TradePopupView(
                 title,
                 subtitle,
-                editingOfferSide == null ? null : this::openTradeMenu,
+                backAction,
                 offer.proposer(),
-                describeTradeSelectionVisualItems(offer.offeredToRecipient()),
+                describeTradeSelectionVisualItems(draft, offer.offeredToRecipient(), true, editingOfferSide),
                 Boolean.TRUE.equals(editingOfferSide),
-                editingOfferSide == null ? null : () -> openTradeEditor(draftFromOffer(offer), true),
+                editingOfferSide == null ? null : () -> openTradeEditor(draft, true),
                 offer.recipient(),
-                describeTradeSelectionVisualItems(offer.requestedFromRecipient()),
+                describeTradeSelectionVisualItems(draft, offer.requestedFromRecipient(), false, editingOfferSide),
                 Boolean.FALSE.equals(editingOfferSide),
-                editingOfferSide == null ? null : () -> openTradeEditor(draftFromOffer(offer), false),
+                editingOfferSide == null ? null : () -> openTradeEditor(draft, false),
                 buildTradeValueDeltaSummary(offer),
                 editingOfferSide == null
                         ? null
@@ -1206,31 +1220,53 @@ public class Game implements MonopolyEventListener {
         return parts;
     }
 
+    private List<TradePopupItem> describeTradeSelectionVisualItems(TradeDraft draft, TradeSelection selection, boolean offerSide, Boolean editingOfferSide) {
+        if (selection.isEmpty()) {
+            return List.of(TradePopupItem.empty(text("trade.option.nothingVisual")));
+        }
+        List<TradePopupItem> parts = new java.util.ArrayList<>();
+        if (selection.moneyAmount() > 0) {
+            parts.add(TradePopupItem.money(text("trade.option.moneyVisual", selection.moneyAmount())));
+        }
+        if (selection.property() != null) {
+            parts.add(TradePopupItem.property(
+                    selection.property(),
+                    true,
+                    editingOfferSide == null ? null : () -> openTradeEditor(clearTradeProperty(draft, offerSide), offerSide)
+            ));
+        }
+        if (selection.jailCard()) {
+            parts.add(TradePopupItem.jailCard(
+                    "",
+                    true,
+                    editingOfferSide == null ? null : () -> openTradeEditor(toggleTradeJailCard(draft, offerSide), offerSide)
+            ));
+        }
+        return parts;
+    }
+
     private List<TradePopupItem> buildTradeInventoryItems(TradeOffer offer, boolean editingOfferSide) {
         Player editingPlayer = editingOfferSide ? offer.proposer() : offer.recipient();
         TradeSelection selection = editingOfferSide ? offer.offeredToRecipient() : offer.requestedFromRecipient();
         List<TradePopupItem> items = new java.util.ArrayList<>(editingPlayer.getOwnedProperties().stream()
                 .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
                 .filter(this::isTradableProperty)
+                .filter(property -> !property.equals(selection.property()))
                 .map(property -> TradePopupItem.property(
                         property,
-                        property.equals(selection.property()),
                         () -> openTradeEditor(
                                 updateTradeSelection(
                                         new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient()),
                                         editingOfferSide,
-                                        property.equals(selection.property())
-                                                ? selection.withProperty(null)
-                                                : selection.withProperty(property)
+                                        selection.withProperty(property)
                                 ),
                                 editingOfferSide
                         )
                 ))
                 .toList());
-        if (editingPlayer.hasGetOutOfJailCard()) {
+        if (editingPlayer.hasGetOutOfJailCard() && !selection.jailCard()) {
             items.add(TradePopupItem.jailCard(
                     text("trade.option.jailCardVisual"),
-                    selection.jailCard(),
                     () -> openTradeEditor(
                             updateTradeSelection(draftFromOffer(offer), editingOfferSide, selection.toggleJailCard()),
                             editingOfferSide
@@ -1242,6 +1278,16 @@ public class Game implements MonopolyEventListener {
 
     private TradeDraft draftFromOffer(TradeOffer offer) {
         return new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient());
+    }
+
+    private TradeDraft clearTradeProperty(TradeDraft draft, boolean offerSide) {
+        TradeSelection selection = offerSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
+        return updateTradeSelection(draft, offerSide, selection.withProperty(null));
+    }
+
+    private TradeDraft toggleTradeJailCard(TradeDraft draft, boolean offerSide) {
+        TradeSelection selection = offerSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
+        return updateTradeSelection(draft, offerSide, selection.toggleJailCard());
     }
 
     private void switchLanguage(Locale locale) {

@@ -15,6 +15,10 @@ public record TradePopupItem(
         return new TradePopupItem(property.getDisplayName(), TradePopupItemType.PROPERTY, property, null, selected, action);
     }
 
+    public static TradePopupItem property(Property property, ButtonAction action) {
+        return new TradePopupItem(property.getDisplayName(), TradePopupItemType.PROPERTY, property, null, false, action);
+    }
+
     public static TradePopupItem money(String label) {
         return new TradePopupItem(label, TradePopupItemType.MONEY, null, null, false, null);
     }
@@ -25,6 +29,10 @@ public record TradePopupItem(
 
     public static TradePopupItem jailCard(String label, boolean selected, ButtonAction action) {
         return new TradePopupItem(label, TradePopupItemType.JAIL_CARD, null, null, selected, action);
+    }
+
+    public static TradePopupItem jailCard(String label, ButtonAction action) {
+        return new TradePopupItem(label, TradePopupItemType.JAIL_CARD, null, null, false, action);
     }
 
     public static TradePopupItem empty(String label) {

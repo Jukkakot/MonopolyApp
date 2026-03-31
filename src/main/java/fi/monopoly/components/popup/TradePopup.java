@@ -68,7 +68,7 @@ public class TradePopup extends Popup {
 
     private void refreshLabels() {
         closeButton.setLabel(text("popup.close.label"));
-        backButton.setLabel("<-");
+        backButton.setLabel("<");
     }
 
     public void setTradeView(TradePopupView tradeView) {
@@ -224,7 +224,11 @@ public class TradePopup extends Popup {
                 itemX = x + UiTokens.tradePanelPadding();
                 itemY += cardH + UiTokens.tradeItemGap();
             }
-            drawTradeItem(p, item, itemX, itemY, cardW, cardH, highlighted, false);
+            boolean itemHighlighted = item.selected() || isHovered(item) || highlighted;
+            drawTradeItem(p, item, itemX, itemY, cardW, cardH, itemHighlighted, false);
+            if (item.action() != null) {
+                clickableRegions.add(new ClickableRegion(itemX, itemY, cardW, cardH, item.action(), hoverKey(item)));
+            }
             itemX += cardW + UiTokens.tradeItemGap();
         }
     }
@@ -448,6 +452,7 @@ public class TradePopup extends Popup {
 
     private void layoutButtons() {
         layoutCloseButton();
+        layoutBackButton();
         if (totalButtonCount == 0) {
             return;
         }
@@ -500,6 +505,9 @@ public class TradePopup extends Popup {
         layoutButtonGroup(positiveButtons, Math.round(getPopupLeft() + 36), rowY, false);
         layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
         layoutButtonGroup(negativeButtons, Math.round(getPopupRight() - 36), rowY, false, true);
+    }
+
+    private void layoutBackButton() {
         backButton.setPosition(
                 getPopupLeft() + UiTokens.tradeBackButtonLeftInset(),
                 getPopupTop() + UiTokens.tradeBackButtonTopInset()
@@ -528,7 +536,7 @@ public class TradePopup extends Popup {
         super.show();
         layoutButtons();
         closeButton.show();
-        if (tradeView != null && tradeView.inventoryTitle() != null && totalButtonCount > 0) {
+        if (tradeView != null && tradeView.backAction() != null) {
             backButton.show();
         }
         for (int i = 0; i < totalButtonCount; i++) {
