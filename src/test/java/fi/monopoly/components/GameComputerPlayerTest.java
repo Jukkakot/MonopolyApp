@@ -59,6 +59,18 @@ class GameComputerPlayerTest {
         method.invoke(game);
     }
 
+    private static void invokeAnimationFinishCooldown(Game game, boolean animationWasRunning) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod("applyComputerActionCooldownIfAnimationJustFinished", boolean.class);
+        method.setAccessible(true);
+        method.invoke(game, animationWasRunning);
+    }
+
+    private static int getLastComputerActionAt(Game game) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField("lastComputerActionAt");
+        field.setAccessible(true);
+        return field.getInt(game);
+    }
+
     private static boolean dispatchKeyToGame(Game game, char key) {
         return game.onEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
@@ -170,5 +182,23 @@ class GameComputerPlayerTest {
         }
 
         assertEquals(botName, Game.players.getTurn().getName());
+    }
+
+    @Test
+    @Timeout(5)
+    void finishingAnimationAppliesBotCooldownBeforeNextStep() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Game.players.switchTurn();
+
+        assertEquals(-1, getLastComputerActionAt(game));
+
+        invokeAnimationFinishCooldown(game, true);
+
+        assertTrue(getLastComputerActionAt(game) >= 0,
+                "Finishing a bot animation should add a cooldown before the next computer action");
     }
 }

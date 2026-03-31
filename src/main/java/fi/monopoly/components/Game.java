@@ -180,12 +180,14 @@ public class Game implements MonopolyEventListener {
     public void draw() {
         LayoutMetrics layoutMetrics = getLayoutMetrics();
         boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
+        boolean animationWasRunning = animations.isRunning();
         if (MonopolyApp.SKIP_ANNIMATIONS) {
             animations.finishAllAnimations();
         }
         if (!runtime.popupService().isAnyVisible()) {
             animations.updateAnimations();
         }
+        applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
         updateSidebarControlPositions();
         board.draw(null);
         if (hasSidebarSpace) {
@@ -208,6 +210,16 @@ public class Game implements MonopolyEventListener {
             drawDebtState();
         }
         runComputerPlayerStep();
+    }
+
+    private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
+        if (MonopolyApp.SKIP_ANNIMATIONS || !animationWasRunning || animations.isRunning()) {
+            return;
+        }
+        Player turnPlayer = players.getTurn();
+        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+            lastComputerActionAt = runtime.app().millis();
+        }
     }
 
     /**
