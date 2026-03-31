@@ -125,9 +125,9 @@ class GameTurnControlsTest {
     }
 
     private static void configureSingleHumanTurn(Game game, MonopolyRuntime runtime) throws ReflectiveOperationException {
-        Spot spot = game.board.getSpots().get(0);
-        Game.players = new Players(runtime);
-        Game.players.addPlayer(new Player(runtime, "Human", Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
+        Spot spot = game.getBoard().getSpots().get(0);
+        Game.PLAYERS = new Players(runtime);
+        Game.PLAYERS.addPlayer(new Player(runtime, "Human", Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
         invokeShowRollDiceControl(game);
         runtime.eventBus().flushPendingChanges();
     }
@@ -372,7 +372,7 @@ class GameTurnControlsTest {
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
 
-        Game.players.switchTurn();
+        Game.PLAYERS.switchTurn();
         invokeShowRollDiceControl(game);
         assertFalse(Game.DICES.isVisible(), "Roll dice must stay hidden on bot turns");
         assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
@@ -389,7 +389,7 @@ class GameTurnControlsTest {
         new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.players.switchTurn();
+        Game.PLAYERS.switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -409,7 +409,7 @@ class GameTurnControlsTest {
         new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.players.switchTurn();
+        Game.PLAYERS.switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -426,7 +426,7 @@ class GameTurnControlsTest {
         new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.players.switchTurn();
+        Game.PLAYERS.switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -444,7 +444,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Game.players.switchTurn();
+        Game.PLAYERS.switchTurn();
 
         getTradeButton(game).pressButton();
         runtime.eventBus().flushPendingChanges();
