@@ -26,17 +26,6 @@ import static processing.core.PConstants.TOP;
 
 @Slf4j
 public abstract class Popup extends Canvas implements MonopolyEventListener {
-    protected static final int DEFAULT_POPUP_WIDTH = LayoutMetrics.popupDefaultWidth();
-    protected static final int DEFAULT_POPUP_HEIGHT = LayoutMetrics.popupDefaultHeight();
-    protected static final int MIN_POPUP_WIDTH = LayoutMetrics.popupMinWidth();
-    protected static final int MIN_POPUP_HEIGHT = LayoutMetrics.popupMinHeight();
-    protected static final int WINDOW_MARGIN = LayoutMetrics.popupWindowMargin();
-    protected static final int TEXT_TOP_OFFSET = LayoutMetrics.popupTextTopOffset();
-    protected static final int TEXT_SIDE_PADDING = LayoutMetrics.popupTextSidePadding();
-    protected static final int TEXT_BOTTOM_PADDING = LayoutMetrics.popupTextBottomPadding();
-    protected static final int TEXT_LINE_HEIGHT = LayoutMetrics.popupTextLineHeight();
-    protected static final int BUTTON_AREA_TOP_PADDING = LayoutMetrics.popupButtonAreaTopPadding();
-    protected static final int BUTTON_AREA_BOTTOM_PADDING = LayoutMetrics.popupButtonAreaBottomPadding();
     protected final MonopolyRuntime runtime;
     protected String popupText;
     @Getter(AccessLevel.PROTECTED)
@@ -115,8 +104,8 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         p.fill(0);
         p.textFont(runtime.font20());
         p.textAlign(CENTER, TOP);
-        p.textLeading(TEXT_LINE_HEIGHT);
-        drawPopupText(p, centerX, top + TEXT_TOP_OFFSET, width - TEXT_SIDE_PADDING * 2f);
+        p.textLeading(LayoutMetrics.popupTextLineHeight());
+        drawPopupText(p, centerX, top + LayoutMetrics.popupTextTopOffset(), width - LayoutMetrics.popupTextSidePadding() * 2f);
 
         p.popStyle();
         p.popMatrix();
@@ -125,8 +114,8 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     private void drawPopupText(PGraphics p, float centerX, float startY, float maxWidth) {
         List<String> lines = TextWrapUtils.wrapText(p, popupText, maxWidth);
         for (int i = 0; i < lines.size(); i++) {
-            float y = startY + i * TEXT_LINE_HEIGHT;
-            if (y + TEXT_LINE_HEIGHT > getPopupTop() + TEXT_TOP_OFFSET + getTextAreaHeight()) {
+            float y = startY + i * LayoutMetrics.popupTextLineHeight();
+            if (y + LayoutMetrics.popupTextLineHeight() > getPopupTop() + LayoutMetrics.popupTextTopOffset() + getTextAreaHeight()) {
                 break;
             }
             p.text(lines.get(i), centerX, y);
@@ -179,13 +168,13 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
 
     protected int getPopupWidth() {
         LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
-        int availableWidth = Math.round(layoutMetrics.boardWidth()) - WINDOW_MARGIN * 2;
-        return Math.max(MIN_POPUP_WIDTH, Math.min(DEFAULT_POPUP_WIDTH, availableWidth));
+        int availableWidth = Math.round(layoutMetrics.boardWidth()) - LayoutMetrics.popupWindowMargin() * 2;
+        return Math.max(LayoutMetrics.popupMinWidth(), Math.min(LayoutMetrics.popupDefaultWidth(), availableWidth));
     }
 
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - WINDOW_MARGIN * 2;
-        return Math.max(MIN_POPUP_HEIGHT, Math.min(DEFAULT_POPUP_HEIGHT, availableHeight));
+        int availableHeight = runtime.app().height - LayoutMetrics.popupWindowMargin() * 2;
+        return Math.max(LayoutMetrics.popupMinHeight(), Math.min(LayoutMetrics.popupDefaultHeight(), availableHeight));
     }
 
     protected float getPopupLeft() {
@@ -207,16 +196,16 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     protected float getTextAreaHeight() {
         return Math.max(
                 0,
-                getButtonAreaTop() - getPopupTop() - TEXT_TOP_OFFSET - TEXT_BOTTOM_PADDING
+                getButtonAreaTop() - getPopupTop() - LayoutMetrics.popupTextTopOffset() - LayoutMetrics.popupTextBottomPadding()
         );
     }
 
     protected float getButtonAreaTop() {
-        return getPopupTop() + BUTTON_AREA_TOP_PADDING;
+        return getPopupTop() + LayoutMetrics.popupButtonAreaTopPadding();
     }
 
     protected float getButtonAreaHeight() {
-        return Math.max(0, getPopupHeight() - BUTTON_AREA_TOP_PADDING - BUTTON_AREA_BOTTOM_PADDING);
+        return Math.max(0, getPopupHeight() - LayoutMetrics.popupButtonAreaTopPadding() - LayoutMetrics.popupButtonAreaBottomPadding());
     }
 
     @Override

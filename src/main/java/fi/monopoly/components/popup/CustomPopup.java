@@ -15,17 +15,11 @@ import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
 public class CustomPopup extends Popup {
-    private static final int MIN_BUTTON_WIDTH = fi.monopoly.utils.LayoutMetrics.popupButtonMinWidth();
-    private static final int MAX_BUTTON_WIDTH = fi.monopoly.utils.LayoutMetrics.popupButtonMaxWidth();
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
     private final Button closeButton;
     private final List<String> activeButtonLabels = new ArrayList<>();
     private final List<ButtonAction> activeButtonActions = new ArrayList<>();
-    private static final int BUTTON_HEIGHT = fi.monopoly.utils.LayoutMetrics.popupButtonHeight();
-    private static final int BUTTON_PADDING = fi.monopoly.utils.LayoutMetrics.popupButtonPadding();
-    private static final int BUTTON_GAP_X = fi.monopoly.utils.LayoutMetrics.popupButtonGapX();
-    private static final int BUTTON_GAP_Y = fi.monopoly.utils.LayoutMetrics.popupButtonGapY();
 
     protected CustomPopup(MonopolyRuntime runtime) {
         super(runtime);
@@ -60,8 +54,12 @@ public class CustomPopup extends Popup {
     private void ensureButtonPoolSize(int requiredCount) {
         while (customButtons.size() < requiredCount) {
             MonopolyButton button = new MonopolyButton(runtime, "customButton" + customButtons.size());
-            button.setSize(MIN_BUTTON_WIDTH, BUTTON_HEIGHT);
-            button.setAutoWidth(MIN_BUTTON_WIDTH, BUTTON_PADDING, MAX_BUTTON_WIDTH);
+            button.setSize(fi.monopoly.utils.LayoutMetrics.popupButtonMinWidth(), fi.monopoly.utils.LayoutMetrics.popupButtonHeight());
+            button.setAutoWidth(
+                    fi.monopoly.utils.LayoutMetrics.popupButtonMinWidth(),
+                    fi.monopoly.utils.LayoutMetrics.popupButtonPadding(),
+                    fi.monopoly.utils.LayoutMetrics.popupButtonMaxWidth()
+            );
             button.hide();
             customButtons.add(button);
         }
@@ -70,7 +68,7 @@ public class CustomPopup extends Popup {
     private void configureButton(MonopolyButton button, ButtonProps buttonProps) {
         button.setLabel(buttonProps.name());
         button.addListener(() -> getButtonAction(buttonProps.buttonAction()));
-        button.setSize(MIN_BUTTON_WIDTH, BUTTON_HEIGHT);
+        button.setSize(fi.monopoly.utils.LayoutMetrics.popupButtonMinWidth(), fi.monopoly.utils.LayoutMetrics.popupButtonHeight());
     }
 
     private void layoutButtons() {
@@ -82,7 +80,8 @@ public class CustomPopup extends Popup {
         int cols = Math.min(getMaxButtonColumns(), (int) Math.ceil(Math.sqrt(totalButtonCount)));
         int rows = (int) Math.ceil((double) totalButtonCount / cols);
         int top = Math.round(getButtonAreaTop());
-        int totalHeight = rows * BUTTON_HEIGHT + Math.max(0, rows - 1) * BUTTON_GAP_Y;
+        int totalHeight = rows * fi.monopoly.utils.LayoutMetrics.popupButtonHeight()
+                + Math.max(0, rows - 1) * fi.monopoly.utils.LayoutMetrics.popupButtonGapY();
         int startY = top + Math.max(0, Math.round((getButtonAreaHeight() - totalHeight) / 2f));
 
         for (int row = 0; row < rows; row++) {
@@ -92,14 +91,14 @@ public class CustomPopup extends Popup {
             for (int i = rowStart; i < rowEnd; i++) {
                 rowWidth += Math.round(customButtons.get(i).getWidth());
             }
-            rowWidth += Math.max(0, rowEnd - rowStart - 1) * BUTTON_GAP_X;
+            rowWidth += Math.max(0, rowEnd - rowStart - 1) * fi.monopoly.utils.LayoutMetrics.popupButtonGapX();
             int startX = Math.round(getPopupCenter().x() - rowWidth / 2f);
             int x = startX;
-            int y = startY + row * (BUTTON_HEIGHT + BUTTON_GAP_Y);
+            int y = startY + row * (fi.monopoly.utils.LayoutMetrics.popupButtonHeight() + fi.monopoly.utils.LayoutMetrics.popupButtonGapY());
             for (int i = rowStart; i < rowEnd; i++) {
                 MonopolyButton button = customButtons.get(i);
                 button.setPosition(new Coordinates(x, y));
-                x += Math.round(button.getWidth()) + BUTTON_GAP_X;
+                x += Math.round(button.getWidth()) + fi.monopoly.utils.LayoutMetrics.popupButtonGapX();
             }
         }
     }
