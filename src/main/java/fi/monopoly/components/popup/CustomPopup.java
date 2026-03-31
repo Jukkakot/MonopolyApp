@@ -21,6 +21,7 @@ public class CustomPopup extends Popup {
     private int totalButtonCount = 0;
     private final Button closeButton;
     private final List<String> activeButtonLabels = new ArrayList<>();
+    private final List<ButtonAction> activeButtonActions = new ArrayList<>();
     private static final int BUTTON_HEIGHT = 50;
     private static final int BUTTON_PADDING = 28;
     private static final int BUTTON_GAP_X = 12;
@@ -43,10 +44,12 @@ public class CustomPopup extends Popup {
     public void setButtons(ButtonProps... buttonProps) {
         totalButtonCount = buttonProps.length;
         activeButtonLabels.clear();
+        activeButtonActions.clear();
         ensureButtonPoolSize(buttonProps.length);
         for (int i = 0; i < buttonProps.length; i++) {
             configureButton(customButtons.get(i), buttonProps[i]);
             activeButtonLabels.add(buttonProps[i].name());
+            activeButtonActions.add(buttonProps[i].buttonAction());
         }
         layoutButtons();
         for (int i = buttonProps.length; i < customButtons.size(); i++) {
@@ -122,6 +125,7 @@ public class CustomPopup extends Popup {
         customButtons.forEach(MonopolyButton::hide);
         totalButtonCount = 0;
         activeButtonLabels.clear();
+        activeButtonActions.clear();
     }
 
     @Override
@@ -148,7 +152,7 @@ public class CustomPopup extends Popup {
 
     @Override
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
-        return triggerPrimaryAction();
+        return triggerPrimaryAction(PopupActionTrigger.COMPUTER);
     }
 
     @Override
@@ -157,19 +161,26 @@ public class CustomPopup extends Popup {
     }
 
     @Override
-    protected boolean triggerPrimaryAction() {
+    protected boolean triggerPrimaryAction(PopupActionTrigger trigger) {
         if (totalButtonCount > 0) {
-            customButtons.get(0).pressButton();
+            completeAction(getButtonActionAt(0), trigger);
             return true;
         }
-        completeAction(null);
+        completeAction(null, trigger);
         return true;
     }
 
     @Override
-    protected boolean triggerSecondaryAction() {
-        completeAction(null);
+    protected boolean triggerSecondaryAction(PopupActionTrigger trigger) {
+        completeAction(null, trigger);
         return true;
+    }
+
+    private ButtonAction getButtonActionAt(int index) {
+        if (index < 0 || index >= totalButtonCount) {
+            return null;
+        }
+        return activeButtonActions.get(index);
     }
 
     private int getMaxButtonColumns() {

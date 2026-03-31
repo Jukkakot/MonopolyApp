@@ -81,7 +81,7 @@ public class ChoicePopup extends Popup {
 
     @Override
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
-        return triggerPrimaryAction();
+        return triggerPrimaryAction(PopupActionTrigger.COMPUTER);
     }
 
     @Override
@@ -95,14 +95,14 @@ public class ChoicePopup extends Popup {
     }
 
     @Override
-    protected boolean triggerPrimaryAction() {
-        acceptAction();
+    protected boolean triggerPrimaryAction(PopupActionTrigger trigger) {
+        completeAction(onAcceptAction, trigger);
         return true;
     }
 
     @Override
-    protected boolean triggerSecondaryAction() {
-        declineAction();
+    protected boolean triggerSecondaryAction(PopupActionTrigger trigger) {
+        completeAction(onDeclineAction, trigger);
         return true;
     }
 

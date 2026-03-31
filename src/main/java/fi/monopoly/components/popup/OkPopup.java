@@ -61,7 +61,7 @@ public class OkPopup extends Popup {
 
     @Override
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
-        return triggerPrimaryAction();
+        return triggerPrimaryAction(PopupActionTrigger.COMPUTER);
     }
 
     @Override
@@ -75,8 +75,8 @@ public class OkPopup extends Popup {
     }
 
     @Override
-    protected boolean triggerPrimaryAction() {
-        okAction();
+    protected boolean triggerPrimaryAction(PopupActionTrigger trigger) {
+        completeAction(onOkAction, trigger);
         return true;
     }
 

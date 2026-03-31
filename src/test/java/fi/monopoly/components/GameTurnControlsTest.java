@@ -3,6 +3,7 @@ package fi.monopoly.components;
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.dices.Dice;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.utils.LayoutMetrics;
@@ -379,5 +380,22 @@ class GameTurnControlsTest {
 
         assertTrue(runtime.popupService().isAnyVisible(),
                 "User input must not close or accept popups during a bot turn");
+    }
+
+    @Test
+    void botTurnPopupStillResolvesThroughComputerChannel() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Game.players.switchTurn();
+        runtime.popupService().show("Bot popup");
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertTrue(runtime.popupService().resolveForComputer(ComputerPlayerProfile.STRONG));
+        assertFalse(runtime.popupService().isAnyVisible(),
+                "Computer popup resolution must remain available during a bot turn");
     }
 }

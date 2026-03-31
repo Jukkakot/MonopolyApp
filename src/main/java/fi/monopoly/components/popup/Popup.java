@@ -62,7 +62,10 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
         runtime.popupService().onPopupClosed(this);
     }
 
-    protected final void completeAction(ButtonAction action) {
+    protected final void completeAction(ButtonAction action, PopupActionTrigger trigger) {
+        if (!isInteractionAllowed(trigger)) {
+            return;
+        }
         allButtonAction();
         if (action != null) {
             action.doAction();
@@ -71,15 +74,20 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected final void completeManualAction(ButtonAction action) {
-        if (!isManualInteractionAllowed()) {
-            return;
-        }
-        completeAction(action);
+        completeAction(action, PopupActionTrigger.MANUAL);
+    }
+
+    protected final void completeComputerAction(ButtonAction action) {
+        completeAction(action, PopupActionTrigger.COMPUTER);
     }
 
     protected final boolean isManualInteractionAllowed() {
         Player turnPlayer = Game.players != null ? Game.players.getTurn() : null;
         return turnPlayer == null || !turnPlayer.isComputerControlled();
+    }
+
+    protected final boolean isInteractionAllowed(PopupActionTrigger trigger) {
+        return trigger == PopupActionTrigger.COMPUTER || isManualInteractionAllowed();
     }
 
     @Override
@@ -150,14 +158,14 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
+        return triggerPrimaryAction(PopupActionTrigger.COMPUTER);
+    }
+
+    protected boolean triggerPrimaryAction(PopupActionTrigger trigger) {
         return false;
     }
 
-    protected boolean triggerPrimaryAction() {
-        return false;
-    }
-
-    protected boolean triggerSecondaryAction() {
+    protected boolean triggerSecondaryAction(PopupActionTrigger trigger) {
         return false;
     }
 

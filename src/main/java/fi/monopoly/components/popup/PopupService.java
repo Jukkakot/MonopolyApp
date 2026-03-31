@@ -142,11 +142,11 @@ public class PopupService {
     }
 
     public boolean triggerPrimaryAction() {
-        return activePopup != null && activePopup.triggerPrimaryAction();
+        return activePopup != null && activePopup.triggerPrimaryAction(PopupActionTrigger.MANUAL);
     }
 
     public boolean triggerSecondaryAction() {
-        return activePopup != null && activePopup.triggerSecondaryAction();
+        return activePopup != null && activePopup.triggerSecondaryAction(PopupActionTrigger.MANUAL);
     }
 
     public Property activeOfferedProperty() {
