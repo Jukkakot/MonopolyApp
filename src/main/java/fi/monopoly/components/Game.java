@@ -11,8 +11,6 @@ import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.*;
-import fi.monopoly.components.popup.TradePopupItem;
-import fi.monopoly.components.popup.TradePopupView;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
@@ -27,6 +25,7 @@ import fi.monopoly.components.trade.TradeDraft;
 import fi.monopoly.components.trade.TradeOffer;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeSelection;
+import fi.monopoly.components.trade.TradeUiBuilder;
 import fi.monopoly.components.turn.*;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
@@ -70,6 +69,7 @@ public class Game implements MonopolyEventListener {
     private final TurnEngine turnEngine = new TurnEngine();
     private final PaymentResolver paymentResolver = new PaymentResolver();
     private final TradeOfferEvaluator tradeOfferEvaluator = new TradeOfferEvaluator();
+    private final TradeUiBuilder tradeUiBuilder = new TradeUiBuilder(tradeOfferEvaluator);
 
     // UI controls
     private final MonopolyButton endRoundButton;
@@ -951,79 +951,32 @@ public class Game implements MonopolyEventListener {
         }
         runtime.popupService().showTrade(
                 text("trade.choosePartner", proposer.getName()),
-                new TradePopupView(
-                        text("trade.choosePartnerTitle"),
-                        text("trade.choosePartner", proposer.getName()),
-                        null,
+                tradeUiBuilder.buildPartnerSelectionView(
                         proposer,
-                        List.of(TradePopupItem.empty(text("trade.choosePartnerCurrent"))),
-                        true,
-                        null,
-                        null,
-                        List.of(),
-                        false,
-                        null,
-                        text("trade.choosePartnerHint"),
-                        text("trade.choosePartnerList"),
-                        tradePartners.stream()
-                                .map(player -> TradePopupItem.player(
-                                        player,
-                                        () -> openTradeEditor(new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE), true)
-                                ))
-                                .toList()
+                        tradePartners,
+                        player -> () -> openTradeEditor(new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE), true)
                 )
         );
     }
 
     private void openTradeEditor(TradeDraft draft, boolean editingOfferSide) {
         runtime.popupService().showTrade(
-                buildTradeEditorSummary(draft, editingOfferSide),
-                buildTradePopupView(
+                tradeUiBuilder.buildTradeEditorSummary(draft, editingOfferSide),
+                tradeUiBuilder.buildTradePopupView(
                         draft.toOffer(),
                         text("trade.editor.header"),
                         text("trade.editor.editing", (editingOfferSide ? draft.proposer() : draft.recipient()).getName()),
                         editingOfferSide,
-                        this::openTradeMenu
+                        this::openTradeMenu,
+                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide)
                 ),
-                buildTradeEditorButtons(draft, editingOfferSide)
+                tradeUiBuilder.buildTradeEditorButtons(
+                        draft,
+                        editingOfferSide,
+                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide),
+                        nextDraft -> () -> confirmTradeOffer(nextDraft)
+                )
         );
-    }
-
-    private ButtonProps[] buildTradeEditorButtons(TradeDraft draft, boolean editingOfferSide) {
-        Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
-        TradeSelection selection = editingOfferSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
-        List<ButtonProps> buttons = new java.util.ArrayList<>();
-        for (int delta : List.of(-10, -100)) {
-            int nextAmount = Math.max(0, selection.moneyAmount() + delta);
-            String label = "-" + text("format.money", Math.abs(delta));
-            buttons.add(new ButtonProps(label, () -> openTradeEditor(
-                    updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(nextAmount)),
-                    editingOfferSide
-            )));
-        }
-        for (int delta : List.of(10, 100)) {
-            int nextAmount = Math.max(0, selection.moneyAmount() + delta);
-            String label = (delta > 0 ? "+" : "-") + text("format.money", Math.abs(delta));
-            int cappedAmount = Math.min(editingPlayer.getMoneyAmount(), nextAmount);
-            buttons.add(new ButtonProps(label, () -> openTradeEditor(
-                    updateTradeSelection(draft, editingOfferSide, selection.withMoneyAmount(cappedAmount)),
-                    editingOfferSide
-            )));
-        }
-        buttons.add(new ButtonProps(text("trade.button.done"), () -> confirmTradeOffer(draft)));
-        buttons.add(new ButtonProps(text("trade.button.clear"), () -> openTradeEditor(
-                editingOfferSide ? draft.withOfferedToRecipient(TradeSelection.NONE) : draft.withRequestedFromRecipient(TradeSelection.NONE),
-                editingOfferSide
-        )));
-        return buttons.toArray(ButtonProps[]::new);
-    }
-
-    private TradeDraft updateTradeSelection(TradeDraft draft, boolean editingOfferSide, TradeSelection selection) {
-        return editingOfferSide ? draft.withOfferedToRecipient(selection) : draft.withRequestedFromRecipient(selection);
-    }
-
-    private boolean isTradableProperty(Property property) {
-        return !(property instanceof StreetProperty streetProperty) || streetProperty.getBuildingLevel() == 0;
     }
 
     private void confirmTradeOffer(TradeDraft draft) {
@@ -1032,7 +985,7 @@ public class Game implements MonopolyEventListener {
             runtime.popupService().show(text("trade.invalid"));
             return;
         }
-        String summary = buildTradeSummary(offer);
+        String summary = tradeUiBuilder.buildTradeSummary(offer);
         if (offer.recipient().isComputerControlled()) {
             BotTradeProfile tradeProfile = resolveTradeProfile(offer.recipient());
             TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer, tradeProfile);
@@ -1056,12 +1009,13 @@ public class Game implements MonopolyEventListener {
         }
         runtime.popupService().showTrade(
                 text("trade.review", offer.recipient().getName()) + "\n" + summary,
-                buildTradePopupView(
+                tradeUiBuilder.buildTradePopupView(
                         offer,
                         text("trade.review.header"),
                         text("trade.review", offer.recipient().getName()),
                         null,
-                        () -> openTradeEditor(draft, false)
+                        () -> openTradeEditor(draft, false),
+                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide)
                 ),
                 new ButtonProps(text("popup.choice.accept"), () -> {
                     applyTradeOffer(offer);
@@ -1079,11 +1033,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void presentBotCounterOffer(TradeOffer originalOffer, TradeOffer counterOffer, String counteringPlayerName) {
-        String summary = text("trade.countered", counteringPlayerName)
-                + "\n\n" + text("trade.countered.original")
-                + "\n" + buildTradeSummary(originalOffer)
-                + "\n\n" + text("trade.countered.new")
-                + "\n" + buildTradeSummary(counterOffer);
+        String summary = tradeUiBuilder.buildCounterOfferSummary(originalOffer, counterOffer, counteringPlayerName);
         if (counterOffer.proposer().isComputerControlled()) {
             BotTradeProfile proposerTradeProfile = resolveTradeProfile(counterOffer.proposer());
             TradeDecision proposerDecision = tradeOfferEvaluator.evaluateForRecipient(counterOffer.reversePerspective(), proposerTradeProfile);
@@ -1097,12 +1047,13 @@ public class Game implements MonopolyEventListener {
         }
         runtime.popupService().showTrade(
                 summary,
-                buildTradePopupView(
+                tradeUiBuilder.buildTradePopupView(
                         counterOffer,
                         text("trade.countered", counteringPlayerName),
                         text("trade.countered.new"),
                         null,
-                        () -> openTradeEditor(draftFromOffer(counterOffer), false)
+                        () -> openTradeEditor(draftFromOffer(counterOffer), false),
+                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide)
                 ),
                 new ButtonProps(text("popup.choice.accept"), () -> {
                     applyTradeOffer(counterOffer);
@@ -1121,172 +1072,8 @@ public class Game implements MonopolyEventListener {
         };
     }
 
-    private String buildTradeSummary(TradeOffer offer) {
-        return buildTradeBoard(offer, text("trade.summary.header", offer.proposer().getName(), offer.recipient().getName()))
-                + "\n" + buildTradeValueDeltaSummary(offer);
-    }
-
-    private String buildTradeEditorSummary(TradeDraft draft, boolean editingOfferSide) {
-        Player editingPlayer = editingOfferSide ? draft.proposer() : draft.recipient();
-        return buildTradeBoard(draft.toOffer(), text("trade.editor.header"))
-                + "\n" + text("trade.editor.editing", editingPlayer.getName());
-    }
-
-    private TradePopupView buildTradePopupView(TradeOffer offer, String title, String subtitle, Boolean editingOfferSide, ButtonAction backAction) {
-        TradeDraft draft = draftFromOffer(offer);
-        return new TradePopupView(
-                title,
-                subtitle,
-                backAction,
-                offer.proposer(),
-                describeTradeSelectionVisualItems(draft, offer.offeredToRecipient(), true, editingOfferSide),
-                Boolean.TRUE.equals(editingOfferSide),
-                editingOfferSide == null ? null : () -> openTradeEditor(draft, true),
-                offer.recipient(),
-                describeTradeSelectionVisualItems(draft, offer.requestedFromRecipient(), false, editingOfferSide),
-                Boolean.FALSE.equals(editingOfferSide),
-                editingOfferSide == null ? null : () -> openTradeEditor(draft, false),
-                buildTradeValueDeltaSummary(offer),
-                editingOfferSide == null
-                        ? null
-                        : text("trade.inventory.title", (editingOfferSide ? offer.proposer() : offer.recipient()).getName()),
-                editingOfferSide == null
-                        ? List.of()
-                        : buildTradeInventoryItems(offer, editingOfferSide)
-        );
-    }
-
-    private String buildTradeBoard(TradeOffer offer, String title) {
-        return title
-                + "\n" + text("trade.board.side", offer.proposer().getName(), describeTradeSelectionVisual(offer.offeredToRecipient()))
-                + "\n" + text("trade.board.side", offer.recipient().getName(), describeTradeSelectionVisual(offer.requestedFromRecipient()));
-    }
-
-    private String buildTradeValueDeltaSummary(TradeOffer offer) {
-        int recipientDelta = offer.isEmpty() ? 0 : tradeOfferEvaluator.estimateNetDeltaForRecipient(offer);
-        int proposerDelta = offer.isEmpty() ? 0 : tradeOfferEvaluator.estimateNetDeltaForRecipient(offer.reversePerspective());
-        return text(
-                "trade.summary.delta",
-                offer.proposer().getName(),
-                formatTradeDelta(proposerDelta),
-                offer.recipient().getName(),
-                formatTradeDelta(recipientDelta)
-        );
-    }
-
-    private String formatTradeDelta(int value) {
-        return (value >= 0 ? "+" : "") + value;
-    }
-
-    private String describeTradeSelection(TradeSelection selection) {
-        if (selection.isEmpty()) {
-            return text("trade.option.nothing");
-        }
-        List<String> parts = new java.util.ArrayList<>();
-        if (selection.moneyAmount() > 0) {
-            parts.add(text("trade.option.money", selection.moneyAmount()));
-        }
-        for (Property property : selection.properties()) {
-            parts.add(property.getDisplayName());
-        }
-        if (selection.jailCard()) {
-            parts.add(text("trade.option.jailCard"));
-        }
-        return String.join(", ", parts);
-    }
-
-    private String describeTradeSelectionVisual(TradeSelection selection) {
-        return describeTradeSelectionVisualItems(selection).stream()
-                .map(TradePopupItem::label)
-                .reduce((left, right) -> left + " " + right)
-                .orElse(text("trade.option.nothingVisual"));
-    }
-
-    private List<TradePopupItem> describeTradeSelectionVisualItems(TradeSelection selection) {
-        if (selection.isEmpty()) {
-            return List.of(TradePopupItem.empty(text("trade.option.nothingVisual")));
-        }
-        List<TradePopupItem> parts = new java.util.ArrayList<>();
-        if (selection.moneyAmount() > 0) {
-            parts.add(TradePopupItem.money(text("trade.option.moneyVisual", selection.moneyAmount())));
-        }
-        for (Property property : selection.properties()) {
-            parts.add(TradePopupItem.property(property, false, null));
-        }
-        if (selection.jailCard()) {
-            parts.add(TradePopupItem.jailCard(""));
-        }
-        return parts;
-    }
-
-    private List<TradePopupItem> describeTradeSelectionVisualItems(TradeDraft draft, TradeSelection selection, boolean offerSide, Boolean editingOfferSide) {
-        if (selection.isEmpty()) {
-            return List.of(TradePopupItem.empty(text("trade.option.nothingVisual")));
-        }
-        List<TradePopupItem> parts = new java.util.ArrayList<>();
-        if (selection.moneyAmount() > 0) {
-            parts.add(TradePopupItem.money(text("trade.option.moneyVisual", selection.moneyAmount())));
-        }
-        for (Property property : selection.properties()) {
-            parts.add(TradePopupItem.property(
-                    property,
-                    true,
-                    editingOfferSide == null ? null : () -> openTradeEditor(removeTradeProperty(draft, offerSide, property), offerSide)
-            ));
-        }
-        if (selection.jailCard()) {
-            parts.add(TradePopupItem.jailCard(
-                    "",
-                    true,
-                    editingOfferSide == null ? null : () -> openTradeEditor(toggleTradeJailCard(draft, offerSide), offerSide)
-            ));
-        }
-        return parts;
-    }
-
-    private List<TradePopupItem> buildTradeInventoryItems(TradeOffer offer, boolean editingOfferSide) {
-        Player editingPlayer = editingOfferSide ? offer.proposer() : offer.recipient();
-        TradeSelection selection = editingOfferSide ? offer.offeredToRecipient() : offer.requestedFromRecipient();
-        List<TradePopupItem> items = new java.util.ArrayList<>(editingPlayer.getOwnedProperties().stream()
-                .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
-                .filter(this::isTradableProperty)
-                .filter(property -> !selection.containsProperty(property))
-                .map(property -> TradePopupItem.property(
-                        property,
-                        () -> openTradeEditor(
-                                updateTradeSelection(
-                                        new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient()),
-                                        editingOfferSide,
-                                        selection.withAddedProperty(property)
-                                ),
-                                editingOfferSide
-                        )
-                ))
-                .toList());
-        if (editingPlayer.hasGetOutOfJailCard() && !selection.jailCard()) {
-            items.add(TradePopupItem.jailCard(
-                    text("trade.option.jailCardVisual"),
-                    () -> openTradeEditor(
-                            updateTradeSelection(draftFromOffer(offer), editingOfferSide, selection.toggleJailCard()),
-                            editingOfferSide
-                    )
-            ));
-        }
-        return items;
-    }
-
     private TradeDraft draftFromOffer(TradeOffer offer) {
         return new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient());
-    }
-
-    private TradeDraft removeTradeProperty(TradeDraft draft, boolean offerSide, Property property) {
-        TradeSelection selection = offerSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
-        return updateTradeSelection(draft, offerSide, selection.withRemovedProperty(property));
-    }
-
-    private TradeDraft toggleTradeJailCard(TradeDraft draft, boolean offerSide) {
-        TradeSelection selection = offerSide ? draft.offeredToRecipient() : draft.requestedFromRecipient();
-        return updateTradeSelection(draft, offerSide, selection.toggleJailCard());
     }
 
     private void switchLanguage(Locale locale) {
