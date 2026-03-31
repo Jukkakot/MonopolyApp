@@ -429,13 +429,15 @@ public class TradePopup extends Popup {
         button.setLabel(buttonProps.name());
         button.addListener(() -> completeManualAction(buttonProps.buttonAction()));
         button.setSize(UiTokens.popupButtonMinWidth(), UiTokens.popupButtonHeight());
-        if (buttonProps.name().equals(text("trade.button.done"))) {
+        if (buttonProps.name().equals(text("trade.button.done"))
+                || buttonProps.name().equals(text("popup.choice.accept"))) {
             button.setButtonColors(
                     runtime.app().color(56, 176, 72),
                     runtime.app().color(76, 204, 90),
                     runtime.app().color(35, 132, 52)
             );
-        } else if (buttonProps.name().equals(text("trade.button.clear"))) {
+        } else if (buttonProps.name().equals(text("trade.button.clear"))
+                || buttonProps.name().equals(text("popup.choice.decline"))) {
             button.setButtonColors(
                     runtime.app().color(196, 70, 70),
                     runtime.app().color(222, 98, 98),

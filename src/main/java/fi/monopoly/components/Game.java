@@ -1104,11 +1104,12 @@ public class Game implements MonopolyEventListener {
                         null,
                         () -> openTradeEditor(draftFromOffer(counterOffer), false)
                 ),
-                () -> {
+                new ButtonProps(text("popup.choice.accept"), () -> {
                     applyTradeOffer(counterOffer);
                     runtime.popupService().show(text("trade.accepted", counterOffer.proposer().getName()));
-                },
-                () -> runtime.popupService().show(text("trade.declined", counterOffer.proposer().getName()))
+                }),
+                new ButtonProps(text("popup.choice.decline"), () -> runtime.popupService().show(text("trade.declined", counterOffer.proposer().getName()))),
+                new ButtonProps(text("trade.button.counterOffer"), () -> openTradeEditor(draftFromOffer(counterOffer), true))
         );
     }
 
