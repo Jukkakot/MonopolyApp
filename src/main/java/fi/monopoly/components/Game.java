@@ -29,6 +29,7 @@ import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.UiTokens;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import processing.core.PConstants;
 import processing.event.Event;
 import processing.event.KeyEvent;
@@ -243,6 +244,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public void draw() {
+        updateLogTurnContext();
         LayoutMetrics layoutMetrics = getLayoutMetrics();
         boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
         boolean animationWasRunning = animations.isRunning();
@@ -473,6 +475,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void rollDice() {
+        updateLogTurnContext();
         if (runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
             log.trace("Ignoring rollDice because popupVisible={} debtStateActive={}",
                     runtime.popupService().isAnyVisible(), debtController.debtState() != null);
@@ -483,6 +486,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void runComputerPlayerStep() {
+        updateLogTurnContext();
         if (gameOver) {
             return;
         }
@@ -510,6 +514,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void endRound(boolean switchTurns) {
+        updateLogTurnContext();
         if (gameOver) {
             hidePrimaryTurnControls();
             return;
@@ -519,6 +524,7 @@ public class Game implements MonopolyEventListener {
         if (switchTurns) {
             players.switchTurn();
         }
+        updateLogTurnContext();
         showRollDiceControl();
         log.debug("Ending round. previousTurnPlayer={}, switchTurns={}, nextTurnPlayer={}",
                 currentTurn != null ? currentTurn.getName() : "none",
@@ -623,6 +629,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public boolean onEvent(Event event) {
+        updateLogTurnContext();
         boolean consumedEvent = false;
         if (event instanceof KeyEvent keyEvent) {
             char key = Character.toLowerCase(keyEvent.getKey());
@@ -686,6 +693,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
+        updateLogTurnContext();
         debtController.handlePaymentRequest(request, onResolved);
     }
 
@@ -906,9 +914,19 @@ public class Game implements MonopolyEventListener {
             players.focusPlayer(winner);
         }
         String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
+        updateLogTurnContext();
         log.info("Game over. winner={}", winnerName);
         runtime.popupService().show(text("game.victory.popup", winnerName), () -> {
         });
+    }
+
+    private void updateLogTurnContext() {
+        if (gameOver && winner != null) {
+            MDC.put("turnPlayer", winner.getName());
+            return;
+        }
+        Player turnPlayer = players != null ? players.getTurn() : null;
+        MDC.put("turnPlayer", turnPlayer != null ? turnPlayer.getName() : "none");
     }
 
     private void enforcePrimaryTurnControlInvariant() {
