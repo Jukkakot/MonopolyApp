@@ -111,11 +111,11 @@ class LegacyTurnEffectExecutorTest {
 
         assertEquals(auctionWinner, property.getOwnerPlayer());
         assertEquals(10, player.getMoneyAmount());
-        assertEquals(490, auctionWinner.getMoneyAmount());
+        assertEquals(480, auctionWinner.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
                 "You don't have enough money to buy MEDITER- RANEAN AVENUE",
-                "AuctionWinner won the auction for MEDITER- RANEAN AVENUE with M10"
+                "AuctionWinner won the auction for MEDITER- RANEAN AVENUE with M20"
         ), popupService.messages);
         assertEquals(1, callback.callCount);
     }
@@ -134,11 +134,11 @@ class LegacyTurnEffectExecutorTest {
         executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
 
         assertEquals(smokeBidder, property.getOwnerPlayer());
-        assertEquals(490, smokeBidder.getMoneyAmount());
+        assertEquals(480, smokeBidder.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nCurrent bid: M20\nCurrent winner: SmokeBidder\nHighest standing bid: M10\nYour available cash: M1500",
-                "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M10"
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nCurrent bid: M30\nCurrent winner: SmokeBidder\nHighest standing bid: M20\nYour available cash: M1500",
+                "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M20"
         ), popupService.messages);
         assertEquals(1, callback.callCount);
     }
@@ -162,6 +162,33 @@ class LegacyTurnEffectExecutorTest {
                 "Buyer, auction for MEDITER- RANEAN AVENUE\nCurrent bid: M10\nCurrent winner: None\nHighest standing bid: M0\nYour available cash: M1500",
                 "No one bid on MEDITER- RANEAN AVENUE. It remains with the bank."
         ), popupService.messages);
+        assertEquals(1, callback.callCount);
+    }
+
+    @Test
+    void humanPassLeavesAuctionPermanentlyEvenIfBotsKeepBidding() {
+        TestPopupService popupService = new TestPopupService();
+        popupService.choiceResponses.add(false);
+        popupService.customButtonResponses.add(1);
+        TestCallbackAction callback = new TestCallbackAction();
+        Player player = TestObjectFactory.player("Buyer", 1500, 1);
+        Player smokeBidderOne = new Player("SmokeOne", Color.BLACK, 500, 2, ComputerPlayerProfile.SMOKE_TEST);
+        Player smokeBidderTwo = new Player("SmokeTwo", Color.BLUE, 500, 3, ComputerPlayerProfile.SMOKE_TEST);
+        StreetProperty property = new StreetProperty(SpotType.B1);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(
+                popupService,
+                TestObjectFactory.playersWithTurn(player, smokeBidderOne, smokeBidderTwo)
+        );
+
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+
+        assertEquals(smokeBidderOne, property.getOwnerPlayer());
+        assertEquals(1, popupService.messages.stream()
+                .filter(message -> message.startsWith("Buyer, auction for"))
+                .count(), "Human should be prompted only once after passing");
+        assertEquals(440, smokeBidderOne.getMoneyAmount());
+        assertEquals(500, smokeBidderTwo.getMoneyAmount());
+        assertEquals(1500, player.getMoneyAmount());
         assertEquals(1, callback.callCount);
     }
 

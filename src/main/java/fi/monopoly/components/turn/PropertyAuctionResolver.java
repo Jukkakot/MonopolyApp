@@ -141,10 +141,11 @@ public class PropertyAuctionResolver {
         }
 
         if (nextParticipant.player().getComputerProfile() != ComputerPlayerProfile.HUMAN) {
+            int botBid = nextBidAmount(nextParticipant.maxBid(), state.currentBid());
             runInteractiveAuction(
                     property,
                     bidders,
-                    state.withBid(nextParticipant.player(), minBid, nextParticipant.index() + 1),
+                    state.withBid(nextParticipant.player(), botBid, nextParticipant.index() + 1),
                     onComplete
             );
             return;
@@ -195,6 +196,19 @@ public class PropertyAuctionResolver {
             }
         }
         return null;
+    }
+
+    private int nextBidAmount(int maxBid, int currentBid) {
+        int minBid = currentBid == 0 ? AUCTION_OPENING_BID : currentBid + AUCTION_BID_INCREMENT;
+        if (maxBid <= minBid) {
+            return minBid;
+        }
+        int headroom = maxBid - minBid;
+        int extraStep = Math.max(
+                AUCTION_BID_INCREMENT,
+                roundDownToIncrement(Math.max(AUCTION_BID_INCREMENT, headroom / 3))
+        );
+        return Math.min(maxBid, minBid + extraStep);
     }
 
     private List<Player> orderedBidders(Player triggeringPlayer) {
@@ -341,7 +355,7 @@ public class PropertyAuctionResolver {
             Set<Player> passedPlayers
     ) {
         private InteractiveAuctionState withBid(Player bidder, int bid, int nextIndex) {
-            return new InteractiveAuctionState(bid, bidder, nextIndex, new HashSet<>());
+            return new InteractiveAuctionState(bid, bidder, nextIndex, new HashSet<>(passedPlayers));
         }
 
         private InteractiveAuctionState withPass(Player bidder, int nextIndex, Set<Player> passedPlayers) {
