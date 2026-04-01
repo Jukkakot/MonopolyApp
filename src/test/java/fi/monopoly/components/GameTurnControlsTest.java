@@ -493,6 +493,22 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void pauseButtonRemainsUsableDuringBotTurn() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        game.players().switchTurn();
+
+        getPauseButton(game).pressButton();
+
+        Field pausedField = Game.class.getDeclaredField("paused");
+        pausedField.setAccessible(true);
+        assertTrue((boolean) pausedField.get(game), "Pause button should still work during a bot turn");
+    }
+
+    @Test
     void languageButtonCyclesToNextSupportedLocaleWithoutPopup() throws ReflectiveOperationException {
         resetNextPlayerId();
         fi.monopoly.text.UiTexts.setLocale(Locale.forLanguageTag("fi"));

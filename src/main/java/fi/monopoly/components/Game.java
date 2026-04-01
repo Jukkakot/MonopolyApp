@@ -123,6 +123,7 @@ public class Game implements MonopolyEventListener {
         pauseButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 96);
         pauseButton.setSize(140, 36);
         pauseButton.setAutoWidth(120, 28, 180);
+        pauseButton.setAllowedDuringComputerTurn(true);
 
         tradeButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 96);
         tradeButton.setSize(140, 36);
