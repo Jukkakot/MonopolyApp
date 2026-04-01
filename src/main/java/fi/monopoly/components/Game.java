@@ -376,7 +376,7 @@ public class Game implements MonopolyEventListener {
         app.text(text("sidebar.section.history"), panelX + UiTokens.sidebarHistoryTextInset(), panelY + 24);
 
         app.fill(0);
-        app.textFont(runtime.font10());
+        app.textFont(runtime.font20());
         app.textAlign(PConstants.LEFT, PConstants.TOP);
 
         if (recentMessages.isEmpty()) {
@@ -400,12 +400,12 @@ public class Game implements MonopolyEventListener {
             List<String> wrappedLines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth);
             for (String line : wrappedLines) {
                 app.text(line, panelX + UiTokens.sidebarHistoryTextInset(), currentY);
-                currentY += 14;
+                currentY += 22;
                 if (currentY > panelY + historyHeight - 16) {
                     return;
                 }
             }
-            currentY += 6;
+            currentY += 8;
             if (currentY > panelY + historyHeight - 16) {
                 break;
             }

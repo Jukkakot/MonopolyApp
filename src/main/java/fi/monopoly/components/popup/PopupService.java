@@ -226,9 +226,22 @@ public class PopupService {
         if (message.isEmpty()) {
             return;
         }
-        popupHistory.addFirst(message);
+        String turnPrefix = activeTurnPrefix();
+        popupHistory.addFirst(turnPrefix == null ? message : turnPrefix + ": " + message);
         while (popupHistory.size() > MAX_HISTORY_ENTRIES) {
             popupHistory.removeLast();
         }
+    }
+
+    private String activeTurnPrefix() {
+        if (runtime == null || runtime.gameSessionOrNull() == null || runtime.gameSessionOrNull().players() == null) {
+            return null;
+        }
+        var turnPlayer = runtime.gameSessionOrNull().players().getTurn();
+        if (turnPlayer == null) {
+            return null;
+        }
+        String turnName = turnPlayer.getName();
+        return turnName == null || turnName.isBlank() ? null : turnName;
     }
 }

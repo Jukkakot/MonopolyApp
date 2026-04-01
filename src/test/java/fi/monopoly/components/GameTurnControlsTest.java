@@ -172,12 +172,16 @@ class GameTurnControlsTest {
         runtime.popupService().show("Second popup");
         runtime.eventBus().flushPendingChanges();
 
-        assertEquals(List.of("First popup"), runtime.popupService().recentPopupMessages());
+        assertEquals(1, runtime.popupService().recentPopupMessages().size());
+        assertTrue(runtime.popupService().recentPopupMessages().get(0).endsWith("First popup"));
+        assertTrue(runtime.popupService().recentPopupMessages().get(0).contains(": "));
 
         dispatchKey(runtime, '1');
         runtime.eventBus().flushPendingChanges();
 
-        assertEquals(List.of("Second popup", "First popup"), runtime.popupService().recentPopupMessages());
+        assertEquals(2, runtime.popupService().recentPopupMessages().size());
+        assertTrue(runtime.popupService().recentPopupMessages().get(0).endsWith("Second popup"));
+        assertTrue(runtime.popupService().recentPopupMessages().get(1).endsWith("First popup"));
     }
 
     @Test
