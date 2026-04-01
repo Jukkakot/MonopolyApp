@@ -6,13 +6,16 @@ import fi.monopoly.components.Players;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.PopupService;
+import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.StreetType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static fi.monopoly.text.UiTexts.text;
 
@@ -33,23 +36,21 @@ public class PropertyAuctionResolver {
     }
 
     public void resolve(Player triggeringPlayer, Property property, CallbackAction onComplete) {
-        AuctionBid winningBid = determineWinningBid(triggeringPlayer, property);
-        if (winningBid == null) {
+        List<AuctionParticipant> orderedPlayers = orderedBidders(triggeringPlayer).stream()
+                .map(bidder -> new AuctionParticipant(bidder, maxBidFor(bidder, property)))
+                .filter(participant -> participant.maxBid() >= AUCTION_OPENING_BID)
+                .toList();
+        if (orderedPlayers.isEmpty()) {
             popupService.show(text("property.auction.noBids", property.getDisplayName()), onComplete::doAction);
             return;
         }
-        boolean bought = winningBid.player().buyProperty(property, winningBid.amount());
-        if (!bought) {
-            log.warn("Auction winner {} could not buy {} for M{} after bidding",
-                    winningBid.player().getName(), property.getDisplayName(), winningBid.amount());
-            popupService.show(text("property.auction.noBids", property.getDisplayName()), onComplete::doAction);
+
+        if (orderedPlayers.stream().noneMatch(participant -> participant.player().getComputerProfile() == ComputerPlayerProfile.HUMAN)) {
+            finalizeWinningBid(determineWinningBid(orderedPlayers), property, onComplete);
             return;
         }
-        popupService.show(
-                text("property.auction.won", winningBid.player().getName(), property.getDisplayName(), winningBid.amount()),
-                onComplete::doAction
-        );
-        recordAuctionOutcome(property, winningBid.amount());
+
+        runInteractiveAuction(property, orderedPlayers, new InteractiveAuctionState(0, null, 0, new HashSet<>()), onComplete);
     }
 
     public static synchronized void resetMetrics() {
@@ -73,18 +74,11 @@ public class PropertyAuctionResolver {
         resolve(null, property, () -> resolveNext(properties, index + 1, onComplete));
     }
 
-    private AuctionBid determineWinningBid(Player triggeringPlayer, Property property) {
-        if (players == null) {
-            return null;
-        }
-        List<Player> orderedPlayers = orderedBidders(triggeringPlayer);
-        if (orderedPlayers.isEmpty()) {
-            return null;
-        }
-
+    private AuctionBid determineWinningBid(List<AuctionParticipant> orderedPlayers) {
         List<AuctionBid> bids = new ArrayList<>();
-        for (Player bidder : orderedPlayers) {
-            int maxBid = maxBidFor(bidder, property);
+        for (AuctionParticipant participant : orderedPlayers) {
+            Player bidder = participant.player();
+            int maxBid = participant.maxBid();
             if (maxBid >= AUCTION_OPENING_BID) {
                 bids.add(new AuctionBid(bidder, maxBid));
             }
@@ -114,6 +108,95 @@ public class PropertyAuctionResolver {
         return new AuctionBid(winningBid.player(), roundDownToIncrement(winningBidAmount));
     }
 
+    private void runInteractiveAuction(
+            Property property,
+            List<AuctionParticipant> bidders,
+            InteractiveAuctionState state,
+            CallbackAction onComplete
+    ) {
+        if (bidders.isEmpty() || state.passedPlayers().size() >= bidders.size()) {
+            popupService.show(text("property.auction.noBids", property.getDisplayName()), onComplete::doAction);
+            return;
+        }
+        long activeCount = bidders.stream()
+                .filter(participant -> !state.passedPlayers().contains(participant.player()))
+                .count();
+        if (state.currentWinner() != null && activeCount <= 1) {
+            finalizeWinningBid(new AuctionBid(state.currentWinner(), state.currentBid()), property, onComplete);
+            return;
+        }
+
+        AuctionParticipant nextParticipant = nextActiveBidder(bidders, state);
+        if (nextParticipant == null) {
+            finalizeWinningBid(state.currentWinner() == null ? null : new AuctionBid(state.currentWinner(), state.currentBid()), property, onComplete);
+            return;
+        }
+
+        int minBid = state.currentBid() == 0 ? AUCTION_OPENING_BID : state.currentBid() + AUCTION_BID_INCREMENT;
+        if (nextParticipant.maxBid() < minBid) {
+            Set<Player> passedPlayers = new HashSet<>(state.passedPlayers());
+            passedPlayers.add(nextParticipant.player());
+            runInteractiveAuction(property, bidders, state.withPass(nextParticipant.player(), nextParticipant.index() + 1, passedPlayers), onComplete);
+            return;
+        }
+
+        if (nextParticipant.player().getComputerProfile() != ComputerPlayerProfile.HUMAN) {
+            runInteractiveAuction(
+                    property,
+                    bidders,
+                    state.withBid(nextParticipant.player(), minBid, nextParticipant.index() + 1),
+                    onComplete
+            );
+            return;
+        }
+
+        int maxBid = nextParticipant.maxBid();
+        popupService.show(
+                text(
+                        "property.auction.prompt",
+                        nextParticipant.player().getName(),
+                        property.getDisplayName(),
+                        minBid,
+                        state.currentWinner() == null ? text("property.auction.none") : state.currentWinner().getName(),
+                        state.currentBid(),
+                        maxBid
+                ),
+                new ButtonProps(
+                        text("property.auction.bid", minBid),
+                        () -> runInteractiveAuction(
+                                property,
+                                bidders,
+                                state.withBid(nextParticipant.player(), minBid, nextParticipant.index() + 1),
+                                onComplete
+                        )
+                ),
+                new ButtonProps(
+                        text("property.auction.pass"),
+                        () -> {
+                            Set<Player> passedPlayers = new HashSet<>(state.passedPlayers());
+                            passedPlayers.add(nextParticipant.player());
+                            runInteractiveAuction(
+                                    property,
+                                    bidders,
+                                    state.withPass(nextParticipant.player(), nextParticipant.index() + 1, passedPlayers),
+                                    onComplete
+                            );
+                        }
+                )
+        );
+    }
+
+    private AuctionParticipant nextActiveBidder(List<AuctionParticipant> bidders, InteractiveAuctionState state) {
+        for (int offset = 0; offset < bidders.size(); offset++) {
+            int index = (state.nextIndex() + offset) % bidders.size();
+            AuctionParticipant participant = bidders.get(index);
+            if (!state.passedPlayers().contains(participant.player())) {
+                return participant.withIndex(index);
+            }
+        }
+        return null;
+    }
+
     private List<Player> orderedBidders(Player triggeringPlayer) {
         List<Player> sortedPlayers = players.getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getTurnNumber))
@@ -133,13 +216,16 @@ public class PropertyAuctionResolver {
     }
 
     private int maxBidFor(Player bidder, Property property) {
-        int cashLimit = bidder.getMoneyAmount() - reserveFor(bidder);
+        int cashLimit = bidder.getComputerProfile() == ComputerPlayerProfile.HUMAN
+                ? bidder.getMoneyAmount()
+                : bidder.getMoneyAmount() - reserveFor(bidder);
         if (cashLimit < AUCTION_OPENING_BID) {
             return 0;
         }
         int valuation = switch (bidder.getComputerProfile()) {
             case STRONG -> strongBidLimit(bidder, property, cashLimit);
-            case SMOKE_TEST, HUMAN -> Math.min(cashLimit, property.getPrice());
+            case SMOKE_TEST -> Math.min(cashLimit, property.getPrice());
+            case HUMAN -> cashLimit;
         };
         return roundDownToIncrement(Math.min(cashLimit, valuation));
     }
@@ -216,7 +302,51 @@ public class PropertyAuctionResolver {
         );
     }
 
+    private void finalizeWinningBid(AuctionBid winningBid, Property property, CallbackAction onComplete) {
+        if (winningBid == null) {
+            popupService.show(text("property.auction.noBids", property.getDisplayName()), onComplete::doAction);
+            return;
+        }
+        boolean bought = winningBid.player().buyProperty(property, winningBid.amount());
+        if (!bought) {
+            log.warn("Auction winner {} could not buy {} for M{} after bidding",
+                    winningBid.player().getName(), property.getDisplayName(), winningBid.amount());
+            popupService.show(text("property.auction.noBids", property.getDisplayName()), onComplete::doAction);
+            return;
+        }
+        popupService.show(
+                text("property.auction.won", winningBid.player().getName(), property.getDisplayName(), winningBid.amount()),
+                onComplete::doAction
+        );
+        recordAuctionOutcome(property, winningBid.amount());
+    }
+
     private record AuctionBid(Player player, int amount) {
+    }
+
+    private record AuctionParticipant(Player player, int maxBid, int index) {
+        private AuctionParticipant(Player player, int maxBid) {
+            this(player, maxBid, -1);
+        }
+
+        private AuctionParticipant withIndex(int index) {
+            return new AuctionParticipant(player, maxBid, index);
+        }
+    }
+
+    private record InteractiveAuctionState(
+            int currentBid,
+            Player currentWinner,
+            int nextIndex,
+            Set<Player> passedPlayers
+    ) {
+        private InteractiveAuctionState withBid(Player bidder, int bid, int nextIndex) {
+            return new InteractiveAuctionState(bid, bidder, nextIndex, new HashSet<>());
+        }
+
+        private InteractiveAuctionState withPass(Player bidder, int nextIndex, Set<Player> passedPlayers) {
+            return new InteractiveAuctionState(currentBid, currentWinner, nextIndex, passedPlayers);
+        }
     }
 
     public record AuctionMetrics(

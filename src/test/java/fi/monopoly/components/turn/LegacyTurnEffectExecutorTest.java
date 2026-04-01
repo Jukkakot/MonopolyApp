@@ -8,6 +8,7 @@ import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.PopupService;
+import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.text.UiTexts;
@@ -123,6 +124,7 @@ class LegacyTurnEffectExecutorTest {
     void offerToBuyPropertyEffectStartsAuctionWhenPlayerDeclines() {
         TestPopupService popupService = new TestPopupService();
         popupService.choiceResponses.add(false);
+        popupService.customButtonResponses.add(1);
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Buyer", 1500, 1);
         Player smokeBidder = new Player("SmokeBidder", Color.BLACK, 500, 2, ComputerPlayerProfile.SMOKE_TEST);
@@ -132,10 +134,33 @@ class LegacyTurnEffectExecutorTest {
         executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
 
         assertEquals(smokeBidder, property.getOwnerPlayer());
-        assertEquals(440, smokeBidder.getMoneyAmount());
+        assertEquals(490, smokeBidder.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M60"
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nCurrent bid: M20\nCurrent winner: SmokeBidder\nHighest standing bid: M10\nYour available cash: M1500",
+                "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M10"
+        ), popupService.messages);
+        assertEquals(1, callback.callCount);
+    }
+
+    @Test
+    void offerToBuyPropertyEffectLetsHumanPassAuctionWithoutForcedPurchase() {
+        TestPopupService popupService = new TestPopupService();
+        popupService.choiceResponses.add(false);
+        popupService.customButtonResponses.add(1);
+        TestCallbackAction callback = new TestCallbackAction();
+        Player player = TestObjectFactory.player("Buyer", 1500, 1);
+        StreetProperty property = new StreetProperty(SpotType.B1);
+        LegacyTurnEffectExecutor executor = new LegacyTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player));
+
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+
+        assertNull(property.getOwnerPlayer());
+        assertEquals(1500, player.getMoneyAmount());
+        assertEquals(List.of(
+                "buy it",
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nCurrent bid: M10\nCurrent winner: None\nHighest standing bid: M0\nYour available cash: M1500",
+                "No one bid on MEDITER- RANEAN AVENUE. It remains with the bank."
         ), popupService.messages);
         assertEquals(1, callback.callCount);
     }
@@ -181,6 +206,7 @@ class LegacyTurnEffectExecutorTest {
     private static final class TestPopupService extends PopupService {
         private final List<String> messages = new ArrayList<>();
         private final ArrayDeque<Boolean> choiceResponses = new ArrayDeque<>();
+        private final ArrayDeque<Integer> customButtonResponses = new ArrayDeque<>();
 
         private TestPopupService() {
             super(null);
@@ -209,6 +235,19 @@ class LegacyTurnEffectExecutorTest {
                 }
             } else if (onDecline != null) {
                 onDecline.doAction();
+            }
+        }
+
+        @Override
+        public void show(String text, ButtonProps... buttonProps) {
+            messages.add(text);
+            if (buttonProps.length == 0) {
+                return;
+            }
+            int responseIndex = customButtonResponses.isEmpty() ? 0 : customButtonResponses.removeFirst();
+            int clampedIndex = Math.max(0, Math.min(responseIndex, buttonProps.length - 1));
+            if (buttonProps[clampedIndex].buttonAction() != null) {
+                buttonProps[clampedIndex].buttonAction().doAction();
             }
         }
     }
