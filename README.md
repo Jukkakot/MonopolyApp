@@ -3,28 +3,35 @@
 A Java + Processing based Monopoly application.
 
 This project is a desktop board game with its own board, dice, popup flow, deeds, property purchase/rent logic, card
-spots, a right-side game info panel, and a gradually refactored turn system. The codebase has also been made more
-testable over time, and now includes unit tests plus a headless smoke test for the main game flow.
+spots, a right-side game info panel, trading, property auctions, computer players, and a gradually refactored turn
+system. The codebase has also been made more testable over time, and now includes unit tests plus headless simulation
+tests for the main game flow.
 
 ## Current Features
 
 - playable Monopoly-style desktop board game
-- default three-player game setup
+- default three-player setup with 1 human and 2 `STRONG` bots
 - multiple players on the same board
 - dice rolling, movement, and animations
+- pause / resume during live play
 - buying properties
+- property auctions, including human bid / pass interaction
 - paying rent
 - debt resolution flow with retry and bankruptcy handling
+- bankruptcy asset transfer and bank-side auctions
 - tax spots
 - jail / go to jail flow
 - chance / community chest card spots with localized shuffled decks
 - deed view for owned properties
-- partial house buying / selling support
-- partial mortgage / unmortgage support
+- house buying and selling, including even full-set rounds
+- mortgage / unmortgage support
+- player-to-player trading with counteroffers and bot trade evaluation
 - popup-based decision flow
-- right-side sidebar for turn state, selected player info, debt state, and popup history
-- debug controls for cash, movement, debt, jail, and language switching
-- automated smoke test that runs the game headlessly and verifies it does not get stuck
+- right-side sidebar for turn state, selected player info, debt state, and recent message history
+- winner / game-over popup flow
+- language toggle button for supported locales
+- debug controls via God mode popup
+- unit tests, smoke tests, and repeated headless bot simulation tests
 
 ## Tech Stack
 
@@ -90,23 +97,35 @@ These keys are available during the game:
   roll dice / accept the next flow step depending on the current state
 - `Enter`  
   alternative confirmation key in some flows
+- `1` / `2`  
+  choose the primary / secondary popup action in many popup flows
 - `E`  
   end the turn in debug mode
 - `A`  
   toggle animation skipping
 - `D`  
   toggle debug mode
+- `P`  
+  pause / resume
+- `T`  
+  open trading on your turn
 - `H`  
   print help to the console
 
 ## Testing
 
-The project includes both regular unit tests and a smoke test that drives the full game flow.
+The project includes both regular unit tests and headless simulation tests that drive the live game flow.
 
 Examples:
 
 - [
   `GameSmokeTest.java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/test/java/fi/monopoly/components/GameSmokeTest.java)
+- [
+  `GameBotSimulationTest.java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/test/java/fi/monopoly/components/GameBotSimulationTest.java)
+- [
+  `GameComputerPlayerTest.java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/test/java/fi/monopoly/components/GameComputerPlayerTest.java)
+- [
+  `GameBankruptcyTest.java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/test/java/fi/monopoly/components/GameBankruptcyTest.java)
 - [
   `TurnEngineTest.java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/test/java/fi/monopoly/components/turn/TurnEngineTest.java)
 - [
@@ -120,8 +139,8 @@ Run tests with:
 mvn test
 ```
 
-The smoke test uses a headless bootstrap and simulates gameplay automatically. Its purpose is to catch regressions where
-the game flow breaks or gets stuck in popup / animation states.
+The simulation tests use a headless bootstrap and automate gameplay. Their purpose is to catch regressions where the
+game flow breaks, stalls, or gets stuck in popup / animation / debt / auction states.
 
 ## Missing / In Progress
 
@@ -129,12 +148,10 @@ See the up-to-date task list in [`TODO.txt`](/E:/Documents/ProcessingProjects/Mo
 
 Some of the biggest unfinished areas are:
 
-- bankruptcy and debt-resolution rule polish
-- auctions
-- player-to-player trading
-- final jail rule behavior
-- fuller building rule support
-- player setup screen
+- starting-order roll before the game begins
+- player setup screen for seat types, names, and bot difficulty
+- more configurable computer-player variants and wording polish for bot-facing popups
+- long-game economy and pacing review
 - full responsive layout for board and sidebar resizing
 
 ## Architecture Notes
@@ -144,8 +161,10 @@ The project has gone through an incremental refactor where:
 - popup and event flow have been moved into services
 - turn logic has started moving into a dedicated `turn` layer
 - debt handling has been separated into payment and debt-resolution components
+- trading, debt flow, and debug flow have been extracted into dedicated controllers
 - sidebar and popup layout logic has started moving into centralized layout helpers
-- part of the older global `MonopolyApp.self` usage has been replaced with a `MonopolyRuntime` structure
+- static UI tokens and runtime layout metrics have been separated
+- older global game state has been moved into `MonopolyRuntime` / `GameSession`
 - testability has been improved with headless testing and cleaner domain-side logic
 
 The refactor is still in progress, so the codebase currently contains both older and newer patterns side by side.
