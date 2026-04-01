@@ -4,7 +4,7 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
-import fi.monopoly.components.turn.LegacyTurnEffectExecutor;
+import fi.monopoly.components.turn.InteractiveTurnEffectExecutor;
 import fi.monopoly.components.turn.PropertyTurnResolver;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.SpotType;
@@ -25,7 +25,7 @@ public class PropertySpot extends Spot {
 
     @Override
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {
-        LegacyTurnEffectExecutor turnEffectExecutor = new LegacyTurnEffectExecutor(runtime.popupService(), gameState.getPlayers());
+        InteractiveTurnEffectExecutor turnEffectExecutor = new InteractiveTurnEffectExecutor(runtime.popupService(), gameState.getPlayers());
         turnEffectExecutor.execute(TURN_RESOLVER.resolve(gameState, getName(), property), gameState.getPaymentHandler(), callbackAction);
         return null;
     }

@@ -13,15 +13,15 @@ import java.util.List;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
-public class LegacyTurnEffectExecutor {
+public class InteractiveTurnEffectExecutor {
     private final PopupService popupService;
     private final PropertyAuctionResolver propertyAuctionResolver;
 
-    public LegacyTurnEffectExecutor(PopupService popupService) {
+    public InteractiveTurnEffectExecutor(PopupService popupService) {
         this(popupService, null);
     }
 
-    public LegacyTurnEffectExecutor(PopupService popupService, Players players) {
+    public InteractiveTurnEffectExecutor(PopupService popupService, Players players) {
         this.popupService = popupService;
         this.propertyAuctionResolver = new PropertyAuctionResolver(popupService, players);
     }
@@ -77,7 +77,7 @@ public class LegacyTurnEffectExecutor {
                 ), next);
             });
         } else {
-            throw new IllegalStateException("Unhandled legacy turn effect: " + effect.getClass().getSimpleName());
+            throw new IllegalStateException("Unhandled interactive turn effect: " + effect.getClass().getSimpleName());
         }
     }
 }
