@@ -50,6 +50,9 @@ class PropertyTurnResolverTest {
         assertEquals(turnPlayer, effect.fromPlayer());
         assertEquals(owner, effect.toPlayer());
         assertEquals(4, effect.amount());
+        assertTrue(effect.message().contains("M4"));
+        assertTrue(effect.message().contains("MEDITER- RANEAN AVENUE"));
+        assertTrue(effect.message().contains("Full color set"));
     }
 
     @Test
@@ -65,4 +68,5 @@ class PropertyTurnResolverTest {
 
         assertTrue(effects.isEmpty());
     }
+
 }
