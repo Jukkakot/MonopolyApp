@@ -36,6 +36,14 @@ public class PropertyAuctionResolver {
     }
 
     public void resolve(Player triggeringPlayer, Property property, CallbackAction onComplete) {
+        resolve(triggeringPlayer, property, AuctionContext.bankAuction(), onComplete);
+    }
+
+    public void resolve(Player triggeringPlayer, Property property, AuctionReason reason, CallbackAction onComplete) {
+        resolve(triggeringPlayer, property, AuctionContext.of(reason, triggeringPlayer), onComplete);
+    }
+
+    private void resolve(Player triggeringPlayer, Property property, AuctionContext auctionContext, CallbackAction onComplete) {
         List<AuctionParticipant> orderedPlayers = orderedBidders(triggeringPlayer).stream()
                 .map(bidder -> new AuctionParticipant(bidder, maxBidFor(bidder, property)))
                 .filter(participant -> participant.maxBid() >= AUCTION_OPENING_BID)
@@ -50,7 +58,7 @@ public class PropertyAuctionResolver {
             return;
         }
 
-        runInteractiveAuction(property, orderedPlayers, new InteractiveAuctionState(0, null, 0, new HashSet<>()), onComplete);
+        runInteractiveAuction(property, orderedPlayers, new InteractiveAuctionState(0, null, 0, new HashSet<>()), auctionContext, onComplete);
     }
 
     public static synchronized void resetMetrics() {
@@ -71,7 +79,7 @@ public class PropertyAuctionResolver {
             return;
         }
         Property property = properties.get(index);
-        resolve(null, property, () -> resolveNext(properties, index + 1, onComplete));
+        resolve(null, property, AuctionContext.bankAuction(), () -> resolveNext(properties, index + 1, onComplete));
     }
 
     private AuctionBid determineWinningBid(List<AuctionParticipant> orderedPlayers) {
@@ -112,6 +120,7 @@ public class PropertyAuctionResolver {
             Property property,
             List<AuctionParticipant> bidders,
             InteractiveAuctionState state,
+            AuctionContext auctionContext,
             CallbackAction onComplete
     ) {
         if (bidders.isEmpty() || state.passedPlayers().size() >= bidders.size()) {
@@ -136,7 +145,7 @@ public class PropertyAuctionResolver {
         if (nextParticipant.maxBid() < minBid) {
             Set<Player> passedPlayers = new HashSet<>(state.passedPlayers());
             passedPlayers.add(nextParticipant.player());
-            runInteractiveAuction(property, bidders, state.withPass(nextParticipant.player(), nextParticipant.index() + 1, passedPlayers), onComplete);
+            runInteractiveAuction(property, bidders, state.withPass(nextParticipant.player(), nextParticipant.index() + 1, passedPlayers), auctionContext, onComplete);
             return;
         }
 
@@ -146,6 +155,7 @@ public class PropertyAuctionResolver {
                     property,
                     bidders,
                     state.withBid(nextParticipant.player(), botBid, nextParticipant.index() + 1),
+                    auctionContext,
                     onComplete
             );
             return;
@@ -156,6 +166,7 @@ public class PropertyAuctionResolver {
                 text(
                         "property.auction.prompt",
                         nextParticipant.player().getName(),
+                        auctionContext.reasonMessage(),
                         property.getDisplayName(),
                         minBid,
                         state.currentWinner() == null ? text("property.auction.none") : state.currentWinner().getName(),
@@ -168,6 +179,7 @@ public class PropertyAuctionResolver {
                                 property,
                                 bidders,
                                 state.withBid(nextParticipant.player(), minBid, nextParticipant.index() + 1),
+                                auctionContext,
                                 onComplete
                         )
                 ),
@@ -180,6 +192,7 @@ public class PropertyAuctionResolver {
                                     property,
                                     bidders,
                                     state.withPass(nextParticipant.player(), nextParticipant.index() + 1, passedPlayers),
+                                    auctionContext,
                                     onComplete
                             );
                         }
@@ -345,6 +358,39 @@ public class PropertyAuctionResolver {
 
         private AuctionParticipant withIndex(int index) {
             return new AuctionParticipant(player, maxBid, index);
+        }
+    }
+
+    public enum AuctionReason {
+        PLAYER_DECLINED("property.auction.reason.declined"),
+        PLAYER_COULD_NOT_PAY("property.auction.reason.couldNotPay"),
+        BANK_AUCTION("property.auction.reason.bank");
+
+        private final String textKey;
+
+        AuctionReason(String textKey) {
+            this.textKey = textKey;
+        }
+
+        private String message(String playerName) {
+            return switch (this) {
+                case PLAYER_DECLINED, PLAYER_COULD_NOT_PAY -> text(textKey, playerName);
+                case BANK_AUCTION -> text(textKey);
+            };
+        }
+    }
+
+    private record AuctionContext(AuctionReason reason, String triggeringPlayerName) {
+        private static AuctionContext of(AuctionReason reason, Player triggeringPlayer) {
+            return new AuctionContext(reason, triggeringPlayer == null ? "" : triggeringPlayer.getName());
+        }
+
+        private static AuctionContext bankAuction() {
+            return new AuctionContext(AuctionReason.BANK_AUCTION, "");
+        }
+
+        private String reasonMessage() {
+            return reason.message(triggeringPlayerName);
         }
     }
 

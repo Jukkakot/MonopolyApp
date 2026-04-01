@@ -54,6 +54,7 @@ public class LegacyTurnEffectExecutor {
                             propertyAuctionResolver.resolve(
                                     offerToBuyPropertyEffect.player(),
                                     offerToBuyPropertyEffect.property(),
+                                    PropertyAuctionResolver.AuctionReason.PLAYER_COULD_NOT_PAY,
                                     next
                             )
                     );
@@ -63,6 +64,7 @@ public class LegacyTurnEffectExecutor {
             }, () -> propertyAuctionResolver.resolve(
                     offerToBuyPropertyEffect.player(),
                     offerToBuyPropertyEffect.property(),
+                    PropertyAuctionResolver.AuctionReason.PLAYER_DECLINED,
                     next
             ));
         } else if (effect instanceof PayRentEffect payRentEffect) {

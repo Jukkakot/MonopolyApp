@@ -137,7 +137,7 @@ class LegacyTurnEffectExecutorTest {
         assertEquals(480, smokeBidder.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nCurrent bid: M30\nCurrent winner: SmokeBidder\nHighest standing bid: M20\nYour available cash: M1500",
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nReason: Buyer declined to buy the property.\nCurrent bid: M30\nCurrent winner: SmokeBidder\nHighest standing bid: M20\nYour available cash: M1500",
                 "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M20"
         ), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -159,7 +159,7 @@ class LegacyTurnEffectExecutorTest {
         assertEquals(1500, player.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nCurrent bid: M10\nCurrent winner: None\nHighest standing bid: M0\nYour available cash: M1500",
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nReason: Buyer declined to buy the property.\nCurrent bid: M10\nCurrent winner: None\nHighest standing bid: M0\nYour available cash: M1500",
                 "No one bid on MEDITER- RANEAN AVENUE. It remains with the bank."
         ), popupService.messages);
         assertEquals(1, callback.callCount);
