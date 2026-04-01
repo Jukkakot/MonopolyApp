@@ -390,71 +390,76 @@ public class Game implements MonopolyEventListener {
             return;
         }
 
-        float currentY = panelY + 52;
         float maxTextWidth = panelW - UiTokens.sidebarHistoryTextInset() * 2;
+        float currentBottomY = panelY + historyHeight - 20;
         for (String message : recentMessages) {
-            String condensedMessage = message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
-            if (condensedMessage.isEmpty()) {
+            HistoryEntryLayout layout = buildHistoryEntryLayout(app, message, maxTextWidth);
+            if (layout == null) {
                 continue;
             }
-            currentY = drawHistoryEntry(app, condensedMessage, panelX + UiTokens.sidebarHistoryTextInset(), currentY, maxTextWidth, panelY + historyHeight - 16);
-            if (currentY > panelY + historyHeight - 16) {
-                return;
-            }
-            currentY += 8;
-            if (currentY > panelY + historyHeight - 16) {
+            float nextTopY = currentBottomY - layout.height();
+            if (nextTopY < panelY + UiTokens.sidebarHistoryHeaderHeight() + 8) {
                 break;
             }
+            drawHistoryEntry(app, layout, panelX + UiTokens.sidebarHistoryTextInset(), nextTopY);
+            currentBottomY = nextTopY - 8;
         }
     }
 
-    private float drawHistoryEntry(MonopolyApp app, String condensedMessage, float startX, float startY, float maxTextWidth, float maxY) {
+    private HistoryEntryLayout buildHistoryEntryLayout(MonopolyApp app, String message, float maxTextWidth) {
+        String condensedMessage = message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
+        if (condensedMessage.isEmpty()) {
+            return null;
+        }
         int separatorIndex = condensedMessage.indexOf(": ");
         if (separatorIndex <= 0) {
-            return drawWrappedHistoryLines(app, List.of("- " + condensedMessage), startX, startY, maxY);
+            List<String> lines = List.copyOf(TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth));
+            return new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
         }
 
         String playerName = condensedMessage.substring(0, separatorIndex).trim();
         String body = condensedMessage.substring(separatorIndex + 2).trim();
         Player messagePlayer = findPlayerByName(playerName);
         if (messagePlayer == null) {
-            return drawWrappedHistoryLines(app, TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth), startX, startY, maxY);
+            List<String> lines = List.copyOf(TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth));
+            return new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
         }
 
         String prefix = "- " + playerName + ":";
         float prefixWidth = app.textWidth(prefix + " ");
-        app.fill(colorComponent(messagePlayer.getColor().getRed()),
-                colorComponent(messagePlayer.getColor().getGreen()),
-                colorComponent(messagePlayer.getColor().getBlue()));
-        app.text(prefix, startX, startY);
-
-        app.fill(0);
-        List<String> wrappedBodyLines = TextWrapUtils.wrapText(app.g, body, Math.max(40, maxTextWidth - prefixWidth));
+        List<String> wrappedBodyLines = List.copyOf(TextWrapUtils.wrapText(app.g, body, Math.max(40, maxTextWidth - prefixWidth)));
         if (wrappedBodyLines.isEmpty()) {
-            return startY + 22;
+            wrappedBodyLines = List.of("");
         }
-        app.text(wrappedBodyLines.get(0), startX + prefixWidth, startY);
-        float currentY = startY + 22;
-        for (int i = 1; i < wrappedBodyLines.size(); i++) {
-            if (currentY > maxY) {
-                return currentY;
-            }
-            app.text(wrappedBodyLines.get(i), startX + 18, currentY);
-            currentY += 22;
-        }
-        return currentY;
+        return new HistoryEntryLayout(messagePlayer, prefix, wrappedBodyLines, wrappedBodyLines.size() * 22f);
     }
 
-    private float drawWrappedHistoryLines(MonopolyApp app, List<String> wrappedLines, float startX, float startY, float maxY) {
+    private void drawHistoryEntry(MonopolyApp app, HistoryEntryLayout layout, float startX, float startY) {
+        if (layout.player() == null || layout.prefix() == null) {
+            drawWrappedHistoryLines(app, layout.lines(), startX, startY);
+            return;
+        }
+        float prefixWidth = app.textWidth(layout.prefix() + " ");
+        app.fill(colorComponent(layout.player().getColor().getRed()),
+                colorComponent(layout.player().getColor().getGreen()),
+                colorComponent(layout.player().getColor().getBlue()));
+        app.text(layout.prefix(), startX, startY);
+
+        app.fill(0);
+        app.text(layout.lines().get(0), startX + prefixWidth, startY);
+        float currentY = startY;
+        for (int i = 1; i < layout.lines().size(); i++) {
+            currentY += 22;
+            app.text(layout.lines().get(i), startX + 18, currentY);
+        }
+    }
+
+    private void drawWrappedHistoryLines(MonopolyApp app, List<String> wrappedLines, float startX, float startY) {
         float currentY = startY;
         for (String line : wrappedLines) {
             app.text(line, startX, currentY);
             currentY += 22;
-            if (currentY > maxY) {
-                return currentY;
-            }
         }
-        return currentY;
     }
 
     private Player findPlayerByName(String playerName) {
@@ -469,6 +474,14 @@ public class Game implements MonopolyEventListener {
 
     private int colorComponent(double component) {
         return (int) Math.round(component * 255);
+    }
+
+    private record HistoryEntryLayout(
+            Player player,
+            String prefix,
+            List<String> lines,
+            float height
+    ) {
     }
 
     private String resolveCurrentTurnPhase() {
