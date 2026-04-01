@@ -10,6 +10,7 @@ TRADING
 COMPUTER PLAYERS
 [High] Add computer players with configurable difficulty profiles
 [Medium] Add configurable strong bot variants like aggressive and defensive
+[Medium] Replace second-person popup wording with player names on bot turns
 
 PLAYER SETUP
 [Medium] Add player setup UI for choosing human vs computer seats before game start

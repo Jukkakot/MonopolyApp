@@ -99,11 +99,19 @@ public class StreetPropertySpot extends PropertySpot {
 
     private ButtonProps[] getSellHousesButtons() {
         int intMaxHousesToSell = property.getMaxSellableHouseCount();
-        ButtonProps[] buttonProps = new ButtonProps[intMaxHousesToSell];
+        int maxSetRounds = property.getMaxSellableBuildingRoundsAcrossSet();
+        ButtonProps[] buttonProps = new ButtonProps[intMaxHousesToSell + maxSetRounds];
         for (int i = 0; i < intMaxHousesToSell; i++) {
             final int finalI = i + 1;
             int totalReturn = finalI * getHouseSellValue();
             buttonProps[i] = new ButtonProps(text("format.countMoneyOption", finalI, totalReturn), () -> property.sellHouses(finalI));
+        }
+        for (int i = 0; i < maxSetRounds; i++) {
+            final int finalI = i + 1;
+            int totalReturn = property.getStreetSetRoundCost(finalI) / 2;
+            buttonProps[intMaxHousesToSell + i] = new ButtonProps(
+                    text("streetProperty.sell.setOption", finalI, totalReturn),
+                    () -> property.sellBuildingRoundsAcrossSet(finalI));
         }
         return buttonProps;
     }

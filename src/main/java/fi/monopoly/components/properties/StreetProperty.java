@@ -293,6 +293,68 @@ public class StreetProperty extends Property {
         return count;
     }
 
+    public boolean sellBuildingRoundsAcrossSet(int rounds) {
+        BuildValidationResult result = validateSellBuildingRoundsAcrossSet(rounds);
+        if (result != BuildValidationResult.OK) {
+            showValidationPopup(result, rounds);
+            return false;
+        }
+        List<StreetProperty> properties = getStreetSetProperties();
+        for (int round = 0; round < rounds; round++) {
+            List<StreetProperty> sellOrder = properties.stream()
+                    .sorted(Comparator.comparingInt(StreetProperty::getBuildingLevel).reversed()
+                            .thenComparing(property -> property.getSpotType().ordinal()))
+                    .toList();
+            for (StreetProperty property : sellOrder) {
+                property.sellHouses(1);
+            }
+        }
+        return true;
+    }
+
+    public boolean canSellBuildingRoundsAcrossSet(int rounds) {
+        return validateSellBuildingRoundsAcrossSet(rounds) == BuildValidationResult.OK;
+    }
+
+    private BuildValidationResult validateSellBuildingRoundsAcrossSet(int rounds) {
+        List<StreetProperty> properties = getStreetSetProperties();
+        if (rounds <= 0 || ownerPlayer == null) {
+            return BuildValidationResult.INVALID_COUNT;
+        }
+        int[] levels = properties.stream().mapToInt(StreetProperty::getBuildingLevel).toArray();
+        int builtHouses = getBuiltHouseCount();
+        int builtHotels = getBuiltHotelCount();
+        for (int round = 0; round < rounds; round++) {
+            int maxGroupLevel = java.util.Arrays.stream(levels).max().orElse(0);
+            if (maxGroupLevel <= 0) {
+                return BuildValidationResult.MUST_SELL_EVENLY;
+            }
+            for (int i = 0; i < levels.length; i++) {
+                if (levels[i] == maxGroupLevel) {
+                    if (levels[i] == 5) {
+                        if (builtHouses + 4 > BANK_HOUSE_SUPPLY) {
+                            return BuildValidationResult.NO_HOUSES_TO_BREAK_HOTEL;
+                        }
+                        builtHotels -= 1;
+                        builtHouses += 4;
+                    } else {
+                        builtHouses -= 1;
+                    }
+                    levels[i] -= 1;
+                }
+            }
+        }
+        return BuildValidationResult.OK;
+    }
+
+    public int getMaxSellableBuildingRoundsAcrossSet() {
+        int rounds = 0;
+        while (canSellBuildingRoundsAcrossSet(rounds + 1)) {
+            rounds++;
+        }
+        return rounds;
+    }
+
     public int getStreetSetRoundCost(int rounds) {
         if (rounds <= 0) {
             return 0;

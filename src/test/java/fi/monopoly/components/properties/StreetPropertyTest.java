@@ -231,6 +231,46 @@ class StreetPropertyTest {
     }
 
     @Test
+    void sellingBuildingRoundsAcrossSetSellsHighestBuildingsEvenly() {
+        Player owner = TestObjectFactory.player("Owner", 2000, 1);
+        StreetProperty first = new StreetProperty(SpotType.B1);
+        StreetProperty second = new StreetProperty(SpotType.B2);
+
+        TestObjectFactory.giveProperty(owner, first);
+        TestObjectFactory.giveProperty(owner, second);
+
+        assertTrue(first.buyHouses(1));
+        assertTrue(second.buyHouses(1));
+        assertTrue(first.buyHouses(1));
+
+        assertEquals(2, first.getMaxSellableBuildingRoundsAcrossSet());
+        assertTrue(first.sellBuildingRoundsAcrossSet(1));
+        assertEquals(1, first.getHouseCount());
+        assertEquals(0, second.getHouseCount());
+        assertEquals(1900, owner.getMoneyAmount());
+    }
+
+    @Test
+    void sellingBuildingRoundsAcrossSetCanBreakHotelAcrossSet() {
+        Player owner = TestObjectFactory.player("Owner", 5000, 1);
+        StreetProperty first = new StreetProperty(SpotType.B1);
+        StreetProperty second = new StreetProperty(SpotType.B2);
+
+        TestObjectFactory.giveProperty(owner, first);
+        TestObjectFactory.giveProperty(owner, second);
+        setBuildingState(first, 0, 1);
+        setBuildingState(second, 0, 1);
+
+        assertEquals(5, first.getMaxSellableBuildingRoundsAcrossSet());
+        assertTrue(first.sellBuildingRoundsAcrossSet(1));
+        assertEquals(4, first.getHouseCount());
+        assertEquals(0, first.getHotelCount());
+        assertEquals(4, second.getHouseCount());
+        assertEquals(0, second.getHotelCount());
+        assertEquals(5050, owner.getMoneyAmount());
+    }
+
+    @Test
     void buyingHouseFailsWhenBankHasNoHousesLeft() {
         Player owner = TestObjectFactory.player("Owner", 2000, 1);
         Player other = TestObjectFactory.player("Other", 2000, 2);
