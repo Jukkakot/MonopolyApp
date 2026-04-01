@@ -151,7 +151,7 @@ public class PropertyAuctionResolver {
         }
 
         int maxBid = nextParticipant.maxBid();
-        popupService.show(
+        popupService.showManualDecision(
                 text(
                         "property.auction.prompt",
                         nextParticipant.player().getName(),

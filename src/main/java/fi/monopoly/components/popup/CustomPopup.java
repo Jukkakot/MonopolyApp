@@ -1,6 +1,5 @@
 package fi.monopoly.components.popup;
 
-import controlP5.Button;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -18,16 +17,18 @@ import static fi.monopoly.text.UiTexts.text;
 public class CustomPopup extends Popup {
     private final List<MonopolyButton> customButtons = new ArrayList<>();
     private int totalButtonCount = 0;
-    private final Button closeButton;
+    private final MonopolyButton closeButton;
     private final List<String> activeButtonLabels = new ArrayList<>();
     private final List<ButtonAction> activeButtonActions = new ArrayList<>();
+    private boolean computerResolvable = true;
+    private boolean manualInteractionDuringComputerTurn;
 
     protected CustomPopup(MonopolyRuntime runtime) {
         super(runtime);
-        this.closeButton = new MonopolyButton(runtime, "close")
-                .addListener(e -> completeManualAction(null))
-                .hide()
-                .setSize(UiTokens.popupCloseButtonSize(), UiTokens.popupCloseButtonSize());
+        this.closeButton = new MonopolyButton(runtime, "close");
+        closeButton.addListener(() -> completeManualAction(null));
+        closeButton.hide();
+        closeButton.setSize(UiTokens.popupCloseButtonSize(), UiTokens.popupCloseButtonSize());
         refreshLabels();
         fi.monopoly.text.UiTexts.addChangeListener(this::refreshLabels);
     }
@@ -70,6 +71,7 @@ public class CustomPopup extends Popup {
         button.setLabel(buttonProps.name());
         button.addListener(() -> getButtonAction(buttonProps.buttonAction()));
         button.setSize(UiTokens.popupButtonMinWidth(), UiTokens.popupButtonHeight());
+        button.setAllowedDuringComputerTurn(manualInteractionDuringComputerTurn);
     }
 
     private void layoutButtons() {
@@ -111,6 +113,7 @@ public class CustomPopup extends Popup {
     @Override
     protected void show() {
         super.show();
+        closeButton.setAllowedDuringComputerTurn(manualInteractionDuringComputerTurn);
         layoutButtons();
         closeButton.show();
         for (int i = 0; i < totalButtonCount; i++) {
@@ -126,6 +129,8 @@ public class CustomPopup extends Popup {
         totalButtonCount = 0;
         activeButtonLabels.clear();
         activeButtonActions.clear();
+        computerResolvable = true;
+        manualInteractionDuringComputerTurn = false;
     }
 
     @Override
@@ -152,6 +157,9 @@ public class CustomPopup extends Popup {
 
     @Override
     protected boolean onComputerAction(ComputerPlayerProfile profile) {
+        if (!computerResolvable) {
+            return false;
+        }
         return triggerPrimaryAction(PopupActionTrigger.COMPUTER);
     }
 
@@ -176,6 +184,11 @@ public class CustomPopup extends Popup {
         return true;
     }
 
+    public void setInteractionPolicy(boolean computerResolvable, boolean manualInteractionDuringComputerTurn) {
+        this.computerResolvable = computerResolvable;
+        this.manualInteractionDuringComputerTurn = manualInteractionDuringComputerTurn;
+    }
+
     private ButtonAction getButtonActionAt(int index) {
         if (index < 0 || index >= totalButtonCount) {
             return null;
@@ -192,5 +205,10 @@ public class CustomPopup extends Popup {
                 getPopupRight() - UiTokens.popupCloseButtonRightInset(),
                 getPopupTop() + UiTokens.popupCloseButtonTopInset()
         );
+    }
+
+    @Override
+    protected boolean allowManualInteractionDuringComputerTurn() {
+        return manualInteractionDuringComputerTurn;
     }
 }

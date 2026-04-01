@@ -76,9 +76,18 @@ public class PopupService {
     }
 
     public void show(String text, ButtonProps... buttonProps) {
+        showCustom(text, true, false, buttonProps);
+    }
+
+    public void showManualDecision(String text, ButtonProps... buttonProps) {
+        showCustom(text, false, true, buttonProps);
+    }
+
+    private void showCustom(String text, boolean computerResolvable, boolean manualInteractionDuringComputerTurn, ButtonProps... buttonProps) {
         enqueue(() -> {
             CustomPopup customPopup = getInstance(CustomPopup.class);
             customPopup.setPopupText(text);
+            customPopup.setInteractionPolicy(computerResolvable, manualInteractionDuringComputerTurn);
             customPopup.setButtons(buttonProps);
             return customPopup;
         });

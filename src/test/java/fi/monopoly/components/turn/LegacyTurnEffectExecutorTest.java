@@ -250,6 +250,11 @@ class LegacyTurnEffectExecutorTest {
                 buttonProps[clampedIndex].buttonAction().doAction();
             }
         }
+
+        @Override
+        public void showManualDecision(String text, ButtonProps... buttonProps) {
+            show(text, buttonProps);
+        }
     }
 
     private static final class TestCallbackAction implements CallbackAction {

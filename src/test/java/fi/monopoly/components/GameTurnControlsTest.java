@@ -443,6 +443,33 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void botTurnManualDecisionPopupWaitsForHumanInput() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        game.players().switchTurn();
+        final boolean[] accepted = {false};
+        runtime.popupService().showManualDecision(
+                "Auction prompt",
+                new fi.monopoly.components.popup.components.ButtonProps("Bid M10", () -> accepted[0] = true),
+                new fi.monopoly.components.popup.components.ButtonProps("Pass", () -> accepted[0] = false)
+        );
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertFalse(runtime.popupService().resolveForComputer(ComputerPlayerProfile.STRONG),
+                "Computer channel must not auto-resolve a human-only decision popup");
+
+        dispatchKey(runtime, '1');
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(accepted[0], "Manual input should still work for a human auction decision during a bot turn");
+        assertFalse(runtime.popupService().isAnyVisible());
+    }
+
+    @Test
     void botTurnBlocksGameAffectingButtonsButAllowsLanguageButton() throws ReflectiveOperationException {
         resetNextPlayerId();
         fi.monopoly.text.UiTexts.setLocale(Locale.forLanguageTag("fi"));
@@ -479,5 +506,19 @@ class GameTurnControlsTest {
         assertEquals(Locale.ENGLISH, fi.monopoly.text.UiTexts.getLocale());
         assertFalse(runtime.popupService().isAnyVisible(),
                 "Language button should switch locale directly without opening a popup");
+    }
+
+    @Test
+    void playersSharingSpotGetDistinctTokenCoordinates() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        List<Player> players = game.players().getPlayers();
+        assertTrue(players.size() >= 2);
+
+        assertNotEquals(players.get(0).getCoords(), players.get(1).getCoords(),
+                "Players on the same spot must not collapse to the same token coordinates");
     }
 }

@@ -5,7 +5,6 @@ import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.images.AbstractClickable;
-import fi.monopoly.images.Image;
 import fi.monopoly.images.SpotImage;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.TurnResult;
@@ -16,7 +15,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,7 +27,7 @@ public abstract class Spot extends AbstractClickable {
     public static final float SPOT_H = SPOT_W * 1.5f;
     @Getter
     protected final SpotType spotType;
-    Set<Image> playersOnSpot = new HashSet<>();
+    Set<Player> playersOnSpot = new LinkedHashSet<>();
     private static final List<Coordinates> TOKEN_COORDS = Arrays.asList(new Coordinates(0, 0), new Coordinates(-PlayerToken.TOKEN_RADIUS, 0), new Coordinates(PlayerToken.TOKEN_RADIUS, 0),
             new Coordinates(0, PlayerToken.TOKEN_RADIUS), new Coordinates(-PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS), new Coordinates(PlayerToken.TOKEN_RADIUS, PlayerToken.TOKEN_RADIUS));
 
@@ -43,14 +43,20 @@ public abstract class Spot extends AbstractClickable {
 
     public void addPlayer(Player p) {
         playersOnSpot.add(p);
+        refreshTokenLayout();
     }
 
     public void removePlayer(Player p) {
         playersOnSpot.remove(p);
+        refreshTokenLayout();
     }
 
     public Coordinates getTokenCoords(Player player) {
-        int index = playersOnSpot.stream().filter(p -> !p.equals(player)).toList().size();
+        List<Player> orderedPlayers = new ArrayList<>(playersOnSpot);
+        int index = orderedPlayers.indexOf(player);
+        if (index < 0) {
+            index = orderedPlayers.size();
+        }
         Coordinates tokenSpot = TOKEN_COORDS.get(index % TOKEN_COORDS.size());
         return image.getCoords().move(tokenSpot);
     }
@@ -58,6 +64,12 @@ public abstract class Spot extends AbstractClickable {
     public Coordinates getTokenCoords() {
         Coordinates tokenSpot = TOKEN_COORDS.get(playersOnSpot.size() % TOKEN_COORDS.size());
         return image.getCoords().move(tokenSpot);
+    }
+
+    private void refreshTokenLayout() {
+        for (Player player : playersOnSpot) {
+            player.setCoords(getTokenCoords(player));
+        }
     }
 
     public TurnResult handleTurn(GameState gameState, CallbackAction callbackAction) {

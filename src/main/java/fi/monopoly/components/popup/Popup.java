@@ -77,7 +77,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
             return true;
         }
         Player turnPlayer = session != null && session.players() != null ? session.players().getTurn() : null;
-        return turnPlayer == null || !turnPlayer.isComputerControlled();
+        return turnPlayer == null || !turnPlayer.isComputerControlled() || allowManualInteractionDuringComputerTurn();
     }
 
     protected final boolean isInteractionAllowed(PopupActionTrigger trigger) {
@@ -164,6 +164,10 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected void refreshControlLayout() {
+    }
+
+    protected boolean allowManualInteractionDuringComputerTurn() {
+        return false;
     }
 
     protected Coordinates getPopupCenter() {
