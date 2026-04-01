@@ -6,7 +6,6 @@ import fi.monopoly.components.Players;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.PopupService;
-import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.StreetType;
 import lombok.extern.slf4j.Slf4j;
@@ -162,7 +161,8 @@ public class PropertyAuctionResolver {
         }
 
         int maxBid = nextParticipant.maxBid();
-        popupService.showManualDecision(
+        popupService.showPropertyAuction(
+                property,
                 text(
                         "property.auction.prompt",
                         nextParticipant.player().getName(),
@@ -173,30 +173,26 @@ public class PropertyAuctionResolver {
                         state.currentBid(),
                         maxBid
                 ),
-                new ButtonProps(
-                        text("property.auction.bid", minBid),
-                        () -> runInteractiveAuction(
-                                property,
-                                bidders,
-                                state.withBid(nextParticipant.player(), minBid, nextParticipant.index() + 1),
-                                auctionContext,
-                                onComplete
-                        )
+                text("property.auction.bid", minBid),
+                text("property.auction.pass"),
+                () -> runInteractiveAuction(
+                        property,
+                        bidders,
+                        state.withBid(nextParticipant.player(), minBid, nextParticipant.index() + 1),
+                        auctionContext,
+                        onComplete
                 ),
-                new ButtonProps(
-                        text("property.auction.pass"),
-                        () -> {
-                            Set<Player> passedPlayers = new HashSet<>(state.passedPlayers());
-                            passedPlayers.add(nextParticipant.player());
-                            runInteractiveAuction(
-                                    property,
-                                    bidders,
-                                    state.withPass(nextParticipant.player(), nextParticipant.index() + 1, passedPlayers),
-                                    auctionContext,
-                                    onComplete
-                            );
-                        }
-                )
+                () -> {
+                    Set<Player> passedPlayers = new HashSet<>(state.passedPlayers());
+                    passedPlayers.add(nextParticipant.player());
+                    runInteractiveAuction(
+                            property,
+                            bidders,
+                            state.withPass(nextParticipant.player(), nextParticipant.index() + 1, passedPlayers),
+                            auctionContext,
+                            onComplete
+                    );
+                }
         );
     }
 

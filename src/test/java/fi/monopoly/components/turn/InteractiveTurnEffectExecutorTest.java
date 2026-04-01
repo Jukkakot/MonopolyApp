@@ -9,6 +9,7 @@ import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.popup.components.ButtonProps;
+import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.text.UiTexts;
@@ -281,6 +282,21 @@ class InteractiveTurnEffectExecutorTest {
         @Override
         public void showManualDecision(String text, ButtonProps... buttonProps) {
             show(text, buttonProps);
+        }
+
+        @Override
+        public void showPropertyAuction(Property property, String text, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
+            messages.add(text);
+            int responseIndex = customButtonResponses.isEmpty() ? 0 : customButtonResponses.removeFirst();
+            if (responseIndex <= 0) {
+                if (onAccept != null) {
+                    onAccept.doAction();
+                }
+                return;
+            }
+            if (onDecline != null) {
+                onDecline.doAction();
+            }
         }
     }
 

@@ -5,6 +5,7 @@ import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.popup.components.ButtonProps;
+import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.UiTokens;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import fi.monopoly.types.SpotType;
 
 class PopupLayoutTest {
 
@@ -122,6 +124,7 @@ class PopupLayoutTest {
 
         PropertyOfferPopup propertyOfferPopup = new PropertyOfferPopup(runtime);
         propertyOfferPopup.setPopupText("Buy it?");
+        propertyOfferPopup.setOfferedProperty(new StreetProperty(SpotType.B1));
         propertyOfferPopup.show();
 
         MonopolyButton acceptButton = getButton(propertyOfferPopup, "acceptButton");
@@ -131,6 +134,27 @@ class PopupLayoutTest {
         assertTrue(declineButton.isVisible());
         assertTrue(acceptButton.getPosition()[0] >= propertyOfferPopup.getPopupLeft());
         assertTrue(declineButton.getPosition()[0] + declineButton.getWidth() <= propertyOfferPopup.getPopupRight());
+        assertTrue(acceptButton.getPosition()[1] >= propertyOfferPopup.getButtonAreaTop());
+    }
+
+    @Test
+    void propertyAuctionPopupKeepsButtonsInsidePropertyPopupLayout() throws ReflectiveOperationException {
+        MonopolyRuntime runtime = initHeadlessRuntime(1700, 996);
+        PropertyAuctionPopup popup = new PropertyAuctionPopup(runtime);
+        popup.setPopupText("Auction for Brown 1");
+        popup.setOfferedProperty(new StreetProperty(SpotType.B1));
+        popup.setButtonLabels("Bid M10", "Pass");
+        popup.show();
+
+        MonopolyButton acceptButton = getButton(popup, "acceptButton");
+        MonopolyButton declineButton = getButton(popup, "declineButton");
+
+        assertTrue(acceptButton.isVisible());
+        assertTrue(declineButton.isVisible());
+        assertTrue(acceptButton.getPosition()[0] >= popup.getPopupLeft());
+        assertTrue(declineButton.getPosition()[0] + declineButton.getWidth() <= popup.getPopupRight());
+        assertTrue(acceptButton.getPosition()[1] >= popup.getButtonAreaTop());
+        assertTrue(declineButton.getPosition()[1] + declineButton.getHeight() <= popup.getPopupBottom());
     }
 
     @Test

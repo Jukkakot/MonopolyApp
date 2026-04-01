@@ -19,6 +19,8 @@ import static fi.monopoly.utils.UiTokens.popupTextSidePadding;
 public class ChoicePopup extends Popup {
     private final MonopolyButton acceptButton;
     private final MonopolyButton declineButton;
+    private String acceptLabel;
+    private String declineLabel;
 
     @Setter
     private ButtonAction onAcceptAction;
@@ -46,8 +48,15 @@ public class ChoicePopup extends Popup {
     }
 
     private void refreshLabels() {
-        acceptButton.setLabel(text("popup.choice.accept"));
-        declineButton.setLabel(text("popup.choice.decline"));
+        acceptButton.setLabel(acceptLabel != null ? acceptLabel : text("popup.choice.accept"));
+        declineButton.setLabel(declineLabel != null ? declineLabel : text("popup.choice.decline"));
+    }
+
+    protected void setActionLabels(String acceptLabel, String declineLabel) {
+        this.acceptLabel = acceptLabel;
+        this.declineLabel = declineLabel;
+        refreshLabels();
+        layoutButtons();
     }
 
     private void acceptAction() {

@@ -33,12 +33,7 @@ public class PopupService {
     }
 
     public void show(String text) {
-        enqueue(() -> {
-            OkPopup okPopup = getInstance(OkPopup.class);
-            okPopup.setOnOkAction(null);
-            okPopup.setPopupText(text);
-            return okPopup;
-        });
+        show(text, (ButtonAction) null);
     }
 
     public void show(String text, ButtonAction onAccept) {
@@ -72,6 +67,22 @@ public class PopupService {
             propertyOfferPopup.setOnAcceptAction(onAccept);
             propertyOfferPopup.setOnDeclineAction(onDecline);
             return propertyOfferPopup;
+        });
+    }
+
+    public void showPropertyAuction(Property property, String text, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
+        if (runtime == null) {
+            showManualDecision(text, new ButtonProps(primaryLabel, onAccept), new ButtonProps(secondaryLabel, onDecline));
+            return;
+        }
+        enqueue(() -> {
+            PropertyAuctionPopup propertyAuctionPopup = getInstance(PropertyAuctionPopup.class);
+            propertyAuctionPopup.setPopupText(text);
+            propertyAuctionPopup.setOfferedProperty(property);
+            propertyAuctionPopup.setOnAcceptAction(onAccept);
+            propertyAuctionPopup.setOnDeclineAction(onDecline);
+            propertyAuctionPopup.setButtonLabels(primaryLabel, secondaryLabel);
+            return propertyAuctionPopup;
         });
     }
 
@@ -197,6 +208,7 @@ public class PopupService {
                 OkPopup.class, () -> new OkPopup(runtime),
                 ChoicePopup.class, () -> new ChoicePopup(runtime),
                 PropertyOfferPopup.class, () -> new PropertyOfferPopup(runtime),
+                PropertyAuctionPopup.class, () -> new PropertyAuctionPopup(runtime),
                 CustomPopup.class, () -> new CustomPopup(runtime),
                 TradePopup.class, () -> new TradePopup(runtime)
         );
