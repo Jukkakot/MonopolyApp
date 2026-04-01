@@ -62,6 +62,18 @@ class GameTurnControlsTest {
         return getButton(game, "tradeButton");
     }
 
+    private static MonopolyButton getPlayersButton(Players players, String fieldName) throws ReflectiveOperationException {
+        Field field = Players.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return (MonopolyButton) field.get(players);
+    }
+
+    private static int getPlayersIntField(Players players, String fieldName) throws ReflectiveOperationException {
+        Field field = Players.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field.getInt(players);
+    }
+
     private static MonopolyButton getButton(Game game, String fieldName) throws ReflectiveOperationException {
         Field field = Game.class.getDeclaredField(fieldName);
         field.setAccessible(true);
@@ -506,6 +518,41 @@ class GameTurnControlsTest {
         Field pausedField = Game.class.getDeclaredField("paused");
         pausedField.setAccessible(true);
         assertTrue((boolean) pausedField.get(game), "Pause button should still work during a bot turn");
+    }
+
+    @Test
+    void deedPagerButtonsRemainUsableDuringBotTurn() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Player bot = game.players().switchTurn();
+        TestGameSessions.install(runtime, game.players(), game.dices(), game.animations());
+        game.players().focusPlayer(bot);
+        for (fi.monopoly.types.SpotType spotType : java.util.List.of(
+                fi.monopoly.types.SpotType.B1,
+                fi.monopoly.types.SpotType.B2,
+                fi.monopoly.types.SpotType.LB1,
+                fi.monopoly.types.SpotType.LB2,
+                fi.monopoly.types.SpotType.LB3,
+                fi.monopoly.types.SpotType.P1,
+                fi.monopoly.types.SpotType.P2,
+                fi.monopoly.types.SpotType.P3,
+                fi.monopoly.types.SpotType.RR1
+        )) {
+            fi.monopoly.support.TestObjectFactory.giveProperty(bot,
+                    fi.monopoly.components.properties.PropertyFactory.getProperty(spotType));
+        }
+
+        MonopolyButton nextDeedsButton = getPlayersButton(game.players(), "nextDeedsButton");
+        var updatePagerMethod = Players.class.getDeclaredMethod("updateDeedPagerButtons", fi.monopoly.utils.Coordinates.class, int.class);
+        updatePagerMethod.setAccessible(true);
+        updatePagerMethod.invoke(game.players(), new fi.monopoly.utils.Coordinates(0, 0), bot.getOwnedProperties().size());
+
+        nextDeedsButton.pressButton();
+        assertTrue(getPlayersIntField(game.players(), "deedPageStartIndex") > 0,
+                "Deed pager buttons should remain usable during a bot turn");
     }
 
     @Test

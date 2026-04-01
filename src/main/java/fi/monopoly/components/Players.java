@@ -67,10 +67,12 @@ public class Players {
         this.getOutOFJailImg = new Image(runtime, new SpotProps(0, 0, Spot.SPOT_H / 2, Spot.SPOT_W / 2), "GetOutOfJail.png");
         this.previousDeedsButton = new MonopolyButton(runtime, "previousDeeds")
                 .setLabel("<")
-                .setSize(DEED_PAGER_BUTTON_WIDTH, 28);
+                .setSize(DEED_PAGER_BUTTON_WIDTH, 28)
+                .setAllowedDuringComputerTurn(true);
         this.nextDeedsButton = new MonopolyButton(runtime, "nextDeeds")
                 .setLabel(">")
-                .setSize(DEED_PAGER_BUTTON_WIDTH, 28);
+                .setSize(DEED_PAGER_BUTTON_WIDTH, 28)
+                .setAllowedDuringComputerTurn(true);
         previousDeedsButton.addListener(this::showPreviousDeedsPage);
         nextDeedsButton.addListener(this::showNextDeedsPage);
     }
