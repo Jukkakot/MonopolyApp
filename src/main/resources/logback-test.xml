@@ -1,17 +1,18 @@
 <configuration>
 
     <property name="LOG_DIR" value="${user.dir}/logs/test"/>
-    <property name="LOG_PATTERN" value="%highlight(%d{HH:mm:ss.SSS} %-5level) %boldCyan([turn=%X{turnPlayer}]) %logger{28} - %msg%n"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%highlight(%d{HH:mm:ss.SSS} %-5level) %boldCyan([turn=%X{turnPlayer:-}]) %logger{28} - %msg%n"/>
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [turn=%X{turnPlayer:-}] %logger{28} - %msg%n"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_DIR}/monopoly-test.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -33,7 +34,7 @@
             <level>ERROR</level>
         </filter>
         <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_DIR}/ERROR-monopoly-test.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -52,9 +53,13 @@
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
+        <appender-ref ref="ASYNC_FILE"/>
     </root>
 
     <logger name="fi.monopoly" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_ERROR_FILE"/>
+        <appender-ref ref="ASYNC_FILE"/>
     </logger>
 </configuration>
