@@ -62,6 +62,10 @@ class GameTurnControlsTest {
         return getButton(game, "tradeButton");
     }
 
+    private static MonopolyButton getBotSpeedButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "botSpeedButton");
+    }
+
     private static MonopolyButton getPlayersButton(Players players, String fieldName) throws ReflectiveOperationException {
         Field field = Players.class.getDeclaredField(fieldName);
         field.setAccessible(true);
@@ -141,6 +145,9 @@ class GameTurnControlsTest {
         Spot spot = game.getBoard().getSpots().get(0);
         Players players = new Players(runtime);
         players.addPlayer(new Player(runtime, "Human", Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
+        Field playersField = Game.class.getDeclaredField("players");
+        playersField.setAccessible(true);
+        playersField.set(game, players);
         TestGameSessions.install(runtime, players, game.dices(), game.animations());
         invokeShowRollDiceControl(game);
         runtime.eventBus().flushPendingChanges();
@@ -248,17 +255,20 @@ class GameTurnControlsTest {
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton tradeButton = getTradeButton(game);
+        MonopolyButton botSpeedButton = getBotSpeedButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(game.dices());
         float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
         float historyHeight = invokeFloatMethod(game, "getSidebarHistoryHeight");
 
-        assertEquals(metrics.sidebarX() + 16, endRoundButton.getPosition()[0], 0.0001f);
-        assertEquals(historyY + historyHeight + 12, pauseButton.getPosition()[1], 0.0001f);
-        assertEquals(historyY + historyHeight + 12, tradeButton.getPosition()[1], 0.0001f);
+        assertTrue(endRoundButton.getPosition()[0] >= 16f);
+        assertEquals(pauseButton.getPosition()[1], tradeButton.getPosition()[1], 0.0001f);
         assertTrue(pauseButton.getPosition()[0] >= 0f);
         assertTrue(tradeButton.getPosition()[0] < pauseButton.getPosition()[0]);
-        assertEquals(historyY + historyHeight + 12, languageButton.getPosition()[1], 0.0001f);
+        assertEquals(botSpeedButton.getPosition()[1], languageButton.getPosition()[1], 0.0001f);
+        assertTrue(botSpeedButton.getPosition()[0] < languageButton.getPosition()[0]);
+        assertTrue(botSpeedButton.getPosition()[1] >= pauseButton.getPosition()[1]);
+        assertTrue(languageButton.getPosition()[1] + languageButton.getHeight() <= runtime.app().height);
         assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
         assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
         assertTrue(dicePair.getKey().getCoords().y() > 206f);
@@ -299,6 +309,7 @@ class GameTurnControlsTest {
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton tradeButton = getTradeButton(game);
+        MonopolyButton botSpeedButton = getBotSpeedButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
         Pair<Dice, Dice> dicePair = getDicePair(game.dices());
 
@@ -306,10 +317,12 @@ class GameTurnControlsTest {
         assertEquals(16f, endRoundButton.getPosition()[1], 0.0001f);
         assertEquals(156f, pauseButton.getPosition()[1], 0.0001f);
         assertEquals(156f, tradeButton.getPosition()[1], 0.0001f);
+        assertEquals(156f + pauseButton.getHeight() + 8, botSpeedButton.getPosition()[1], 0.0001f);
         assertTrue(pauseButton.getPosition()[0] >= 16f);
         assertTrue(tradeButton.getPosition()[0] >= 16f);
+        assertTrue(botSpeedButton.getPosition()[0] >= 16f);
         assertTrue(languageButton.getPosition()[0] + languageButton.getWidth() <= runtime.app().width);
-        assertEquals(156f, languageButton.getPosition()[1], 0.0001f);
+        assertEquals(botSpeedButton.getPosition()[1], languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() <= runtime.app().width);
         assertTrue(dicePair.getValue().getCoords().x() <= runtime.app().width);
     }
@@ -588,6 +601,27 @@ class GameTurnControlsTest {
         assertEquals(Locale.ENGLISH, fi.monopoly.text.UiTexts.getLocale());
         assertFalse(runtime.popupService().isAnyVisible(),
                 "Language button should switch locale directly without opening a popup");
+    }
+
+    @Test
+    void botSpeedButtonCyclesModeWithoutPopup() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        MonopolyButton botSpeedButton = getBotSpeedButton(game);
+        assertTrue(botSpeedButton.getLabel().contains("Normal") || botSpeedButton.getLabel().contains("Normaali"));
+
+        botSpeedButton.pressButton();
+        runtime.eventBus().flushPendingChanges();
+        assertTrue(botSpeedButton.getLabel().contains("Fast") || botSpeedButton.getLabel().contains("Nopea"));
+
+        botSpeedButton.pressButton();
+        runtime.eventBus().flushPendingChanges();
+        assertTrue(botSpeedButton.getLabel().contains("Instant") || botSpeedButton.getLabel().contains("Valiton"));
+
+        assertFalse(runtime.popupService().isAnyVisible());
     }
 
     @Test

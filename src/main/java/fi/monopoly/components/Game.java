@@ -53,8 +53,41 @@ public class Game implements MonopolyEventListener {
             Locale.ENGLISH
     );
     private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
-    private static final int COMPUTER_ACTION_DELAY_MS = 1000;
     private static final int NO_COMPUTER_ACTION_YET = -1;
+
+    private enum BotSpeedMode {
+        NORMAL("game.button.botSpeed.normal", 1.0f),
+        FAST("game.button.botSpeed.fast", 0.5f),
+        INSTANT("game.button.botSpeed.instant", 0.0f);
+
+        private final String labelKey;
+        private final float delayMultiplier;
+
+        BotSpeedMode(String labelKey, float delayMultiplier) {
+            this.labelKey = labelKey;
+            this.delayMultiplier = delayMultiplier;
+        }
+
+        private BotSpeedMode next() {
+            return values()[(ordinal() + 1) % values().length];
+        }
+    }
+
+    private enum ComputerActionDelayKind {
+        ANIMATION_FINISH,
+        RESOLVE_POPUP,
+        ACCEPT_POPUP,
+        DECLINE_POPUP,
+        ROLL_DICE,
+        END_TURN,
+        BUILD_ROUND,
+        SELL_BUILDING,
+        MORTGAGE_PROPERTY,
+        UNMORTGAGE_PROPERTY,
+        TRADE,
+        RETRY_DEBT_PAYMENT,
+        DECLARE_BANKRUPTCY
+    }
 
     // Core services
     private final MonopolyRuntime runtime;
@@ -70,6 +103,7 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton debugGodModeButton;
     private final MonopolyButton pauseButton;
     private final MonopolyButton tradeButton;
+    private final MonopolyButton botSpeedButton;
     private final MonopolyButton languageButton;
 
     // Mutable game state
@@ -80,9 +114,11 @@ public class Game implements MonopolyEventListener {
     private Board board;
     private TurnResult prevTurnResult;
     private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
+    private int nextComputerActionReadyAt = NO_COMPUTER_ACTION_YET;
     private boolean paused;
     private boolean gameOver;
     private Player winner;
+    private BotSpeedMode botSpeedMode = BotSpeedMode.NORMAL;
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private LayoutMetrics frameLayoutMetrics;
     private float frameSidebarHistoryHeight;
@@ -102,6 +138,7 @@ public class Game implements MonopolyEventListener {
         this.debugGodModeButton = new MonopolyButton(runtime, "debugGodMode");
         this.pauseButton = new MonopolyButton(runtime, "pause");
         this.tradeButton = new MonopolyButton(runtime, "trade");
+        this.botSpeedButton = new MonopolyButton(runtime, "botSpeed");
         this.languageButton = new MonopolyButton(runtime, "language");
         setupButtons();
         setupRuntimeDependencies();
@@ -142,6 +179,11 @@ public class Game implements MonopolyEventListener {
         tradeButton.setSize(140, 36);
         tradeButton.setAutoWidth(120, 28, 220);
 
+        botSpeedButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
+        botSpeedButton.setSize(140, 36);
+        botSpeedButton.setAutoWidth(120, 28, 220);
+        botSpeedButton.setAllowedDuringComputerTurn(true);
+
         languageButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
         languageButton.setSize(220, 36);
         languageButton.setAutoWidth(180, 28, 280);
@@ -154,6 +196,7 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.hide();
         pauseButton.hide();
         tradeButton.hide();
+        botSpeedButton.hide();
     }
 
     private void setupRuntimeDependencies() {
@@ -225,6 +268,7 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.addListener(debugController::openGodModeMenu);
         pauseButton.addListener(this::togglePause);
         tradeButton.addListener(tradeController::openTradeMenu);
+        botSpeedButton.addListener(this::cycleBotSpeedMode);
         languageButton.addListener(this::toggleLanguage);
     }
 
@@ -321,7 +365,7 @@ public class Game implements MonopolyEventListener {
         }
         Player turnPlayer = players.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            lastComputerActionAt = runtime.app().millis();
+            scheduleNextComputerAction(ComputerActionDelayKind.ANIMATION_FINISH, runtime.app().millis());
         }
     }
 
@@ -646,17 +690,45 @@ public class Game implements MonopolyEventListener {
             return;
         }
         int now = runtime.app().millis();
-        boolean shouldApplyDelay = !MonopolyApp.SKIP_ANNIMATIONS && lastComputerActionAt != NO_COMPUTER_ACTION_YET;
-        if (shouldApplyDelay && now - lastComputerActionAt < COMPUTER_ACTION_DELAY_MS) {
+        boolean shouldApplyDelay = !MonopolyApp.SKIP_ANNIMATIONS && nextComputerActionReadyAt != NO_COMPUTER_ACTION_YET;
+        if (shouldApplyDelay && now < nextComputerActionReadyAt) {
             return;
         }
 
-        boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile())
-                .takeStep(new GameComputerTurnContext(turnPlayer));
+        GameComputerTurnContext context = new GameComputerTurnContext(turnPlayer);
+        boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile()).takeStep(context);
         if (acted) {
-            lastComputerActionAt = now;
+            scheduleNextComputerAction(context.delayKind(), now);
         }
         debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+    }
+
+    private void scheduleNextComputerAction(ComputerActionDelayKind delayKind, int now) {
+        lastComputerActionAt = now;
+        nextComputerActionReadyAt = now + computeComputerActionDelayMs(delayKind);
+    }
+
+    private int computeComputerActionDelayMs(ComputerActionDelayKind delayKind) {
+        if (MonopolyApp.SKIP_ANNIMATIONS || botSpeedMode == BotSpeedMode.INSTANT) {
+            return 0;
+        }
+        int baseDelayMs = switch (delayKind) {
+            case ANIMATION_FINISH -> 260;
+            case RESOLVE_POPUP, ACCEPT_POPUP, DECLINE_POPUP -> 220;
+            case ROLL_DICE -> 240;
+            case END_TURN -> 150;
+            case BUILD_ROUND -> 700;
+            case SELL_BUILDING -> 520;
+            case MORTGAGE_PROPERTY, UNMORTGAGE_PROPERTY -> 480;
+            case TRADE -> 850;
+            case RETRY_DEBT_PAYMENT, DECLARE_BANKRUPTCY -> 650;
+        };
+        float multiplier = botSpeedMode.delayMultiplier;
+        if (players.getPlayers().stream().allMatch(Player::isComputerControlled)) {
+            multiplier *= 0.7f;
+        }
+        int jitter = (int) ((Math.random() * 120) - 60);
+        return Math.max(0, Math.round(baseDelayMs * multiplier) + jitter);
     }
 
     private void endRound(boolean switchTurns) {
@@ -786,6 +858,10 @@ public class Game implements MonopolyEventListener {
                 togglePause();
                 return true;
             }
+            if (key == 'b') {
+                cycleBotSpeedMode();
+                return true;
+            }
             if (runtime.popupService().isAnyVisible()) {
                 return consumedEvent;
             }
@@ -887,6 +963,7 @@ public class Game implements MonopolyEventListener {
                 Math.round(frameSidebarHistoryPanelY),
                 pauseButton.getWidth(),
                 tradeButton.getWidth(),
+                botSpeedButton.getWidth(),
                 languageButton.getWidth(),
                 declareBankruptcyButton.getWidth()
         );
@@ -905,23 +982,33 @@ public class Game implements MonopolyEventListener {
         float sidebarRightAlignedX = layoutMetrics.sidebarRight() - UiTokens.spacingMd();
         float primaryButtonY = layoutMetrics.sidebarPrimaryButtonY();
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
-        float pauseButtonY = frameSidebarHistoryPanelY + frameSidebarHistoryHeight + UiTokens.spacingSm();
-        float tradeButtonY = pauseButtonY;
-        float languageButtonY = frameSidebarHistoryPanelY + frameSidebarHistoryHeight + UiTokens.spacingSm();
+        float controlRow1Y = frameSidebarHistoryPanelY + frameSidebarHistoryHeight + UiTokens.spacingSm();
+        float controlRow2Y = controlRow1Y + pauseButton.getHeight() + UiTokens.spacingXs();
+        if (controlRow2Y + languageButton.getHeight() > runtime.app().height - UiTokens.spacingMd()) {
+            layoutOverlayControls(layoutMetrics);
+            dices.updateLayout(layoutMetrics);
+            return;
+        }
 
         endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
         retryDebtButton.setPosition(sidebarLeftX, primaryButtonY);
         declareBankruptcyButton.setPosition(sidebarRightAlignedX - declareBankruptcyButton.getWidth(), primaryButtonY);
         debugGodModeButton.setPosition(sidebarLeftX, debugRow1Y);
-        languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), languageButtonY);
-        pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs(), pauseButtonY);
-        tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), tradeButtonY);
+        pauseButton.setPosition(sidebarRightAlignedX - pauseButton.getWidth(), controlRow1Y);
+        tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
+        languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow2Y);
+        botSpeedButton.setPosition(languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs(), controlRow2Y);
         dices.updateLayout(layoutMetrics);
     }
 
     private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
         float leftX = UiTokens.overlayMargin();
         float rightX = layoutMetrics.boardWidth() - UiTokens.overlayMargin();
+        float overlayTopRowY = UiTokens.overlaySecondaryRow3Y();
+        float overlayBottomRowY = Math.min(
+                overlayTopRowY + languageButton.getHeight() + UiTokens.spacingXs(),
+                runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
+        );
 
         endRoundButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());
         retryDebtButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());
@@ -929,15 +1016,19 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setPosition(leftX, UiTokens.overlaySecondaryRow1Y());
         languageButton.setPosition(
                 Math.max(leftX, rightX - languageButton.getWidth()),
-                UiTokens.overlaySecondaryRow3Y()
+                overlayBottomRowY
+        );
+        botSpeedButton.setPosition(
+                Math.max(leftX, languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs()),
+                overlayBottomRowY
         );
         pauseButton.setPosition(
-                Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs()),
-                UiTokens.overlaySecondaryRow3Y()
+                Math.max(leftX, rightX - pauseButton.getWidth()),
+                overlayTopRowY
         );
         tradeButton.setPosition(
                 Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs()),
-                UiTokens.overlaySecondaryRow3Y()
+                overlayTopRowY
         );
     }
 
@@ -979,11 +1070,13 @@ public class Game implements MonopolyEventListener {
             debugGodModeButton.hide();
             pauseButton.hide();
             tradeButton.hide();
+            botSpeedButton.hide();
             languageButton.show();
             return;
         }
         pauseButton.show();
         tradeButton.show();
+        botSpeedButton.show();
         languageButton.show();
         if (!MonopolyApp.DEBUG_MODE) {
             debugGodModeButton.hide();
@@ -999,6 +1092,7 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setLabel(text("game.button.godMode"));
         pauseButton.setLabel(paused ? text("game.button.resume") : text("game.button.pause"));
         tradeButton.setLabel(text("game.button.trade"));
+        botSpeedButton.setLabel(text("game.button.botSpeed", text(botSpeedMode.labelKey)));
         languageButton.setLabel(text("language.button.current", text("language.name.current")));
     }
 
@@ -1009,6 +1103,13 @@ public class Game implements MonopolyEventListener {
         paused = !paused;
         refreshLabels();
         log.info("Game paused={}", paused);
+    }
+
+    private void cycleBotSpeedMode() {
+        botSpeedMode = botSpeedMode.next();
+        nextComputerActionReadyAt = runtime.app().millis();
+        refreshLabels();
+        log.info("Bot speed mode={}", botSpeedMode);
     }
 
     private void toggleLanguage() {
@@ -1114,9 +1215,14 @@ public class Game implements MonopolyEventListener {
 
     private final class GameComputerTurnContext implements ComputerTurnContext {
         private final Player player;
+        private ComputerActionDelayKind delayKind = ComputerActionDelayKind.RESOLVE_POPUP;
 
         private GameComputerTurnContext(Player player) {
             this.player = player;
+        }
+
+        private ComputerActionDelayKind delayKind() {
+            return delayKind;
         }
 
         @Override
@@ -1131,17 +1237,29 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public boolean resolveActivePopup() {
-            return runtime.popupService().resolveForComputer(player.getComputerProfile());
+            boolean resolved = runtime.popupService().resolveForComputer(player.getComputerProfile());
+            if (resolved) {
+                delayKind = ComputerActionDelayKind.RESOLVE_POPUP;
+            }
+            return resolved;
         }
 
         @Override
         public boolean acceptActivePopup() {
-            return runtime.popupService().triggerPrimaryComputerAction();
+            boolean accepted = runtime.popupService().triggerPrimaryComputerAction();
+            if (accepted) {
+                delayKind = ComputerActionDelayKind.ACCEPT_POPUP;
+            }
+            return accepted;
         }
 
         @Override
         public boolean declineActivePopup() {
-            return runtime.popupService().triggerSecondaryComputerAction();
+            boolean declined = runtime.popupService().triggerSecondaryComputerAction();
+            if (declined) {
+                delayKind = ComputerActionDelayKind.DECLINE_POPUP;
+            }
+            return declined;
         }
 
         @Override
@@ -1150,7 +1268,11 @@ public class Game implements MonopolyEventListener {
             if (!(property instanceof StreetProperty streetProperty)) {
                 return false;
             }
-            return streetProperty.sellHouses(count);
+            boolean sold = streetProperty.sellHouses(count);
+            if (sold) {
+                delayKind = ComputerActionDelayKind.SELL_BUILDING;
+            }
+            return sold;
         }
 
         @Override
@@ -1159,36 +1281,56 @@ public class Game implements MonopolyEventListener {
             if (!(property instanceof StreetProperty streetProperty)) {
                 return false;
             }
-            return streetProperty.buyBuildingRoundsAcrossSet(1);
+            boolean built = streetProperty.buyBuildingRoundsAcrossSet(1);
+            if (built) {
+                delayKind = ComputerActionDelayKind.BUILD_ROUND;
+            }
+            return built;
         }
 
         @Override
         public boolean toggleMortgage(SpotType spotType) {
-            return PropertyFactory.getProperty(spotType).handleMortgaging();
+            Property property = PropertyFactory.getProperty(spotType);
+            boolean wasMortgaged = property.isMortgaged();
+            boolean toggled = property.handleMortgaging();
+            if (toggled) {
+                delayKind = wasMortgaged
+                        ? ComputerActionDelayKind.UNMORTGAGE_PROPERTY
+                        : ComputerActionDelayKind.MORTGAGE_PROPERTY;
+            }
+            return toggled;
         }
 
         @Override
         public ComputerDecision initiateTrade() {
-            return tradeController.tryInitiateComputerTrade(player);
+            ComputerDecision decision = tradeController.tryInitiateComputerTrade(player);
+            if (decision != null) {
+                delayKind = ComputerActionDelayKind.TRADE;
+            }
+            return decision;
         }
 
         @Override
         public void retryPendingDebtPayment() {
+            delayKind = ComputerActionDelayKind.RETRY_DEBT_PAYMENT;
             debtController.retryPendingDebtPayment();
         }
 
         @Override
         public void declareBankruptcy() {
+            delayKind = ComputerActionDelayKind.DECLARE_BANKRUPTCY;
             debtController.declareBankruptcy();
         }
 
         @Override
         public void rollDice() {
+            delayKind = ComputerActionDelayKind.ROLL_DICE;
             dices.rollDice();
         }
 
         @Override
         public void endTurn() {
+            delayKind = ComputerActionDelayKind.END_TURN;
             Game.this.endRound(true);
         }
     }
