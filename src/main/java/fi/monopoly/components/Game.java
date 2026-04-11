@@ -961,6 +961,7 @@ public class Game implements MonopolyEventListener {
                 Math.round(layoutMetrics.sidebarDebugButtonRow1Y()),
                 Math.round(frameSidebarHistoryHeight),
                 Math.round(frameSidebarHistoryPanelY),
+                MonopolyApp.DEBUG_MODE,
                 pauseButton.getWidth(),
                 tradeButton.getWidth(),
                 botSpeedButton.getWidth(),
@@ -983,8 +984,10 @@ public class Game implements MonopolyEventListener {
         float primaryButtonY = layoutMetrics.sidebarPrimaryButtonY();
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
         float controlRow1Y = frameSidebarHistoryPanelY + frameSidebarHistoryHeight + UiTokens.spacingSm();
+        boolean showBotSpeed = MonopolyApp.DEBUG_MODE;
         float controlRow2Y = controlRow1Y + pauseButton.getHeight() + UiTokens.spacingXs();
-        if (controlRow2Y + languageButton.getHeight() > runtime.app().height - UiTokens.spacingMd()) {
+        float lowestControlBottom = (showBotSpeed ? controlRow2Y : controlRow1Y) + languageButton.getHeight();
+        if (lowestControlBottom > runtime.app().height - UiTokens.spacingMd()) {
             layoutOverlayControls(layoutMetrics);
             dices.updateLayout(layoutMetrics);
             return;
@@ -994,10 +997,16 @@ public class Game implements MonopolyEventListener {
         retryDebtButton.setPosition(sidebarLeftX, primaryButtonY);
         declareBankruptcyButton.setPosition(sidebarRightAlignedX - declareBankruptcyButton.getWidth(), primaryButtonY);
         debugGodModeButton.setPosition(sidebarLeftX, debugRow1Y);
-        pauseButton.setPosition(sidebarRightAlignedX - pauseButton.getWidth(), controlRow1Y);
-        tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
-        languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow2Y);
-        botSpeedButton.setPosition(languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs(), controlRow2Y);
+        if (showBotSpeed) {
+            pauseButton.setPosition(sidebarRightAlignedX - pauseButton.getWidth(), controlRow1Y);
+            tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
+            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow2Y);
+            botSpeedButton.setPosition(languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs(), controlRow2Y);
+        } else {
+            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow1Y);
+            pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
+            tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
+        }
         dices.updateLayout(layoutMetrics);
     }
 
@@ -1005,6 +1014,7 @@ public class Game implements MonopolyEventListener {
         float leftX = UiTokens.overlayMargin();
         float rightX = layoutMetrics.boardWidth() - UiTokens.overlayMargin();
         float overlayTopRowY = UiTokens.overlaySecondaryRow3Y();
+        boolean showBotSpeed = MonopolyApp.DEBUG_MODE;
         float overlayBottomRowY = Math.min(
                 overlayTopRowY + languageButton.getHeight() + UiTokens.spacingXs(),
                 runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
@@ -1014,22 +1024,37 @@ public class Game implements MonopolyEventListener {
         retryDebtButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());
         declareBankruptcyButton.setPosition(rightX - declareBankruptcyButton.getWidth(), UiTokens.overlayPrimaryButtonY());
         debugGodModeButton.setPosition(leftX, UiTokens.overlaySecondaryRow1Y());
-        languageButton.setPosition(
-                Math.max(leftX, rightX - languageButton.getWidth()),
-                overlayBottomRowY
-        );
-        botSpeedButton.setPosition(
-                Math.max(leftX, languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs()),
-                overlayBottomRowY
-        );
-        pauseButton.setPosition(
-                Math.max(leftX, rightX - pauseButton.getWidth()),
-                overlayTopRowY
-        );
-        tradeButton.setPosition(
-                Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs()),
-                overlayTopRowY
-        );
+        if (showBotSpeed) {
+            languageButton.setPosition(
+                    Math.max(leftX, rightX - languageButton.getWidth()),
+                    overlayBottomRowY
+            );
+            botSpeedButton.setPosition(
+                    Math.max(leftX, languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs()),
+                    overlayBottomRowY
+            );
+            pauseButton.setPosition(
+                    Math.max(leftX, rightX - pauseButton.getWidth()),
+                    overlayTopRowY
+            );
+            tradeButton.setPosition(
+                    Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs()),
+                    overlayTopRowY
+            );
+        } else {
+            languageButton.setPosition(
+                    Math.max(leftX, rightX - languageButton.getWidth()),
+                    overlayTopRowY
+            );
+            pauseButton.setPosition(
+                    Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs()),
+                    overlayTopRowY
+            );
+            tradeButton.setPosition(
+                    Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs()),
+                    overlayTopRowY
+            );
+        }
     }
 
     private float getSidebarHistoryHeight() {
@@ -1076,13 +1101,14 @@ public class Game implements MonopolyEventListener {
         }
         pauseButton.show();
         tradeButton.show();
-        botSpeedButton.show();
         languageButton.show();
         if (!MonopolyApp.DEBUG_MODE) {
             debugGodModeButton.hide();
+            botSpeedButton.hide();
             return;
         }
         debugGodModeButton.show();
+        botSpeedButton.show();
     }
 
     private void refreshLabels() {
