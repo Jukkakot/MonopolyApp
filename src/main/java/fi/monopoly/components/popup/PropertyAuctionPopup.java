@@ -10,11 +10,9 @@ import processing.core.PImage;
 import static fi.monopoly.text.UiTexts.text;
 import static processing.core.PConstants.CENTER;
 import static processing.core.PConstants.CORNER;
-import static processing.core.PConstants.LEFT;
 import static processing.core.PConstants.TOP;
 
 public class PropertyAuctionPopup extends PropertyOfferPopup {
-    private String reasonText = "";
     private int currentBidAmount;
     private Player currentLeader;
 
@@ -26,8 +24,7 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         setActionLabels(primaryLabel, secondaryLabel);
     }
 
-    public void setAuctionInfo(String reasonText, Player currentLeader, int currentBidAmount) {
-        this.reasonText = reasonText;
+    public void setAuctionInfo(Player currentLeader, int currentBidAmount) {
         this.currentLeader = currentLeader;
         this.currentBidAmount = currentBidAmount;
     }
@@ -66,11 +63,7 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         p.textFont(runtime.font20());
         p.textAlign(CENTER, TOP);
         p.text(getPopupText(), centerX, cardY + cardH + 8f);
-
-        p.textFont(runtime.font20());
-        p.text(reasonText, centerX, cardY + cardH + 36f);
-
-        float infoY = cardY + cardH + 74f;
+        float infoY = cardY + cardH + 44f;
         drawLeaderCard(p, centerX - 116f, infoY, 112f, 92f);
         drawMoneyChip(p, centerX + 4f, infoY, 176f, 92f, currentBidAmount);
 
@@ -122,9 +115,24 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         p.fill(35, 75, 41);
         p.textAlign(CENTER, TOP);
         p.textFont(runtime.font10());
-        p.text(text("property.auction.currentBidLabel"), x + width / 2f, y + 10f);
+        p.text(text("property.auction.highestBidLabel"), x + width / 2f, y + 10f);
         p.textFont(runtime.font30());
         p.text("M" + amount, x + width / 2f, y + 34f);
+    }
+
+    @Override
+    public void show() {
+        primaryButton().setButtonColors(
+                runtime.app().color(73, 170, 79),
+                runtime.app().color(255),
+                runtime.app().color(54, 135, 60)
+        );
+        secondaryButton().setButtonColors(
+                runtime.app().color(196, 70, 63),
+                runtime.app().color(255),
+                runtime.app().color(161, 49, 43)
+        );
+        super.show();
     }
 
     @Override
@@ -140,7 +148,6 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
     @Override
     protected void hide() {
         super.hide();
-        reasonText = "";
         currentBidAmount = 0;
         currentLeader = null;
     }

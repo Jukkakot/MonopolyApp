@@ -138,7 +138,7 @@ class InteractiveTurnEffectExecutorTest {
         assertEquals(480, smokeBidder.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer is auctioning the property.",
+                "Buyer is auctioning MEDITER- RANEAN AVENUE",
                 "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M20"
         ), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -160,7 +160,7 @@ class InteractiveTurnEffectExecutorTest {
         assertEquals(1500, player.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer is auctioning the property.",
+                "Buyer is auctioning MEDITER- RANEAN AVENUE",
                 "No one bid on MEDITER- RANEAN AVENUE. It remains with the bank."
         ), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -185,7 +185,7 @@ class InteractiveTurnEffectExecutorTest {
 
         assertEquals(smokeBidderOne, property.getOwnerPlayer());
         assertEquals(1, popupService.messages.stream()
-                .filter(message -> message.startsWith("Buyer, auction for"))
+                .filter(message -> message.startsWith("Buyer is auctioning"))
                 .count(), "Human should be prompted only once after passing");
         assertEquals(440, smokeBidderOne.getMoneyAmount());
         assertEquals(500, smokeBidderTwo.getMoneyAmount());
@@ -285,8 +285,8 @@ class InteractiveTurnEffectExecutorTest {
         }
 
         @Override
-        public void showPropertyAuction(Property property, String title, String reasonText, Player currentLeader, int currentBidAmount, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
-            messages.add(title + "\n" + reasonText);
+        public void showPropertyAuction(Property property, String title, Player currentLeader, int currentBidAmount, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
+            messages.add(title);
             int responseIndex = customButtonResponses.isEmpty() ? 0 : customButtonResponses.removeFirst();
             if (responseIndex <= 0) {
                 if (onAccept != null) {

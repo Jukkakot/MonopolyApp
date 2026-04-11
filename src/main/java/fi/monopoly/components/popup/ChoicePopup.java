@@ -52,6 +52,14 @@ public class ChoicePopup extends Popup {
         declineButton.setLabel(declineLabel != null ? declineLabel : text("popup.choice.decline"));
     }
 
+    protected MonopolyButton primaryButton() {
+        return acceptButton;
+    }
+
+    protected MonopolyButton secondaryButton() {
+        return declineButton;
+    }
+
     protected void setActionLabels(String acceptLabel, String declineLabel) {
         this.acceptLabel = acceptLabel;
         this.declineLabel = declineLabel;

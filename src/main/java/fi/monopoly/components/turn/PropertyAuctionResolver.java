@@ -164,7 +164,6 @@ public class PropertyAuctionResolver {
         popupService.showPropertyAuction(
                 property,
                 text("property.auction.prompt", nextParticipant.player().getName(), property.getDisplayName()),
-                auctionContext.reasonMessage(),
                 state.currentWinner(),
                 state.currentBid(),
                 text("property.auction.bid", minBid),

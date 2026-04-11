@@ -74,7 +74,6 @@ public class PopupService {
     public void showPropertyAuction(
             Property property,
             String title,
-            String reasonText,
             Player currentLeader,
             int currentBidAmount,
             String primaryLabel,
@@ -90,7 +89,7 @@ public class PopupService {
             PropertyAuctionPopup propertyAuctionPopup = getInstance(PropertyAuctionPopup.class);
             propertyAuctionPopup.setPopupText(title);
             propertyAuctionPopup.setOfferedProperty(property);
-            propertyAuctionPopup.setAuctionInfo(reasonText, currentLeader, currentBidAmount);
+            propertyAuctionPopup.setAuctionInfo(currentLeader, currentBidAmount);
             propertyAuctionPopup.setOnAcceptAction(onAccept);
             propertyAuctionPopup.setOnDeclineAction(onDecline);
             propertyAuctionPopup.setButtonLabels(primaryLabel, secondaryLabel);
