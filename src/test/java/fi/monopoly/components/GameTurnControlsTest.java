@@ -521,6 +521,25 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void botTurnPopupTextUsesPlayerNameInsteadOfSecondPerson() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Player bot = game.players().switchTurn();
+        runtime.popupService().show("Arrived at WATER WORKS. Do you want to buy it for M150?");
+        runtime.eventBus().flushPendingChanges();
+
+        assertEquals(
+                bot.getName() + " arrived at WATER WORKS. Does " + bot.getName() + " want to buy it for M150?",
+                runtime.popupService().activePopupMessage()
+        );
+        assertTrue(runtime.popupService().recentPopupMessages().get(0).contains(bot.getName() + ":"));
+    }
+
+    @Test
     void deedPagerButtonsRemainUsableDuringBotTurn() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();

@@ -41,7 +41,7 @@ public class PopupService {
         enqueue(() -> {
             OkPopup okPopup = getInstance(OkPopup.class);
             okPopup.setOnOkAction(onAccept);
-            okPopup.setPopupText(text);
+            okPopup.setPopupText(adaptPopupText(text));
             return okPopup;
         });
     }
@@ -49,7 +49,7 @@ public class PopupService {
     public void show(String text, ButtonAction onAccept, ButtonAction onDecline) {
         enqueue(() -> {
             ChoicePopup choicePopup = getInstance(ChoicePopup.class);
-            choicePopup.setPopupText(text);
+            choicePopup.setPopupText(adaptPopupText(text));
             choicePopup.setOnAcceptAction(onAccept);
             choicePopup.setOnDeclineAction(onDecline);
             return choicePopup;
@@ -63,7 +63,7 @@ public class PopupService {
         }
         enqueue(() -> {
             PropertyOfferPopup propertyOfferPopup = getInstance(PropertyOfferPopup.class);
-            propertyOfferPopup.setPopupText(text);
+            propertyOfferPopup.setPopupText(adaptPopupText(text));
             propertyOfferPopup.setOfferedProperty(property);
             propertyOfferPopup.setOnAcceptAction(onAccept);
             propertyOfferPopup.setOnDeclineAction(onDecline);
@@ -87,7 +87,7 @@ public class PopupService {
         }
         enqueue(() -> {
             PropertyAuctionPopup propertyAuctionPopup = getInstance(PropertyAuctionPopup.class);
-            propertyAuctionPopup.setPopupText(title);
+            propertyAuctionPopup.setPopupText(adaptPopupText(title));
             propertyAuctionPopup.setOfferedProperty(property);
             propertyAuctionPopup.setAuctionInfo(currentLeader, currentBidAmount);
             propertyAuctionPopup.setOnAcceptAction(onAccept);
@@ -108,7 +108,7 @@ public class PopupService {
     private void showCustom(String text, boolean computerResolvable, boolean manualInteractionDuringComputerTurn, ButtonProps... buttonProps) {
         enqueue(() -> {
             CustomPopup customPopup = getInstance(CustomPopup.class);
-            customPopup.setPopupText(text);
+            customPopup.setPopupText(adaptPopupText(text));
             customPopup.setInteractionPolicy(computerResolvable, manualInteractionDuringComputerTurn);
             customPopup.setButtons(buttonProps);
             return customPopup;
@@ -118,7 +118,7 @@ public class PopupService {
     public void showTrade(String text, TradePopupView tradeView, ButtonProps... buttonProps) {
         enqueue(() -> {
             TradePopup tradePopup = getInstance(TradePopup.class);
-            tradePopup.setPopupText(text);
+            tradePopup.setPopupText(adaptPopupText(text));
             tradePopup.setTradeView(tradeView);
             tradePopup.setButtons(buttonProps);
             return tradePopup;
@@ -266,14 +266,22 @@ public class PopupService {
     }
 
     private String activeTurnPrefix() {
-        if (runtime == null || runtime.gameSessionOrNull() == null || runtime.gameSessionOrNull().players() == null) {
-            return null;
-        }
-        var turnPlayer = runtime.gameSessionOrNull().players().getTurn();
+        Player turnPlayer = activeTurnPlayer();
         if (turnPlayer == null) {
             return null;
         }
         String turnName = turnPlayer.getName();
         return turnName == null || turnName.isBlank() ? null : turnName;
+    }
+
+    private String adaptPopupText(String text) {
+        return PopupPerspectiveText.adaptForTurnPlayer(text, activeTurnPlayer());
+    }
+
+    private Player activeTurnPlayer() {
+        if (runtime == null || runtime.gameSessionOrNull() == null || runtime.gameSessionOrNull().players() == null) {
+            return null;
+        }
+        return runtime.gameSessionOrNull().players().getTurn();
     }
 }
