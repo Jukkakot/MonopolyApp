@@ -105,7 +105,8 @@ public class TradePopup extends Popup {
 
     @Override
     protected fi.monopoly.utils.Coordinates getPopupCenter() {
-        return fi.monopoly.utils.Coordinates.of(runtime.app().width / 2f, getPopupTop() + getPopupHeight() / 2f);
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        return fi.monopoly.utils.Coordinates.of(layoutMetrics.boardWidth() / 2f, getPopupTop() + getPopupHeight() / 2f);
     }
 
     @Override
@@ -504,9 +505,9 @@ public class TradePopup extends Popup {
                 centerButtons.add(button);
             }
         }
-        layoutButtonGroup(negativeButtons, Math.round(getPopupLeft() + 36), rowY, false);
+        layoutButtonGroup(negativeButtons, Math.round(getPopupLeft() + 36), rowY, false, false, UiTokens.tradeMoneyButtonGapX());
         layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
-        layoutButtonGroup(positiveButtons, Math.round(getPopupRight() - 36), rowY, false, true);
+        layoutButtonGroup(positiveButtons, Math.round(getPopupRight() - 36), rowY, false, true, UiTokens.tradeMoneyButtonGapX());
     }
 
     private void layoutBackButton() {
@@ -517,19 +518,30 @@ public class TradePopup extends Popup {
     }
 
     private void layoutButtonGroup(List<MonopolyButton> buttons, int anchorX, int rowY, boolean centered) {
-        layoutButtonGroup(buttons, anchorX, rowY, centered, false);
+        layoutButtonGroup(buttons, anchorX, rowY, centered, false, UiTokens.popupButtonGapX());
     }
 
     private void layoutButtonGroup(List<MonopolyButton> buttons, int anchorX, int rowY, boolean centered, boolean alignRight) {
+        layoutButtonGroup(buttons, anchorX, rowY, centered, alignRight, UiTokens.popupButtonGapX());
+    }
+
+    private void layoutButtonGroup(
+            List<MonopolyButton> buttons,
+            int anchorX,
+            int rowY,
+            boolean centered,
+            boolean alignRight,
+            int gapX
+    ) {
         if (buttons.isEmpty()) {
             return;
         }
         int totalWidth = buttons.stream().mapToInt(button -> Math.round(button.getWidth())).sum()
-                + Math.max(0, buttons.size() - 1) * UiTokens.popupButtonGapX();
+                + Math.max(0, buttons.size() - 1) * gapX;
         int buttonX = centered ? anchorX - totalWidth / 2 : alignRight ? anchorX - totalWidth : anchorX;
         for (MonopolyButton button : buttons) {
             button.setPosition(buttonX, rowY);
-            buttonX += Math.round(button.getWidth()) + UiTokens.popupButtonGapX();
+            buttonX += Math.round(button.getWidth()) + gapX;
         }
     }
 

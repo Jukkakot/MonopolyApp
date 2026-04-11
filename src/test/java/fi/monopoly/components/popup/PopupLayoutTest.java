@@ -79,6 +79,14 @@ class PopupLayoutTest {
     }
 
     @Test
+    void tradePopupAlsoCentersToBoardAreaWhenSidebarIsVisible() {
+        TradePopup popup = new TradePopup(initHeadlessRuntime(1700, 996));
+
+        assertEquals(498f, popup.getPopupCenter().x(), 0.0001f);
+        assertTrue(popup.getPopupRight() <= LayoutMetrics.fromWindow(1700, 996).boardWidth());
+    }
+
+    @Test
     void choicePopupKeepsButtonsInsideSmallPopup() throws ReflectiveOperationException {
         ChoicePopup popup = new ChoicePopup(initHeadlessRuntime(360, 260));
         popup.setPopupText("Question");
