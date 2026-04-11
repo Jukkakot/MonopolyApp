@@ -98,7 +98,7 @@ public class PropertyOfferPopup extends ChoicePopup {
         p.popMatrix();
     }
 
-    private void drawPopupText(PGraphics p, float centerX, float startY, float maxWidth) {
+    protected void drawPopupText(PGraphics p, float centerX, float startY, float maxWidth) {
         p.fill(0);
         p.textFont(runtime.font20());
         p.textAlign(CENTER, TOP);
@@ -113,7 +113,7 @@ public class PropertyOfferPopup extends ChoicePopup {
         }
     }
 
-    private void drawPropertyCard(PGraphics p, float x, float y, float width, float height) {
+    protected void drawPropertyCard(PGraphics p, float x, float y, float width, float height) {
         p.rectMode(CORNER);
         p.stroke(p.color(0));
         p.strokeWeight(2);
@@ -144,7 +144,7 @@ public class PropertyOfferPopup extends ChoicePopup {
         );
     }
 
-    private void drawStripe(PGraphics p, float x, float y, float width) {
+    protected void drawStripe(PGraphics p, float x, float y, float width) {
         p.fill(resolveStripeColor());
         p.rect(
                 x + 5f,
@@ -158,7 +158,7 @@ public class PropertyOfferPopup extends ChoicePopup {
         );
     }
 
-    private int resolveStripeColor() {
+    protected int resolveStripeColor() {
         if (offeredProperty == null) {
             return runtime.app().color(170, 150, 100);
         }

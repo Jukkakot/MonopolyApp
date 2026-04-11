@@ -70,15 +70,27 @@ public class PopupService {
         });
     }
 
-    public void showPropertyAuction(Property property, String text, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
+    public void showPropertyAuction(
+            Property property,
+            String title,
+            String reasonText,
+            String currentLeaderLabel,
+            int currentBidAmount,
+            int availableCashAmount,
+            String primaryLabel,
+            String secondaryLabel,
+            ButtonAction onAccept,
+            ButtonAction onDecline
+    ) {
         if (runtime == null) {
-            showManualDecision(text, new ButtonProps(primaryLabel, onAccept), new ButtonProps(secondaryLabel, onDecline));
+            showManualDecision(title, new ButtonProps(primaryLabel, onAccept), new ButtonProps(secondaryLabel, onDecline));
             return;
         }
         enqueue(() -> {
             PropertyAuctionPopup propertyAuctionPopup = getInstance(PropertyAuctionPopup.class);
-            propertyAuctionPopup.setPopupText(text);
+            propertyAuctionPopup.setPopupText(title);
             propertyAuctionPopup.setOfferedProperty(property);
+            propertyAuctionPopup.setAuctionInfo(reasonText, currentLeaderLabel, currentBidAmount, availableCashAmount);
             propertyAuctionPopup.setOnAcceptAction(onAccept);
             propertyAuctionPopup.setOnDeclineAction(onDecline);
             propertyAuctionPopup.setButtonLabels(primaryLabel, secondaryLabel);

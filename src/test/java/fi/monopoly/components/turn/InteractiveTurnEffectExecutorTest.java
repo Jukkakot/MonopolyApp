@@ -138,7 +138,7 @@ class InteractiveTurnEffectExecutorTest {
         assertEquals(480, smokeBidder.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nReason: Buyer declined to buy the property.\nCurrent bid: M30\nCurrent winner: SmokeBidder\nHighest standing bid: M20\nYour available cash: M1500",
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer declined to buy the property.",
                 "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M20"
         ), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -160,7 +160,7 @@ class InteractiveTurnEffectExecutorTest {
         assertEquals(1500, player.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nReason: Buyer declined to buy the property.\nCurrent bid: M10\nCurrent winner: None\nHighest standing bid: M0\nYour available cash: M1500",
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer declined to buy the property.",
                 "No one bid on MEDITER- RANEAN AVENUE. It remains with the bank."
         ), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -285,8 +285,8 @@ class InteractiveTurnEffectExecutorTest {
         }
 
         @Override
-        public void showPropertyAuction(Property property, String text, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
-            messages.add(text);
+        public void showPropertyAuction(Property property, String title, String reasonText, String currentLeaderLabel, int currentBidAmount, int availableCashAmount, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
+            messages.add(title + "\n" + reasonText);
             int responseIndex = customButtonResponses.isEmpty() ? 0 : customButtonResponses.removeFirst();
             if (responseIndex <= 0) {
                 if (onAccept != null) {

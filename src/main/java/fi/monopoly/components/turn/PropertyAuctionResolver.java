@@ -163,16 +163,11 @@ public class PropertyAuctionResolver {
         int maxBid = nextParticipant.maxBid();
         popupService.showPropertyAuction(
                 property,
-                text(
-                        "property.auction.prompt",
-                        nextParticipant.player().getName(),
-                        auctionContext.reasonMessage(),
-                        property.getDisplayName(),
-                        minBid,
-                        state.currentWinner() == null ? text("property.auction.none") : state.currentWinner().getName(),
-                        state.currentBid(),
-                        maxBid
-                ),
+                text("property.auction.prompt", nextParticipant.player().getName(), property.getDisplayName()),
+                auctionContext.reasonMessage(),
+                state.currentWinner() == null ? text("property.auction.none") : state.currentWinner().getName(),
+                state.currentBid(),
+                maxBid,
                 text("property.auction.bid", minBid),
                 text("property.auction.pass"),
                 () -> runInteractiveAuction(
