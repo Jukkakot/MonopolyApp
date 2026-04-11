@@ -50,7 +50,7 @@ public final class TradeUiBuilder {
 
     public String buildTradeSummary(TradeOffer offer) {
         return buildTradeBoard(offer, text("trade.summary.header", offer.proposer().getName(), offer.recipient().getName()))
-                + "\n" + buildTradeValueDeltaSummary(offer);
+                + "\n" + buildTradeValueSummary(offer);
     }
 
     public String buildTradeEditorSummary(TradeDraft draft, boolean editingOfferSide, String notice) {
@@ -84,7 +84,7 @@ public final class TradeUiBuilder {
                 describeTradeSelectionVisualItems(draft, offer.requestedFromRecipient(), false, editingOfferSide, onOpenEditor),
                 Boolean.FALSE.equals(editingOfferSide),
                 editingOfferSide == null ? null : onOpenEditor.apply(draft, false),
-                buildTradeValueDeltaSummary(offer),
+                buildTradeValueSummary(offer),
                 editingOfferSide == null
                         ? null
                         : text("trade.inventory.title", (editingOfferSide ? offer.proposer() : offer.recipient()).getName()),
@@ -131,20 +131,20 @@ public final class TradeUiBuilder {
                 + "\n" + text("trade.board.side", offer.recipient().getName(), describeTradeSelectionVisual(offer.requestedFromRecipient()));
     }
 
-    private String buildTradeValueDeltaSummary(TradeOffer offer) {
-        int recipientDelta = offer.isEmpty() ? 0 : tradeOfferEvaluator.estimateNetDeltaForRecipient(offer);
-        int proposerDelta = offer.isEmpty() ? 0 : tradeOfferEvaluator.estimateNetDeltaForRecipient(offer.reversePerspective());
+    private String buildTradeValueSummary(TradeOffer offer) {
+        int proposerValue = tradeOfferEvaluator.estimateSelectionMarketValue(offer.offeredToRecipient());
+        int recipientValue = tradeOfferEvaluator.estimateSelectionMarketValue(offer.requestedFromRecipient());
         return text(
-                "trade.summary.delta",
+                "trade.summary.value",
                 offer.proposer().getName(),
-                formatTradeDelta(proposerDelta),
+                formatTradeValue(proposerValue),
                 offer.recipient().getName(),
-                formatTradeDelta(recipientDelta)
+                formatTradeValue(recipientValue)
         );
     }
 
-    private String formatTradeDelta(int value) {
-        return (value >= 0 ? "+" : "") + value;
+    private String formatTradeValue(int value) {
+        return text("format.money", value);
     }
 
     private String describeTradeSelectionVisual(TradeSelection selection) {

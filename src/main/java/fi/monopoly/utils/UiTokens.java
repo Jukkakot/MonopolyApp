@@ -70,6 +70,7 @@ public final class UiTokens {
     private static final float TRADE_BUTTON_AREA_BOTTOM_MARGIN = 28f;
     private static final float TRADE_BUTTON_AREA_TOP_MARGIN = 18f;
     private static final int TRADE_MONEY_BUTTON_GAP_X = 20;
+    private static final int TRADE_MONEY_GROUP_GAP_X = 28;
     private static final float TRADE_CARD_RADIUS = 14f;
     private static final float TRADE_CARD_INNER_RADIUS = 11f;
     private static final int TRADE_CARD_INSET = 4;
@@ -145,6 +146,7 @@ public final class UiTokens {
     public static float tradeButtonAreaBottomMargin() { return TRADE_BUTTON_AREA_BOTTOM_MARGIN; }
     public static float tradeButtonAreaTopMargin() { return TRADE_BUTTON_AREA_TOP_MARGIN; }
     public static int tradeMoneyButtonGapX() { return TRADE_MONEY_BUTTON_GAP_X; }
+    public static int tradeMoneyGroupGapX() { return TRADE_MONEY_GROUP_GAP_X; }
     public static float tradeCardRadius() { return TRADE_CARD_RADIUS; }
     public static float tradeCardInnerRadius() { return TRADE_CARD_INNER_RADIUS; }
     public static int tradeCardInset() { return TRADE_CARD_INSET; }

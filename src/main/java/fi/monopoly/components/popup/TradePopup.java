@@ -490,7 +490,10 @@ public class TradePopup extends Popup {
 
     private void layoutTradeEditorButtons() {
         int top = Math.round(getButtonAreaTop());
-        int rowY = top + Math.max(0, Math.round((getButtonAreaHeight() - UiTokens.popupButtonHeight()) / 2f));
+        int totalHeight = UiTokens.popupButtonHeight() * 2 + UiTokens.popupButtonGapY();
+        int startY = top + Math.max(0, Math.round((getButtonAreaHeight() - totalHeight) / 2f));
+        int moneyRowY = startY;
+        int actionRowY = startY + UiTokens.popupButtonHeight() + UiTokens.popupButtonGapY();
         List<MonopolyButton> positiveButtons = new ArrayList<>();
         List<MonopolyButton> centerButtons = new ArrayList<>();
         List<MonopolyButton> negativeButtons = new ArrayList<>();
@@ -505,9 +508,18 @@ public class TradePopup extends Popup {
                 centerButtons.add(button);
             }
         }
-        layoutButtonGroup(negativeButtons, Math.round(getPopupLeft() + 36), rowY, false, false, UiTokens.tradeMoneyButtonGapX());
-        layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), rowY, true);
-        layoutButtonGroup(positiveButtons, Math.round(getPopupRight() - 36), rowY, false, true, UiTokens.tradeMoneyButtonGapX());
+        int moneyGroupWidth = groupWidth(negativeButtons, UiTokens.popupButtonGapX())
+                + UiTokens.tradeMoneyGroupGapX()
+                + groupWidth(positiveButtons, UiTokens.popupButtonGapX());
+        int moneyStartX = Math.round(getPopupCenter().x()) - moneyGroupWidth / 2;
+        layoutButtonGroup(negativeButtons, moneyStartX, moneyRowY, false);
+        layoutButtonGroup(
+                positiveButtons,
+                moneyStartX + groupWidth(negativeButtons, UiTokens.popupButtonGapX()) + UiTokens.tradeMoneyGroupGapX(),
+                moneyRowY,
+                false
+        );
+        layoutButtonGroup(centerButtons, Math.round(getPopupCenter().x()), actionRowY, true);
     }
 
     private void layoutBackButton() {
@@ -543,6 +555,14 @@ public class TradePopup extends Popup {
             button.setPosition(buttonX, rowY);
             buttonX += Math.round(button.getWidth()) + gapX;
         }
+    }
+
+    private int groupWidth(List<MonopolyButton> buttons, int gapX) {
+        if (buttons.isEmpty()) {
+            return 0;
+        }
+        return buttons.stream().mapToInt(button -> Math.round(button.getWidth())).sum()
+                + Math.max(0, buttons.size() - 1) * gapX;
     }
 
     @Override

@@ -103,6 +103,17 @@ public final class TradeOfferEvaluator {
         return (int) Math.round(gainScore - lossScore);
     }
 
+    public int estimateSelectionMarketValue(TradeSelection selection) {
+        int value = selection.moneyAmount();
+        if (selection.jailCard()) {
+            value += JAIL_CARD_VALUE;
+        }
+        for (Property property : selection.properties()) {
+            value += propertyMarketValue(property);
+        }
+        return value;
+    }
+
     private double selectionValue(Player perspective, TradeSelection selection, boolean receiving, StrongBotConfig strongConfig) {
         double value = selection.moneyAmount() * (strongConfig == null ? 1.0 : strongConfig.tradeLiquidityWeight());
         if (selection.jailCard()) {
@@ -149,6 +160,14 @@ public final class TradeOfferEvaluator {
             value *= strongConfig.colorGroupWeight(streetType);
         }
         return value;
+    }
+
+    private int propertyMarketValue(Property property) {
+        int value = property.getPrice();
+        if (property.isMortgaged()) {
+            value -= property.getMortgageInterest();
+        }
+        return Math.max(0, value);
     }
 
     private boolean isLeadingOpponent(Player proposer, Player recipient) {
