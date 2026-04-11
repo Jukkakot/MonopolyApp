@@ -31,6 +31,7 @@ public final class TradeUiBuilder {
         return new TradePopupView(
                 text("trade.choosePartnerTitle"),
                 text("trade.choosePartner", proposer.getName()),
+                false,
                 null,
                 proposer,
                 List.of(TradePopupItem.empty(text("trade.choosePartnerCurrent"))),
@@ -68,6 +69,7 @@ public final class TradeUiBuilder {
             String title,
             String subtitle,
             Boolean editingOfferSide,
+            boolean manualInteractionDuringComputerTurn,
             ButtonAction backAction,
             BiFunction<TradeDraft, Boolean, ButtonAction> onOpenEditor
     ) {
@@ -75,6 +77,7 @@ public final class TradeUiBuilder {
         return new TradePopupView(
                 title,
                 subtitle,
+                manualInteractionDuringComputerTurn,
                 backAction,
                 offer.proposer(),
                 describeTradeSelectionVisualItems(draft, offer.offeredToRecipient(), true, editingOfferSide, onOpenEditor),

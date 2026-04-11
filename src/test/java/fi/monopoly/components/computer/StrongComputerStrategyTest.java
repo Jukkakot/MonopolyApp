@@ -212,6 +212,22 @@ class StrongComputerStrategyTest {
     }
 
     @Test
+    void strongStrategyUsesTradeActionBeforeEndingTurnWhenGoodTradeExists() {
+        PlayerView self = playerView(1, 700, List.of(
+                propertyView(SpotType.B1, 60, 4, 0, false, 50)
+        ));
+        FakeContext context = new FakeContext(endTurnGameView(self), self);
+        context.tradeDecision = new ComputerDecision(
+                ComputerAction.PROPOSE_TRADE,
+                180,
+                "Propose trade for B2: completes BROWN for M80"
+        );
+
+        assertTrue(strategy.takeStep(context));
+        assertEquals(List.of("trade"), context.operations);
+    }
+
+    @Test
     void buildDecisionIncludesReasonAndAction() {
         PlayerView self = playerView(1, 900, List.of(
                 propertyView(SpotType.O1, 180, 14, 0, true, 100),
@@ -502,6 +518,7 @@ class StrongComputerStrategyTest {
         private boolean accepted;
         private boolean declined;
         private boolean bankrupt;
+        private ComputerDecision tradeDecision;
         private final List<String> operations = new ArrayList<>();
 
         private FakeContext(GameView gameView, PlayerView self) {
@@ -735,6 +752,15 @@ class StrongComputerStrategyTest {
             }
             replacePlayer();
             return true;
+        }
+
+        @Override
+        public ComputerDecision initiateTrade() {
+            if (tradeDecision == null) {
+                return null;
+            }
+            operations.add("trade");
+            return tradeDecision;
         }
 
         @Override

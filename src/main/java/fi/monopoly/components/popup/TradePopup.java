@@ -635,6 +635,11 @@ public class TradePopup extends Popup {
     }
 
     @Override
+    protected boolean allowManualInteractionDuringComputerTurn() {
+        return tradeView != null && tradeView.manualInteractionDuringComputerTurn();
+    }
+
+    @Override
     public List<String> getVisibleActionLabels() {
         return List.copyOf(activeButtonLabels);
     }

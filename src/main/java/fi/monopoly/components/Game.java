@@ -1069,6 +1069,11 @@ public class Game implements MonopolyEventListener {
         }
 
         @Override
+        public ComputerDecision initiateTrade() {
+            return tradeController.tryInitiateComputerTrade(player);
+        }
+
+        @Override
         public void retryPendingDebtPayment() {
             debtController.retryPendingDebtPayment();
         }

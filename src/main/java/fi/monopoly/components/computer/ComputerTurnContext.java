@@ -19,6 +19,8 @@ public interface ComputerTurnContext {
 
     boolean toggleMortgage(SpotType spotType);
 
+    ComputerDecision initiateTrade();
+
     void retryPendingDebtPayment();
 
     void declareBankruptcy();

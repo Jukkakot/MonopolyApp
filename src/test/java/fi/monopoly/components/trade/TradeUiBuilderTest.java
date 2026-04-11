@@ -9,6 +9,7 @@ import fi.monopoly.types.SpotType;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
+import static fi.monopoly.text.UiTexts.text;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -33,10 +34,10 @@ class TradeUiBuilderTest {
                 new TradeSelection(0, java.util.List.of(), true)
         );
 
-        TradePopupView view = uiBuilder.buildTradePopupView(offer, "Title", "Subtitle", null, null, (draft, editingOfferSide) -> null);
+        TradePopupView view = uiBuilder.buildTradePopupView(offer, "Title", "Subtitle", null, false, null, (draft, editingOfferSide) -> null);
         String footer = view.footer();
 
-        assertEquals("Trade value: P1 M170, P2 M60", footer);
+        assertEquals(text("trade.summary.value", "P1", "M170", "P2", "M60"), footer);
     }
 
     @Test

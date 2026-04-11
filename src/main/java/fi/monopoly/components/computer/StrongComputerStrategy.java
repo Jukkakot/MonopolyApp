@@ -57,6 +57,11 @@ final class StrongComputerStrategy implements ComputerTurnStrategy {
                     return true;
                 }
             }
+            ComputerDecision tradeDecision = context.initiateTrade();
+            if (tradeDecision != null) {
+                logDecision(self, tradeDecision);
+                return true;
+            }
         }
         if (view.visibleActions().endTurnVisible()) {
             logDecision(self, new ComputerDecision(ComputerAction.END_TURN, 0, "End turn: no stronger buy/build/debt action available"));

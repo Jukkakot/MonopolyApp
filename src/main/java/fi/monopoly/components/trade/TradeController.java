@@ -23,6 +23,8 @@ public final class TradeController {
     private final Supplier<List<Player>> playersSupplier;
     private final TradeOfferEvaluator tradeOfferEvaluator = new TradeOfferEvaluator();
     private final TradeUiBuilder tradeUiBuilder = new TradeUiBuilder(tradeOfferEvaluator);
+    private final StrongTradePlanner strongTradePlanner = new StrongTradePlanner(STRONG_CONFIG);
+    private Player lastProactiveTradePlayer;
 
     public TradeController(
             MonopolyRuntime runtime,
@@ -68,6 +70,29 @@ public final class TradeController {
         );
     }
 
+    public fi.monopoly.components.computer.ComputerDecision tryInitiateComputerTrade(Player proposer) {
+        if (!canOpenTrade.getAsBoolean() || proposer == null || !proposer.isComputerControlled()) {
+            return null;
+        }
+        if (currentPlayerSupplier.get() != proposer || lastProactiveTradePlayer == proposer) {
+            return null;
+        }
+        lastProactiveTradePlayer = proposer;
+        if (proposer.getComputerProfile() != fi.monopoly.components.computer.ComputerPlayerProfile.STRONG) {
+            return null;
+        }
+        StrongTradePlanner.TradePlan plan = strongTradePlanner.plan(proposer, playersSupplier.get());
+        if (plan == null) {
+            return null;
+        }
+        submitTradeOffer(
+                plan.offer(),
+                text("trade.review.proposed", plan.offer().proposer().getName(), plan.offer().recipient().getName()),
+                plan.offer().recipient().getComputerProfile() == fi.monopoly.components.computer.ComputerPlayerProfile.HUMAN
+        );
+        return plan.decision();
+    }
+
     private void openTradeEditor(
             TradeDraft draft,
             boolean editingOfferSide,
@@ -82,6 +107,7 @@ public final class TradeController {
                         text("trade.editor.header"),
                         buildTradeEditorSubtitle(draft, editingOfferSide, editorNotice),
                         editingOfferSide,
+                        false,
                         backAction,
                         (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, editorNotice, backAction, reviewSubtitle)
                 ),
@@ -100,6 +126,10 @@ public final class TradeController {
             runtime.popupService().show(text("trade.invalid"));
             return;
         }
+        submitTradeOffer(offer, reviewSubtitle != null ? reviewSubtitle : text("trade.review", offer.recipient().getName()), false);
+    }
+
+    private void submitTradeOffer(TradeOffer offer, String reviewSubtitle, boolean allowHumanResponseDuringComputerTurn) {
         if (offer.recipient().isComputerControlled()) {
             BotTradeProfile tradeProfile = resolveTradeProfile(offer.recipient());
             StrongBotConfig strongConfig = resolveStrongTradeConfig(offer.recipient());
@@ -115,22 +145,23 @@ public final class TradeController {
             } else {
                 TradeOffer counterOffer = tradeOfferEvaluator.proposeCounterOffer(offer, tradeProfile, strongConfig);
                 if (counterOffer != null) {
-                    showHumanTradeReview(
-                            counterOffer,
-                            draftFromOffer(counterOffer),
-                            text("trade.review.countered", offer.recipient().getName(), counterOffer.recipient().getName())
-                    );
+                    if (offer.proposer().isComputerControlled()) {
+                        handleComputerCounterOffer(counterOffer, offer);
+                    } else {
+                        showHumanTradeReview(
+                                counterOffer,
+                                draftFromOffer(counterOffer),
+                                text("trade.review.countered", offer.recipient().getName(), counterOffer.recipient().getName()),
+                                false
+                        );
+                    }
                 } else {
                     runtime.popupService().show(text("trade.declined", offer.recipient().getName()) + "\n" + decision.reason());
                 }
             }
             return;
         }
-        showHumanTradeReview(
-                offer,
-                draft,
-                reviewSubtitle != null ? reviewSubtitle : text("trade.review", offer.recipient().getName())
-        );
+        showHumanTradeReview(offer, draftFromOffer(offer), reviewSubtitle, allowHumanResponseDuringComputerTurn);
     }
 
     private void applyTradeOffer(TradeOffer offer) {
@@ -139,7 +170,28 @@ public final class TradeController {
         }
     }
 
-    private void showHumanTradeReview(TradeOffer offer, TradeDraft draft, String subtitle) {
+    private void handleComputerCounterOffer(TradeOffer counterOffer, TradeOffer originalOffer) {
+        BotTradeProfile proposerProfile = resolveTradeProfile(originalOffer.proposer());
+        StrongBotConfig proposerStrongConfig = resolveStrongTradeConfig(originalOffer.proposer());
+        TradeDecision proposerDecision = tradeOfferEvaluator.evaluateForRecipient(
+                counterOffer.reversePerspective(),
+                proposerProfile,
+                proposerStrongConfig
+        );
+        log.info("Bot counter-trade decision: player={}, accept={}, score={}, reason={}",
+                originalOffer.proposer().getName(),
+                proposerDecision.accept(),
+                Math.round(proposerDecision.score() * 10.0) / 10.0,
+                proposerDecision.reason());
+        if (proposerDecision.accept()) {
+            applyTradeOffer(counterOffer);
+            runtime.popupService().show(text("trade.accepted", originalOffer.proposer().getName()) + "\n" + tradeUiBuilder.buildTradeSummary(counterOffer));
+            return;
+        }
+        runtime.popupService().show(text("trade.declined", originalOffer.recipient().getName()) + "\n" + proposerDecision.reason());
+    }
+
+    private void showHumanTradeReview(TradeOffer offer, TradeDraft draft, String subtitle, boolean allowHumanResponseDuringComputerTurn) {
         runtime.popupService().showTrade(
                 subtitle + "\n" + tradeUiBuilder.buildTradeSummary(offer),
                 tradeUiBuilder.buildTradePopupView(
@@ -147,6 +199,7 @@ public final class TradeController {
                         text("trade.review.header"),
                         subtitle,
                         null,
+                        allowHumanResponseDuringComputerTurn,
                         () -> openTradeEditor(draft, false, null, this::openTradeMenu, subtitle),
                         (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, null, this::openTradeMenu, subtitle)
                 ),
@@ -161,7 +214,7 @@ public final class TradeController {
                                 draft.asCounterOffer(),
                                 true,
                                 text("trade.editor.countering", offer.recipient().getName(), offer.proposer().getName()),
-                                () -> showHumanTradeReview(offer, draft, subtitle),
+                                () -> showHumanTradeReview(offer, draft, subtitle, allowHumanResponseDuringComputerTurn),
                                 text("trade.review.countered", offer.recipient().getName(), offer.proposer().getName())
                         )
                 )
