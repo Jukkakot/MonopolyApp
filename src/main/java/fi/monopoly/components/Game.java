@@ -25,6 +25,7 @@ import fi.monopoly.components.turn.*;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
 import fi.monopoly.utils.LayoutMetrics;
+import fi.monopoly.utils.DebugPerformanceStats;
 import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.UiTokens;
 import javafx.scene.paint.Color;
@@ -80,6 +81,7 @@ public class Game implements MonopolyEventListener {
     private boolean paused;
     private boolean gameOver;
     private Player winner;
+    private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
 
     public Game(MonopolyRuntime runtime) {
         this.runtime = runtime;
@@ -245,6 +247,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public void draw() {
+        long frameStart = System.nanoTime();
         updateLogTurnContext();
         LayoutMetrics layoutMetrics = getLayoutMetrics();
         boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
@@ -278,6 +281,7 @@ public class Game implements MonopolyEventListener {
             drawDebtState();
         }
         runComputerPlayerStep();
+        debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
     }
 
     private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
@@ -358,6 +362,7 @@ public class Game implements MonopolyEventListener {
      * covering the game board itself.
      */
     private void drawPopupHistoryPanel(MonopolyApp app, LayoutMetrics layoutMetrics) {
+        long historyStart = System.nanoTime();
         float panelX = layoutMetrics.sidebarX() + UiTokens.spacingMd();
         float historyHeight = getSidebarHistoryHeight();
         float panelY = getSidebarHistoryPanelY();
@@ -405,6 +410,7 @@ public class Game implements MonopolyEventListener {
             drawHistoryEntry(app, layout, panelX + UiTokens.sidebarHistoryTextInset(), nextTopY);
             currentBottomY = nextTopY - 8;
         }
+        debugPerformanceStats.recordHistoryLayout(System.nanoTime() - historyStart);
     }
 
     private HistoryEntryLayout buildHistoryEntryLayout(MonopolyApp app, String message, float maxTextWidth) {
@@ -559,6 +565,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void runComputerPlayerStep() {
+        long stepStart = System.nanoTime();
         updateLogTurnContext();
         if (gameOver) {
             return;
@@ -584,6 +591,7 @@ public class Game implements MonopolyEventListener {
         if (acted) {
             lastComputerActionAt = now;
         }
+        debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
     }
 
     private void endRound(boolean switchTurns) {
@@ -1095,6 +1103,7 @@ public class Game implements MonopolyEventListener {
     }
 
     GameView createGameView(Player currentPlayer) {
+        long snapshotStart = System.nanoTime();
         PopupView popupView = runtime.popupService().isAnyVisible()
                 ? new PopupView(
                 runtime.popupService().activePopupKind(),
@@ -1111,7 +1120,7 @@ public class Game implements MonopolyEventListener {
                 debtState.paymentRequest().target().getClass().getSimpleName(),
                 debtTargetName(debtState.paymentRequest())
         );
-        return new GameView(
+        GameView view = new GameView(
                 currentPlayer.getId(),
                 players.getPlayers().stream()
                         .map(this::createPlayerView)
@@ -1130,6 +1139,12 @@ public class Game implements MonopolyEventListener {
                 StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount(),
                 StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount()
         );
+        debugPerformanceStats.recordGameViewBuild(System.nanoTime() - snapshotStart);
+        return view;
+    }
+
+    public List<String> debugPerformanceLines(float fps) {
+        return debugPerformanceStats.overlayLines(fps, MonopolyApp.getColoredImageCopies());
     }
 
     PlayerView createPlayerView(Player player) {

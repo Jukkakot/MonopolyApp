@@ -39,6 +39,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static ControlP5 p5;
     public static PFont font10, font20, font30;
     private static Map<String, PImage> IMAGES = new HashMap<>();
+    private static long coloredImageCopies;
     private Game game;
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
@@ -65,6 +66,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     private static PImage getColoredCopy(PImage img, int color) {
+        coloredImageCopies++;
         PImage result = self.createImage(img.width, img.height, RGB);
         for (int i = 0; i < img.pixels.length; i++) {
             int pixel = blendColor(img.pixels[i], color, DARKEST);
@@ -88,6 +90,10 @@ public class MonopolyApp extends MonopolyEventObserver {
             }
         }
         return image;
+    }
+
+    public static long getColoredImageCopies() {
+        return coloredImageCopies;
     }
 
     public void settings() {
@@ -151,6 +157,17 @@ public class MonopolyApp extends MonopolyEventObserver {
         game.draw();
         if (DEBUG_MODE) {
             push();
+            fill(22, 36, 31, 190);
+            noStroke();
+            rect(12, 12, 270, 144, 14);
+            fill(245, 245, 245);
+            textAlign(LEFT, TOP);
+            textFont(font20);
+            float debugTextY = 22;
+            for (String line : game.debugPerformanceLines(frameRate)) {
+                text(line, 24, debugTextY);
+                debugTextY += 20;
+            }
             fill(255, 105, 180);
             noStroke();
             circle(mouseX, mouseY, 20);
@@ -174,6 +191,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     private void initImages() {
+        coloredImageCopies = 0;
         String dirPath = "src/main/resources/img/";
         List<String> fileNames = listFiles(dirPath);
         for (String fileName : fileNames) {
