@@ -103,7 +103,7 @@ public class PropertyOfferPopup extends ChoicePopup {
         p.textFont(runtime.font20());
         p.textAlign(CENTER, TOP);
         p.textLeading(UiTokens.popupTextLineHeight());
-        List<String> lines = TextWrapUtils.wrapText(p, getPopupText(), maxWidth);
+        List<String> lines = TextWrapUtils.wrapText(p, getPopupText(), maxWidth, getPopupKind() + ".offer");
         for (int i = 0; i < lines.size(); i++) {
             float y = startY + i * UiTokens.popupTextLineHeight();
             if (y + UiTokens.popupTextLineHeight() > getButtonAreaTop() - UiTokens.spacingSm()) {

@@ -22,6 +22,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,6 +40,12 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static ControlP5 p5;
     public static PFont font10, font20, font30;
     private static Map<String, PImage> IMAGES = new HashMap<>();
+    private static final Map<String, PImage> TINTED_IMAGE_CACHE = new LinkedHashMap<>(64, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, PImage> eldest) {
+            return size() > 128;
+        }
+    };
     private static long coloredImageCopies;
     private Game game;
     private int lastDrawWidth = -1;
@@ -60,7 +67,15 @@ public class MonopolyApp extends MonopolyEventObserver {
             return null;
         }
         if (color != null) {
-            return getColoredCopy(image, MonopolyUtils.toColor(self, color));
+            int tintColor = MonopolyUtils.toColor(self, color);
+            String cacheKey = name + "#" + tintColor;
+            PImage cachedImage = TINTED_IMAGE_CACHE.get(cacheKey);
+            if (cachedImage != null) {
+                return cachedImage;
+            }
+            PImage tintedImage = getColoredCopy(image, tintColor);
+            TINTED_IMAGE_CACHE.put(cacheKey, tintedImage);
+            return tintedImage;
         }
         return image;
     }
@@ -192,6 +207,7 @@ public class MonopolyApp extends MonopolyEventObserver {
 
     private void initImages() {
         coloredImageCopies = 0;
+        TINTED_IMAGE_CACHE.clear();
         String dirPath = "src/main/resources/img/";
         List<String> fileNames = listFiles(dirPath);
         for (String fileName : fileNames) {

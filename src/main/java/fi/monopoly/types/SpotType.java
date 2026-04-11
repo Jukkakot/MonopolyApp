@@ -6,8 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 @ToString(onlyExplicitlyIncluded = true)
@@ -38,6 +40,7 @@ public enum SpotType {
     private static Locale loadedLocale = null;
     private static ResourceBundle bundle;
     private static ResourceBundle defaultBundle = ResourceBundle.getBundle(BUNDLE_NAME, DEFAULT_LOCALE);
+    private static final Map<StreetType, Integer> SPOT_COUNT_BY_STREET = createSpotCountByStreet();
 
     public final StreetType streetType;
     public final int id;
@@ -61,7 +64,7 @@ public enum SpotType {
     }
 
     public static Integer getNumberOfSpots(StreetType streetType) {
-        return SPOT_TYPES.stream().filter(spotType -> streetType.equals(spotType.streetType)).toList().size();
+        return SPOT_COUNT_BY_STREET.getOrDefault(streetType, 0);
     }
 
     public boolean hasProperty(String propName) {
@@ -97,6 +100,14 @@ public enum SpotType {
             return null;
         }
         return bundle.getString(key);
+    }
+
+    private static Map<StreetType, Integer> createSpotCountByStreet() {
+        Map<StreetType, Integer> counts = new EnumMap<>(StreetType.class);
+        for (SpotType spotType : SPOT_TYPES) {
+            counts.merge(spotType.streetType, 1, Integer::sum);
+        }
+        return counts;
     }
 
     private String getProperty(String propName) {

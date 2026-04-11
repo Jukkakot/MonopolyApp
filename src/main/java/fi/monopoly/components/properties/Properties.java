@@ -24,20 +24,26 @@ public class Properties {
     }
 
     public List<Property> getProperties() {
-        return propertySet.stream().toList();
-    }
-
-    private List<StreetProperty> getPropertyTypes(PlaceType placeType) {
-        return propertySet.stream().filter(ps -> ps.getSpotType().streetType.placeType.equals(placeType))
-                .map(property -> (StreetProperty) property)
-                .toList();
+        return List.copyOf(propertySet);
     }
 
     public int getTotalHouseCount() {
-        return getPropertyTypes(PlaceType.STREET).stream().mapToInt(StreetProperty::getHouseCount).sum();
+        int totalHouseCount = 0;
+        for (Property property : propertySet) {
+            if (property.getSpotType().streetType.placeType == PlaceType.STREET) {
+                totalHouseCount += ((StreetProperty) property).getHouseCount();
+            }
+        }
+        return totalHouseCount;
     }
 
     public int getTotalHotelCount() {
-        return getPropertyTypes(PlaceType.STREET).stream().mapToInt(StreetProperty::getHotelCount).sum();
+        int totalHotelCount = 0;
+        for (Property property : propertySet) {
+            if (property.getSpotType().streetType.placeType == PlaceType.STREET) {
+                totalHotelCount += ((StreetProperty) property).getHotelCount();
+            }
+        }
+        return totalHotelCount;
     }
 }

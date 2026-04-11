@@ -27,6 +27,7 @@ public class Dices implements MonopolyEventListener {
     private final MonopolyButton rollDiceButton;
     private boolean rollDiceRequestedVisible = true;
     private int pairCount = 0;
+    private int lastLayoutHash = Integer.MIN_VALUE;
     @Getter
     @Setter // Just for debugging can manually set dice value..
     private DiceValue value;
@@ -90,6 +91,12 @@ public class Dices implements MonopolyEventListener {
     }
 
     public void updateLayout(LayoutMetrics layoutMetrics) {
+        int layoutHash = layoutHash(layoutMetrics);
+        if (layoutHash == lastLayoutHash) {
+            applyRollDiceButtonVisibility();
+            return;
+        }
+        lastLayoutHash = layoutHash;
         if (!layoutMetrics.hasSidebarSpace()) {
             layoutOverlayControls(layoutMetrics);
             applyRollDiceButtonVisibility();
@@ -179,6 +186,17 @@ public class Dices implements MonopolyEventListener {
     private void setDicePositions(float firstX, float firstY, float secondX, float secondY) {
         dices.getKey().setCoords(Coordinates.of(firstX, firstY));
         dices.getValue().setCoords(Coordinates.of(secondX, secondY));
+    }
+
+    private int layoutHash(LayoutMetrics layoutMetrics) {
+        return java.util.Objects.hash(
+                layoutMetrics.hasSidebarSpace(),
+                Math.round(layoutMetrics.sidebarX()),
+                Math.round(layoutMetrics.sidebarRight()),
+                Math.round(layoutMetrics.sidebarPrimaryButtonY()),
+                Math.round(layoutMetrics.boardWidth()),
+                rollDiceButton.getWidth()
+        );
     }
 
     @Override

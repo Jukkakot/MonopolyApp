@@ -38,9 +38,12 @@ class GamePerformanceBenchmarkTest {
 
         long wrapNs = benchmarkWrap(runtime.app(), historyText, 3_000);
         long gameViewNs = benchmarkGameView(game, turnPlayer, 2_000);
+        long tintNs = benchmarkTintedImageLookup(2_000);
         System.out.println("Game performance baseline:");
         System.out.println(" - wrapText avg: " + formatMillis(wrapNs / 3_000.0));
         System.out.println(" - createGameView avg: " + formatMillis(gameViewNs / 2_000.0));
+        System.out.println(" - tinted image lookup avg: " + formatMillis(tintNs / 2_000.0));
+        System.out.println(" - tinted copies created: " + MonopolyApp.getColoredImageCopies());
         System.out.println(" - debug overlay sample: " + String.join(" | ", game.debugPerformanceLines(runtime.app().frameRate)));
     }
 
@@ -56,6 +59,14 @@ class GamePerformanceBenchmarkTest {
         long start = System.nanoTime();
         for (int i = 0; i < iterations; i++) {
             game.createGameView(turnPlayer);
+        }
+        return System.nanoTime() - start;
+    }
+
+    private static long benchmarkTintedImageLookup(int iterations) {
+        long start = System.nanoTime();
+        for (int i = 0; i < iterations; i++) {
+            MonopolyApp.getImage("BigToken.png", javafx.scene.paint.Color.PINK);
         }
         return System.nanoTime() - start;
     }

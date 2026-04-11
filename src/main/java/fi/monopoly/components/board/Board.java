@@ -10,7 +10,9 @@ import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
 import fi.monopoly.types.TurnResult;
 import fi.monopoly.utils.Coordinates;
+import fi.monopoly.utils.LayoutMetrics;
 import lombok.Getter;
+import processing.core.PGraphics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,10 @@ public class Board {
     private final MonopolyRuntime runtime;
     @Getter //For debugging
     private final List<Spot> spots = new ArrayList<>();
+    private Spot cachedHoveredSpot;
+    private PGraphics backgroundLayer;
+    private int backgroundLayerWidth = -1;
+    private int backgroundLayerHeight = -1;
 
     public Board(MonopolyRuntime runtime) {
         this.runtime = runtime;
@@ -79,29 +85,63 @@ public class Board {
     }
 
     private void drawSpots(Coordinates c) {
-        // not hovered spots
-        spots.stream().filter(spot -> !spot.getImage().isHovered()).forEach(spot -> spot.getImage().draw(c));
-        // hovered spots
-        spots.stream().filter(spot -> spot.getImage().isHovered()).forEach(spot -> spot.getImage().draw(c));
+        Spot firstHoveredSpot = null;
+        Spot secondHoveredSpot = null;
+        for (Spot spot : spots) {
+            if (!spot.getImage().isHovered()) {
+                spot.getImage().draw(c);
+                continue;
+            }
+            if (firstHoveredSpot == null) {
+                firstHoveredSpot = spot;
+            } else if (secondHoveredSpot == null) {
+                secondHoveredSpot = spot;
+            }
+        }
+        if (firstHoveredSpot != null) {
+            firstHoveredSpot.getImage().draw(c);
+        }
+        if (secondHoveredSpot != null) {
+            secondHoveredSpot.getImage().draw(c);
+        }
+        cachedHoveredSpot = secondHoveredSpot == null ? firstHoveredSpot : null;
     }
 
     public Spot getHoveredSpot() {
-        List<Spot> hoveredSpots = spots.stream().filter(spot -> spot.getImage().isHovered()).toList();
-        if (hoveredSpots.size() == 1) {
-            return hoveredSpots.get(0);
-        } else {
-            return null;
+        Spot firstHoveredSpot = null;
+        for (Spot spot : spots) {
+            if (!spot.getImage().isHovered()) {
+                continue;
+            }
+            if (firstHoveredSpot != null) {
+                cachedHoveredSpot = null;
+                return null;
+            }
+            firstHoveredSpot = spot;
         }
+        cachedHoveredSpot = firstHoveredSpot;
+        return cachedHoveredSpot;
     }
 
     private void drawBackground() {
         MonopolyApp p = runtime.app();
-        p.push();
-        p.imageMode(p.CENTER);
-        float imgSize = Spot.SPOT_W * 9;
-        float middleRadius = Spot.SPOT_W * 6;
-        p.image(MonopolyApp.getImage("Background.png"), middleRadius, middleRadius, imgSize, imgSize);
-        p.pop();
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(p.width, p.height);
+        int boardWidth = Math.max(1, Math.round(layoutMetrics.boardWidth()));
+        int boardHeight = Math.max(1, p.height);
+        if (backgroundLayer == null || backgroundLayerWidth != boardWidth || backgroundLayerHeight != boardHeight) {
+            backgroundLayerWidth = boardWidth;
+            backgroundLayerHeight = boardHeight;
+            backgroundLayer = p.createGraphics(boardWidth, boardHeight, MonopolyApp.FX2D);
+            backgroundLayer.beginDraw();
+            backgroundLayer.clear();
+            backgroundLayer.imageMode(p.CENTER);
+            float imgSize = Spot.SPOT_W * 9;
+            float middleRadius = Spot.SPOT_W * 6;
+            backgroundLayer.image(MonopolyApp.getImage("Background.png"), middleRadius, middleRadius, imgSize, imgSize);
+            backgroundLayer.endDraw();
+        }
+        p.imageMode(p.CORNER);
+        p.image(backgroundLayer, 0, 0);
     }
 
     public Spot getNewSpot(Spot spot, int diceValue, PathMode pathMode) {
@@ -147,7 +187,12 @@ public class Board {
     }
 
     public Spot getPathWithCriteria(SpotType spotType) {
-        return spots.stream().filter(spot -> spot.getSpotType().equals(spotType)).toList().get(0);
+        for (Spot spot : spots) {
+            if (spot.getSpotType().equals(spotType)) {
+                return spot;
+            }
+        }
+        throw new IllegalArgumentException("Spot type not found on board: " + spotType);
     }
 
     public Spot getNextSpot(StreetType streetType, Spot currSpot, PathMode pathMode) {

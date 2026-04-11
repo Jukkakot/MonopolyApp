@@ -117,7 +117,7 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     private void drawPopupText(PGraphics p, float centerX, float startY, float maxWidth) {
-        List<String> lines = TextWrapUtils.wrapText(p, popupText, maxWidth);
+        List<String> lines = TextWrapUtils.wrapText(p, popupText, maxWidth, getPopupKind());
         for (int i = 0; i < lines.size(); i++) {
             float y = startY + i * UiTokens.popupTextLineHeight();
             if (y + UiTokens.popupTextLineHeight() > getPopupTop() + UiTokens.popupTextTopOffset() + getTextAreaHeight()) {

@@ -18,6 +18,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Deque;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Comparator;
@@ -137,7 +138,13 @@ public class Player extends PlayerToken {
     }
 
     public List<Property> getOwnedProperties(StreetType streetType) {
-        return getOwnedProperties().stream().filter(property -> property.isSameStreetType(streetType)).toList();
+        List<Property> matchingProperties = new ArrayList<>();
+        for (Property property : getOwnedProperties()) {
+            if (property.isSameStreetType(streetType)) {
+                matchingProperties.add(property);
+            }
+        }
+        return matchingProperties;
     }
 
     public List<Property> getOwnedProperties() {
@@ -296,9 +303,11 @@ public class Player extends PlayerToken {
      * overrides such as street building sell value.
      */
     public int getTotalLiquidationValue() {
-        return ownedProperties.getProperties().stream()
-                .mapToInt(Property::getLiquidationValue)
-                .sum();
+        int totalLiquidationValue = 0;
+        for (Property property : ownedProperties.getProperties()) {
+            totalLiquidationValue += property.getLiquidationValue();
+        }
+        return totalLiquidationValue;
     }
 
     public boolean isInJail() {

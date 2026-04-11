@@ -48,6 +48,7 @@ public class Players {
     private final MonopolyRuntime runtime;
     private final Coordinates baseCoords = new Coordinates(Spot.SPOT_W * 12, 0, 0);
     private final List<Player> playerList = new ArrayList<>();
+    private final List<Player> readOnlyPlayers = Collections.unmodifiableList(playerList);
     private final Map<String, Button> playerButtons = new HashMap<>();
     private final Image getOutOFJailImg;
     private final MonopolyButton previousDeedsButton;
@@ -55,6 +56,7 @@ public class Players {
     private int turnNum = 1;
     private Player selectedPlayer;
     private int deedPageStartIndex = 0;
+    private boolean playerButtonsVisible;
 
     public Players(MonopolyRuntime runtime) {
         this.runtime = runtime;
@@ -115,7 +117,7 @@ public class Players {
     }
 
     public List<Player> getPlayers() {
-        return List.copyOf(playerList);
+        return readOnlyPlayers;
     }
 
     public int getTotalHouseCount() {
@@ -142,20 +144,35 @@ public class Players {
         if (selectedPlayer == p) {
             selectedPlayer = null;
         }
-        return playerList.remove(p);
+        boolean removed = playerList.remove(p);
+        if (removed && turnNum == p.getTurnNumber() && !playerList.isEmpty()) {
+            turnNum = playerList.stream().mapToInt(Player::getTurnNumber).min().orElse(1);
+        }
+        return removed;
     }
 
     public Player switchTurn() {
         if (playerList.isEmpty()) {
             return null;
         }
-        List<Player> sortedPlayers = playerList.stream()
-                .sorted(Comparator.comparingInt(Player::getTurnNumber))
-                .toList();
-        Player nextPlayer = sortedPlayers.stream()
-                .filter(player -> player.getTurnNumber() > turnNum)
-                .findFirst()
-                .orElse(sortedPlayers.get(0));
+        Player nextPlayer = null;
+        Player firstPlayer = null;
+        int smallestTurnAboveCurrent = Integer.MAX_VALUE;
+        int smallestTurnNumber = Integer.MAX_VALUE;
+        for (Player player : playerList) {
+            int playerTurnNumber = player.getTurnNumber();
+            if (playerTurnNumber < smallestTurnNumber) {
+                smallestTurnNumber = playerTurnNumber;
+                firstPlayer = player;
+            }
+            if (playerTurnNumber > turnNum && playerTurnNumber < smallestTurnAboveCurrent) {
+                smallestTurnAboveCurrent = playerTurnNumber;
+                nextPlayer = player;
+            }
+        }
+        if (nextPlayer == null) {
+            nextPlayer = firstPlayer;
+        }
         turnNum = nextPlayer.getTurnNumber();
         selectPlayer(nextPlayer);
         return nextPlayer;
@@ -165,22 +182,31 @@ public class Players {
         if (playerList.isEmpty()) {
             return null;
         }
-        List<Player> players = playerList.stream().filter(p -> p.getTurnNumber() == turnNum).toList();
-        if (players.size() == 1) {
-            return players.get(0);
-        } else {
-            Player fallbackTurn = playerList.stream()
-                    .min(Comparator.comparingInt(Player::getTurnNumber))
-                    .orElse(null);
-            if (fallbackTurn != null) {
-                log.warn("Turn player not found for turnNumber={}. Falling back to {}", turnNum, fallbackTurn.getName());
-                turnNum = fallbackTurn.getTurnNumber();
-                selectPlayer(fallbackTurn);
-            } else {
-                log.error("Turn player not found");
+        Player turnPlayer = null;
+        Player fallbackTurn = null;
+        for (Player player : playerList) {
+            if (fallbackTurn == null || player.getTurnNumber() < fallbackTurn.getTurnNumber()) {
+                fallbackTurn = player;
             }
-            return fallbackTurn;
+            if (player.getTurnNumber() == turnNum) {
+                if (turnPlayer != null) {
+                    turnPlayer = null;
+                    break;
+                }
+                turnPlayer = player;
+            }
         }
+        if (turnPlayer != null) {
+            return turnPlayer;
+        }
+        if (fallbackTurn != null) {
+            log.warn("Turn player not found for turnNumber={}. Falling back to {}", turnNum, fallbackTurn.getName());
+            turnNum = fallbackTurn.getTurnNumber();
+            selectPlayer(fallbackTurn);
+        } else {
+            log.error("Turn player not found");
+        }
+        return fallbackTurn;
     }
 
     /**
@@ -209,6 +235,10 @@ public class Players {
      * visible; otherwise they can overlap other sidebar sections.
      */
     private void setPlayerButtonsVisible(boolean visible) {
+        if (playerButtonsVisible == visible) {
+            return;
+        }
+        playerButtonsVisible = visible;
         playerButtons.values().forEach(button -> {
             if (visible) {
                 button.show();

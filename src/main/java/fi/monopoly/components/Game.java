@@ -37,8 +37,10 @@ import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static fi.monopoly.text.UiTexts.text;
 import static processing.event.MouseEvent.CLICK;
@@ -82,6 +84,14 @@ public class Game implements MonopolyEventListener {
     private boolean gameOver;
     private Player winner;
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
+    private LayoutMetrics frameLayoutMetrics;
+    private float frameSidebarHistoryHeight;
+    private float frameSidebarHistoryPanelY;
+    private float frameSidebarReservedTop;
+    private int lastSidebarLayoutHash = Integer.MIN_VALUE;
+    private final Map<HistoryEntryCacheKey, HistoryEntryLayout> historyLayoutCache = new HashMap<>();
+    private final Map<Integer, CachedPlayerView> playerViewCache = new HashMap<>();
+    private CachedGameView cachedGameView;
 
     public Game(MonopolyRuntime runtime) {
         this.runtime = runtime;
@@ -249,7 +259,7 @@ public class Game implements MonopolyEventListener {
     public void draw() {
         long frameStart = System.nanoTime();
         updateLogTurnContext();
-        LayoutMetrics layoutMetrics = getLayoutMetrics();
+        LayoutMetrics layoutMetrics = updateFrameLayoutMetrics();
         boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
         boolean animationWasRunning = animations.isRunning();
         if (MonopolyApp.SKIP_ANNIMATIONS) {
@@ -259,10 +269,10 @@ public class Game implements MonopolyEventListener {
             animations.updateAnimations();
         }
         applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
-        updateSidebarControlPositions();
+        updateSidebarControlPositions(layoutMetrics);
         board.draw(null);
         if (hasSidebarSpace) {
-            drawSidebarPanel();
+            drawSidebarPanel(layoutMetrics);
         }
         if (!isDebtSidebarMode()) {
             dices.draw(null);
@@ -284,6 +294,15 @@ public class Game implements MonopolyEventListener {
         debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
     }
 
+    private LayoutMetrics updateFrameLayoutMetrics() {
+        frameLayoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        frameSidebarReservedTop = frameLayoutMetrics.sidebarReservedTop(MonopolyApp.DEBUG_MODE);
+        float availableHistoryHeight = runtime.app().height - frameSidebarReservedTop - frameLayoutMetrics.sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin();
+        frameSidebarHistoryHeight = Math.max(UiTokens.sidebarHistoryMinHeight(), Math.min(UiTokens.sidebarHistoryPreferredHeight(), availableHistoryHeight));
+        frameSidebarHistoryPanelY = runtime.app().height - frameSidebarHistoryHeight - frameLayoutMetrics.sidebarHistoryBottomMargin();
+        return frameLayoutMetrics;
+    }
+
     private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
         if (MonopolyApp.SKIP_ANNIMATIONS || !animationWasRunning || animations.isRunning()) {
             return;
@@ -298,8 +317,7 @@ public class Game implements MonopolyEventListener {
      * Draws the persistent right-side information panel so turn state, player
      * overview and controls stay in one predictable area.
      */
-    private void drawSidebarPanel() {
-        LayoutMetrics layoutMetrics = getLayoutMetrics();
+    private void drawSidebarPanel(LayoutMetrics layoutMetrics) {
         float sidebarX = layoutMetrics.sidebarX();
         float sidebarWidth = layoutMetrics.sidebarWidth();
         if (!layoutMetrics.hasSidebarSpace()) {
@@ -414,31 +432,42 @@ public class Game implements MonopolyEventListener {
     }
 
     private HistoryEntryLayout buildHistoryEntryLayout(MonopolyApp app, String message, float maxTextWidth) {
-        String condensedMessage = message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
+        String condensedMessage = condenseHistoryMessage(message);
         if (condensedMessage.isEmpty()) {
             return null;
         }
+        HistoryEntryCacheKey cacheKey = new HistoryEntryCacheKey(condensedMessage, Math.round(maxTextWidth));
+        HistoryEntryLayout cachedLayout = historyLayoutCache.get(cacheKey);
+        if (cachedLayout != null) {
+            return cachedLayout;
+        }
         int separatorIndex = condensedMessage.indexOf(": ");
         if (separatorIndex <= 0) {
-            List<String> lines = List.copyOf(TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth));
-            return new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
+            List<String> lines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth, "history.generic");
+            HistoryEntryLayout layout = new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
+            historyLayoutCache.put(cacheKey, layout);
+            return layout;
         }
 
         String playerName = condensedMessage.substring(0, separatorIndex).trim();
         String body = condensedMessage.substring(separatorIndex + 2).trim();
         Player messagePlayer = findPlayerByName(playerName);
         if (messagePlayer == null) {
-            List<String> lines = List.copyOf(TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth));
-            return new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
+            List<String> lines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth, "history.generic");
+            HistoryEntryLayout layout = new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
+            historyLayoutCache.put(cacheKey, layout);
+            return layout;
         }
 
         String prefix = "- " + playerName + ":";
         float prefixWidth = app.textWidth(prefix + " ");
-        List<String> wrappedBodyLines = List.copyOf(TextWrapUtils.wrapText(app.g, body, Math.max(40, maxTextWidth - prefixWidth)));
+        List<String> wrappedBodyLines = TextWrapUtils.wrapText(app.g, body, Math.max(40, maxTextWidth - prefixWidth), "history.player");
         if (wrappedBodyLines.isEmpty()) {
             wrappedBodyLines = List.of("");
         }
-        return new HistoryEntryLayout(messagePlayer, prefix, wrappedBodyLines, wrappedBodyLines.size() * 22f);
+        HistoryEntryLayout layout = new HistoryEntryLayout(messagePlayer, prefix, wrappedBodyLines, wrappedBodyLines.size() * 22f);
+        historyLayoutCache.put(cacheKey, layout);
+        return layout;
     }
 
     private void drawHistoryEntry(MonopolyApp app, HistoryEntryLayout layout, float startX, float startY) {
@@ -469,14 +498,20 @@ public class Game implements MonopolyEventListener {
         }
     }
 
+    private String condenseHistoryMessage(String message) {
+        return message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
+    }
+
     private Player findPlayerByName(String playerName) {
         if (players == null || playerName == null || playerName.isBlank()) {
             return null;
         }
-        return players.getPlayers().stream()
-                .filter(player -> player.getName().equals(playerName))
-                .findFirst()
-                .orElse(null);
+        for (Player player : players.getPlayers()) {
+            if (player.getName().equals(playerName)) {
+                return player;
+            }
+        }
+        return null;
     }
 
     private int colorComponent(double component) {
@@ -488,6 +523,24 @@ public class Game implements MonopolyEventListener {
             String prefix,
             List<String> lines,
             float height
+    ) {
+    }
+
+    private record HistoryEntryCacheKey(
+            String message,
+            int width
+    ) {
+    }
+
+    private record CachedPlayerView(
+            long signature,
+            PlayerView view
+    ) {
+    }
+
+    private record CachedGameView(
+            long signature,
+            GameView view
     ) {
     }
 
@@ -804,11 +857,32 @@ public class Game implements MonopolyEventListener {
     }
 
     private LayoutMetrics getLayoutMetrics() {
-        return LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        return frameLayoutMetrics != null ? frameLayoutMetrics : LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
     }
 
     private void updateSidebarControlPositions() {
-        LayoutMetrics layoutMetrics = getLayoutMetrics();
+        updateSidebarControlPositions(updateFrameLayoutMetrics());
+    }
+
+    private void updateSidebarControlPositions(LayoutMetrics layoutMetrics) {
+        int layoutHash = java.util.Objects.hash(
+                layoutMetrics.hasSidebarSpace(),
+                Math.round(layoutMetrics.sidebarX()),
+                Math.round(layoutMetrics.sidebarRight()),
+                Math.round(layoutMetrics.sidebarPrimaryButtonY()),
+                Math.round(layoutMetrics.sidebarDebugButtonRow1Y()),
+                Math.round(frameSidebarHistoryHeight),
+                Math.round(frameSidebarHistoryPanelY),
+                pauseButton.getWidth(),
+                tradeButton.getWidth(),
+                languageButton.getWidth(),
+                declareBankruptcyButton.getWidth()
+        );
+        if (layoutHash == lastSidebarLayoutHash) {
+            dices.updateLayout(layoutMetrics);
+            return;
+        }
+        lastSidebarLayoutHash = layoutHash;
         if (!layoutMetrics.hasSidebarSpace()) {
             layoutOverlayControls(layoutMetrics);
             dices.updateLayout(layoutMetrics);
@@ -819,9 +893,9 @@ public class Game implements MonopolyEventListener {
         float sidebarRightAlignedX = layoutMetrics.sidebarRight() - UiTokens.spacingMd();
         float primaryButtonY = layoutMetrics.sidebarPrimaryButtonY();
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
-        float pauseButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + UiTokens.spacingSm();
+        float pauseButtonY = frameSidebarHistoryPanelY + frameSidebarHistoryHeight + UiTokens.spacingSm();
         float tradeButtonY = pauseButtonY;
-        float languageButtonY = getSidebarHistoryPanelY() + getSidebarHistoryHeight() + UiTokens.spacingSm();
+        float languageButtonY = frameSidebarHistoryPanelY + frameSidebarHistoryHeight + UiTokens.spacingSm();
 
         endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
         retryDebtButton.setPosition(sidebarLeftX, primaryButtonY);
@@ -856,16 +930,21 @@ public class Game implements MonopolyEventListener {
     }
 
     private float getSidebarHistoryHeight() {
-        float availableHeight = runtime.app().height - getSidebarReservedTop() - getLayoutMetrics().sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin();
-        return Math.max(UiTokens.sidebarHistoryMinHeight(), Math.min(UiTokens.sidebarHistoryPreferredHeight(), availableHeight));
+        return frameSidebarHistoryHeight > 0 ? frameSidebarHistoryHeight : Math.max(
+                UiTokens.sidebarHistoryMinHeight(),
+                Math.min(
+                        UiTokens.sidebarHistoryPreferredHeight(),
+                        runtime.app().height - getSidebarReservedTop() - getLayoutMetrics().sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin()
+                )
+        );
     }
 
     private float getSidebarHistoryPanelY() {
-        return runtime.app().height - getSidebarHistoryHeight() - getLayoutMetrics().sidebarHistoryBottomMargin();
+        return frameSidebarHistoryPanelY > 0 ? frameSidebarHistoryPanelY : runtime.app().height - getSidebarHistoryHeight() - getLayoutMetrics().sidebarHistoryBottomMargin();
     }
 
     private float getSidebarReservedTop() {
-        return getLayoutMetrics().sidebarReservedTop(MonopolyApp.DEBUG_MODE);
+        return frameSidebarReservedTop > 0 ? frameSidebarReservedTop : getLayoutMetrics().sidebarReservedTop(MonopolyApp.DEBUG_MODE);
     }
 
     private void updateDebtButtons() {
@@ -1104,6 +1183,11 @@ public class Game implements MonopolyEventListener {
 
     GameView createGameView(Player currentPlayer) {
         long snapshotStart = System.nanoTime();
+        long gameViewSignature = buildGameViewSignature(currentPlayer);
+        if (cachedGameView != null && cachedGameView.signature() == gameViewSignature) {
+            debugPerformanceStats.recordGameViewBuild(System.nanoTime() - snapshotStart);
+            return cachedGameView.view();
+        }
         PopupView popupView = runtime.popupService().isAnyVisible()
                 ? new PopupView(
                 runtime.popupService().activePopupKind(),
@@ -1120,12 +1204,14 @@ public class Game implements MonopolyEventListener {
                 debtState.paymentRequest().target().getClass().getSimpleName(),
                 debtTargetName(debtState.paymentRequest())
         );
+        List<Player> playerList = players.getPlayers();
+        List<PlayerView> playerViews = playerList.stream()
+                .map(this::createPlayerView)
+                .sorted(Comparator.comparingInt(PlayerView::turnNumber))
+                .toList();
         GameView view = new GameView(
                 currentPlayer.getId(),
-                players.getPlayers().stream()
-                        .map(this::createPlayerView)
-                        .sorted(Comparator.comparingInt(PlayerView::turnNumber))
-                        .toList(),
+                playerViews,
                 new VisibleActionsView(
                         runtime.popupService().isAnyVisible(),
                         retryDebtButton.isVisible(),
@@ -1139,6 +1225,7 @@ public class Game implements MonopolyEventListener {
                 StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount(),
                 StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount()
         );
+        cachedGameView = new CachedGameView(gameViewSignature, view);
         debugPerformanceStats.recordGameViewBuild(System.nanoTime() - snapshotStart);
         return view;
     }
@@ -1148,18 +1235,24 @@ public class Game implements MonopolyEventListener {
     }
 
     PlayerView createPlayerView(Player player) {
-        List<PropertyView> ownedProperties = player.getOwnedProperties().stream()
+        long playerSignature = buildPlayerViewSignature(player);
+        CachedPlayerView cachedPlayerView = playerViewCache.get(player.getId());
+        if (cachedPlayerView != null && cachedPlayerView.signature() == playerSignature) {
+            return cachedPlayerView.view();
+        }
+        List<Property> ownedPlayerProperties = player.getOwnedProperties();
+        List<PropertyView> ownedProperties = ownedPlayerProperties.stream()
                 .map(property -> createPropertyView(player, property))
                 .sorted(Comparator.comparing(property -> property.spotType().ordinal()))
                 .toList();
-        List<StreetType> completedSets = player.getOwnedProperties().stream()
+        List<StreetType> completedSets = ownedPlayerProperties.stream()
                 .map(Property::getSpotType)
                 .map(spotType -> spotType.streetType)
                 .distinct()
                 .filter(player::ownsAllStreetProperties)
                 .sorted(Comparator.comparingInt(Enum::ordinal))
                 .toList();
-        return new PlayerView(
+        PlayerView playerView = new PlayerView(
                 player.getId(),
                 player.getName(),
                 player.getMoneyAmount(),
@@ -1176,6 +1269,66 @@ public class Game implements MonopolyEventListener {
                 completedSets,
                 ownedProperties
         );
+        playerViewCache.put(player.getId(), new CachedPlayerView(playerSignature, playerView));
+        return playerView;
+    }
+
+    private long buildGameViewSignature(Player currentPlayer) {
+        long signature = currentPlayer == null ? 0 : currentPlayer.getId();
+        signature = signature * 31 + Boolean.hashCode(runtime.popupService().isAnyVisible());
+        if (runtime.popupService().isAnyVisible()) {
+            signature = signature * 31 + String.valueOf(runtime.popupService().activePopupKind()).hashCode();
+            signature = signature * 31 + String.valueOf(runtime.popupService().activePopupMessage()).hashCode();
+            signature = signature * 31 + runtime.popupService().activePopupActions().hashCode();
+        }
+        signature = signature * 31 + Boolean.hashCode(retryDebtButton.isVisible());
+        signature = signature * 31 + Boolean.hashCode(declareBankruptcyButton.isVisible());
+        signature = signature * 31 + Boolean.hashCode(isRollDiceActionAvailable(currentPlayer));
+        signature = signature * 31 + Boolean.hashCode(isEndTurnActionAvailable(currentPlayer));
+        signature = signature * 31 + countUnownedProperties();
+        signature = signature * 31 + (StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount());
+        signature = signature * 31 + (StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount());
+        DebtState debtState = debtController.debtState();
+        if (debtState != null) {
+            signature = signature * 31 + debtState.paymentRequest().amount();
+            signature = signature * 31 + debtState.paymentRequest().reason().hashCode();
+            signature = signature * 31 + Boolean.hashCode(debtState.bankruptcyRisk());
+        }
+        Property offeredProperty = runtime.popupService().activeOfferedProperty();
+        if (offeredProperty != null) {
+            signature = signature * 31 + offeredProperty.getSpotType().ordinal();
+        }
+        for (Player player : players.getPlayers()) {
+            signature = signature * 31 + buildPlayerViewSignature(player);
+        }
+        return signature;
+    }
+
+    private long buildPlayerViewSignature(Player player) {
+        long signature = player.getId();
+        signature = signature * 31 + player.getMoneyAmount();
+        signature = signature * 31 + player.getTurnNumber();
+        signature = signature * 31 + player.getSpot().getSpotType().ordinal();
+        signature = signature * 31 + Boolean.hashCode(player.isInJail());
+        signature = signature * 31 + JailSpot.jailTimeLeftMap.getOrDefault(player, 0);
+        signature = signature * 31 + player.getGetOutOfJailCardCount();
+        signature = signature * 31 + player.getTotalHouseCount();
+        signature = signature * 31 + player.getTotalHotelCount();
+        signature = signature * 31 + player.getTotalLiquidationValue();
+        signature = signature * 31 + calculateBoardDangerScore(player);
+        for (Property property : player.getOwnedProperties()) {
+            signature = signature * 31 + property.getSpotType().ordinal();
+            signature = signature * 31 + property.getPrice();
+            signature = signature * 31 + Boolean.hashCode(property.isMortgaged());
+            signature = signature * 31 + property.getLiquidationValue();
+            if (property instanceof StreetProperty streetProperty) {
+                signature = signature * 31 + streetProperty.getHousePrice();
+                signature = signature * 31 + streetProperty.getBuildingLevel();
+                signature = signature * 31 + streetProperty.getHouseCount();
+                signature = signature * 31 + streetProperty.getHotelCount();
+            }
+        }
+        return signature;
     }
 
     private boolean isRollDiceActionAvailable(Player currentPlayer) {
@@ -1234,31 +1387,39 @@ public class Game implements MonopolyEventListener {
                 default -> 28;
             };
         }
-        Player nonOwner = players.getPlayers().stream()
-                .filter(candidate -> candidate != owner)
-                .findFirst()
-                .orElse(null);
+        Player nonOwner = null;
+        for (Player candidate : players.getPlayers()) {
+            if (candidate != owner) {
+                nonOwner = candidate;
+                break;
+            }
+        }
         return nonOwner == null ? 0 : property.getRent(nonOwner);
     }
 
     private int calculateBoardDangerScore(Player player) {
-        return board.getSpots().stream()
-                .filter(PropertySpot.class::isInstance)
-                .map(PropertySpot.class::cast)
-                .map(PropertySpot::getProperty)
-                .filter(Property::hasOwner)
-                .filter(property -> property.isNotOwner(player))
-                .mapToInt(property -> estimateRent(property, property.getOwnerPlayer()))
-                .sum();
+        int boardDangerScore = 0;
+        for (Spot spot : board.getSpots()) {
+            if (!(spot instanceof PropertySpot propertySpot)) {
+                continue;
+            }
+            Property property = propertySpot.getProperty();
+            if (!property.hasOwner() || !property.isNotOwner(player)) {
+                continue;
+            }
+            boardDangerScore += estimateRent(property, property.getOwnerPlayer());
+        }
+        return boardDangerScore;
     }
 
     private int countUnownedProperties() {
-        return (int) board.getSpots().stream()
-                .filter(PropertySpot.class::isInstance)
-                .map(PropertySpot.class::cast)
-                .map(PropertySpot::getProperty)
-                .filter(property -> !property.hasOwner())
-                .count();
+        int unownedProperties = 0;
+        for (Spot spot : board.getSpots()) {
+            if (spot instanceof PropertySpot propertySpot && !propertySpot.getProperty().hasOwner()) {
+                unownedProperties++;
+            }
+        }
+        return unownedProperties;
     }
 
     private String debtTargetName(PaymentRequest paymentRequest) {
@@ -1297,10 +1458,13 @@ public class Game implements MonopolyEventListener {
             int utilityCount = currentPlayer == null ? 0 : currentPlayer.getOwnedProperties(property.getSpotType().streetType).size() + 1;
             return utilityCount >= 2 ? 70 : 28;
         }
-        Player simulatedVisitor = players.getPlayers().stream()
-                .filter(candidate -> candidate != currentPlayer)
-                .findFirst()
-                .orElse(null);
+        Player simulatedVisitor = null;
+        for (Player candidate : players.getPlayers()) {
+            if (candidate != currentPlayer) {
+                simulatedVisitor = candidate;
+                break;
+            }
+        }
         if (simulatedVisitor == null) {
             return 0;
         }

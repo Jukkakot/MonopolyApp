@@ -30,6 +30,10 @@ public class MonopolyButton extends Button {
 
     @Override
     public MonopolyButton setPosition(float x, float y) {
+        float[] currentPosition = getPosition();
+        if (currentPosition[0] == x && currentPosition[1] == y) {
+            return this;
+        }
         super.setPosition(x, y);
         return this;
     }
@@ -88,6 +92,22 @@ public class MonopolyButton extends Button {
         setColorBackground(background);
         setColorForeground(foreground);
         setColorActive(active);
+        return this;
+    }
+
+    @Override
+    public MonopolyButton show() {
+        if (!isVisible()) {
+            super.show();
+        }
+        return this;
+    }
+
+    @Override
+    public MonopolyButton hide() {
+        if (isVisible()) {
+            super.hide();
+        }
         return this;
     }
 
