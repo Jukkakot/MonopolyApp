@@ -126,7 +126,7 @@ public class StreetProperty extends Property {
         if (!ownerPlayer.ownsAllStreetProperties(streetType())) {
             return BuildValidationResult.REQUIRES_FULL_SET;
         }
-        if (ownerPlayer.getOwnedProperties(streetType()).stream().anyMatch(Property::isMortgaged)) {
+        if (ownerPlayer.hasMortgagedPropertyInStreetType(streetType())) {
             return BuildValidationResult.MORTGAGED_PROPERTY;
         }
         int simulatedLevel = getBuildingLevel();
@@ -238,7 +238,7 @@ public class StreetProperty extends Property {
         if (!ownerPlayer.ownsAllStreetProperties(streetType())) {
             return BuildValidationResult.REQUIRES_FULL_SET;
         }
-        if (ownerPlayer.getOwnedProperties(streetType()).stream().anyMatch(Property::isMortgaged)) {
+        if (ownerPlayer.hasMortgagedPropertyInStreetType(streetType())) {
             return BuildValidationResult.MORTGAGED_PROPERTY;
         }
         int[] levels = properties.stream().mapToInt(StreetProperty::getBuildingLevel).toArray();
@@ -368,10 +368,7 @@ public class StreetProperty extends Property {
         if (ownerPlayer == null) {
             return List.of(this);
         }
-        return ownerPlayer.getOwnedProperties(streetType()).stream()
-                .map(property -> (StreetProperty) property)
-                .sorted(Comparator.comparingInt(property -> property.getSpotType().ordinal()))
-                .toList();
+        return ownerPlayer.getOwnedStreetProperties(streetType());
     }
 
     private StreetType streetType() {

@@ -9,6 +9,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
@@ -19,6 +20,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class StreetPropertyTest {
+
+    @BeforeEach
+    void resetRuntimeSessionBeforeTest() {
+        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        if (runtime != null) {
+            runtime.setGameSession(null);
+        }
+    }
 
     @AfterEach
     void clearGamePlayers() {

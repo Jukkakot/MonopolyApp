@@ -6,6 +6,7 @@ import fi.monopoly.components.Players;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
+import fi.monopoly.text.UiTexts;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -51,8 +52,8 @@ class PropertyTurnResolverTest {
         assertEquals(owner, effect.toPlayer());
         assertEquals(4, effect.amount());
         assertTrue(effect.message().contains("M4"));
-        assertTrue(effect.message().contains("MEDITER- RANEAN AVENUE"));
-        assertTrue(effect.message().contains("Full color set"));
+        assertTrue(effect.message().contains(property.getDisplayName()));
+        assertTrue(effect.message().contains(UiTexts.text("property.payRent.details.street.monopoly")));
     }
 
     @Test

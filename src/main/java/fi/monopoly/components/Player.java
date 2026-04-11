@@ -134,7 +134,7 @@ public class Player extends PlayerToken {
     }
 
     public boolean ownsAllStreetProperties(StreetType streetType) {
-        return SpotType.getNumberOfSpots(streetType).equals(getOwnedProperties(streetType).size());
+        return SpotType.getNumberOfSpots(streetType).equals(countOwnedProperties(streetType));
     }
 
     public List<Property> getOwnedProperties(StreetType streetType) {
@@ -149,6 +149,18 @@ public class Player extends PlayerToken {
 
     public List<Property> getOwnedProperties() {
         return ownedProperties.getProperties();
+    }
+
+    public int countOwnedProperties(StreetType streetType) {
+        return ownedProperties.countByStreetType(streetType);
+    }
+
+    public boolean hasMortgagedPropertyInStreetType(StreetType streetType) {
+        return ownedProperties.hasMortgagedPropertyInStreetType(streetType);
+    }
+
+    public List<StreetProperty> getOwnedStreetProperties(StreetType streetType) {
+        return ownedProperties.getStreetProperties(streetType);
     }
 
     public boolean addOwnedProperty(Property property) {

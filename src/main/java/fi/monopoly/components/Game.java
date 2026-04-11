@@ -1382,7 +1382,7 @@ public class Game implements MonopolyEventListener {
 
     private int estimateRent(Property property, Player owner) {
         if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
-            return switch (owner.getOwnedProperties(property.getSpotType().streetType).size()) {
+            return switch (owner.countOwnedProperties(property.getSpotType().streetType)) {
                 case 2 -> 70;
                 default -> 28;
             };
@@ -1407,9 +1407,21 @@ public class Game implements MonopolyEventListener {
             if (!property.hasOwner() || !property.isNotOwner(player)) {
                 continue;
             }
-            boardDangerScore += estimateRent(property, property.getOwnerPlayer());
+            boardDangerScore += calculateDangerRent(property);
         }
         return boardDangerScore;
+    }
+
+    private int calculateDangerRent(Property property) {
+        Player owner = property.getOwnerPlayer();
+        if (owner == null) {
+            return 0;
+        }
+        return switch (property.getSpotType().streetType.placeType) {
+            case UTILITY -> owner.countOwnedProperties(property.getSpotType().streetType) >= 2 ? 70 : 28;
+            case RAILROAD, STREET -> estimateRent(property, owner);
+            default -> 0;
+        };
     }
 
     private int countUnownedProperties() {
@@ -1448,14 +1460,14 @@ public class Game implements MonopolyEventListener {
                 0,
                 0,
                 estimateOfferedPropertyRent(offeredProperty, currentPlayer),
-                currentPlayer != null && currentPlayer.getOwnedProperties(offeredProperty.getSpotType().streetType).size() + 1
+                currentPlayer != null && currentPlayer.countOwnedProperties(offeredProperty.getSpotType().streetType) + 1
                         >= SpotType.getNumberOfSpots(offeredProperty.getSpotType().streetType)
         );
     }
 
     private int estimateOfferedPropertyRent(Property property, Player currentPlayer) {
         if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
-            int utilityCount = currentPlayer == null ? 0 : currentPlayer.getOwnedProperties(property.getSpotType().streetType).size() + 1;
+            int utilityCount = currentPlayer == null ? 0 : currentPlayer.countOwnedProperties(property.getSpotType().streetType) + 1;
             return utilityCount >= 2 ? 70 : 28;
         }
         Player simulatedVisitor = null;

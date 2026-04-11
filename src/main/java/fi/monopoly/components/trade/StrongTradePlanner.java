@@ -11,7 +11,7 @@ import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
 
-import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 
 final class StrongTradePlanner {
@@ -30,13 +30,22 @@ final class StrongTradePlanner {
             return null;
         }
         Player leader = findLeader(proposer, players);
-        return players.stream()
-                .filter(recipient -> recipient != proposer)
-                .flatMap(recipient -> recipient.getOwnedProperties().stream()
-                        .map(property -> buildPlanForProperty(proposer, recipient, property, leader)))
-                .filter(plan -> plan != null)
-                .max(Comparator.comparingDouble(plan -> plan.decision().score()))
-                .orElse(null);
+        TradePlan bestPlan = null;
+        for (Player recipient : players) {
+            if (recipient == proposer) {
+                continue;
+            }
+            for (Property property : recipient.getOwnedProperties()) {
+                TradePlan candidate = buildPlanForProperty(proposer, recipient, property, leader);
+                if (candidate == null) {
+                    continue;
+                }
+                if (bestPlan == null || candidate.decision().score() > bestPlan.decision().score()) {
+                    bestPlan = candidate;
+                }
+            }
+        }
+        return bestPlan;
     }
 
     private TradePlan buildPlanForProperty(Player proposer, Player recipient, Property property, Player leader) {
@@ -92,16 +101,15 @@ final class StrongTradePlanner {
                 continue;
             }
 
-            TradePlan candidate = new TradePlan(
-                    offer,
-                    new ComputerDecision(
-                            ComputerAction.PROPOSE_TRADE,
-                            totalScore,
-                            buildReason(property, recipient, completesSet, deniesLeader, moneyOffer, proposerGain)
-                    )
-            );
-            if (bestPlan == null || candidate.decision().score() > bestPlan.decision().score()) {
-                bestPlan = candidate;
+            if (bestPlan == null || totalScore > bestPlan.decision().score()) {
+                bestPlan = new TradePlan(
+                        offer,
+                        new ComputerDecision(
+                                ComputerAction.PROPOSE_TRADE,
+                                totalScore,
+                                buildReason(property, recipient, completesSet, deniesLeader, moneyOffer, proposerGain)
+                        )
+                );
             }
         }
         return bestPlan;
@@ -109,11 +117,18 @@ final class StrongTradePlanner {
 
     private int availableTradeCash(Player proposer) {
         int reserve = config.minCashReserve();
-        boolean hasCompletedSet = proposer.getOwnedProperties().stream()
-                .map(Property::getSpotType)
-                .map(spotType -> spotType.streetType)
-                .distinct()
-                .anyMatch(proposer::ownsAllStreetProperties);
+        boolean hasCompletedSet = false;
+        EnumSet<StreetType> seenStreetTypes = EnumSet.noneOf(StreetType.class);
+        for (Property property : proposer.getOwnedProperties()) {
+            StreetType streetType = property.getSpotType().streetType;
+            if (!seenStreetTypes.add(streetType)) {
+                continue;
+            }
+            if (proposer.ownsAllStreetProperties(streetType)) {
+                hasCompletedSet = true;
+                break;
+            }
+        }
         if (hasCompletedSet) {
             reserve += config.postMonopolyCashBuffer();
         }
@@ -173,18 +188,18 @@ final class StrongTradePlanner {
     }
 
     private boolean completesSetFor(Player proposer, StreetType streetType) {
-        return proposer.getOwnedProperties(streetType).size() == SpotType.getNumberOfSpots(streetType) - 1;
+        return proposer.countOwnedProperties(streetType) == SpotType.getNumberOfSpots(streetType) - 1;
     }
 
     private boolean advancesSetFor(Player proposer, StreetType streetType) {
-        return proposer.getOwnedProperties(streetType).size() > 0;
+        return proposer.countOwnedProperties(streetType) > 0;
     }
 
     private boolean blocksLeaderCompletion(Player leader, Player proposer, Player recipient, StreetType streetType) {
         if (leader == null || leader == proposer || leader == recipient) {
             return false;
         }
-        return leader.getOwnedProperties(streetType).size() == SpotType.getNumberOfSpots(streetType) - 1;
+        return leader.countOwnedProperties(streetType) == SpotType.getNumberOfSpots(streetType) - 1;
     }
 
     private boolean isTradeable(Property property) {
@@ -198,10 +213,19 @@ final class StrongTradePlanner {
     }
 
     private Player findLeader(Player proposer, List<Player> players) {
-        return players.stream()
-                .filter(player -> player != proposer)
-                .max(Comparator.comparingInt(player -> player.getMoneyAmount() + player.getTotalLiquidationValue()))
-                .orElse(null);
+        Player leader = null;
+        int highestNetWorth = Integer.MIN_VALUE;
+        for (Player player : players) {
+            if (player == proposer) {
+                continue;
+            }
+            int netWorth = player.getMoneyAmount() + player.getTotalLiquidationValue();
+            if (leader == null || netWorth > highestNetWorth) {
+                leader = player;
+                highestNetWorth = netWorth;
+            }
+        }
+        return leader;
     }
 
     private BotTradeProfile profileFor(Player player) {

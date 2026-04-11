@@ -131,7 +131,7 @@ public final class TradeOfferEvaluator {
             value -= property.getMortgageInterest();
         }
         StreetType streetType = property.getSpotType().streetType;
-        int ownedInSet = perspective.getOwnedProperties(streetType).size();
+        int ownedInSet = perspective.countOwnedProperties(streetType);
         if (receiving) {
             ownedInSet += 1;
         }
