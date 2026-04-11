@@ -124,11 +124,16 @@ public class PropertyOfferPopup extends ChoicePopup {
         p.fill(p.color(CARD_BASE_R, CARD_BASE_G, CARD_BASE_B));
         p.rect(x + 4f, y + 4f, width - 8f, height - 8f, 11);
 
-        drawStripe(p, x, y, width);
+        boolean hasStripe = hasDecorativeStripe();
+        if (hasStripe) {
+            drawStripe(p, x, y, width);
+        }
         PImage image = MonopolyApp.getImage(offeredProperty.getSpotType());
         if (image != null) {
             p.imageMode(CORNER);
-            p.image(image, x + 8f, y + 8f + UiTokens.tradePropertyColorStripeHeight(), width - 16f, height - 58f);
+            float imageTopInset = hasStripe ? 8f + UiTokens.tradePropertyColorStripeHeight() : 8f;
+            float imageHeight = hasStripe ? height - 58f : height - 46f;
+            p.image(image, x + 8f, y + imageTopInset, width - 16f, imageHeight);
         }
 
         p.fill(0);
@@ -173,6 +178,14 @@ public class PropertyOfferPopup extends ChoicePopup {
             return runtime.app().color(120, 160, 170);
         }
         return runtime.app().color(170, 150, 100);
+    }
+
+    protected boolean hasDecorativeStripe() {
+        if (offeredProperty == null) {
+            return false;
+        }
+        StreetType streetType = offeredProperty.getSpotType().streetType;
+        return streetType.placeType == PlaceType.STREET && streetType.color != null;
     }
 
     @Override

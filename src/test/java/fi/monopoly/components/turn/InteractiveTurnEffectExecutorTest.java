@@ -138,7 +138,7 @@ class InteractiveTurnEffectExecutorTest {
         assertEquals(480, smokeBidder.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer declined to buy the property.",
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer is auctioning the property.",
                 "SmokeBidder won the auction for MEDITER- RANEAN AVENUE with M20"
         ), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -160,7 +160,7 @@ class InteractiveTurnEffectExecutorTest {
         assertEquals(1500, player.getMoneyAmount());
         assertEquals(List.of(
                 "buy it",
-                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer declined to buy the property.",
+                "Buyer, auction for MEDITER- RANEAN AVENUE\nBuyer is auctioning the property.",
                 "No one bid on MEDITER- RANEAN AVENUE. It remains with the bank."
         ), popupService.messages);
         assertEquals(1, callback.callCount);

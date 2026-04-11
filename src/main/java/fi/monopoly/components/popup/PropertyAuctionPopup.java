@@ -103,7 +103,8 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
             p.image(token, x + width / 2f - tokenSize / 2f, y + 22f, tokenSize, tokenSize);
         }
         p.textFont(runtime.font10());
-        p.text(currentLeader.getName(), x + width / 2f, y + 56f, width - 12f, 24f);
+        p.textAlign(CENTER, TOP);
+        p.text(currentLeader.getName(), x + 6f, y + 56f, width - 12f, 24f);
     }
 
     private void drawMoneyChip(PGraphics p, float x, float y, float width, float height, int amount) {
