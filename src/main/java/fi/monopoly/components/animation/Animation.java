@@ -8,11 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Animation {
+    public static final float REFERENCE_FRAME_SECONDS = 1f / 60f;
     @Getter
     private final Drawable drawable;
     private final AnimationPath path;
     private final static float MIN_ANIM_DISTANCE = 2;
-    // Larger value moves farther per frame and makes animations faster; smaller value slows them down.
+    // Larger value moves farther per reference frame and makes animations faster; smaller value slows them down.
     private final static float ANIMATION_SPEED = 0.3f;
     private final CallbackAction onAnimationEnd;
 
@@ -32,6 +33,10 @@ public class Animation {
     }
 
     public boolean updateAnimation() {
+        return updateAnimation(REFERENCE_FRAME_SECONDS);
+    }
+
+    public boolean updateAnimation(float deltaSeconds) {
         if (path.isEmpty()) {
             finishAnimation();
             return false;
@@ -39,7 +44,7 @@ public class Animation {
 
         Coordinates goalCoords = getGoalCoords();
         if (goalCoords != null) {
-            moveTowardsCoords(goalCoords);
+            moveTowardsCoords(goalCoords, deltaSeconds);
         } else {
             finishAnimation();
             return false;
@@ -66,17 +71,22 @@ public class Animation {
         return drawable.getCoords().getDistance(goalCoords) > MIN_ANIM_DISTANCE;
     }
 
-    private void moveTowardsCoords(Coordinates goalCoords) {
-        Coordinates newCoords = getNextAnimationCoords(drawable.getCoords(), goalCoords);
+    private void moveTowardsCoords(Coordinates goalCoords, float deltaSeconds) {
+        Coordinates newCoords = getNextAnimationCoords(drawable.getCoords(), goalCoords, deltaSeconds);
         drawable.setCoords(newCoords);
     }
 
     static Coordinates getNextAnimationCoords(Coordinates currCoords, Coordinates goalCoords) {
+        return getNextAnimationCoords(currCoords, goalCoords, REFERENCE_FRAME_SECONDS);
+    }
+
+    static Coordinates getNextAnimationCoords(Coordinates currCoords, Coordinates goalCoords, float deltaSeconds) {
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
         if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
 //            log.warn("No movement?");
         }
-        return currCoords.move(dx * ANIMATION_SPEED, dy * ANIMATION_SPEED);
+        float speedFactor = Math.max(0f, deltaSeconds / REFERENCE_FRAME_SECONDS);
+        return currCoords.move(dx * ANIMATION_SPEED * speedFactor, dy * ANIMATION_SPEED * speedFactor);
     }
 }

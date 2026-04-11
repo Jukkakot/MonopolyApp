@@ -32,6 +32,18 @@ class AnimationsTest {
     }
 
     @Test
+    void updateAnimationsPassesDeltaToContainedAnimations() {
+        Animations animations = new Animations();
+        TestDrawable drawable = new TestDrawable(new Coordinates(0, 0));
+        animations.addAnimation(new Animation(drawable, new FixedPath(List.of(new Coordinates(10, 0)), new Coordinates(10, 0)), null));
+
+        animations.updateAnimations(Animation.REFERENCE_FRAME_SECONDS / 2);
+
+        assertTrue(animations.isRunning());
+        assertTrue(drawable.getCoords().x() > 1f && drawable.getCoords().x() < 2f);
+    }
+
+    @Test
     void addingAnimationForSameDrawableFinishesPreviousOne() {
         Animations animations = new Animations();
         TestDrawable drawable = new TestDrawable(new Coordinates(0, 0));

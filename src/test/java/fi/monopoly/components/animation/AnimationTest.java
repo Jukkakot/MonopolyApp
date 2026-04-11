@@ -20,6 +20,28 @@ class AnimationTest {
     }
 
     @Test
+    void getNextAnimationCoordsKeepsSameSpeedAtReferenceFrameDelta() {
+        Coordinates next = Animation.getNextAnimationCoords(
+                new Coordinates(0, 0),
+                new Coordinates(10, 20),
+                Animation.REFERENCE_FRAME_SECONDS
+        );
+
+        assertEquals(new Coordinates(3, 6, 0), next);
+    }
+
+    @Test
+    void getNextAnimationCoordsMovesHalfDistanceAtHalfFrameDelta() {
+        Coordinates next = Animation.getNextAnimationCoords(
+                new Coordinates(0, 0),
+                new Coordinates(10, 20),
+                Animation.REFERENCE_FRAME_SECONDS / 2
+        );
+
+        assertEquals(new Coordinates(1.5f, 3f, 0), next);
+    }
+
+    @Test
     void updateAnimationMovesDrawableTowardsCurrentGoal() {
         TestDrawable drawable = new TestDrawable(new Coordinates(0, 0));
         TestAnimationPath path = new TestAnimationPath(List.of(new Coordinates(10, 0)), new Coordinates(10, 0));
@@ -29,6 +51,18 @@ class AnimationTest {
 
         assertTrue(running);
         assertEquals(new Coordinates(3, 0, 0), drawable.getCoords());
+    }
+
+    @Test
+    void updateAnimationUsesProvidedDeltaSeconds() {
+        TestDrawable drawable = new TestDrawable(new Coordinates(0, 0));
+        TestAnimationPath path = new TestAnimationPath(List.of(new Coordinates(10, 0)), new Coordinates(10, 0));
+        Animation animation = new Animation(drawable, path, null);
+
+        boolean running = animation.updateAnimation(Animation.REFERENCE_FRAME_SECONDS / 2);
+
+        assertTrue(running);
+        assertEquals(new Coordinates(1.5f, 0, 0), drawable.getCoords());
     }
 
     @Test

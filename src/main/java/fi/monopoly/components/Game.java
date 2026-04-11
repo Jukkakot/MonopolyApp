@@ -89,6 +89,7 @@ public class Game implements MonopolyEventListener {
     private float frameSidebarHistoryPanelY;
     private float frameSidebarReservedTop;
     private int lastSidebarLayoutHash = Integer.MIN_VALUE;
+    private long lastAnimationUpdateNanos = -1L;
     private final Map<HistoryEntryCacheKey, HistoryEntryLayout> historyLayoutCache = new HashMap<>();
     private final Map<Integer, CachedPlayerView> playerViewCache = new HashMap<>();
     private CachedGameView cachedGameView;
@@ -262,11 +263,12 @@ public class Game implements MonopolyEventListener {
         LayoutMetrics layoutMetrics = updateFrameLayoutMetrics();
         boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
         boolean animationWasRunning = animations.isRunning();
+        float animationDeltaSeconds = resolveAnimationDeltaSeconds(frameStart);
         if (MonopolyApp.SKIP_ANNIMATIONS) {
             animations.finishAllAnimations();
         }
         if (!runtime.popupService().isAnyVisible()) {
-            animations.updateAnimations();
+            animations.updateAnimations(animationDeltaSeconds);
         }
         applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
         updateSidebarControlPositions(layoutMetrics);
@@ -292,6 +294,16 @@ public class Game implements MonopolyEventListener {
         }
         runComputerPlayerStep();
         debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
+    }
+
+    private float resolveAnimationDeltaSeconds(long nowNanos) {
+        if (lastAnimationUpdateNanos < 0L) {
+            lastAnimationUpdateNanos = nowNanos;
+            return Animation.REFERENCE_FRAME_SECONDS;
+        }
+        float deltaSeconds = (nowNanos - lastAnimationUpdateNanos) / 1_000_000_000f;
+        lastAnimationUpdateNanos = nowNanos;
+        return deltaSeconds;
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {

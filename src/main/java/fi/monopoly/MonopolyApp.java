@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MonopolyApp extends MonopolyEventObserver {
+    public static final int TARGET_FRAME_RATE = 120;
     public static final char ENTER = '\n';
     public static final char SPACE = ' ';
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
@@ -116,6 +117,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     public void setup() {
+        frameRate(TARGET_FRAME_RATE);
         initImages();
         p5 = new ControlP5(this);
         configureWindowSizing();

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Animations {
+    private static final float MAX_ANIMATION_DELTA_SECONDS = 1f / 15f;
 
     private final List<Animation> animationList = new ArrayList<>();
 
@@ -19,7 +20,12 @@ public class Animations {
     }
 
     public void updateAnimations() {
-        animationList.removeIf(a -> !a.updateAnimation());
+        updateAnimations(Animation.REFERENCE_FRAME_SECONDS);
+    }
+
+    public void updateAnimations(float deltaSeconds) {
+        float safeDeltaSeconds = Math.min(Math.max(0f, deltaSeconds), MAX_ANIMATION_DELTA_SECONDS);
+        animationList.removeIf(animation -> !animation.updateAnimation(safeDeltaSeconds));
     }
 
     public void finishAllAnimations() {
