@@ -5,12 +5,8 @@ RULES AND GAME START
 [Low] Remove random starting deeds from normal game setup
 
 TRADING
-[Medium] Add trade history / recent trade summaries to sidebar message flow
 
 COMPUTER PLAYERS
-[High] Add computer players with configurable difficulty profiles
-[Medium] Add configurable strong bot variants like aggressive and defensive
-[Medium] Replace second-person popup wording with player names on bot turns
 
 PLAYER SETUP
 [Medium] Add player setup UI for choosing human vs computer seats before game start
@@ -18,4 +14,3 @@ PLAYER SETUP
 [Medium] Add player setup screen for names, player count, and colors
 
 ECONOMY AND PACING
-[Low] Review long-game economy and bankruptcy pacing

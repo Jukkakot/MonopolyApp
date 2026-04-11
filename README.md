@@ -42,27 +42,6 @@ tests for the main game flow.
 - JUnit 5
 - Lombok
 
-## Project Structure
-
-- [`src/main/java/fi/monopoly`](/E:/Documents/ProcessingProjects/MonopolyApp/src/main/java/fi/monopoly)  
-  application runtime and bootstrap
-- [
-  `src/main/java/fi/monopoly/components`](/E:/Documents/ProcessingProjects/MonopolyApp/src/main/java/fi/monopoly/components)  
-  core game logic, players, board flow, dice, popups
-- [
-  `src/main/java/fi/monopoly/components/turn`](/E:/Documents/ProcessingProjects/MonopolyApp/src/main/java/fi/monopoly/components/turn)  
-  newer turn engine structure and effect-based direction
-- [
-  `src/main/java/fi/monopoly/components/spots`](/E:/Documents/ProcessingProjects/MonopolyApp/src/main/java/fi/monopoly/components/spots)  
-  board spot behavior
-- [
-  `src/main/java/fi/monopoly/components/properties`](/E:/Documents/ProcessingProjects/MonopolyApp/src/main/java/fi/monopoly/components/properties)  
-  properties, rent, buildings, mortgage logic
-- [`src/main/java/fi/monopoly/images`](/E:/Documents/ProcessingProjects/MonopolyApp/src/main/java/fi/monopoly/images)  
-  images and rendering objects
-- [`src/test/java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/test/java)  
-  unit tests and smoke tests
-
 ## Running the App
 
 ### Requirements
@@ -74,12 +53,6 @@ tests for the main game flow.
 
 In IntelliJ, the easiest way is to run [
 `StartMonopolyApp.java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/main/java/StartMonopolyApp.java).
-
-From the command line, you can first compile and run tests with:
-
-```bash
-mvn test
-```
 
 Then run `StartMonopolyApp` from the IDE or with your own Java run configuration.
 
@@ -133,38 +106,5 @@ Examples:
 - [
   `PathTest.java`](/E:/Documents/ProcessingProjects/MonopolyApp/src/test/java/fi/monopoly/components/board/PathTest.java)
 
-Run tests with:
-
-```bash
-mvn test
-```
-
 The simulation tests use a headless bootstrap and automate gameplay. Their purpose is to catch regressions where the
 game flow breaks, stalls, or gets stuck in popup / animation / debt / auction states.
-
-## Missing / In Progress
-
-See the up-to-date task list in [`TODO.txt`](/E:/Documents/ProcessingProjects/MonopolyApp/TODO.txt).
-
-Some of the biggest unfinished areas are:
-
-- starting-order roll before the game begins
-- player setup screen for seat types, names, and bot difficulty
-- more configurable computer-player variants and wording polish for bot-facing popups
-- long-game economy and pacing review
-- full responsive layout for board and sidebar resizing
-
-## Architecture Notes
-
-The project has gone through an incremental refactor where:
-
-- popup and event flow have been moved into services
-- turn logic has started moving into a dedicated `turn` layer
-- debt handling has been separated into payment and debt-resolution components
-- trading, debt flow, and debug flow have been extracted into dedicated controllers
-- sidebar and popup layout logic has started moving into centralized layout helpers
-- static UI tokens and runtime layout metrics have been separated
-- older global game state has been moved into `MonopolyRuntime` / `GameSession`
-- testability has been improved with headless testing and cleaner domain-side logic
-
-The refactor is still in progress, so the codebase currently contains both older and newer patterns side by side.
