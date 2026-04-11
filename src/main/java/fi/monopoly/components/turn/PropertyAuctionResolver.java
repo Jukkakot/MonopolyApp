@@ -165,9 +165,8 @@ public class PropertyAuctionResolver {
                 property,
                 text("property.auction.prompt", nextParticipant.player().getName(), property.getDisplayName()),
                 auctionContext.reasonMessage(),
-                state.currentWinner() == null ? text("property.auction.none") : state.currentWinner().getName(),
+                state.currentWinner(),
                 state.currentBid(),
-                maxBid,
                 text("property.auction.bid", minBid),
                 text("property.auction.pass"),
                 () -> runInteractiveAuction(

@@ -1,6 +1,7 @@
 package fi.monopoly.components.popup;
 
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
@@ -74,9 +75,8 @@ public class PopupService {
             Property property,
             String title,
             String reasonText,
-            String currentLeaderLabel,
+            Player currentLeader,
             int currentBidAmount,
-            int availableCashAmount,
             String primaryLabel,
             String secondaryLabel,
             ButtonAction onAccept,
@@ -90,7 +90,7 @@ public class PopupService {
             PropertyAuctionPopup propertyAuctionPopup = getInstance(PropertyAuctionPopup.class);
             propertyAuctionPopup.setPopupText(title);
             propertyAuctionPopup.setOfferedProperty(property);
-            propertyAuctionPopup.setAuctionInfo(reasonText, currentLeaderLabel, currentBidAmount, availableCashAmount);
+            propertyAuctionPopup.setAuctionInfo(reasonText, currentLeader, currentBidAmount);
             propertyAuctionPopup.setOnAcceptAction(onAccept);
             propertyAuctionPopup.setOnDeclineAction(onDecline);
             propertyAuctionPopup.setButtonLabels(primaryLabel, secondaryLabel);

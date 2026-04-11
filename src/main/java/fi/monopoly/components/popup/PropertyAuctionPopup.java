@@ -1,19 +1,22 @@
 package fi.monopoly.components.popup;
 
+import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.Player;
 import fi.monopoly.utils.UiTokens;
 import processing.core.PGraphics;
+import processing.core.PImage;
 
 import static fi.monopoly.text.UiTexts.text;
 import static processing.core.PConstants.CENTER;
 import static processing.core.PConstants.CORNER;
+import static processing.core.PConstants.LEFT;
 import static processing.core.PConstants.TOP;
 
 public class PropertyAuctionPopup extends PropertyOfferPopup {
     private String reasonText = "";
-    private String currentLeaderLabel = "";
     private int currentBidAmount;
-    private int availableCashAmount;
+    private Player currentLeader;
 
     protected PropertyAuctionPopup(MonopolyRuntime runtime) {
         super(runtime, "propertyAuction");
@@ -23,11 +26,10 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         setActionLabels(primaryLabel, secondaryLabel);
     }
 
-    public void setAuctionInfo(String reasonText, String currentLeaderLabel, int currentBidAmount, int availableCashAmount) {
+    public void setAuctionInfo(String reasonText, Player currentLeader, int currentBidAmount) {
         this.reasonText = reasonText;
-        this.currentLeaderLabel = currentLeaderLabel;
+        this.currentLeader = currentLeader;
         this.currentBidAmount = currentBidAmount;
-        this.availableCashAmount = availableCashAmount;
     }
 
     @Override
@@ -69,16 +71,14 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         p.text(reasonText, centerX, cardY + cardH + 36f);
 
         float infoY = cardY + cardH + 74f;
-        drawInfoChip(p, centerX - 116f, infoY, 112f, 40f, text("property.auction.currentBidLabel"), "M" + currentBidAmount);
-        drawInfoChip(p, centerX + 4f, infoY, 112f, 40f, text("property.auction.leaderLabel"), currentLeaderLabel);
-
-        drawMoneyChip(p, centerX - 88f, infoY + 52f, 176f, 50f, availableCashAmount);
+        drawLeaderCard(p, centerX - 116f, infoY, 112f, 92f);
+        drawMoneyChip(p, centerX + 4f, infoY, 176f, 92f, currentBidAmount);
 
         p.popStyle();
         p.popMatrix();
     }
 
-    private void drawInfoChip(PGraphics p, float x, float y, float width, float height, String label, String value) {
+    private void drawLeaderCard(PGraphics p, float x, float y, float width, float height) {
         p.rectMode(CORNER);
         p.stroke(0);
         p.strokeWeight(2);
@@ -88,9 +88,22 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         p.fill(76, 68, 44);
         p.textAlign(CENTER, TOP);
         p.textFont(runtime.font10());
-        p.text(label, x + width / 2f, y + 6f);
-        p.textFont(runtime.font20());
-        p.text(value, x + width / 2f, y + 20f);
+        p.text(text("property.auction.leaderLabel"), x + width / 2f, y + 6f);
+
+        if (currentLeader == null) {
+            p.textFont(runtime.font20());
+            p.text(text("property.auction.none"), x + width / 2f, y + 38f);
+            return;
+        }
+
+        PImage token = MonopolyApp.getImage("BigToken.png", currentLeader.getColor());
+        if (token != null) {
+            float tokenSize = 28f;
+            p.imageMode(CORNER);
+            p.image(token, x + width / 2f - tokenSize / 2f, y + 22f, tokenSize, tokenSize);
+        }
+        p.textFont(runtime.font10());
+        p.text(currentLeader.getName(), x + width / 2f, y + 56f, width - 12f, 24f);
     }
 
     private void drawMoneyChip(PGraphics p, float x, float y, float width, float height, int amount) {
@@ -108,9 +121,9 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         p.fill(35, 75, 41);
         p.textAlign(CENTER, TOP);
         p.textFont(runtime.font10());
-        p.text(text("property.auction.cashLabel"), x + width / 2f, y + 7f);
-        p.textFont(runtime.font20());
-        p.text("M" + amount, x + width / 2f, y + 20f);
+        p.text(text("property.auction.currentBidLabel"), x + width / 2f, y + 10f);
+        p.textFont(runtime.font30());
+        p.text("M" + amount, x + width / 2f, y + 34f);
     }
 
     @Override
@@ -127,8 +140,7 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
     protected void hide() {
         super.hide();
         reasonText = "";
-        currentLeaderLabel = "";
         currentBidAmount = 0;
-        availableCashAmount = 0;
+        currentLeader = null;
     }
 }
