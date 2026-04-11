@@ -24,8 +24,8 @@ import fi.monopoly.components.trade.TradeController;
 import fi.monopoly.components.turn.*;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
-import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.DebugPerformanceStats;
+import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.UiTokens;
 import javafx.scene.paint.Color;
@@ -36,11 +36,7 @@ import processing.event.Event;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import static fi.monopoly.text.UiTexts.text;
 import static processing.event.MouseEvent.CLICK;
@@ -55,22 +51,21 @@ public class Game implements MonopolyEventListener {
     private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
     private static final int NO_COMPUTER_ACTION_YET = -1;
 
-    private enum BotSpeedMode {
-        NORMAL("game.button.botSpeed.normal", 1.0f),
-        FAST("game.button.botSpeed.fast", 0.5f),
-        INSTANT("game.button.botSpeed.instant", 0.0f);
+    private void setupDebugGameConfigs(MonopolyRuntime runtime) {
+        Spot spot = board.getSpots().get(0);
+        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
+        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
 
-        private final String labelKey;
-        private final float delayMultiplier;
+        //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
+        //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
+        //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
 
-        BotSpeedMode(String labelKey, float delayMultiplier) {
-            this.labelKey = labelKey;
-            this.delayMultiplier = delayMultiplier;
-        }
-
-        private BotSpeedMode next() {
-            return values()[(ordinal() + 1) % values().length];
-        }
+        //        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B1));
+        //        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B2));
+        //        if (!FORCE_DEBT_DEBUG_SCENARIO) {
+        //            players.giveRandomDeeds(board);
+        //        }
     }
 
     private enum ComputerActionDelayKind {
@@ -272,21 +267,22 @@ public class Game implements MonopolyEventListener {
         languageButton.addListener(this::toggleLanguage);
     }
 
-    private void setupDebugGameConfigs(MonopolyRuntime runtime) {
-        Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
-        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
-        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
+    private enum BotSpeedMode {
+        NORMAL("game.button.botSpeed.normal", 3.0f),
+        FAST("game.button.botSpeed.fast", 1.0f),
+        INSTANT("game.button.botSpeed.instant", 0.0f);
 
-        //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
-        //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
-        //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
+        private final String labelKey;
+        private final float delayMultiplier;
 
-        //        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B1));
-        //        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B2));
-        //        if (!FORCE_DEBT_DEBUG_SCENARIO) {
-        //            players.giveRandomDeeds(board);
-        //        }
+        BotSpeedMode(String labelKey, float delayMultiplier) {
+            this.labelKey = labelKey;
+            this.delayMultiplier = delayMultiplier;
+        }
+
+        private BotSpeedMode next() {
+            return values()[(ordinal() + 1) % values().length];
+        }
     }
 
     Players players() {
