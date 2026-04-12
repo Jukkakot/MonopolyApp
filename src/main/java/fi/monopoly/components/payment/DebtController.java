@@ -73,6 +73,15 @@ public final class DebtController {
         runtime.popupService().show(buildDebtMessage(result));
     }
 
+    public void openDebtState(PaymentRequest request, CallbackAction onResolved, int missingAmount, boolean bankruptcyRisk) {
+        debtState = new DebtState(request, onResolved, bankruptcyRisk);
+        hidePrimaryTurnControls.run();
+        onStateChanged.run();
+        log.info("Entering debt resolution: debtor={}, target={}, amount={}, bankruptcyRisk={}",
+                request.debtor().getName(), request.target().getDisplayName(), request.amount(), bankruptcyRisk);
+        runtime.popupService().show(buildDebtMessage(request, missingAmount, bankruptcyRisk));
+    }
+
     public void retryPendingDebtPayment() {
         if (debtState == null) {
             return;
@@ -157,8 +166,10 @@ public final class DebtController {
         if (debtState == null) {
             return text("game.debt.couldNotComplete");
         }
+        return buildDebtMessage(debtState.paymentRequest(), result.missingAmount(), result.status() == PaymentStatus.BANKRUPT);
+    }
 
-        PaymentRequest request = debtState.paymentRequest();
+    private String buildDebtMessage(PaymentRequest request, int missingAmount, boolean bankruptcyRisk) {
         StringBuilder text = new StringBuilder(text(
                 "game.debt.message",
                 request.debtor().getName(),
@@ -166,9 +177,9 @@ public final class DebtController {
                 request.target().getDisplayName(),
                 request.reason(),
                 request.debtor().getMoneyAmount(),
-                result.missingAmount()
+                missingAmount
         ));
-        if (result.status() == PaymentStatus.BANKRUPT) {
+        if (bankruptcyRisk) {
             text.append(text("game.debt.message.bankruptcyLine"));
         }
         return text.toString();

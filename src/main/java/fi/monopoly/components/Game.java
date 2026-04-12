@@ -162,6 +162,7 @@ public class Game implements MonopolyEventListener {
                         () -> endRoundButton.isVisible()
                 )::project
         );
+        this.sessionApplicationService.configureRentAndDebtFlow(debtController);
         this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
         this.propertyPurchaseFlow = new PendingDecisionPopupAdapter(
                 LOCAL_SESSION_ID,
@@ -242,7 +243,7 @@ public class Game implements MonopolyEventListener {
                 players,
                 this::hidePrimaryTurnControls,
                 this::showRollDiceControl,
-                this::updateDebtButtons,
+                this::onDebtStateChanged,
                 this::declareWinner
         );
         tradeController = new TradeController(
@@ -289,6 +290,13 @@ public class Game implements MonopolyEventListener {
 
     DebtController debtController() {
         return debtController;
+    }
+
+    private void onDebtStateChanged() {
+        updateDebtButtons();
+        if (sessionApplicationService != null) {
+            sessionApplicationService.clearActiveDebtOverride();
+        }
     }
 
     private void setupButtonActions() {
@@ -951,7 +959,7 @@ public class Game implements MonopolyEventListener {
 
     private void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
         updateLogTurnContext();
-        debtController.handlePaymentRequest(request, onResolved);
+        sessionApplicationService.handlePaymentRequest(request, onResolved);
     }
 
     private void drawDebtState() {

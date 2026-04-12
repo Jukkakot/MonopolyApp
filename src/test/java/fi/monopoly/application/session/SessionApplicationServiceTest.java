@@ -45,6 +45,7 @@ class SessionApplicationServiceTest {
                 new TurnState("player-0", TurnPhase.WAITING_FOR_ROLL, true, false),
                 null,
                 null,
+                null,
                 null
         );
     }

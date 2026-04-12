@@ -3,6 +3,7 @@ package fi.monopoly.presentation.session;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.payment.DebtState;
+import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
@@ -63,6 +64,7 @@ public final class LegacySessionProjector {
                 turnState,
                 buildPendingDecision(turnState.activePlayerId()),
                 null,
+                buildActiveDebt(),
                 buildWinnerPlayerId(identities)
         );
     }
@@ -197,6 +199,32 @@ public final class LegacySessionProjector {
         }
         PlayerIdentity identity = identities.get(winner);
         return identity == null ? playerId(winner) : identity.playerId();
+    }
+
+    private DebtStateModel buildActiveDebt() {
+        DebtState debtState = debtStateSupplier.get();
+        if (debtState == null || debtState.paymentRequest() == null) {
+            return null;
+        }
+        PaymentRequest request = debtState.paymentRequest();
+        List<DebtAction> allowedActions = new ArrayList<>(List.of(
+                DebtAction.PAY_DEBT_NOW,
+                DebtAction.MORTGAGE_PROPERTY,
+                DebtAction.SELL_BUILDING
+        ));
+        if (debtState.bankruptcyRisk()) {
+            allowedActions.add(DebtAction.DECLARE_BANKRUPTCY);
+        }
+        return new DebtStateModel(
+                "debt:" + playerId(request.debtor()) + ":" + request.amount() + ":" + request.reason().hashCode(),
+                playerId(request.debtor()),
+                request.target() instanceof fi.monopoly.components.payment.PlayerTarget ? DebtCreditorType.PLAYER : DebtCreditorType.BANK,
+                request.target() instanceof fi.monopoly.components.payment.PlayerTarget playerTarget ? playerId(playerTarget.player()) : null,
+                request.amount(),
+                request.reason(),
+                debtState.bankruptcyRisk(),
+                allowedActions
+        );
     }
 
     private Map<Player, PlayerIdentity> mapPlayerIdentities(List<Player> playerList) {

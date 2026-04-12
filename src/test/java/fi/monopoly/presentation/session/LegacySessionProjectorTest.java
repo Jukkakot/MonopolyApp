@@ -3,8 +3,11 @@ package fi.monopoly.presentation.session;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.components.payment.BankTarget;
+import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
+import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SessionStatus;
 import fi.monopoly.domain.turn.TurnPhase;
@@ -67,6 +70,8 @@ class LegacySessionProjectorTest {
     void mapsActiveDebtToResolvingDebtPhase() {
         var state = projector(null, () -> false, () -> true, () -> false, () -> false, () -> false).project();
         assertEquals(TurnPhase.RESOLVING_DEBT, state.turn().phase());
+        assertNotNull(state.activeDebt());
+        assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.DECLARE_BANKRUPTCY), state.activeDebt().allowedActions());
     }
 
     private LegacySessionProjector projector(
@@ -82,7 +87,14 @@ class LegacySessionProjectorTest {
                 "local-session",
                 () -> players,
                 () -> popup,
-                () -> debtActive.getAsBoolean() ? new fi.monopoly.components.payment.DebtState(null, null, true) : null,
+                () -> debtActive.getAsBoolean()
+                        ? new fi.monopoly.components.payment.DebtState(
+                        new PaymentRequest(players.getPlayers().get(0), BankTarget.INSTANCE, 200, "Debt"),
+                        () -> {
+                        },
+                        true
+                )
+                        : null,
                 paused,
                 gameOver,
                 () -> null,
