@@ -3,8 +3,11 @@ package fi.monopoly.application.session;
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
 import fi.monopoly.application.command.PayDebtCommand;
+import fi.monopoly.application.command.PassAuctionCommand;
+import fi.monopoly.application.command.PlaceAuctionBidCommand;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
@@ -24,6 +27,7 @@ import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.presentation.session.LegacyAuctionGateway;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -34,6 +38,7 @@ public final class SessionApplicationService {
     private PendingDecision pendingDecisionOverride;
     private AuctionState auctionStateOverride;
     private DebtStateModel activeDebtOverride;
+    private AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseCommandHandler propertyPurchaseCommandHandler;
     private RentAndDebtOpeningHandler rentAndDebtOpeningHandler;
     private DebtRemediationCommandHandler debtRemediationCommandHandler;
@@ -70,13 +75,26 @@ public final class SessionApplicationService {
         );
     }
 
+    public void configureAuctionFlow(PopupService popupService, Players players) {
+        auctionCommandHandler = new AuctionCommandHandler(
+                sessionId,
+                this::currentState,
+                this::setAuctionStateOverride,
+                new LegacyAuctionGateway(popupService, players)
+        );
+    }
+
     public void configurePropertyPurchaseFlow(PopupService popupService, Players players) {
+        if (auctionCommandHandler == null) {
+            configureAuctionFlow(popupService, players);
+        }
         propertyPurchaseCommandHandler = new PropertyPurchaseCommandHandler(
                 sessionId,
                 this::currentState,
                 this::setPendingDecisionOverride,
                 this::setAuctionStateOverride,
-                new LegacyPropertyPurchaseGateway(popupService, players)
+                new LegacyPropertyPurchaseGateway(popupService, players),
+                auctionCommandHandler
         );
     }
 
@@ -108,10 +126,27 @@ public final class SessionApplicationService {
         activeDebtOverride = null;
     }
 
+    public boolean hasActiveAuction() {
+        return currentState().auctionState() != null;
+    }
+
+    public CommandResult handleComputerAuctionAction(String actorPlayerId) {
+        if (auctionCommandHandler == null) {
+            return rejected("AUCTION_NOT_CONFIGURED", "Auction flow has not been configured");
+        }
+        return auctionCommandHandler.handleComputerAction(actorPlayerId);
+    }
+
     public CommandResult handle(SessionCommand command) {
         if (propertyPurchaseCommandHandler != null
                 && (command instanceof BuyPropertyCommand || command instanceof DeclinePropertyCommand)) {
             return propertyPurchaseCommandHandler.handle(command);
+        }
+        if (auctionCommandHandler != null
+                && (command instanceof PlaceAuctionBidCommand
+                || command instanceof PassAuctionCommand
+                || command instanceof FinishAuctionResolutionCommand)) {
+            return auctionCommandHandler.handle(command);
         }
         if (debtRemediationCommandHandler != null
                 && (command instanceof PayDebtCommand

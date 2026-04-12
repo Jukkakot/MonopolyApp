@@ -104,7 +104,6 @@ class PropertyPurchaseCommandHandlerTest {
 
         assertTrue(result.accepted());
         assertNull(pendingDecisionRef.get());
-        assertTrue(gateway.auctionStarted);
         assertNotNull(auctionStateRef.get());
         assertEquals(property.getSpotType().name(), auctionStateRef.get().propertyId());
         assertEquals(AuctionStatus.ACTIVE, auctionStateRef.get().status());
@@ -132,7 +131,54 @@ class PropertyPurchaseCommandHandlerTest {
                 ),
                 pendingDecisionRef::set,
                 auctionStateRef::set,
-                gateway
+                gateway,
+                new AuctionCommandHandler(
+                        "local-session",
+                        () -> new SessionState(
+                                "local-session",
+                                0L,
+                                SessionStatus.IN_PROGRESS,
+                                List.of(new SeatState("seat-0", 0, "player-" + human.getId(), SeatKind.HUMAN, ControlMode.MANUAL, human.getName())),
+                                List.of(new PlayerSnapshot("player-" + human.getId(), "seat-0", human.getName(), human.getMoneyAmount(), -1, false, false, false, 0, List.of())),
+                                new TurnState("player-" + human.getId(), TurnPhase.WAITING_FOR_AUCTION, false, false),
+                                pendingDecisionRef.get(),
+                                auctionStateRef.get(),
+                                null,
+                                null
+                        ),
+                        auctionStateRef::set,
+                        new AuctionGateway() {
+                            @Override
+                            public List<String> eligibleBidderIds(Player triggeringPlayer, fi.monopoly.components.properties.Property property) {
+                                return gateway.eligibleBidderIds(triggeringPlayer);
+                            }
+
+                            @Override
+                            public Player playerById(String playerId) {
+                                return ("player-" + human.getId()).equals(playerId) ? human : null;
+                            }
+
+                            @Override
+                            public fi.monopoly.components.properties.Property propertyById(String propertyId) {
+                                return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+                            }
+
+                            @Override
+                            public int maxBidFor(Player bidder, fi.monopoly.components.properties.Property property) {
+                                return 200;
+                            }
+
+                            @Override
+                            public int nextBidAmount(Player bidder, fi.monopoly.components.properties.Property property, int currentBid) {
+                                return currentBid == 0 ? 10 : currentBid + 10;
+                            }
+
+                            @Override
+                            public boolean transferWinningProperty(Player winner, fi.monopoly.components.properties.Property property, int amount) {
+                                return winner.buyProperty(property, amount);
+                            }
+                        }
+                )
         );
     }
 

@@ -7,6 +7,7 @@ import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.turn.PropertyAuctionResolver;
+import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.support.TestLogLevels;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
@@ -325,6 +326,7 @@ class GameBotSimulationTest {
     }
 
     private static String snapshot(MonopolyRuntime runtime, Game game) {
+        SessionState sessionState = game.projectedSessionState();
         String playerState = game.players().getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getId))
                 .map(player -> player.getId() + ":" + player.getMoneyAmount() + ":" + player.getSpot().getSpotType() + ":" + player.getOwnedProperties().size())
@@ -341,7 +343,12 @@ class GameBotSimulationTest {
                 + "|diceVisible=" + (game.dices() != null && game.dices().isVisible())
                 + "|dice=" + diceValue
                 + "|animations=" + (game.animations() != null && game.animations().isRunning())
-                + "|debt=" + (game.debtController().debtState() != null);
+                + "|debt=" + (game.debtController().debtState() != null)
+                + "|phase=" + sessionState.turn().phase()
+                + "|pendingDecision=" + (sessionState.pendingDecision() != null ? sessionState.pendingDecision().decisionType() : "none")
+                + "|auctionStatus=" + (sessionState.auctionState() != null ? sessionState.auctionState().status() : "none")
+                + "|auctionActor=" + (sessionState.auctionState() != null ? sessionState.auctionState().currentActorPlayerId() : "none")
+                + "|auctionWinner=" + (sessionState.auctionState() != null ? sessionState.auctionState().winningPlayerId() : "none");
     }
 
     private static double averageCash(Game game) {

@@ -13,7 +13,9 @@ public record AuctionState(
         int minimumNextBid,
         Set<String> passedPlayerIds,
         List<String> eligiblePlayerIds,
-        AuctionStatus status
+        AuctionStatus status,
+        int winningBid,
+        String winningPlayerId
 ) {
     public AuctionState {
         passedPlayerIds = Set.copyOf(passedPlayerIds);

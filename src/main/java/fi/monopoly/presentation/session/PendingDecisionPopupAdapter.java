@@ -15,17 +15,20 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final SessionApplicationService sessionApplicationService;
     private final PopupService popupService;
     private final LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport;
+    private final Runnable postHandleSync;
 
     public PendingDecisionPopupAdapter(
             String sessionId,
             SessionApplicationService sessionApplicationService,
             PopupService popupService,
-            LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport
+            LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport,
+            Runnable postHandleSync
     ) {
         this.sessionId = sessionId;
         this.sessionApplicationService = sessionApplicationService;
         this.popupService = popupService;
         this.propertyPurchaseDecisionSupport = propertyPurchaseDecisionSupport;
+        this.postHandleSync = postHandleSync;
     }
 
     @Override
@@ -50,6 +53,7 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     }
 
     private void handleResult(CommandResult result) {
+        postHandleSync.run();
         if (result.accepted() || result.rejections().isEmpty()) {
             return;
         }

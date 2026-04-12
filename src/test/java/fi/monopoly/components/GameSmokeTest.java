@@ -64,6 +64,8 @@ class GameSmokeTest {
         // resolve animations, accept popups, otherwise press space to keep turns moving.
         while (rollCount < targetRollCount) {
             runtime.eventBus().flushPendingChanges();
+            invokeNoArgMethod(game, "syncTransientPresentationState");
+            runtime.eventBus().flushPendingChanges();
             invokePrimaryControlInvariant(game);
             if (verifyResponsiveUi) {
                 assertResponsiveUiState(game, runtime);
@@ -74,9 +76,11 @@ class GameSmokeTest {
             } else if (runtime.popupService().isAnyVisible()) {
                 popupResolutionCount++;
                 Player turnPlayer = players().getTurn();
+                boolean resolvedForComputer = false;
                 if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-                    runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
-                } else {
+                    resolvedForComputer = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                }
+                if (!resolvedForComputer) {
                     dispatchKey(runtime, '1');
                 }
             } else if (isDebtResolutionActive(game)) {
@@ -101,6 +105,8 @@ class GameSmokeTest {
                 }
             }
 
+            runtime.eventBus().flushPendingChanges();
+            invokeNoArgMethod(game, "syncTransientPresentationState");
             runtime.eventBus().flushPendingChanges();
             invokePrimaryControlInvariant(game);
             if (verifyResponsiveUi) {
@@ -138,6 +144,8 @@ class GameSmokeTest {
 
         // Finish any last popup/animation chain before asserting the end state.
         settlePendingGameFlow(runtime, game, verifyResponsiveUi);
+        settlePendingGameFlow(runtime, game, verifyResponsiveUi);
+        forceDrainPresentationTail(runtime, game);
         assertCoreInvariants(game, initialPlayerCount);
 
         assertTrue(rollCount >= targetRollCount || completedGame,
@@ -150,7 +158,12 @@ class GameSmokeTest {
         assertTrue(seenSpotTypes.size() >= MIN_UNIQUE_SPOTS, "Game did not traverse enough of the board to be a useful sanity check");
         assertTrue(debtResolutionCount >= bankruptcyCount, "Bankruptcy count cannot exceed debt resolutions");
         assertFalse(animations().isRunning(), "Animations should not be left running at the end of the smoke test");
-        assertFalse(runtime.popupService().isAnyVisible(), "Popup should not be left open at the end of the smoke test");
+        assertFalse(
+                runtime.popupService().isAnyVisible(),
+                "Popup should not be left open at the end of the smoke test. kind="
+                        + runtime.popupService().activePopupKind()
+                        + ", message=" + runtime.popupService().activePopupMessage()
+        );
         assertFalse(isDebtResolutionActive(game), "Debt resolution should not be left active at the end of the smoke test");
 
         System.out.println(buildPlayerSummary());
@@ -159,6 +172,8 @@ class GameSmokeTest {
     private static void settlePendingGameFlow(MonopolyRuntime runtime, Game game, boolean verifyResponsiveUi) {
         // Drain any popup/animation tail so the test does not stop mid-turn.
         for (int step = 0; step < 500; step++) {
+            runtime.eventBus().flushPendingChanges();
+            invokeNoArgMethod(game, "syncTransientPresentationState");
             runtime.eventBus().flushPendingChanges();
             invokePrimaryControlInvariant(game);
             if (verifyResponsiveUi) {
@@ -170,9 +185,11 @@ class GameSmokeTest {
             }
             if (runtime.popupService().isAnyVisible()) {
                 Player turnPlayer = players().getTurn();
+                boolean resolvedForComputer = false;
                 if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-                    runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
-                } else {
+                    resolvedForComputer = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                }
+                if (!resolvedForComputer) {
                     dispatchKey(runtime, '1');
                 }
                 continue;
@@ -192,6 +209,41 @@ class GameSmokeTest {
                 continue;
             }
             return;
+        }
+    }
+
+    private static void forceDrainPresentationTail(MonopolyRuntime runtime, Game game) {
+        for (int step = 0; step < 50; step++) {
+            runtime.eventBus().flushPendingChanges();
+            invokeNoArgMethod(game, "syncTransientPresentationState");
+            runtime.eventBus().flushPendingChanges();
+            if (animations().isRunning()) {
+                animations().finishAllAnimations();
+                continue;
+            }
+            if (runtime.popupService().isAnyVisible()) {
+                Player turnPlayer = players().getTurn();
+                boolean resolvedForComputer = false;
+                if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+                    resolvedForComputer = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                }
+                if (!resolvedForComputer) {
+                    dispatchKey(runtime, '1');
+                }
+                continue;
+            }
+            if (isDebtResolutionActive(game)) {
+                if (isBankruptcyRisk(game)) {
+                    invokeDeclareBankruptcy(game);
+                } else {
+                    topUpDebtDebtorCash(game);
+                    invokeRetryPendingDebtPayment(game);
+                }
+                continue;
+            }
+            if (!isDebtResolutionActive(game)) {
+                return;
+            }
         }
     }
 

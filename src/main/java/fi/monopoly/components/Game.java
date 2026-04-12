@@ -2,6 +2,7 @@ package fi.monopoly.components;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.session.PropertyPurchaseFlow;
 import fi.monopoly.application.session.SessionApplicationService;
@@ -25,10 +26,12 @@ import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.trade.TradeController;
 import fi.monopoly.components.turn.*;
+import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.session.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.LegacySessionProjector;
 import fi.monopoly.presentation.session.DebtActionDispatcher;
+import fi.monopoly.presentation.session.AuctionViewAdapter;
 import fi.monopoly.presentation.session.PendingDecisionPopupAdapter;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
@@ -89,6 +92,7 @@ public class Game implements MonopolyEventListener {
         MORTGAGE_PROPERTY,
         UNMORTGAGE_PROPERTY,
         TRADE,
+        AUCTION_ACTION,
         RETRY_DEBT_PAYMENT,
         DECLARE_BANKRUPTCY
     }
@@ -99,6 +103,7 @@ public class Game implements MonopolyEventListener {
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
     private final DebtActionDispatcher debtActionDispatcher;
+    private final AuctionViewAdapter auctionViewAdapter;
     private TradeController tradeController;
     private DebtController debtController;
     private DebugController debugController;
@@ -165,6 +170,7 @@ public class Game implements MonopolyEventListener {
                 )::project
         );
         this.sessionApplicationService.configureRentAndDebtFlow(debtController);
+        this.sessionApplicationService.configureAuctionFlow(runtime.popupService(), players);
         this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
         this.debtActionDispatcher = new DebtActionDispatcher(
                 LOCAL_SESSION_ID,
@@ -172,11 +178,18 @@ public class Game implements MonopolyEventListener {
                 runtime.popupService(),
                 () -> players != null ? players.getTurn() : null
         );
+        this.auctionViewAdapter = new AuctionViewAdapter(
+                LOCAL_SESSION_ID,
+                sessionApplicationService,
+                runtime.popupService(),
+                players
+        );
         this.propertyPurchaseFlow = new PendingDecisionPopupAdapter(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
                 runtime.popupService(),
-                sessionApplicationService::openPropertyPurchaseDecision
+                sessionApplicationService::openPropertyPurchaseDecision,
+                auctionViewAdapter::sync
         );
         registerGameSession();
         setupDefaultGameState();
@@ -388,6 +401,7 @@ public class Game implements MonopolyEventListener {
         if (hasSidebarSpace) {
             drawDebtState();
         }
+        syncTransientPresentationState();
         runComputerPlayerStep();
         debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
     }
@@ -731,10 +745,6 @@ public class Game implements MonopolyEventListener {
         if (gameOver) {
             return;
         }
-        Player turnPlayer = players.getTurn();
-        if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
-            return;
-        }
         if (animations.isRunning()) {
             return;
         }
@@ -746,6 +756,51 @@ public class Game implements MonopolyEventListener {
         if (shouldApplyDelay && now < nextComputerActionReadyAt) {
             return;
         }
+        auctionViewAdapter.sync();
+        SessionState sessionState = sessionApplicationService.currentState();
+        if (sessionState.auctionState() != null) {
+            if (sessionState.auctionState().status() == AuctionStatus.WON_PENDING_RESOLUTION
+                    && !runtime.popupService().isAnyVisible()) {
+                boolean resolved = sessionApplicationService.handle(new FinishAuctionResolutionCommand(
+                        LOCAL_SESSION_ID,
+                        sessionState.auctionState().auctionId()
+                )).accepted();
+                if (resolved) {
+                    scheduleNextComputerAction(ComputerActionDelayKind.AUCTION_ACTION, now);
+                }
+                debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+                return;
+            }
+            Player turnPlayer = players.getTurn();
+            if (runtime.popupService().isAnyVisible()) {
+                if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+                    boolean resolved = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                    if (resolved) {
+                        scheduleNextComputerAction(ComputerActionDelayKind.RESOLVE_POPUP, now);
+                    }
+                }
+                debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+                return;
+            }
+            Player auctionActor = findPlayerById(sessionState.auctionState().currentActorPlayerId());
+            if (auctionActor == null || !auctionActor.isComputerControlled()) {
+                return;
+            }
+            if (sessionState.auctionState().status() != AuctionStatus.ACTIVE) {
+                return;
+            }
+            boolean acted = sessionApplicationService.handleComputerAuctionAction(sessionState.auctionState().currentActorPlayerId()).accepted();
+            if (acted) {
+                scheduleNextComputerAction(ComputerActionDelayKind.AUCTION_ACTION, now);
+            }
+            debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+            return;
+        }
+
+        Player turnPlayer = players.getTurn();
+        if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
+            return;
+        }
 
         GameComputerTurnContext context = new GameComputerTurnContext(turnPlayer);
         boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile()).takeStep(context);
@@ -753,6 +808,18 @@ public class Game implements MonopolyEventListener {
             scheduleNextComputerAction(context.delayKind(), now);
         }
         debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+    }
+
+    private Player findPlayerById(String playerId) {
+        if (playerId == null) {
+            return null;
+        }
+        for (Player player : players.getPlayers()) {
+            if (playerId.equals("player-" + player.getId())) {
+                return player;
+            }
+        }
+        return null;
     }
 
     private void scheduleNextComputerAction(ComputerActionDelayKind delayKind, int now) {
@@ -773,6 +840,7 @@ public class Game implements MonopolyEventListener {
             case SELL_BUILDING -> 520;
             case MORTGAGE_PROPERTY, UNMORTGAGE_PROPERTY -> 480;
             case TRADE -> 850;
+            case AUCTION_ACTION -> 260;
             case RETRY_DEBT_PAYMENT, DECLARE_BANKRUPTCY -> 650;
         };
         float multiplier = botSpeedMode.delayMultiplier;
@@ -1287,6 +1355,10 @@ public class Game implements MonopolyEventListener {
         }
         Player turnPlayer = players != null ? players.getTurn() : null;
         MDC.put("turnPlayer", turnPlayer != null ? turnPlayer.getName() : "none");
+    }
+
+    private void syncTransientPresentationState() {
+        auctionViewAdapter.sync();
     }
 
     private void enforcePrimaryTurnControlInvariant() {

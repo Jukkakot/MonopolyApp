@@ -14,7 +14,6 @@ import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.AuctionState;
-import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 
 import java.util.List;
@@ -28,6 +27,7 @@ final class PropertyPurchaseCommandHandler {
     private final Consumer<PendingDecision> pendingDecisionSetter;
     private final Consumer<AuctionState> auctionStateSetter;
     private final PropertyPurchaseGateway gateway;
+    private final AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseContext activeContext;
 
     PropertyPurchaseCommandHandler(
@@ -35,13 +35,15 @@ final class PropertyPurchaseCommandHandler {
             Supplier<SessionState> currentStateSupplier,
             Consumer<PendingDecision> pendingDecisionSetter,
             Consumer<AuctionState> auctionStateSetter,
-            PropertyPurchaseGateway gateway
+            PropertyPurchaseGateway gateway,
+            AuctionCommandHandler auctionCommandHandler
     ) {
         this.sessionId = sessionId;
         this.currentStateSupplier = currentStateSupplier;
         this.pendingDecisionSetter = pendingDecisionSetter;
         this.auctionStateSetter = auctionStateSetter;
         this.gateway = gateway;
+        this.auctionCommandHandler = auctionCommandHandler;
     }
 
     PendingDecision openDecision(Player player, Property property, String message, CallbackAction onComplete) {
@@ -102,24 +104,8 @@ final class PropertyPurchaseCommandHandler {
             return reject("INVALID_PROPERTY_PURCHASE", "Property decline command is not valid in the current state");
         }
         pendingDecisionSetter.accept(null);
-        auctionStateSetter.accept(new AuctionState(
-                "auction:" + context.property().getSpotType().name() + ":" + context.player().getId(),
-                context.property().getSpotType().name(),
-                playerId(context.player()),
-                null,
-                null,
-                0,
-                10,
-                java.util.Set.of(),
-                gateway.eligibleBidderIds(context.player()),
-                AuctionStatus.ACTIVE
-        ));
-        CallbackAction onAuctionComplete = () -> {
-            auctionStateSetter.accept(null);
-            context.onComplete().doAction();
-        };
+        auctionCommandHandler.startAuction(context.player(), context.property(), context.onComplete());
         activeContext = null;
-        gateway.startAuction(context.player(), context.property(), onAuctionComplete);
         return new CommandResult(
                 true,
                 currentStateSupplier.get(),
