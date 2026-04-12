@@ -40,6 +40,7 @@ import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
+import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.projection.LegacySessionProjector;
@@ -74,8 +75,6 @@ public class Game implements MonopolyEventListener {
             Locale.ENGLISH
     );
     private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
-    private static final int NO_COMPUTER_ACTION_YET = -1;
-
     private void setupDebugGameConfigs(MonopolyRuntime runtime) {
         Spot spot = board.getSpots().get(0);
         players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
@@ -91,23 +90,6 @@ public class Game implements MonopolyEventListener {
         //        if (!FORCE_DEBT_DEBUG_SCENARIO) {
         //            players.giveRandomDeeds(board);
         //        }
-    }
-
-    private enum ComputerActionDelayKind {
-        ANIMATION_FINISH,
-        RESOLVE_POPUP,
-        ACCEPT_POPUP,
-        DECLINE_POPUP,
-        ROLL_DICE,
-        END_TURN,
-        BUILD_ROUND,
-        SELL_BUILDING,
-        MORTGAGE_PROPERTY,
-        UNMORTGAGE_PROPERTY,
-        TRADE,
-        AUCTION_ACTION,
-        RETRY_DEBT_PAYMENT,
-        DECLARE_BANKRUPTCY
     }
 
     // Core services
@@ -139,12 +121,11 @@ public class Game implements MonopolyEventListener {
     private int goMoneyAmount = 200;
     private Board board;
     private TurnResult prevTurnResult;
-    private int lastComputerActionAt = NO_COMPUTER_ACTION_YET;
-    private int nextComputerActionReadyAt = NO_COMPUTER_ACTION_YET;
     private boolean paused;
     private boolean gameOver;
     private Player winner;
-    private BotSpeedMode botSpeedMode = BotSpeedMode.NORMAL;
+    private final BotTurnScheduler botTurnScheduler = new BotTurnScheduler();
+    private BotTurnScheduler.SpeedMode botSpeedMode = BotTurnScheduler.SpeedMode.NORMAL;
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private LayoutMetrics frameLayoutMetrics;
     private float frameSidebarHistoryHeight;
@@ -364,24 +345,6 @@ public class Game implements MonopolyEventListener {
         languageButton.addListener(this::toggleLanguage);
     }
 
-    private enum BotSpeedMode {
-        NORMAL("game.button.botSpeed.normal", 3.0f),
-        FAST("game.button.botSpeed.fast", 1.0f),
-        INSTANT("game.button.botSpeed.instant", 0.0f);
-
-        private final String labelKey;
-        private final float delayMultiplier;
-
-        BotSpeedMode(String labelKey, float delayMultiplier) {
-            this.labelKey = labelKey;
-            this.delayMultiplier = delayMultiplier;
-        }
-
-        private BotSpeedMode next() {
-            return values()[(ordinal() + 1) % values().length];
-        }
-    }
-
     Players players() {
         return players;
     }
@@ -454,13 +417,15 @@ public class Game implements MonopolyEventListener {
     }
 
     private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
-        if (MonopolyApp.SKIP_ANNIMATIONS || !animationWasRunning || animations.isRunning()) {
-            return;
-        }
         Player turnPlayer = players.getTurn();
-        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            scheduleNextComputerAction(ComputerActionDelayKind.ANIMATION_FINISH, runtime.app().millis());
-        }
+        botTurnScheduler.applyAnimationFinishCooldownIfNeeded(
+                animationWasRunning,
+                animations.isRunning(),
+                turnPlayer != null && turnPlayer.isComputerControlled(),
+                runtime.app().millis(),
+                botSpeedMode,
+                players.getPlayers().stream().allMatch(Player::isComputerControlled)
+        );
     }
 
     /**
@@ -780,8 +745,7 @@ public class Game implements MonopolyEventListener {
             return;
         }
         int now = runtime.app().millis();
-        boolean shouldApplyDelay = !MonopolyApp.SKIP_ANNIMATIONS && nextComputerActionReadyAt != NO_COMPUTER_ACTION_YET;
-        if (shouldApplyDelay && now < nextComputerActionReadyAt) {
+        if (botTurnScheduler.isWaiting(now)) {
             return;
         }
         auctionViewAdapter.sync();
@@ -798,7 +762,7 @@ public class Game implements MonopolyEventListener {
             }
             boolean acted = tradeController.handleComputerTradeTurn(tradeActor);
             if (acted) {
-                scheduleNextComputerAction(ComputerActionDelayKind.TRADE, now);
+                scheduleNextComputerAction(BotTurnScheduler.DelayKind.TRADE, now);
             }
             debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
             return;
@@ -811,7 +775,7 @@ public class Game implements MonopolyEventListener {
                         sessionState.auctionState().auctionId()
                 )).accepted();
                 if (resolved) {
-                    scheduleNextComputerAction(ComputerActionDelayKind.AUCTION_ACTION, now);
+                    scheduleNextComputerAction(BotTurnScheduler.DelayKind.AUCTION_ACTION, now);
                 }
                 debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
                 return;
@@ -821,7 +785,7 @@ public class Game implements MonopolyEventListener {
                 if (turnPlayer != null && turnPlayer.isComputerControlled()) {
                     boolean resolved = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
                     if (resolved) {
-                        scheduleNextComputerAction(ComputerActionDelayKind.RESOLVE_POPUP, now);
+                        scheduleNextComputerAction(BotTurnScheduler.DelayKind.RESOLVE_POPUP, now);
                     }
                 }
                 debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
@@ -836,7 +800,7 @@ public class Game implements MonopolyEventListener {
             }
             boolean acted = sessionApplicationService.handleComputerAuctionAction(sessionState.auctionState().currentActorPlayerId()).accepted();
             if (acted) {
-                scheduleNextComputerAction(ComputerActionDelayKind.AUCTION_ACTION, now);
+                scheduleNextComputerAction(BotTurnScheduler.DelayKind.AUCTION_ACTION, now);
             }
             debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
             return;
@@ -877,33 +841,13 @@ public class Game implements MonopolyEventListener {
         return sessionState.tradeState().decisionRequiredFromPlayerId();
     }
 
-    private void scheduleNextComputerAction(ComputerActionDelayKind delayKind, int now) {
-        lastComputerActionAt = now;
-        nextComputerActionReadyAt = now + computeComputerActionDelayMs(delayKind);
-    }
-
-    private int computeComputerActionDelayMs(ComputerActionDelayKind delayKind) {
-        if (MonopolyApp.SKIP_ANNIMATIONS || botSpeedMode == BotSpeedMode.INSTANT) {
-            return 0;
-        }
-        int baseDelayMs = switch (delayKind) {
-            case ANIMATION_FINISH -> 260;
-            case RESOLVE_POPUP, ACCEPT_POPUP, DECLINE_POPUP -> 220;
-            case ROLL_DICE -> 240;
-            case END_TURN -> 150;
-            case BUILD_ROUND -> 700;
-            case SELL_BUILDING -> 520;
-            case MORTGAGE_PROPERTY, UNMORTGAGE_PROPERTY -> 480;
-            case TRADE -> 850;
-            case AUCTION_ACTION -> 260;
-            case RETRY_DEBT_PAYMENT, DECLARE_BANKRUPTCY -> 650;
-        };
-        float multiplier = botSpeedMode.delayMultiplier;
-        if (players.getPlayers().stream().allMatch(Player::isComputerControlled)) {
-            multiplier *= 0.7f;
-        }
-        int jitter = (int) ((Math.random() * 120) - 60);
-        return Math.max(0, Math.round(baseDelayMs * multiplier) + jitter);
+    private void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
+        botTurnScheduler.schedule(
+                delayKind,
+                now,
+                botSpeedMode,
+                players.getPlayers().stream().allMatch(Player::isComputerControlled)
+        );
     }
 
     private void endRound(boolean switchTurns) {
@@ -1302,7 +1246,7 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.setLabel(text("game.button.godMode"));
         pauseButton.setLabel(paused ? text("game.button.resume") : text("game.button.pause"));
         tradeButton.setLabel(text("game.button.trade"));
-        botSpeedButton.setLabel(text("game.button.botSpeed", text(botSpeedMode.labelKey)));
+        botSpeedButton.setLabel(text("game.button.botSpeed", text(botSpeedMode.labelKey())));
         languageButton.setLabel(text("language.button.current", text("language.name.current")));
     }
 
@@ -1317,7 +1261,7 @@ public class Game implements MonopolyEventListener {
 
     private void cycleBotSpeedMode() {
         botSpeedMode = botSpeedMode.next();
-        nextComputerActionReadyAt = runtime.app().millis();
+        botTurnScheduler.markReadyNow(runtime.app().millis());
         refreshLabels();
         log.info("Bot speed mode={}", botSpeedMode);
     }
@@ -1430,13 +1374,13 @@ public class Game implements MonopolyEventListener {
 
     private final class GameComputerTurnContext implements ComputerTurnContext {
         private final Player player;
-        private ComputerActionDelayKind delayKind = ComputerActionDelayKind.RESOLVE_POPUP;
+        private BotTurnScheduler.DelayKind delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
 
         private GameComputerTurnContext(Player player) {
             this.player = player;
         }
 
-        private ComputerActionDelayKind delayKind() {
+        private BotTurnScheduler.DelayKind delayKind() {
             return delayKind;
         }
 
@@ -1470,7 +1414,7 @@ public class Game implements MonopolyEventListener {
         public boolean resolveActivePopup() {
             boolean resolved = runtime.popupService().resolveForComputer(player.getComputerProfile());
             if (resolved) {
-                delayKind = ComputerActionDelayKind.RESOLVE_POPUP;
+                delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
             }
             return resolved;
         }
@@ -1479,7 +1423,7 @@ public class Game implements MonopolyEventListener {
         public boolean acceptActivePopup() {
             boolean accepted = runtime.popupService().triggerPrimaryComputerAction();
             if (accepted) {
-                delayKind = ComputerActionDelayKind.ACCEPT_POPUP;
+                delayKind = BotTurnScheduler.DelayKind.ACCEPT_POPUP;
             }
             return accepted;
         }
@@ -1488,7 +1432,7 @@ public class Game implements MonopolyEventListener {
         public boolean declineActivePopup() {
             boolean declined = runtime.popupService().triggerSecondaryComputerAction();
             if (declined) {
-                delayKind = ComputerActionDelayKind.DECLINE_POPUP;
+                delayKind = BotTurnScheduler.DelayKind.DECLINE_POPUP;
             }
             return declined;
         }
@@ -1498,7 +1442,7 @@ public class Game implements MonopolyEventListener {
             if (debtController.debtState() != null) {
                 boolean soldForDebt = debtActionDispatcher.sellBuilding(spotType, count);
                 if (soldForDebt) {
-                    delayKind = ComputerActionDelayKind.SELL_BUILDING;
+                    delayKind = BotTurnScheduler.DelayKind.SELL_BUILDING;
                 }
                 return soldForDebt;
             }
@@ -1508,7 +1452,7 @@ public class Game implements MonopolyEventListener {
             }
             boolean sold = streetProperty.sellHouses(count);
             if (sold) {
-                delayKind = ComputerActionDelayKind.SELL_BUILDING;
+                delayKind = BotTurnScheduler.DelayKind.SELL_BUILDING;
             }
             return sold;
         }
@@ -1521,7 +1465,7 @@ public class Game implements MonopolyEventListener {
             }
             boolean built = streetProperty.buyBuildingRoundsAcrossSet(1);
             if (built) {
-                delayKind = ComputerActionDelayKind.BUILD_ROUND;
+                delayKind = BotTurnScheduler.DelayKind.BUILD_ROUND;
             }
             return built;
         }
@@ -1531,7 +1475,7 @@ public class Game implements MonopolyEventListener {
             if (debtController.debtState() != null) {
                 boolean mortgagedForDebt = debtActionDispatcher.mortgageProperty(spotType);
                 if (mortgagedForDebt) {
-                    delayKind = ComputerActionDelayKind.MORTGAGE_PROPERTY;
+                    delayKind = BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
                 }
                 return mortgagedForDebt;
             }
@@ -1540,8 +1484,8 @@ public class Game implements MonopolyEventListener {
             boolean toggled = property.handleMortgaging();
             if (toggled) {
                 delayKind = wasMortgaged
-                        ? ComputerActionDelayKind.UNMORTGAGE_PROPERTY
-                        : ComputerActionDelayKind.MORTGAGE_PROPERTY;
+                        ? BotTurnScheduler.DelayKind.UNMORTGAGE_PROPERTY
+                        : BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
             }
             return toggled;
         }
@@ -1550,55 +1494,55 @@ public class Game implements MonopolyEventListener {
         public ComputerDecision initiateTrade() {
             ComputerDecision decision = tradeController.tryInitiateComputerTrade(player);
             if (decision != null) {
-                delayKind = ComputerActionDelayKind.TRADE;
+                delayKind = BotTurnScheduler.DelayKind.TRADE;
             }
             return decision;
         }
 
         @Override
         public void retryPendingDebtPayment() {
-            delayKind = ComputerActionDelayKind.RETRY_DEBT_PAYMENT;
+            delayKind = BotTurnScheduler.DelayKind.RETRY_DEBT_PAYMENT;
             debtActionDispatcher.payDebt();
         }
 
         @Override
         public void declareBankruptcy() {
-            delayKind = ComputerActionDelayKind.DECLARE_BANKRUPTCY;
+            delayKind = BotTurnScheduler.DelayKind.DECLARE_BANKRUPTCY;
             debtActionDispatcher.declareBankruptcy();
         }
 
         @Override
         public void rollDice() {
-            delayKind = ComputerActionDelayKind.ROLL_DICE;
+            delayKind = BotTurnScheduler.DelayKind.ROLL_DICE;
             dices.rollDice();
         }
 
         @Override
         public void endTurn() {
-            delayKind = ComputerActionDelayKind.END_TURN;
+            delayKind = BotTurnScheduler.DelayKind.END_TURN;
             Game.this.endRound(true);
         }
 
-        private ComputerActionDelayKind delayKindForCommand(SessionCommand command) {
+        private BotTurnScheduler.DelayKind delayKindForCommand(SessionCommand command) {
             if (command instanceof BuyPropertyCommand) {
-                return ComputerActionDelayKind.ACCEPT_POPUP;
+                return BotTurnScheduler.DelayKind.ACCEPT_POPUP;
             }
             if (command instanceof DeclinePropertyCommand) {
-                return ComputerActionDelayKind.DECLINE_POPUP;
+                return BotTurnScheduler.DelayKind.DECLINE_POPUP;
             }
             if (command instanceof PayDebtCommand) {
-                return ComputerActionDelayKind.RETRY_DEBT_PAYMENT;
+                return BotTurnScheduler.DelayKind.RETRY_DEBT_PAYMENT;
             }
             if (command instanceof MortgagePropertyForDebtCommand) {
-                return ComputerActionDelayKind.MORTGAGE_PROPERTY;
+                return BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
             }
             if (command instanceof SellBuildingForDebtCommand || command instanceof SellBuildingRoundsAcrossSetForDebtCommand) {
-                return ComputerActionDelayKind.SELL_BUILDING;
+                return BotTurnScheduler.DelayKind.SELL_BUILDING;
             }
             if (command instanceof DeclareBankruptcyCommand) {
-                return ComputerActionDelayKind.DECLARE_BANKRUPTCY;
+                return BotTurnScheduler.DelayKind.DECLARE_BANKRUPTCY;
             }
-            return ComputerActionDelayKind.RESOLVE_POPUP;
+            return BotTurnScheduler.DelayKind.RESOLVE_POPUP;
         }
     }
 

@@ -4,6 +4,7 @@ import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.support.TestLogLevels;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,10 +70,10 @@ class GameComputerPlayerTest {
         method.invoke(game);
     }
 
-    private static int getLastComputerActionAt(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("lastComputerActionAt");
+    private static BotTurnScheduler getBotTurnScheduler(Game game) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField("botTurnScheduler");
         field.setAccessible(true);
-        return field.getInt(game);
+        return (BotTurnScheduler) field.get(game);
     }
 
     private static boolean dispatchKeyToGame(Game game, char key) {
@@ -197,12 +198,14 @@ class GameComputerPlayerTest {
         runtime.eventBus().flushPendingChanges();
 
         game.players().switchTurn();
+        BotTurnScheduler scheduler = getBotTurnScheduler(game);
+        int now = runtime.app().millis();
 
-        assertEquals(-1, getLastComputerActionAt(game));
+        assertFalse(scheduler.isWaiting(now));
 
         invokeAnimationFinishCooldown(game, true);
 
-        assertTrue(getLastComputerActionAt(game) >= 0,
+        assertTrue(scheduler.isWaiting(now),
                 "Finishing a bot animation should add a cooldown before the next computer action");
     }
 
