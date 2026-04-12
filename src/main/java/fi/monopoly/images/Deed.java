@@ -58,14 +58,28 @@ public class Deed extends AbstractClickable {
         for (int i = 0; i < sellableBuildingCount; i++) {
             final int finalI = i + 1;
             int totalReturn = finalI * getHouseSellValue(streetProperty);
-            buttonProps[i] = new ButtonProps(text("format.countMoneyOption", finalI, totalReturn), () -> streetProperty.sellHouses(finalI));
+            buttonProps[i] = new ButtonProps(text("format.countMoneyOption", finalI, totalReturn), () -> {
+                GameSession activeSession = runtime.gameSessionOrNull();
+                if (activeSession != null && activeSession.debtActionDispatcher() != null && activeSession.isDebtResolutionActive()) {
+                    activeSession.debtActionDispatcher().sellBuilding(property.getSpotType(), finalI);
+                    return;
+                }
+                streetProperty.sellHouses(finalI);
+            });
         }
         for (int i = 0; i < maxSetRounds; i++) {
             final int finalI = i + 1;
             int totalReturn = streetProperty.getStreetSetRoundCost(finalI) / 2;
             buttonProps[sellableBuildingCount + i] = new ButtonProps(
                     text("streetProperty.sell.setOption", finalI, totalReturn),
-                    () -> streetProperty.sellBuildingRoundsAcrossSet(finalI));
+                    () -> {
+                        GameSession activeSession = runtime.gameSessionOrNull();
+                        if (activeSession != null && activeSession.debtActionDispatcher() != null && activeSession.isDebtResolutionActive()) {
+                            activeSession.debtActionDispatcher().sellBuildingRoundsAcrossSet(property.getSpotType(), finalI);
+                            return;
+                        }
+                        streetProperty.sellBuildingRoundsAcrossSet(finalI);
+                    });
         }
         return buttonProps;
     }
@@ -88,7 +102,14 @@ public class Deed extends AbstractClickable {
             };
             runtime.popupService().show(text("deed.confirmUnmortgage", property.getDisplayName(), getUnmortgageCost()), onAccept, null);
         } else {
-            runtime.popupService().show(text("deed.confirmMortgage", property.getDisplayName(), property.getMortgageValue()), property::handleMortgaging, null);
+            runtime.popupService().show(text("deed.confirmMortgage", property.getDisplayName(), property.getMortgageValue()), () -> {
+                GameSession activeSession = runtime.gameSessionOrNull();
+                if (activeSession != null && activeSession.debtActionDispatcher() != null && activeSession.isDebtResolutionActive()) {
+                    activeSession.debtActionDispatcher().mortgageProperty(property.getSpotType());
+                    return;
+                }
+                property.handleMortgaging();
+            }, null);
         }
     }
 

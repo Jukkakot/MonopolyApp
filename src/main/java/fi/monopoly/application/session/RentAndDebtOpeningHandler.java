@@ -51,9 +51,11 @@ public final class RentAndDebtOpeningHandler {
                 obligation.debtorPlayerId(),
                 obligation.creditorType(),
                 obligation.creditorPlayerId(),
-                missingAmount,
+                obligation.amount(),
                 obligation.reason(),
                 bankruptcyRisk,
+                request.debtor().getMoneyAmount(),
+                request.debtor().getTotalLiquidationValue(),
                 allowedActions(bankruptcyRisk)
         );
     }
@@ -62,7 +64,8 @@ public final class RentAndDebtOpeningHandler {
         List<DebtAction> actions = new ArrayList<>(List.of(
                 DebtAction.PAY_DEBT_NOW,
                 DebtAction.MORTGAGE_PROPERTY,
-                DebtAction.SELL_BUILDING
+                DebtAction.SELL_BUILDING,
+                DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET
         ));
         if (bankruptcyRisk) {
             actions.add(DebtAction.DECLARE_BANKRUPTCY);

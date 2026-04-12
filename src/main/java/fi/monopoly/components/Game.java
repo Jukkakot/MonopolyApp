@@ -28,6 +28,7 @@ import fi.monopoly.components.turn.*;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.session.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.LegacySessionProjector;
+import fi.monopoly.presentation.session.DebtActionDispatcher;
 import fi.monopoly.presentation.session.PendingDecisionPopupAdapter;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
@@ -97,6 +98,7 @@ public class Game implements MonopolyEventListener {
     private final TurnEngine turnEngine = new TurnEngine();
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
+    private final DebtActionDispatcher debtActionDispatcher;
     private TradeController tradeController;
     private DebtController debtController;
     private DebugController debugController;
@@ -164,6 +166,12 @@ public class Game implements MonopolyEventListener {
         );
         this.sessionApplicationService.configureRentAndDebtFlow(debtController);
         this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
+        this.debtActionDispatcher = new DebtActionDispatcher(
+                LOCAL_SESSION_ID,
+                sessionApplicationService,
+                runtime.popupService(),
+                () -> players != null ? players.getTurn() : null
+        );
         this.propertyPurchaseFlow = new PendingDecisionPopupAdapter(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
@@ -258,7 +266,7 @@ public class Game implements MonopolyEventListener {
                 () -> players != null ? players.getTurn() : null,
                 this::debugResetTurnState,
                 this::restoreNormalTurnControls,
-                debtController::retryPendingDebtPayment,
+                this::retryPendingDebtPaymentAction,
                 this::handlePaymentRequest
         );
     }
@@ -269,7 +277,8 @@ public class Game implements MonopolyEventListener {
                         () -> debtController != null && debtController.debtState() != null,
                         () -> gameOver,
                         () -> goMoneyAmount
-                ));
+                )
+                .withDebtActionDispatcher(debtActionDispatcher));
     }
 
     private void setupDefaultGameState() {
@@ -305,8 +314,8 @@ public class Game implements MonopolyEventListener {
                 endRound(true);
             }
         });
-        retryDebtButton.addListener(debtController::retryPendingDebtPayment);
-        declareBankruptcyButton.addListener(debtController::declareBankruptcy);
+        retryDebtButton.addListener(debtActionDispatcher::payDebt);
+        declareBankruptcyButton.addListener(debtActionDispatcher::declareBankruptcy);
         debugGodModeButton.addListener(debugController::openGodModeMenu);
         pauseButton.addListener(this::togglePause);
         tradeButton.addListener(tradeController::openTradeMenu);
@@ -910,7 +919,7 @@ public class Game implements MonopolyEventListener {
             }
             if (debtController.debtState() != null) {
                 if (key == MonopolyApp.SPACE || key == MonopolyApp.ENTER) {
-                    debtController.retryPendingDebtPayment();
+                    debtActionDispatcher.payDebt();
                     return true;
                 }
                 return false;
@@ -960,6 +969,14 @@ public class Game implements MonopolyEventListener {
     private void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
         updateLogTurnContext();
         sessionApplicationService.handlePaymentRequest(request, onResolved);
+    }
+
+    private void retryPendingDebtPaymentAction() {
+        if (debtActionDispatcher != null) {
+            debtActionDispatcher.payDebt();
+            return;
+        }
+        debtController.retryPendingDebtPayment();
     }
 
     private void drawDebtState() {
@@ -1120,13 +1137,14 @@ public class Game implements MonopolyEventListener {
 
     private void updateDebtButtons() {
         DebtState debtState = debtController.debtState();
-        if (debtState == null) {
+        var activeDebt = sessionApplicationService != null ? sessionApplicationService.currentState().activeDebt() : null;
+        if (debtState == null || activeDebt == null) {
             retryDebtButton.hide();
             declareBankruptcyButton.hide();
             return;
         }
         retryDebtButton.show();
-        if (debtState.bankruptcyRisk()) {
+        if (activeDebt.bankruptcyRisk()) {
             declareBankruptcyButton.show();
         } else {
             declareBankruptcyButton.hide();
@@ -1333,6 +1351,13 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public boolean sellBuilding(SpotType spotType, int count) {
+            if (debtController.debtState() != null) {
+                boolean soldForDebt = debtActionDispatcher.sellBuilding(spotType, count);
+                if (soldForDebt) {
+                    delayKind = ComputerActionDelayKind.SELL_BUILDING;
+                }
+                return soldForDebt;
+            }
             Property property = PropertyFactory.getProperty(spotType);
             if (!(property instanceof StreetProperty streetProperty)) {
                 return false;
@@ -1359,6 +1384,13 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public boolean toggleMortgage(SpotType spotType) {
+            if (debtController.debtState() != null) {
+                boolean mortgagedForDebt = debtActionDispatcher.mortgageProperty(spotType);
+                if (mortgagedForDebt) {
+                    delayKind = ComputerActionDelayKind.MORTGAGE_PROPERTY;
+                }
+                return mortgagedForDebt;
+            }
             Property property = PropertyFactory.getProperty(spotType);
             boolean wasMortgaged = property.isMortgaged();
             boolean toggled = property.handleMortgaging();
@@ -1382,13 +1414,13 @@ public class Game implements MonopolyEventListener {
         @Override
         public void retryPendingDebtPayment() {
             delayKind = ComputerActionDelayKind.RETRY_DEBT_PAYMENT;
-            debtController.retryPendingDebtPayment();
+            debtActionDispatcher.payDebt();
         }
 
         @Override
         public void declareBankruptcy() {
             delayKind = ComputerActionDelayKind.DECLARE_BANKRUPTCY;
-            debtController.declareBankruptcy();
+            debtActionDispatcher.declareBankruptcy();
         }
 
         @Override

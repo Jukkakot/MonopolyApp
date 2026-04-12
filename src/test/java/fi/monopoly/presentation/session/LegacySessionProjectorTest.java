@@ -71,7 +71,8 @@ class LegacySessionProjectorTest {
         var state = projector(null, () -> false, () -> true, () -> false, () -> false, () -> false).project();
         assertEquals(TurnPhase.RESOLVING_DEBT, state.turn().phase());
         assertNotNull(state.activeDebt());
-        assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.DECLARE_BANKRUPTCY), state.activeDebt().allowedActions());
+        assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET, DebtAction.DECLARE_BANKRUPTCY), state.activeDebt().allowedActions());
+        assertEquals(1500, state.activeDebt().currentCash());
     }
 
     private LegacySessionProjector projector(

@@ -58,7 +58,8 @@ class RentAndDebtOpeningHandlerTest {
         assertNotNull(debtRef.get());
         assertEquals(100, debtRef.get().amountRemaining());
         assertFalse(debtRef.get().bankruptcyRisk());
-        assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING), debtRef.get().allowedActions());
+        assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET), debtRef.get().allowedActions());
+        assertEquals(0, debtRef.get().currentCash());
         assertTrue(paymentGateway.openCalled);
         assertEquals(PaymentStatus.REQUIRES_DEBT_RESOLUTION, paymentGateway.lastStatus);
     }
@@ -75,7 +76,7 @@ class RentAndDebtOpeningHandlerTest {
 
         assertNotNull(debtRef.get());
         assertTrue(debtRef.get().bankruptcyRisk());
-        assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.DECLARE_BANKRUPTCY), debtRef.get().allowedActions());
+        assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET, DebtAction.DECLARE_BANKRUPTCY), debtRef.get().allowedActions());
         assertTrue(paymentGateway.openCalled);
         assertEquals(PaymentStatus.BANKRUPT, paymentGateway.lastStatus);
     }

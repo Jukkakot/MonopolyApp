@@ -210,7 +210,8 @@ public final class LegacySessionProjector {
         List<DebtAction> allowedActions = new ArrayList<>(List.of(
                 DebtAction.PAY_DEBT_NOW,
                 DebtAction.MORTGAGE_PROPERTY,
-                DebtAction.SELL_BUILDING
+                DebtAction.SELL_BUILDING,
+                DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET
         ));
         if (debtState.bankruptcyRisk()) {
             allowedActions.add(DebtAction.DECLARE_BANKRUPTCY);
@@ -223,6 +224,8 @@ public final class LegacySessionProjector {
                 request.amount(),
                 request.reason(),
                 debtState.bankruptcyRisk(),
+                request.debtor().getMoneyAmount(),
+                request.debtor().getTotalLiquidationValue(),
                 allowedActions
         );
     }

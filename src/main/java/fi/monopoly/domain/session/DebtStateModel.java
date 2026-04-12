@@ -10,6 +10,8 @@ public record DebtStateModel(
         int amountRemaining,
         String reason,
         boolean bankruptcyRisk,
+        int currentCash,
+        int estimatedLiquidationValue,
         List<DebtAction> allowedActions
 ) {
     public DebtStateModel {

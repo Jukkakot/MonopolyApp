@@ -2,6 +2,7 @@ package fi.monopoly.components;
 
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.dices.Dices;
+import fi.monopoly.presentation.session.DebtActionDispatcher;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
@@ -18,6 +19,7 @@ public final class GameSession {
     private BooleanSupplier debtResolutionActiveSupplier = () -> false;
     private BooleanSupplier gameOverActiveSupplier = () -> false;
     private IntSupplier goMoneyAmountSupplier = () -> 200;
+    private DebtActionDispatcher debtActionDispatcher;
 
     public GameSession(Players players, Dices dices, Animations animations) {
         this.players = players;
@@ -58,5 +60,14 @@ public final class GameSession {
 
     public int goMoneyAmount() {
         return goMoneyAmountSupplier.getAsInt();
+    }
+
+    public GameSession withDebtActionDispatcher(DebtActionDispatcher debtActionDispatcher) {
+        this.debtActionDispatcher = debtActionDispatcher;
+        return this;
+    }
+
+    public DebtActionDispatcher debtActionDispatcher() {
+        return debtActionDispatcher;
     }
 }

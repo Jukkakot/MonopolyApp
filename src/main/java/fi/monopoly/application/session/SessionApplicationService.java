@@ -1,8 +1,13 @@
 package fi.monopoly.application.session;
 
 import fi.monopoly.application.command.BuyPropertyCommand;
+import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
+import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
+import fi.monopoly.application.command.SellBuildingForDebtCommand;
+import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
 import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
@@ -31,6 +36,7 @@ public final class SessionApplicationService {
     private DebtStateModel activeDebtOverride;
     private PropertyPurchaseCommandHandler propertyPurchaseCommandHandler;
     private RentAndDebtOpeningHandler rentAndDebtOpeningHandler;
+    private DebtRemediationCommandHandler debtRemediationCommandHandler;
 
     public SessionApplicationService(String sessionId, Supplier<SessionState> sessionStateSupplier) {
         this.sessionId = sessionId;
@@ -76,6 +82,12 @@ public final class SessionApplicationService {
 
     public void configureRentAndDebtFlow(DebtController debtController) {
         rentAndDebtOpeningHandler = new RentAndDebtOpeningHandler(this::setActiveDebtOverride, new LegacyPaymentGateway(debtController));
+        debtRemediationCommandHandler = new DebtRemediationCommandHandler(
+                sessionId,
+                this::currentState,
+                this::setActiveDebtOverride,
+                new LegacyDebtRemediationGateway(debtController)
+        );
     }
 
     public PendingDecision openPropertyPurchaseDecision(Player player, Property property, String message, CallbackAction onComplete) {
@@ -100,6 +112,14 @@ public final class SessionApplicationService {
         if (propertyPurchaseCommandHandler != null
                 && (command instanceof BuyPropertyCommand || command instanceof DeclinePropertyCommand)) {
             return propertyPurchaseCommandHandler.handle(command);
+        }
+        if (debtRemediationCommandHandler != null
+                && (command instanceof PayDebtCommand
+                || command instanceof MortgagePropertyForDebtCommand
+                || command instanceof SellBuildingForDebtCommand
+                || command instanceof SellBuildingRoundsAcrossSetForDebtCommand
+                || command instanceof DeclareBankruptcyCommand)) {
+            return debtRemediationCommandHandler.handle(command);
         }
         if (command instanceof RefreshSessionViewCommand refreshSessionViewCommand) {
             if (!sessionId.equals(refreshSessionViewCommand.sessionId())) {
