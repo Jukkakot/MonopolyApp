@@ -1,10 +1,20 @@
 package fi.monopoly.components.trade;
 
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.application.command.*;
+import fi.monopoly.application.result.CommandResult;
+import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.computer.ComputerDecision;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.ButtonAction;
-import fi.monopoly.components.popup.components.ButtonProps;
+import fi.monopoly.domain.session.TradeOfferState;
+import fi.monopoly.domain.session.TradeSelectionState;
+import fi.monopoly.domain.session.TradeState;
+import fi.monopoly.domain.session.TradeStatus;
+import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
+import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -17,7 +27,12 @@ import static fi.monopoly.text.UiTexts.text;
 @Slf4j
 public final class TradeController {
     private static final StrongBotConfig STRONG_CONFIG = StrongBotConfig.defaults();
+
     private final MonopolyRuntime runtime;
+    private final String sessionId;
+    private final SessionApplicationService sessionApplicationService;
+    private final TradeViewAdapter tradeViewAdapter;
+    private final LegacyTradeGateway legacyTradeGateway;
     private final BooleanSupplier canOpenTrade;
     private final Supplier<Player> currentPlayerSupplier;
     private final Supplier<List<Player>> playersSupplier;
@@ -28,18 +43,30 @@ public final class TradeController {
 
     public TradeController(
             MonopolyRuntime runtime,
+            String sessionId,
+            SessionApplicationService sessionApplicationService,
+            TradeViewAdapter tradeViewAdapter,
+            LegacyTradeGateway legacyTradeGateway,
             BooleanSupplier canOpenTrade,
             Supplier<Player> currentPlayerSupplier,
             Supplier<List<Player>> playersSupplier
     ) {
         this.runtime = runtime;
+        this.sessionId = sessionId;
+        this.sessionApplicationService = sessionApplicationService;
+        this.tradeViewAdapter = tradeViewAdapter;
+        this.legacyTradeGateway = legacyTradeGateway;
         this.canOpenTrade = canOpenTrade;
         this.currentPlayerSupplier = currentPlayerSupplier;
         this.playersSupplier = playersSupplier;
     }
 
+    public void sync() {
+        tradeViewAdapter.sync();
+    }
+
     public void openTradeMenu() {
-        if (!canOpenTrade.getAsBoolean()) {
+        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.hasActiveTrade()) {
             return;
         }
         Player proposer = currentPlayerSupplier.get();
@@ -59,166 +86,136 @@ public final class TradeController {
                 tradeUiBuilder.buildPartnerSelectionView(
                         proposer,
                         tradePartners,
-                        player -> () -> openTradeEditor(
-                                new TradeDraft(proposer, player, TradeSelection.NONE, TradeSelection.NONE),
-                                true,
-                                null,
-                                this::openTradeMenu,
-                                null
-                        )
+                        player -> () -> openTrade(proposer, player)
                 )
         );
     }
 
-    public fi.monopoly.components.computer.ComputerDecision tryInitiateComputerTrade(Player proposer) {
-        if (!canOpenTrade.getAsBoolean() || proposer == null || !proposer.isComputerControlled()) {
+    public ComputerDecision tryInitiateComputerTrade(Player proposer) {
+        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.hasActiveTrade() || proposer == null || !proposer.isComputerControlled()) {
             return null;
         }
         if (currentPlayerSupplier.get() != proposer || lastProactiveTradePlayer == proposer) {
             return null;
         }
         lastProactiveTradePlayer = proposer;
-        if (proposer.getComputerProfile() != fi.monopoly.components.computer.ComputerPlayerProfile.STRONG) {
+        if (proposer.getComputerProfile() != ComputerPlayerProfile.STRONG) {
             return null;
         }
         StrongTradePlanner.TradePlan plan = strongTradePlanner.plan(proposer, playersSupplier.get());
         if (plan == null) {
             return null;
         }
-        submitTradeOffer(
-                plan.offer(),
-                text("trade.review.proposed", plan.offer().proposer().getName(), plan.offer().recipient().getName()),
-                plan.offer().recipient().getComputerProfile() == fi.monopoly.components.computer.ComputerPlayerProfile.HUMAN
-        );
+        if (!openTrade(plan.offer().proposer(), plan.offer().recipient())) {
+            return null;
+        }
+        TradeState tradeState = sessionApplicationService.currentState().tradeState();
+        if (tradeState == null) {
+            return null;
+        }
+        replaceOffer(tradeState, legacyTradeGateway.toState(plan.offer()), true);
+        handleResult(sessionApplicationService.handle(new SubmitTradeOfferCommand(sessionId, playerId(plan.offer().proposer()), tradeState.tradeId())));
+        handleComputerTradeTurn(plan.offer().recipient());
         return plan.decision();
     }
 
-    private void openTradeEditor(
-            TradeDraft draft,
-            boolean editingOfferSide,
-            String editorNotice,
-            ButtonAction backAction,
-            String reviewSubtitle
+    public boolean handleComputerTradeTurn(Player actor) {
+        TradeState tradeState = sessionApplicationService.currentState().tradeState();
+        if (tradeState == null || actor == null || !actor.isComputerControlled()) {
+            return false;
+        }
+        String actorId = playerId(actor);
+        if (tradeState.status() == TradeStatus.EDITING && actorId.equals(tradeState.editingPlayerId())) {
+            return handleResult(sessionApplicationService.handle(new SubmitTradeOfferCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
+        }
+        if ((tradeState.status() != TradeStatus.SUBMITTED && tradeState.status() != TradeStatus.COUNTERED)
+                || !actorId.equals(tradeState.decisionRequiredFromPlayerId())) {
+            return false;
+        }
+        BotTradeProfile profile = resolveTradeProfile(actor);
+        StrongBotConfig strongConfig = resolveStrongTradeConfig(actor);
+        TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(
+                legacyTradeGateway.toLegacyOffer(tradeState.currentOffer()),
+                profile,
+                strongConfig
+        );
+        log.info("Bot trade decision: player={}, accept={}, score={}, reason={}",
+                actor.getName(),
+                decision.accept(),
+                Math.round(decision.score() * 10.0) / 10.0,
+                decision.reason());
+        if (decision.accept()) {
+            return handleResult(sessionApplicationService.handle(new AcceptTradeCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
+        }
+        TradeOfferState counterOffer = legacyTradeGateway.proposeCounterOffer(tradeState.currentOffer(), profile, strongConfig);
+        if (counterOffer == null) {
+            return handleResult(sessionApplicationService.handle(new DeclineTradeCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
+        }
+        replaceOffer(tradeState, counterOffer, false);
+        return handleResult(sessionApplicationService.handle(new CounterTradeCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
+    }
+
+    private boolean openTrade(Player proposer, Player recipient) {
+        CommandResult result = sessionApplicationService.handle(new OpenTradeCommand(
+                sessionId,
+                playerId(proposer),
+                playerId(recipient)
+        ));
+        handleResult(result);
+        return result.accepted();
+    }
+
+    private void replaceOffer(TradeState tradeState, TradeOfferState targetState, boolean nextEditingOfferedSide) {
+        TradeOfferState currentState = sessionApplicationService.currentState().tradeState().currentOffer();
+        if (!currentState.proposerPlayerId().equals(targetState.proposerPlayerId())) {
+            handleResult(sessionApplicationService.handle(new EditTradeOfferCommand(
+                    sessionId,
+                    tradeState.editingPlayerId(),
+                    tradeState.tradeId(),
+                    new fi.monopoly.domain.session.TradeEditPatch(true, true, null, List.of(), List.of(), null)
+            )));
+        }
+        currentState = sessionApplicationService.currentState().tradeState().currentOffer();
+        applySelectionReplace(tradeState, true, currentState.offeredToRecipient(), targetState.offeredToRecipient());
+        applySelectionReplace(tradeState, false, currentState.requestedFromRecipient(), targetState.requestedFromRecipient());
+        if (sessionApplicationService.currentState().tradeState() != null
+                && sessionApplicationService.currentState().tradeState().editingOfferedSide() != nextEditingOfferedSide) {
+            handleResult(sessionApplicationService.handle(new EditTradeOfferCommand(
+                    sessionId,
+                    tradeState.editingPlayerId(),
+                    tradeState.tradeId(),
+                    new fi.monopoly.domain.session.TradeEditPatch(null, nextEditingOfferedSide, null, List.of(), List.of(), null)
+            )));
+        }
+    }
+
+    private void applySelectionReplace(
+            TradeState tradeState,
+            boolean offeredSide,
+            TradeSelectionState currentSelection,
+            TradeSelectionState targetSelection
     ) {
-        runtime.popupService().showTrade(
-                tradeUiBuilder.buildTradeEditorSummary(draft, editingOfferSide, editorNotice),
-                tradeUiBuilder.buildTradePopupView(
-                        draft.toOffer(),
-                        text("trade.editor.header"),
-                        buildTradeEditorSubtitle(draft, editingOfferSide, editorNotice),
-                        editingOfferSide,
-                        false,
-                        backAction,
-                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, editorNotice, backAction, reviewSubtitle)
-                ),
-                tradeUiBuilder.buildTradeEditorButtons(
-                        draft,
-                        editingOfferSide,
-                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, editorNotice, backAction, reviewSubtitle),
-                        nextDraft -> () -> confirmTradeOffer(nextDraft, reviewSubtitle)
-                )
-        );
-    }
-
-    private void confirmTradeOffer(TradeDraft draft, String reviewSubtitle) {
-        TradeOffer offer = draft.toOffer();
-        if (!offer.isValid()) {
-            runtime.popupService().show(text("trade.invalid"));
-            return;
-        }
-        submitTradeOffer(offer, reviewSubtitle != null ? reviewSubtitle : text("trade.review", offer.recipient().getName()), false);
-    }
-
-    private void submitTradeOffer(TradeOffer offer, String reviewSubtitle, boolean allowHumanResponseDuringComputerTurn) {
-        if (offer.recipient().isComputerControlled()) {
-            BotTradeProfile tradeProfile = resolveTradeProfile(offer.recipient());
-            StrongBotConfig strongConfig = resolveStrongTradeConfig(offer.recipient());
-            TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(offer, tradeProfile, strongConfig);
-            log.info("Bot trade decision: player={}, accept={}, score={}, reason={}",
-                    offer.recipient().getName(),
-                    decision.accept(),
-                    Math.round(decision.score() * 10.0) / 10.0,
-                    decision.reason());
-            if (decision.accept()) {
-                applyTradeOffer(offer);
-                runtime.popupService().show(text("trade.accepted", offer.recipient().getName()) + "\n" + tradeUiBuilder.buildTradeSummary(offer));
-            } else {
-                TradeOffer counterOffer = tradeOfferEvaluator.proposeCounterOffer(offer, tradeProfile, strongConfig);
-                if (counterOffer != null) {
-                    if (offer.proposer().isComputerControlled()) {
-                        handleComputerCounterOffer(counterOffer, offer);
-                    } else {
-                        showHumanTradeReview(
-                                counterOffer,
-                                draftFromOffer(counterOffer),
-                                text("trade.review.countered", offer.recipient().getName(), counterOffer.recipient().getName()),
-                                false
-                        );
-                    }
-                } else {
-                    runtime.popupService().show(text("trade.declined", offer.recipient().getName()) + "\n" + decision.reason());
-                }
-            }
-            return;
-        }
-        showHumanTradeReview(offer, draftFromOffer(offer), reviewSubtitle, allowHumanResponseDuringComputerTurn);
-    }
-
-    private void applyTradeOffer(TradeOffer offer) {
-        if (!offer.apply()) {
-            runtime.popupService().show(text("trade.invalid"));
-        }
-    }
-
-    private void handleComputerCounterOffer(TradeOffer counterOffer, TradeOffer originalOffer) {
-        BotTradeProfile proposerProfile = resolveTradeProfile(originalOffer.proposer());
-        StrongBotConfig proposerStrongConfig = resolveStrongTradeConfig(originalOffer.proposer());
-        TradeDecision proposerDecision = tradeOfferEvaluator.evaluateForRecipient(
-                counterOffer.reversePerspective(),
-                proposerProfile,
-                proposerStrongConfig
-        );
-        log.info("Bot counter-trade decision: player={}, accept={}, score={}, reason={}",
-                originalOffer.proposer().getName(),
-                proposerDecision.accept(),
-                Math.round(proposerDecision.score() * 10.0) / 10.0,
-                proposerDecision.reason());
-        if (proposerDecision.accept()) {
-            applyTradeOffer(counterOffer);
-            runtime.popupService().show(text("trade.accepted", originalOffer.proposer().getName()) + "\n" + tradeUiBuilder.buildTradeSummary(counterOffer));
-            return;
-        }
-        runtime.popupService().show(text("trade.declined", originalOffer.recipient().getName()) + "\n" + proposerDecision.reason());
-    }
-
-    private void showHumanTradeReview(TradeOffer offer, TradeDraft draft, String subtitle, boolean allowHumanResponseDuringComputerTurn) {
-        runtime.popupService().showTrade(
-                subtitle + "\n" + tradeUiBuilder.buildTradeSummary(offer),
-                tradeUiBuilder.buildTradePopupView(
-                        offer,
-                        text("trade.review.header"),
-                        subtitle,
+        handleResult(sessionApplicationService.handle(new EditTradeOfferCommand(
+                sessionId,
+                tradeState.editingPlayerId(),
+                tradeState.tradeId(),
+                new fi.monopoly.domain.session.TradeEditPatch(
                         null,
-                        allowHumanResponseDuringComputerTurn,
-                        () -> openTradeEditor(draft, false, null, this::openTradeMenu, subtitle),
-                        (nextDraft, nextOfferSide) -> () -> openTradeEditor(nextDraft, nextOfferSide, null, this::openTradeMenu, subtitle)
-                ),
-                new ButtonProps(text("popup.choice.accept"), () -> {
-                    applyTradeOffer(offer);
-                    runtime.popupService().show(text("trade.accepted", offer.recipient().getName()));
-                }),
-                new ButtonProps(text("popup.choice.decline"), () -> runtime.popupService().show(text("trade.declined", offer.recipient().getName()))),
-                new ButtonProps(
-                        text("trade.button.counterOffer"),
-                        () -> openTradeEditor(
-                                draft.asCounterOffer(),
-                                true,
-                                text("trade.editor.countering", offer.recipient().getName(), offer.proposer().getName()),
-                                () -> showHumanTradeReview(offer, draft, subtitle, allowHumanResponseDuringComputerTurn),
-                                text("trade.review.countered", offer.recipient().getName(), offer.proposer().getName())
-                        )
+                        offeredSide,
+                        targetSelection.moneyAmount(),
+                        targetSelection.propertyIds().stream().filter(id -> !currentSelection.propertyIds().contains(id)).toList(),
+                        currentSelection.propertyIds().stream().filter(id -> !targetSelection.propertyIds().contains(id)).toList(),
+                        currentSelection.jailCardCount() != targetSelection.jailCardCount()
                 )
-        );
+        )));
+    }
+
+    private CommandResult handleResult(CommandResult result) {
+        tradeViewAdapter.sync();
+        if (!result.accepted() && !result.rejections().isEmpty()) {
+            runtime.popupService().show(result.rejections().get(0).message());
+        }
+        return result;
     }
 
     private BotTradeProfile resolveTradeProfile(Player player) {
@@ -230,18 +227,10 @@ public final class TradeController {
     }
 
     private StrongBotConfig resolveStrongTradeConfig(Player player) {
-        return player.getComputerProfile() == fi.monopoly.components.computer.ComputerPlayerProfile.STRONG ? STRONG_CONFIG : null;
+        return player.getComputerProfile() == ComputerPlayerProfile.STRONG ? STRONG_CONFIG : null;
     }
 
-    private TradeDraft draftFromOffer(TradeOffer offer) {
-        return new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient());
-    }
-
-    private String buildTradeEditorSubtitle(TradeDraft draft, boolean editingOfferSide, String editorNotice) {
-        String subtitle = text("trade.editor.editing", (editingOfferSide ? draft.proposer() : draft.recipient()).getName());
-        if (editorNotice == null || editorNotice.isBlank()) {
-            return subtitle;
-        }
-        return subtitle + "\n" + editorNotice;
+    private String playerId(Player player) {
+        return player == null ? null : "player-" + player.getId();
     }
 }

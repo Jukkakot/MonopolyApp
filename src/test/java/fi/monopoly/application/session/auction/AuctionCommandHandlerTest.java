@@ -162,6 +162,7 @@ class AuctionCommandHandlerTest {
                         null,
                         auctionStateRef.get(),
                         null,
+                        null,
                         null
                 ),
                 auctionStateRef::set,

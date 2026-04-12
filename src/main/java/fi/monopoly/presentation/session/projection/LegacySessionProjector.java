@@ -65,6 +65,7 @@ public final class LegacySessionProjector {
                 buildPendingDecision(turnState.activePlayerId()),
                 null,
                 buildActiveDebt(),
+                null,
                 buildWinnerPlayerId(identities)
         );
     }

@@ -15,6 +15,7 @@ public record SessionState(
         PendingDecision pendingDecision,
         AuctionState auctionState,
         DebtStateModel activeDebt,
+        TradeState tradeState,
         String winnerPlayerId
 ) {
     public SessionState {

@@ -129,6 +129,7 @@ class PropertyPurchaseCommandHandlerTest {
                         pendingDecisionRef.get(),
                         auctionStateRef.get(),
                         null,
+                        null,
                         null
                 ),
                 pendingDecisionRef::set,
@@ -145,6 +146,7 @@ class PropertyPurchaseCommandHandlerTest {
                                 new TurnState("player-" + human.getId(), TurnPhase.WAITING_FOR_AUCTION, false, false),
                                 pendingDecisionRef.get(),
                                 auctionStateRef.get(),
+                                null,
                                 null,
                                 null
                         ),

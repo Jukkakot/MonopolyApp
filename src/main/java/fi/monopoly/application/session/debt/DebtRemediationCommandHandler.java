@@ -199,6 +199,7 @@ public final class DebtRemediationCommandHandler {
                     state.pendingDecision(),
                     state.auctionState(),
                     null,
+                    state.tradeState(),
                     state.winnerPlayerId()
             );
         }

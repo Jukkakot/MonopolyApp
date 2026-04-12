@@ -25,14 +25,19 @@ import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.trade.TradeController;
+import fi.monopoly.components.trade.TradeOfferEvaluator;
+import fi.monopoly.components.trade.TradeUiBuilder;
 import fi.monopoly.components.turn.*;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.projection.LegacySessionProjector;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
+import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
+import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -104,6 +109,7 @@ public class Game implements MonopolyEventListener {
     private final PropertyPurchaseFlow propertyPurchaseFlow;
     private final DebtActionDispatcher debtActionDispatcher;
     private final AuctionViewAdapter auctionViewAdapter;
+    private final TradeViewAdapter tradeViewAdapter;
     private TradeController tradeController;
     private DebtController debtController;
     private DebugController debugController;
@@ -172,6 +178,7 @@ public class Game implements MonopolyEventListener {
         this.sessionApplicationService.configureRentAndDebtFlow(debtController);
         this.sessionApplicationService.configureAuctionFlow(runtime.popupService(), players);
         this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
+        this.sessionApplicationService.configureTradeFlow(() -> players != null ? players.getPlayers() : List.of());
         this.debtActionDispatcher = new DebtActionDispatcher(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
@@ -184,12 +191,31 @@ public class Game implements MonopolyEventListener {
                 runtime.popupService(),
                 players
         );
+        LegacyTradeGateway legacyTradeGateway = new LegacyTradeGateway(() -> players != null ? players.getPlayers() : List.of());
+        this.tradeViewAdapter = new TradeViewAdapter(
+                LOCAL_SESSION_ID,
+                sessionApplicationService,
+                runtime.popupService(),
+                legacyTradeGateway,
+                new TradeUiBuilder(new TradeOfferEvaluator()),
+                () -> players != null && players.getTurn() != null && players.getTurn().isComputerControlled()
+        );
         this.propertyPurchaseFlow = new PendingDecisionPopupAdapter(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
                 runtime.popupService(),
                 sessionApplicationService::openPropertyPurchaseDecision,
                 auctionViewAdapter::sync
+        );
+        this.tradeController = new TradeController(
+                runtime,
+                LOCAL_SESSION_ID,
+                sessionApplicationService,
+                tradeViewAdapter,
+                legacyTradeGateway,
+                () -> !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null,
+                () -> players != null ? players.getTurn() : null,
+                () -> players != null ? players.getPlayers() : List.of()
         );
         registerGameSession();
         setupDefaultGameState();
@@ -266,12 +292,6 @@ public class Game implements MonopolyEventListener {
                 this::showRollDiceControl,
                 this::onDebtStateChanged,
                 this::declareWinner
-        );
-        tradeController = new TradeController(
-                runtime,
-                () -> !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null,
-                () -> players != null ? players.getTurn() : null,
-                () -> players != null ? players.getPlayers() : List.of()
         );
         debugController = new DebugController(
                 runtime,
@@ -757,7 +777,24 @@ public class Game implements MonopolyEventListener {
             return;
         }
         auctionViewAdapter.sync();
+        tradeViewAdapter.sync();
         SessionState sessionState = sessionApplicationService.currentState();
+        if (sessionState.tradeState() != null) {
+            Player tradeActor = findPlayerById(resolveTradeActorId(sessionState));
+            if (tradeActor == null) {
+                return;
+            }
+            if (!tradeActor.isComputerControlled()) {
+                debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+                return;
+            }
+            boolean acted = tradeController.handleComputerTradeTurn(tradeActor);
+            if (acted) {
+                scheduleNextComputerAction(ComputerActionDelayKind.TRADE, now);
+            }
+            debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+            return;
+        }
         if (sessionState.auctionState() != null) {
             if (sessionState.auctionState().status() == AuctionStatus.WON_PENDING_RESOLUTION
                     && !runtime.popupService().isAnyVisible()) {
@@ -820,6 +857,16 @@ public class Game implements MonopolyEventListener {
             }
         }
         return null;
+    }
+
+    private String resolveTradeActorId(SessionState sessionState) {
+        if (sessionState.tradeState() == null) {
+            return null;
+        }
+        if (sessionState.tradeState().status() == TradeStatus.EDITING) {
+            return sessionState.tradeState().editingPlayerId();
+        }
+        return sessionState.tradeState().decisionRequiredFromPlayerId();
     }
 
     private void scheduleNextComputerAction(ComputerActionDelayKind delayKind, int now) {
@@ -1359,6 +1406,7 @@ public class Game implements MonopolyEventListener {
 
     private void syncTransientPresentationState() {
         auctionViewAdapter.sync();
+        tradeViewAdapter.sync();
     }
 
     private void enforcePrimaryTurnControlInvariant() {

@@ -135,6 +135,7 @@ class DebtRemediationCommandHandlerTest {
                         null,
                         null,
                         debtSupplier.get(),
+                        null,
                         null
                 ),
                 debtSupplier::set,
