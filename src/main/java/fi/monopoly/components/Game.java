@@ -2,8 +2,16 @@ package fi.monopoly.components;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.application.command.BuyPropertyCommand;
+import fi.monopoly.application.command.DeclareBankruptcyCommand;
+import fi.monopoly.application.command.DeclinePropertyCommand;
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
+import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
+import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
+import fi.monopoly.application.command.SellBuildingForDebtCommand;
+import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
+import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.animation.Animation;
@@ -1443,6 +1451,22 @@ public class Game implements MonopolyEventListener {
         }
 
         @Override
+        public SessionState sessionState() {
+            return sessionApplicationService.currentState();
+        }
+
+        @Override
+        public boolean submit(SessionCommand command) {
+            boolean accepted = sessionApplicationService.handle(command).accepted();
+            if (!accepted) {
+                return false;
+            }
+            delayKind = delayKindForCommand(command);
+            syncTransientPresentationState();
+            return true;
+        }
+
+        @Override
         public boolean resolveActivePopup() {
             boolean resolved = runtime.popupService().resolveForComputer(player.getComputerProfile());
             if (resolved) {
@@ -1553,6 +1577,28 @@ public class Game implements MonopolyEventListener {
         public void endTurn() {
             delayKind = ComputerActionDelayKind.END_TURN;
             Game.this.endRound(true);
+        }
+
+        private ComputerActionDelayKind delayKindForCommand(SessionCommand command) {
+            if (command instanceof BuyPropertyCommand) {
+                return ComputerActionDelayKind.ACCEPT_POPUP;
+            }
+            if (command instanceof DeclinePropertyCommand) {
+                return ComputerActionDelayKind.DECLINE_POPUP;
+            }
+            if (command instanceof PayDebtCommand) {
+                return ComputerActionDelayKind.RETRY_DEBT_PAYMENT;
+            }
+            if (command instanceof MortgagePropertyForDebtCommand) {
+                return ComputerActionDelayKind.MORTGAGE_PROPERTY;
+            }
+            if (command instanceof SellBuildingForDebtCommand || command instanceof SellBuildingRoundsAcrossSetForDebtCommand) {
+                return ComputerActionDelayKind.SELL_BUILDING;
+            }
+            if (command instanceof DeclareBankruptcyCommand) {
+                return ComputerActionDelayKind.DECLARE_BANKRUPTCY;
+            }
+            return ComputerActionDelayKind.RESOLVE_POPUP;
         }
     }
 

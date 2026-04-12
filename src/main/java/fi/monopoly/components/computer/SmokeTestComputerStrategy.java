@@ -1,5 +1,13 @@
 package fi.monopoly.components.computer;
 
+import fi.monopoly.application.command.BuyPropertyCommand;
+import fi.monopoly.application.command.DeclareBankruptcyCommand;
+import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
+import fi.monopoly.application.command.PayDebtCommand;
+import fi.monopoly.application.command.SellBuildingForDebtCommand;
+import fi.monopoly.domain.decision.DecisionType;
+import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.types.PlaceType;
 
 import java.util.Comparator;
@@ -9,6 +17,25 @@ final class SmokeTestComputerStrategy implements ComputerTurnStrategy {
     public boolean takeStep(ComputerTurnContext context) {
         GameView view = context.gameView();
         PlayerView player = context.currentPlayerView();
+        SessionState state = context.sessionState();
+        if (view.popup() != null && view.popup().offeredProperty() != null
+                && state.pendingDecision() != null
+                && state.pendingDecision().decisionType() == DecisionType.PROPERTY_PURCHASE) {
+            if (player.moneyAmount() >= view.popup().offeredProperty().price()) {
+                return context.submit(new BuyPropertyCommand(
+                        state.sessionId(),
+                        state.pendingDecision().actorPlayerId(),
+                        state.pendingDecision().decisionId(),
+                        view.popup().offeredProperty().spotType().name()
+                ));
+            }
+            return context.submit(new DeclinePropertyCommand(
+                    state.sessionId(),
+                    state.pendingDecision().actorPlayerId(),
+                    state.pendingDecision().decisionId(),
+                    view.popup().offeredProperty().spotType().name()
+            ));
+        }
         if (view.visibleActions().popupVisible()) {
             return context.resolveActivePopup();
         }
@@ -31,13 +58,12 @@ final class SmokeTestComputerStrategy implements ComputerTurnStrategy {
         if (debtor.moneyAmount() < amount) {
             liquidateAssets(context, debtor, amount);
         }
+        SessionState state = context.sessionState();
         if (context.currentPlayerView().moneyAmount() >= amount) {
-            context.retryPendingDebtPayment();
-            return true;
+            return context.submit(new PayDebtCommand(state.sessionId(), playerId(context.currentPlayerView()), state.activeDebt().debtId()));
         }
         if (context.gameView().debt().bankruptcyRisk()) {
-            context.declareBankruptcy();
-            return true;
+            return context.submit(new DeclareBankruptcyCommand(state.sessionId(), playerId(context.currentPlayerView()), state.activeDebt().debtId()));
         }
         return false;
     }
@@ -54,7 +80,15 @@ final class SmokeTestComputerStrategy implements ComputerTurnStrategy {
                 .filter(this::canMortgage)
                 .sorted(Comparator.comparingInt(PropertyView::mortgageValue))
                 .toList()) {
-            context.toggleMortgage(property.spotType());
+            if (context.sessionState().activeDebt() == null) {
+                return;
+            }
+            context.submit(new MortgagePropertyForDebtCommand(
+                    context.sessionState().sessionId(),
+                    playerId(context.currentPlayerView()),
+                    context.sessionState().activeDebt().debtId(),
+                    property.spotType().name()
+            ));
             if (context.currentPlayerView().moneyAmount() >= targetAmount) {
                 return;
             }
@@ -67,7 +101,13 @@ final class SmokeTestComputerStrategy implements ComputerTurnStrategy {
                 .filter(property -> property.buildingLevel() > 0)
                 .sorted(Comparator.comparingInt(PropertyView::price).reversed())
                 .toList()) {
-            if (context.sellBuilding(property.spotType(), 1)) {
+            if (context.sessionState().activeDebt() != null && context.submit(new SellBuildingForDebtCommand(
+                    context.sessionState().sessionId(),
+                    playerId(context.currentPlayerView()),
+                    context.sessionState().activeDebt().debtId(),
+                    property.spotType().name(),
+                    1
+            ))) {
                 return true;
             }
         }
@@ -79,5 +119,9 @@ final class SmokeTestComputerStrategy implements ComputerTurnStrategy {
             return true;
         }
         return property.buildingLevel() == 0;
+    }
+
+    private String playerId(PlayerView player) {
+        return "player-" + player.id();
     }
 }
