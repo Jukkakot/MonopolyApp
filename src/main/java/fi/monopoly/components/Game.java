@@ -2,6 +2,8 @@ package fi.monopoly.components;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.application.command.RefreshSessionViewCommand;
+import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -22,6 +24,9 @@ import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.trade.TradeController;
 import fi.monopoly.components.turn.*;
+import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.session.LegacyPopupSnapshot;
+import fi.monopoly.presentation.session.LegacySessionProjector;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -43,6 +48,7 @@ import static processing.event.MouseEvent.CLICK;
 
 @Slf4j
 public class Game implements MonopolyEventListener {
+    private static final String LOCAL_SESSION_ID = "local-session";
     // UI and layout constants
     private static final List<Locale> SUPPORTED_UI_LOCALES = List.of(
             Locale.forLanguageTag("fi"),
@@ -87,6 +93,7 @@ public class Game implements MonopolyEventListener {
     // Core services
     private final MonopolyRuntime runtime;
     private final TurnEngine turnEngine = new TurnEngine();
+    private final SessionApplicationService sessionApplicationService;
     private TradeController tradeController;
     private DebtController debtController;
     private DebugController debugController;
@@ -138,6 +145,20 @@ public class Game implements MonopolyEventListener {
         setupButtons();
         setupRuntimeDependencies();
         setupControllers();
+        this.sessionApplicationService = new SessionApplicationService(
+                LOCAL_SESSION_ID,
+                new LegacySessionProjector(
+                        LOCAL_SESSION_ID,
+                        () -> players,
+                        () -> LegacyPopupSnapshot.fromPopupService(runtime.popupService()),
+                        () -> debtController != null ? debtController.debtState() : null,
+                        () -> paused,
+                        () -> gameOver,
+                        () -> winner,
+                        () -> dices != null && dices.isVisible(),
+                        () -> endRoundButton.isVisible()
+                )::project
+        );
         registerGameSession();
         setupDefaultGameState();
         setupButtonActions();
@@ -246,6 +267,14 @@ public class Game implements MonopolyEventListener {
 
     Board getBoard() {
         return board;
+    }
+
+    SessionState projectedSessionState() {
+        return sessionApplicationService.currentState();
+    }
+
+    void refreshProjectedSessionState() {
+        sessionApplicationService.handle(new RefreshSessionViewCommand(LOCAL_SESSION_ID));
     }
 
     DebtController debtController() {
