@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.debt;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -10,6 +10,7 @@ import fi.monopoly.components.payment.PaymentStatus;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtStateModel;
+import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
 import fi.monopoly.types.SpotType;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.BeforeEach;

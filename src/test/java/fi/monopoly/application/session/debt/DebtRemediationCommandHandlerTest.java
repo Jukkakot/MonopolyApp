@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.debt;
 
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
@@ -15,6 +15,7 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
 import fi.monopoly.types.SpotType;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.BeforeEach;

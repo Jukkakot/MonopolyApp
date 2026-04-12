@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.auction;
 
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.command.PassAuctionCommand;
@@ -23,14 +23,14 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-final class AuctionCommandHandler {
+public final class AuctionCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> currentStateSupplier;
     private final Consumer<AuctionState> auctionStateSetter;
     private final AuctionGateway gateway;
     private ActiveAuctionContext activeContext;
 
-    AuctionCommandHandler(
+    public AuctionCommandHandler(
             String sessionId,
             Supplier<SessionState> currentStateSupplier,
             Consumer<AuctionState> auctionStateSetter,
@@ -42,7 +42,7 @@ final class AuctionCommandHandler {
         this.gateway = gateway;
     }
 
-    AuctionState startAuction(Player triggeringPlayer, Property property, CallbackAction onComplete) {
+    public AuctionState startAuction(Player triggeringPlayer, Property property, CallbackAction onComplete) {
         List<String> eligibleBidderIds = gateway.eligibleBidderIds(triggeringPlayer, property);
         if (eligibleBidderIds.isEmpty()) {
             activeContext = null;
@@ -68,13 +68,13 @@ final class AuctionCommandHandler {
         return state;
     }
 
-    boolean supports(SessionCommand command) {
+    public boolean supports(SessionCommand command) {
         return command instanceof PlaceAuctionBidCommand
                 || command instanceof PassAuctionCommand
                 || command instanceof FinishAuctionResolutionCommand;
     }
 
-    CommandResult handle(SessionCommand command) {
+    public CommandResult handle(SessionCommand command) {
         if (command instanceof PlaceAuctionBidCommand placeAuctionBidCommand) {
             return handleBid(placeAuctionBidCommand);
         }
@@ -87,7 +87,7 @@ final class AuctionCommandHandler {
         return reject("UNSUPPORTED_AUCTION_COMMAND", "Unsupported auction command");
     }
 
-    CommandResult handleComputerAction(String actorPlayerId) {
+    public CommandResult handleComputerAction(String actorPlayerId) {
         AuctionState state = currentStateSupplier.get().auctionState();
         if (state == null || state.status() != AuctionStatus.ACTIVE) {
             return reject("NO_ACTIVE_AUCTION", "There is no active auction to resolve");

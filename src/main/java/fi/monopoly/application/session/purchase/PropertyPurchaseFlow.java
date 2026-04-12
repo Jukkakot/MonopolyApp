@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.purchase;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;

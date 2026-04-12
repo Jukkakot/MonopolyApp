@@ -1,6 +1,6 @@
 package fi.monopoly.components;
 
-import fi.monopoly.application.session.PropertyPurchaseFlow;
+import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.PaymentHandler;

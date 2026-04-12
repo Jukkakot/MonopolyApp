@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.auction;
 
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.command.PassAuctionCommand;

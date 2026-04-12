@@ -1,10 +1,10 @@
-package fi.monopoly.presentation.session;
+package fi.monopoly.presentation.session.purchase;
 
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
 import fi.monopoly.application.result.CommandResult;
-import fi.monopoly.application.session.PropertyPurchaseFlow;
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;

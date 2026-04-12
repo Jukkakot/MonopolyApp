@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.session;
+package fi.monopoly.presentation.session.debt;
 
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.MortgagePropertyForDebtCommand;

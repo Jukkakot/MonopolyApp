@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.presentation.session.debt;
 
 import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.DebtState;

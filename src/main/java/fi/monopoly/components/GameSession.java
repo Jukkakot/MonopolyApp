@@ -2,7 +2,7 @@ package fi.monopoly.components;
 
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.dices.Dices;
-import fi.monopoly.presentation.session.DebtActionDispatcher;
+import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;

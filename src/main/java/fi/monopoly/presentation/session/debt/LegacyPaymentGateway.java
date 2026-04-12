@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.presentation.session.debt;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.payment.DebtController;
@@ -15,7 +15,7 @@ public class LegacyPaymentGateway {
         this(new PaymentResolver(), debtController);
     }
 
-    LegacyPaymentGateway(PaymentResolver paymentResolver, DebtController debtController) {
+    public LegacyPaymentGateway(PaymentResolver paymentResolver, DebtController debtController) {
         this.paymentResolver = paymentResolver;
         this.debtController = debtController;
     }

@@ -1,6 +1,6 @@
-package fi.monopoly.presentation.session;
+package fi.monopoly.presentation.session.auction;
 
-import fi.monopoly.application.session.AuctionGateway;
+import fi.monopoly.application.session.auction.AuctionGateway;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.popup.PopupService;

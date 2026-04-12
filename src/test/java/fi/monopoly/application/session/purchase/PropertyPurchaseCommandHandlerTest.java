@@ -1,7 +1,9 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.purchase;
 
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.session.auction.AuctionCommandHandler;
+import fi.monopoly.application.session.auction.AuctionGateway;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.PropertyFactory;

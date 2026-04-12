@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.debt;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
@@ -10,6 +10,7 @@ import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.PaymentObligation;
+import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
 
 import java.util.ArrayList;
 import java.util.List;

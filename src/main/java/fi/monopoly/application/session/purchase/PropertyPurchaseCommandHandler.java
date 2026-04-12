@@ -1,4 +1,4 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.purchase;
 
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
@@ -6,6 +6,7 @@ import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
+import fi.monopoly.application.session.auction.AuctionCommandHandler;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.properties.Property;
@@ -21,7 +22,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-final class PropertyPurchaseCommandHandler {
+public final class PropertyPurchaseCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> currentStateSupplier;
     private final Consumer<PendingDecision> pendingDecisionSetter;
@@ -30,7 +31,7 @@ final class PropertyPurchaseCommandHandler {
     private final AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseContext activeContext;
 
-    PropertyPurchaseCommandHandler(
+    public PropertyPurchaseCommandHandler(
             String sessionId,
             Supplier<SessionState> currentStateSupplier,
             Consumer<PendingDecision> pendingDecisionSetter,
@@ -46,7 +47,7 @@ final class PropertyPurchaseCommandHandler {
         this.auctionCommandHandler = auctionCommandHandler;
     }
 
-    PendingDecision openDecision(Player player, Property property, String message, CallbackAction onComplete) {
+    public PendingDecision openDecision(Player player, Property property, String message, CallbackAction onComplete) {
         String propertyId = property.getSpotType().name();
         PendingDecision decision = new PendingDecision(
                 "property-purchase:" + player.getId() + ":" + propertyId,
@@ -62,11 +63,11 @@ final class PropertyPurchaseCommandHandler {
         return decision;
     }
 
-    boolean supports(SessionCommand command) {
+    public boolean supports(SessionCommand command) {
         return command instanceof BuyPropertyCommand || command instanceof DeclinePropertyCommand;
     }
 
-    CommandResult handle(SessionCommand command) {
+    public CommandResult handle(SessionCommand command) {
         if (command instanceof BuyPropertyCommand buyPropertyCommand) {
             return handleBuy(buyPropertyCommand);
         }

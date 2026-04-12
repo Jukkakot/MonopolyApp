@@ -1,9 +1,10 @@
-package fi.monopoly.application.session;
+package fi.monopoly.application.session.debt;
 
 import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
+import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
 import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;

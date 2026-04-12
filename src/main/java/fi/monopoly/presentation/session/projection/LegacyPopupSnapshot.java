@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.session;
+package fi.monopoly.presentation.session.projection;
 
 import fi.monopoly.components.popup.PopupService;
 

@@ -1,5 +1,6 @@
-package fi.monopoly.application.session;
+package fi.monopoly.presentation.session.purchase;
 
+import fi.monopoly.application.session.purchase.PropertyPurchaseGateway;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
@@ -10,11 +11,11 @@ import fi.monopoly.components.turn.PropertyAuctionResolver;
 import java.util.Comparator;
 import java.util.List;
 
-final class LegacyPropertyPurchaseGateway implements PropertyPurchaseGateway {
+public final class LegacyPropertyPurchaseGateway implements PropertyPurchaseGateway {
     private final PopupService popupService;
     private final Players players;
 
-    LegacyPropertyPurchaseGateway(PopupService popupService, Players players) {
+    public LegacyPropertyPurchaseGateway(PopupService popupService, Players players) {
         this.popupService = popupService;
         this.players = players;
     }
