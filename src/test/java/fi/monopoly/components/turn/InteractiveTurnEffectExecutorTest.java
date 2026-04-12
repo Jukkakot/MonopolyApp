@@ -1,6 +1,7 @@
 package fi.monopoly.components.turn;
 
 import fi.monopoly.components.CallbackAction;
+import fi.monopoly.components.GameState;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -48,10 +49,11 @@ class InteractiveTurnEffectExecutorTest {
     @Test
     void executeCallsOnCompleteImmediatelyWhenNoEffectsExist() {
         TestPopupService popupService = new TestPopupService();
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, new Players(null));
+        Players players = new Players(null);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
         TestCallbackAction callback = new TestCallbackAction();
 
-        executor.execute(List.of(), paymentHandler, callback);
+        executor.execute(List.of(), gameState(players), callback);
 
         assertEquals(1, callback.callCount);
         assertTrue(popupService.messages.isEmpty());
@@ -60,10 +62,11 @@ class InteractiveTurnEffectExecutorTest {
     @Test
     void showMessageEffectDisplaysMessageAndCompletes() {
         TestPopupService popupService = new TestPopupService();
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, new Players(null));
+        Players players = new Players(null);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
         TestCallbackAction callback = new TestCallbackAction();
 
-        executor.execute(List.of(new ShowMessageEffect("hello")), paymentHandler, callback);
+        executor.execute(List.of(new ShowMessageEffect("hello")), gameState(players), callback);
 
         assertEquals(List.of("hello"), popupService.messages);
         assertEquals(1, callback.callCount);
@@ -72,11 +75,12 @@ class InteractiveTurnEffectExecutorTest {
     @Test
     void adjustPlayerMoneyEffectUpdatesMoneyAfterPopupAccept() {
         TestPopupService popupService = new TestPopupService();
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, new Players(null));
+        Players players = new Players(null);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Owner", 1000, 1);
 
-        executor.execute(List.of(new AdjustPlayerMoneyEffect(player, 50, "gain 50")), paymentHandler, callback);
+        executor.execute(List.of(new AdjustPlayerMoneyEffect(player, 50, "gain 50")), gameState(players), callback);
 
         assertEquals(1050, player.getMoneyAmount());
         assertEquals(List.of("gain 50"), popupService.messages);
@@ -89,9 +93,10 @@ class InteractiveTurnEffectExecutorTest {
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Buyer", 1500, 1);
         StreetProperty property = new StreetProperty(SpotType.B1);
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player));
+        Players players = TestObjectFactory.playersWithTurn(player);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), gameState(players), callback);
 
         assertEquals(player, property.getOwnerPlayer());
         assertEquals(1440, player.getMoneyAmount());
@@ -106,9 +111,10 @@ class InteractiveTurnEffectExecutorTest {
         Player player = TestObjectFactory.player("Buyer", 10, 1);
         Player auctionWinner = new Player("AuctionWinner", Color.BLACK, 500, 2, ComputerPlayerProfile.SMOKE_TEST);
         StreetProperty property = new StreetProperty(SpotType.B1);
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player, auctionWinner));
+        Players players = TestObjectFactory.playersWithTurn(player, auctionWinner);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), gameState(players), callback);
 
         assertEquals(auctionWinner, property.getOwnerPlayer());
         assertEquals(10, player.getMoneyAmount());
@@ -130,9 +136,10 @@ class InteractiveTurnEffectExecutorTest {
         Player player = TestObjectFactory.player("Buyer", 1500, 1);
         Player smokeBidder = new Player("SmokeBidder", Color.BLACK, 500, 2, ComputerPlayerProfile.SMOKE_TEST);
         StreetProperty property = new StreetProperty(SpotType.B1);
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player, smokeBidder));
+        Players players = TestObjectFactory.playersWithTurn(player, smokeBidder);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), gameState(players), callback);
 
         assertEquals(smokeBidder, property.getOwnerPlayer());
         assertEquals(480, smokeBidder.getMoneyAmount());
@@ -152,9 +159,10 @@ class InteractiveTurnEffectExecutorTest {
         TestCallbackAction callback = new TestCallbackAction();
         Player player = TestObjectFactory.player("Buyer", 1500, 1);
         StreetProperty property = new StreetProperty(SpotType.B1);
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player));
+        Players players = TestObjectFactory.playersWithTurn(player);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), gameState(players), callback);
 
         assertNull(property.getOwnerPlayer());
         assertEquals(1500, player.getMoneyAmount());
@@ -176,12 +184,13 @@ class InteractiveTurnEffectExecutorTest {
         Player smokeBidderOne = new Player("SmokeOne", Color.BLACK, 500, 2, ComputerPlayerProfile.SMOKE_TEST);
         Player smokeBidderTwo = new Player("SmokeTwo", Color.BLUE, 500, 3, ComputerPlayerProfile.SMOKE_TEST);
         StreetProperty property = new StreetProperty(SpotType.B1);
+        Players players = TestObjectFactory.playersWithTurn(player, smokeBidderOne, smokeBidderTwo);
         InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(
                 popupService,
-                TestObjectFactory.playersWithTurn(player, smokeBidderOne, smokeBidderTwo)
+                players
         );
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), gameState(players), callback);
 
         assertEquals(smokeBidderOne, property.getOwnerPlayer());
         assertEquals(1, popupService.messages.stream()
@@ -201,9 +210,10 @@ class InteractiveTurnEffectExecutorTest {
         Player player = TestObjectFactory.player("Buyer", 5, 1);
         Player brokeBidder = new Player("BrokeBidder", Color.BLACK, 80, 2, ComputerPlayerProfile.SMOKE_TEST);
         StreetProperty property = new StreetProperty(SpotType.B1);
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, TestObjectFactory.playersWithTurn(player, brokeBidder));
+        Players players = TestObjectFactory.playersWithTurn(player, brokeBidder);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
 
-        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), paymentHandler, callback);
+        executor.execute(List.of(new OfferToBuyPropertyEffect(player, property, "buy it")), gameState(players), callback);
 
         assertNull(property.getOwnerPlayer());
         assertEquals(5, player.getMoneyAmount());
@@ -218,12 +228,13 @@ class InteractiveTurnEffectExecutorTest {
     @Test
     void payRentEffectTransfersMoneyAfterPopupAccept() {
         TestPopupService popupService = new TestPopupService();
-        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, new Players(null));
+        Players players = new Players(null);
+        InteractiveTurnEffectExecutor executor = new InteractiveTurnEffectExecutor(popupService, players);
         TestCallbackAction callback = new TestCallbackAction();
         Player from = TestObjectFactory.player("From", 1000, 1);
         Player to = TestObjectFactory.player("To", 1000, 2);
 
-        executor.execute(List.of(new PayRentEffect(from, to, 200, "pay rent")), paymentHandler, callback);
+        executor.execute(List.of(new PayRentEffect(from, to, 200, "pay rent")), gameState(players), callback);
 
         assertEquals(800, from.getMoneyAmount());
         assertEquals(1200, to.getMoneyAmount());
@@ -298,6 +309,10 @@ class InteractiveTurnEffectExecutorTest {
                 onDecline.doAction();
             }
         }
+    }
+
+    private GameState gameState(Players players) {
+        return new GameState(players, null, null, null, paymentHandler);
     }
 
     private static final class TestCallbackAction implements CallbackAction {

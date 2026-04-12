@@ -1,5 +1,6 @@
 package fi.monopoly.components;
 
+import fi.monopoly.application.session.PropertyPurchaseFlow;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.PaymentHandler;
@@ -15,4 +16,9 @@ public class GameState {
     Board board;
     TurnResult prevTurnResult;
     PaymentHandler paymentHandler;
+    PropertyPurchaseFlow propertyPurchaseFlow;
+
+    public GameState(Players players, Dices dices, Board board, TurnResult prevTurnResult, PaymentHandler paymentHandler) {
+        this(players, dices, board, prevTurnResult, paymentHandler, null);
+    }
 }

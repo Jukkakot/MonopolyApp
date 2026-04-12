@@ -59,6 +59,7 @@ class LegacySessionProjectorTest {
         assertNotNull(state.pendingDecision());
         assertEquals(DecisionType.PROPERTY_PURCHASE, state.pendingDecision().decisionType());
         assertEquals(List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY), state.pendingDecision().allowedActions());
+        assertNull(state.pendingDecision().payload());
         assertEquals(TurnPhase.WAITING_FOR_DECISION, state.turn().phase());
     }
 

@@ -3,6 +3,7 @@ package fi.monopoly.components;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
+import fi.monopoly.application.session.PropertyPurchaseFlow;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
@@ -27,6 +28,7 @@ import fi.monopoly.components.turn.*;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.session.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.LegacySessionProjector;
+import fi.monopoly.presentation.session.PendingDecisionPopupAdapter;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -94,6 +96,7 @@ public class Game implements MonopolyEventListener {
     private final MonopolyRuntime runtime;
     private final TurnEngine turnEngine = new TurnEngine();
     private final SessionApplicationService sessionApplicationService;
+    private final PropertyPurchaseFlow propertyPurchaseFlow;
     private TradeController tradeController;
     private DebtController debtController;
     private DebugController debugController;
@@ -158,6 +161,13 @@ public class Game implements MonopolyEventListener {
                         () -> dices != null && dices.isVisible(),
                         () -> endRoundButton.isVisible()
                 )::project
+        );
+        this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
+        this.propertyPurchaseFlow = new PendingDecisionPopupAdapter(
+                LOCAL_SESSION_ID,
+                sessionApplicationService,
+                runtime.popupService(),
+                sessionApplicationService::openPropertyPurchaseDecision
         );
         registerGameSession();
         setupDefaultGameState();
@@ -841,7 +851,7 @@ public class Game implements MonopolyEventListener {
     private void handleSpotLogic(DiceState diceState, Spot spot) {
         log.debug("Handling spot logic for player {} on spot {} with diceState={}",
                 players.getTurn().getName(), spot.getSpotType(), diceState);
-        GameState gameState = new GameState(players, dices, board, TurnResult.copyOf(prevTurnResult), this::handlePaymentRequest);
+        GameState gameState = new GameState(players, dices, board, TurnResult.copyOf(prevTurnResult), this::handlePaymentRequest, propertyPurchaseFlow);
         prevTurnResult = null; //Important to clear previous turn result before getting next one!
         prevTurnResult = spot.handleTurn(gameState, () -> doTurnEndEvent(diceState));
         log.trace("Spot handling produced prevTurnResult={}", prevTurnResult);

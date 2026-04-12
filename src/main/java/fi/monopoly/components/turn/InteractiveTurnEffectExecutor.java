@@ -1,6 +1,7 @@
 package fi.monopoly.components.turn;
 
 import fi.monopoly.components.CallbackAction;
+import fi.monopoly.components.GameState;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.payment.PaymentRequest;
@@ -26,18 +27,18 @@ public class InteractiveTurnEffectExecutor {
         this.propertyAuctionResolver = new PropertyAuctionResolver(popupService, players);
     }
 
-    public void execute(List<TurnEffect> effects, PaymentHandler paymentHandler, CallbackAction onComplete) {
-        executeNext(effects, 0, paymentHandler, onComplete);
+    public void execute(List<TurnEffect> effects, GameState gameState, CallbackAction onComplete) {
+        executeNext(effects, 0, gameState, onComplete);
     }
 
-    private void executeNext(List<TurnEffect> effects, int index, PaymentHandler paymentHandler, CallbackAction onComplete) {
+    private void executeNext(List<TurnEffect> effects, int index, GameState gameState, CallbackAction onComplete) {
         if (index >= effects.size()) {
             onComplete.doAction();
             return;
         }
 
         TurnEffect effect = effects.get(index);
-        CallbackAction next = () -> executeNext(effects, index + 1, paymentHandler, onComplete);
+        CallbackAction next = () -> executeNext(effects, index + 1, gameState, onComplete);
 
         if (effect instanceof ShowMessageEffect showMessageEffect) {
             popupService.show(showMessageEffect.message(), next::doAction);
@@ -47,29 +48,38 @@ public class InteractiveTurnEffectExecutor {
                 next.doAction();
             });
         } else if (effect instanceof OfferToBuyPropertyEffect offerToBuyPropertyEffect) {
-            popupService.showPropertyOffer(offerToBuyPropertyEffect.property(), offerToBuyPropertyEffect.message(), () -> {
-                boolean couldBuy = offerToBuyPropertyEffect.player().buyProperty(offerToBuyPropertyEffect.property());
-                if (!couldBuy) {
-                    popupService.show(text("property.buy.notEnough", offerToBuyPropertyEffect.property().getDisplayName()), () ->
-                            propertyAuctionResolver.resolve(
-                                    offerToBuyPropertyEffect.player(),
-                                    offerToBuyPropertyEffect.property(),
-                                    PropertyAuctionResolver.AuctionReason.PLAYER_COULD_NOT_PAY,
-                                    next
-                            )
-                    );
-                    return;
-                }
-                next.doAction();
-            }, () -> propertyAuctionResolver.resolve(
+            if (gameState.getPropertyPurchaseFlow() == null) {
+                popupService.showPropertyOffer(offerToBuyPropertyEffect.property(), offerToBuyPropertyEffect.message(), () -> {
+                    boolean couldBuy = offerToBuyPropertyEffect.player().buyProperty(offerToBuyPropertyEffect.property());
+                    if (!couldBuy) {
+                        popupService.show(text("property.buy.notEnough", offerToBuyPropertyEffect.property().getDisplayName()), () ->
+                                propertyAuctionResolver.resolve(
+                                        offerToBuyPropertyEffect.player(),
+                                        offerToBuyPropertyEffect.property(),
+                                        PropertyAuctionResolver.AuctionReason.PLAYER_COULD_NOT_PAY,
+                                        next
+                                )
+                        );
+                        return;
+                    }
+                    next.doAction();
+                }, () -> propertyAuctionResolver.resolve(
+                        offerToBuyPropertyEffect.player(),
+                        offerToBuyPropertyEffect.property(),
+                        PropertyAuctionResolver.AuctionReason.PLAYER_DECLINED,
+                        next
+                ));
+                return;
+            }
+            gameState.getPropertyPurchaseFlow().begin(
                     offerToBuyPropertyEffect.player(),
                     offerToBuyPropertyEffect.property(),
-                    PropertyAuctionResolver.AuctionReason.PLAYER_DECLINED,
+                    offerToBuyPropertyEffect.message(),
                     next
-            ));
+            );
         } else if (effect instanceof PayRentEffect payRentEffect) {
             popupService.show(payRentEffect.message(), () -> {
-                paymentHandler.requestPayment(new PaymentRequest(
+                gameState.getPaymentHandler().requestPayment(new PaymentRequest(
                         payRentEffect.fromPlayer(),
                         new PlayerTarget(payRentEffect.toPlayer()),
                         payRentEffect.amount(),

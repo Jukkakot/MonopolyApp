@@ -13,6 +13,7 @@ public record SessionState(
         List<PlayerSnapshot> players,
         TurnState turn,
         PendingDecision pendingDecision,
+        AuctionState auctionState,
         String winnerPlayerId
 ) {
     public SessionState {

@@ -62,6 +62,7 @@ public final class LegacySessionProjector {
                 buildPlayerSnapshots(playerList, identities),
                 turnState,
                 buildPendingDecision(turnState.activePlayerId()),
+                null,
                 buildWinnerPlayerId(identities)
         );
     }
@@ -155,7 +156,8 @@ public final class LegacySessionProjector {
                 decisionType,
                 activePlayerId,
                 mapDecisionActions(popup, decisionType),
-                popup.message()
+                popup.message(),
+                null
         );
     }
 
