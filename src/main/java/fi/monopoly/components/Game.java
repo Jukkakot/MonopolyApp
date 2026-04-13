@@ -46,6 +46,7 @@ import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.game.GameBotTurnDriver;
+import fi.monopoly.presentation.game.GameSidebarPresenter;
 import fi.monopoly.presentation.game.GameUiController;
 import fi.monopoly.presentation.game.SessionViewFacade;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
@@ -59,12 +60,10 @@ import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
 import fi.monopoly.utils.DebugPerformanceStats;
 import fi.monopoly.utils.LayoutMetrics;
-import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.UiTokens;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import processing.core.PConstants;
 import processing.event.Event;
 
 import java.util.*;
@@ -139,8 +138,8 @@ public class Game implements MonopolyEventListener {
     private float frameSidebarReservedTop;
     private int lastSidebarLayoutHash = Integer.MIN_VALUE;
     private long lastAnimationUpdateNanos = -1L;
-    private final Map<HistoryEntryCacheKey, HistoryEntryLayout> historyLayoutCache = new HashMap<>();
     private final SessionViewFacade sessionViewFacade;
+    private final GameSidebarPresenter gameSidebarPresenter;
     private final GameUiController gameUiController;
     private PrimaryTurnControlState primaryTurnControlState = PrimaryTurnControlState.NONE;
 
@@ -166,6 +165,7 @@ public class Game implements MonopolyEventListener {
                 SUPPORTED_UI_LOCALES,
                 new GameUiHooks()
         );
+        this.gameSidebarPresenter = new GameSidebarPresenter(runtime);
         setupButtons();
         setupRuntimeDependencies();
         setupControllers();
@@ -384,6 +384,7 @@ public class Game implements MonopolyEventListener {
         updateLogTurnContext();
         LayoutMetrics layoutMetrics = updateFrameLayoutMetrics();
         boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
+        GameSidebarPresenter.SidebarState sidebarState = createSidebarState();
         boolean animationWasRunning = animations.isRunning();
         float animationDeltaSeconds = resolveAnimationDeltaSeconds(frameStart);
         if (MonopolyApp.SKIP_ANNIMATIONS) {
@@ -396,7 +397,7 @@ public class Game implements MonopolyEventListener {
         updateSidebarControlPositions(layoutMetrics);
         board.draw(null);
         if (hasSidebarSpace) {
-            drawSidebarPanel(layoutMetrics);
+            drawSidebarPanel(layoutMetrics, sidebarState);
         }
         if (!isDebtSidebarMode()) {
             dices.draw(null);
@@ -405,14 +406,14 @@ public class Game implements MonopolyEventListener {
             players.focusPlayer(debtController.debtState().paymentRequest().debtor());
         }
         if (hasSidebarSpace) {
-            players.draw(getSidebarContentTop(), !isDebtSidebarMode(), !isDebtSidebarMode());
+            players.draw(gameSidebarPresenter.contentTop(layoutMetrics, sidebarState), !isDebtSidebarMode(), !isDebtSidebarMode());
         } else {
             players.drawTokens();
         }
         updateDebugButtons();
         enforcePrimaryTurnControlInvariant();
         if (hasSidebarSpace) {
-            drawDebtState();
+            drawDebtState(layoutMetrics, sidebarState);
         }
         syncTransientPresentationState();
         runComputerPlayerStep();
@@ -454,219 +455,8 @@ public class Game implements MonopolyEventListener {
      * Draws the persistent right-side information panel so turn state, player
      * overview and controls stay in one predictable area.
      */
-    private void drawSidebarPanel(LayoutMetrics layoutMetrics) {
-        float sidebarX = layoutMetrics.sidebarX();
-        float sidebarWidth = layoutMetrics.sidebarWidth();
-        if (!layoutMetrics.hasSidebarSpace()) {
-            return;
-        }
-        MonopolyApp app = runtime.app();
-        app.push();
-        app.noStroke();
-        app.fill(245, 239, 221);
-        app.rect(sidebarX, 0, sidebarWidth, app.height);
-
-        app.stroke(193, 178, 140);
-        app.strokeWeight(2);
-        app.line(sidebarX, 0, sidebarX, app.height);
-        app.line(sidebarX + UiTokens.spacingMd(), layoutMetrics.sidebarHeaderHeight(), sidebarX + sidebarWidth - UiTokens.spacingMd(), layoutMetrics.sidebarHeaderHeight());
-        if (isDebtSidebarMode()) {
-            app.line(sidebarX + UiTokens.spacingMd(), getDebtSectionBottom(), sidebarX + sidebarWidth - UiTokens.spacingMd(), getDebtSectionBottom());
-        }
-
-        Player turnPlayer = players.getTurn();
-        app.fill(46, 72, 63);
-        app.textAlign(PConstants.LEFT);
-        app.textFont(runtime.font30());
-        app.text(text("sidebar.title"), sidebarX + UiTokens.spacingMd(), layoutMetrics.sidebarTitleY());
-
-        app.fill(0);
-        app.textFont(runtime.font20());
-        app.text(text("sidebar.currentPlayer"), sidebarX + UiTokens.sidebarLabelX(), layoutMetrics.sidebarHeaderRow1Y());
-        app.text(text("sidebar.turnPhase"), sidebarX + UiTokens.sidebarLabelX(), layoutMetrics.sidebarHeaderRow2Y());
-        app.text(text("sidebar.currentSpot"), sidebarX + UiTokens.sidebarLabelX(), layoutMetrics.sidebarHeaderRow3Y());
-
-        app.fill(46, 72, 63);
-        float currentPlayerValueX = sidebarX + UiTokens.sidebarValueX();
-        float currentPlayerValueY = layoutMetrics.sidebarHeaderRow1Y();
-        app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), currentPlayerValueX, currentPlayerValueY);
-        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            drawComputerBadge(app, currentPlayerValueX + app.textWidth(turnPlayer.getName()) + 12, currentPlayerValueY - 14);
-        }
-        app.text(resolveCurrentTurnPhase(), sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow2Y());
-        app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow3Y());
-        drawPopupHistoryPanel(app, layoutMetrics);
-        app.pop();
-    }
-
-    private void drawComputerBadge(MonopolyApp app, float x, float y) {
-        app.pushStyle();
-        app.rectMode(PConstants.CORNER);
-        app.noStroke();
-        app.fill(46, 72, 63);
-        app.rect(x, y, 42, 18, 8);
-        app.fill(255);
-        app.textFont(runtime.font10());
-        app.textAlign(PConstants.CENTER, PConstants.TOP);
-        app.text("BOT", x + 21, y + 4);
-        app.popStyle();
-    }
-
-    /**
-     * Keeps the latest popup texts visible after accidental dismissals without
-     * covering the game board itself.
-     */
-    private void drawPopupHistoryPanel(MonopolyApp app, LayoutMetrics layoutMetrics) {
-        long historyStart = System.nanoTime();
-        float panelX = layoutMetrics.sidebarX() + UiTokens.spacingMd();
-        float historyHeight = getSidebarHistoryHeight();
-        float panelY = getSidebarHistoryPanelY();
-        float panelW = layoutMetrics.sidebarWidth() - UiTokens.spacingMd() * 2;
-        List<String> recentMessages = runtime.popupService().recentPopupMessages();
-
-        app.noStroke();
-        app.fill(255, 249, 233);
-        app.rect(panelX, panelY, panelW, historyHeight, 16);
-
-        app.stroke(193, 178, 140);
-        app.strokeWeight(2);
-        app.line(panelX, panelY + UiTokens.sidebarHistoryHeaderHeight(), panelX + panelW, panelY + UiTokens.sidebarHistoryHeaderHeight());
-
-        app.fill(46, 72, 63);
-        app.textFont(runtime.font20());
-        app.text(text("sidebar.section.history"), panelX + UiTokens.sidebarHistoryTextInset(), panelY + 24);
-
-        app.fill(0);
-        app.textFont(runtime.font20());
-        app.textAlign(PConstants.LEFT, PConstants.TOP);
-
-        if (recentMessages.isEmpty()) {
-            app.text(
-                    text("sidebar.history.empty"),
-                    panelX + UiTokens.sidebarHistoryTextInset(),
-                    panelY + 56,
-                    panelW - UiTokens.sidebarHistoryTextInset() * 2,
-                    historyHeight - 48
-            );
-            return;
-        }
-
-        float maxTextWidth = panelW - UiTokens.sidebarHistoryTextInset() * 2;
-        float currentBottomY = panelY + historyHeight - 20;
-        for (String message : recentMessages) {
-            HistoryEntryLayout layout = buildHistoryEntryLayout(app, message, maxTextWidth);
-            if (layout == null) {
-                continue;
-            }
-            float nextTopY = currentBottomY - layout.height();
-            if (nextTopY < panelY + UiTokens.sidebarHistoryHeaderHeight() + 8) {
-                break;
-            }
-            drawHistoryEntry(app, layout, panelX + UiTokens.sidebarHistoryTextInset(), nextTopY);
-            currentBottomY = nextTopY - 8;
-        }
-        debugPerformanceStats.recordHistoryLayout(System.nanoTime() - historyStart);
-    }
-
-    private HistoryEntryLayout buildHistoryEntryLayout(MonopolyApp app, String message, float maxTextWidth) {
-        String condensedMessage = condenseHistoryMessage(message);
-        if (condensedMessage.isEmpty()) {
-            return null;
-        }
-        HistoryEntryCacheKey cacheKey = new HistoryEntryCacheKey(condensedMessage, Math.round(maxTextWidth));
-        HistoryEntryLayout cachedLayout = historyLayoutCache.get(cacheKey);
-        if (cachedLayout != null) {
-            return cachedLayout;
-        }
-        int separatorIndex = condensedMessage.indexOf(": ");
-        if (separatorIndex <= 0) {
-            List<String> lines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth, "history.generic");
-            HistoryEntryLayout layout = new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
-            historyLayoutCache.put(cacheKey, layout);
-            return layout;
-        }
-
-        String playerName = condensedMessage.substring(0, separatorIndex).trim();
-        String body = condensedMessage.substring(separatorIndex + 2).trim();
-        Player messagePlayer = findPlayerByName(playerName);
-        if (messagePlayer == null) {
-            List<String> lines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth, "history.generic");
-            HistoryEntryLayout layout = new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
-            historyLayoutCache.put(cacheKey, layout);
-            return layout;
-        }
-
-        String prefix = "- " + playerName + ":";
-        float prefixWidth = app.textWidth(prefix + " ");
-        List<String> wrappedBodyLines = TextWrapUtils.wrapText(app.g, body, Math.max(40, maxTextWidth - prefixWidth), "history.player");
-        if (wrappedBodyLines.isEmpty()) {
-            wrappedBodyLines = List.of("");
-        }
-        HistoryEntryLayout layout = new HistoryEntryLayout(messagePlayer, prefix, wrappedBodyLines, wrappedBodyLines.size() * 22f);
-        historyLayoutCache.put(cacheKey, layout);
-        return layout;
-    }
-
-    private void drawHistoryEntry(MonopolyApp app, HistoryEntryLayout layout, float startX, float startY) {
-        if (layout.player() == null || layout.prefix() == null) {
-            drawWrappedHistoryLines(app, layout.lines(), startX, startY);
-            return;
-        }
-        float prefixWidth = app.textWidth(layout.prefix() + " ");
-        app.fill(colorComponent(layout.player().getColor().getRed()),
-                colorComponent(layout.player().getColor().getGreen()),
-                colorComponent(layout.player().getColor().getBlue()));
-        app.text(layout.prefix(), startX, startY);
-
-        app.fill(0);
-        app.text(layout.lines().get(0), startX + prefixWidth, startY);
-        float currentY = startY;
-        for (int i = 1; i < layout.lines().size(); i++) {
-            currentY += 22;
-            app.text(layout.lines().get(i), startX + 18, currentY);
-        }
-    }
-
-    private void drawWrappedHistoryLines(MonopolyApp app, List<String> wrappedLines, float startX, float startY) {
-        float currentY = startY;
-        for (String line : wrappedLines) {
-            app.text(line, startX, currentY);
-            currentY += 22;
-        }
-    }
-
-    private String condenseHistoryMessage(String message) {
-        return message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
-    }
-
-    private Player findPlayerByName(String playerName) {
-        if (players == null || playerName == null || playerName.isBlank()) {
-            return null;
-        }
-        for (Player player : players.getPlayers()) {
-            if (player.getName().equals(playerName)) {
-                return player;
-            }
-        }
-        return null;
-    }
-
-    private int colorComponent(double component) {
-        return (int) Math.round(component * 255);
-    }
-
-    private record HistoryEntryLayout(
-            Player player,
-            String prefix,
-            List<String> lines,
-            float height
-    ) {
-    }
-
-    private record HistoryEntryCacheKey(
-            String message,
-            int width
-    ) {
+    private void drawSidebarPanel(LayoutMetrics layoutMetrics, GameSidebarPresenter.SidebarState sidebarState) {
+        gameSidebarPresenter.drawSidebarPanel(layoutMetrics, sidebarState, debugPerformanceStats::recordHistoryLayout);
     }
 
     private String resolveCurrentTurnPhase() {
@@ -691,38 +481,8 @@ public class Game implements MonopolyEventListener {
         return text("sidebar.phase.resolving");
     }
 
-    private float getSidebarContentTop() {
-        if (debtController.debtState() != null) {
-            return getDebtSectionBottom() + 20;
-        }
-        float debugFloor = getSidebarReservedTop();
-        float historyTop = getSidebarHistoryPanelY();
-        float availableTop = historyTop - UiTokens.sidebarHistoryTopMargin();
-        return Math.max(UiTokens.sidebarMinContentTop(), Math.min(debugFloor, availableTop));
-    }
-
     private boolean isDebtSidebarMode() {
         return debtController.debtState() != null;
-    }
-
-    private String buildDebtSidebarText(PaymentRequest request) {
-        return text(
-                "sidebar.debt.summary",
-                request.debtor().getName(),
-                request.amount(),
-                request.target().getDisplayName(),
-                request.debtor().getMoneyAmount(),
-                request.debtor().getTotalLiquidationValue()
-        );
-    }
-
-    private int getDebtSectionBottom() {
-        DebtState debtState = debtController.debtState();
-        if (debtState == null) {
-            return Math.round(getLayoutMetrics().debtTextY());
-        }
-        int lineCount = buildDebtSidebarText(debtState.paymentRequest()).split("\\R").length;
-        return Math.round(getLayoutMetrics().debtTextY() + lineCount * UiTokens.sidebarLineHeight());
     }
 
     private Spot getNewSpot(DiceValue diceValue) {
@@ -1012,29 +772,8 @@ public class Game implements MonopolyEventListener {
         debtController.retryPendingDebtPayment();
     }
 
-    private void drawDebtState() {
-        DebtState debtState = debtController.debtState();
-        if (debtState == null) {
-            return;
-        }
-
-        LayoutMetrics layoutMetrics = getLayoutMetrics();
-        MonopolyApp app = runtime.app();
-        app.push();
-        app.fill(46, 72, 63);
-        app.textFont(runtime.font20());
-        app.text(text("sidebar.section.debt"), layoutMetrics.sidebarX() + UiTokens.spacingMd(), layoutMetrics.debtSectionTitleY());
-
-        app.fill(0);
-        app.textFont(runtime.font20());
-        app.textAlign(PConstants.LEFT);
-        PaymentRequest request = debtState.paymentRequest();
-        app.text(
-                buildDebtSidebarText(request),
-                layoutMetrics.sidebarX() + UiTokens.spacingMd(),
-                layoutMetrics.debtTextY()
-        );
-        app.pop();
+    private void drawDebtState(LayoutMetrics layoutMetrics, GameSidebarPresenter.SidebarState sidebarState) {
+        gameSidebarPresenter.drawDebtState(layoutMetrics, sidebarState.debtState());
     }
 
     private LayoutMetrics getLayoutMetrics() {
@@ -1166,6 +905,23 @@ public class Game implements MonopolyEventListener {
 
     private float getSidebarReservedTop() {
         return frameSidebarReservedTop > 0 ? frameSidebarReservedTop : getLayoutMetrics().sidebarReservedTop(MonopolyApp.DEBUG_MODE);
+    }
+
+    private GameSidebarPresenter.SidebarState createSidebarState() {
+        return new GameSidebarPresenter.SidebarState(
+                players.getTurn(),
+                resolveCurrentTurnPhase(),
+                players.getPlayers(),
+                runtime.popupService().recentPopupMessages(),
+                debtController.debtState(),
+                getSidebarHistoryPanelY(),
+                getSidebarHistoryHeight(),
+                getSidebarReservedTop()
+        );
+    }
+
+    private float getSidebarContentTop() {
+        return gameSidebarPresenter.contentTop(getLayoutMetrics(), createSidebarState());
     }
 
     private void updateDebtButtons() {
