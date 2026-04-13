@@ -45,6 +45,8 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.GameBotTurnDriver;
+import fi.monopoly.presentation.game.GameUiController;
 import fi.monopoly.presentation.game.SessionViewFacade;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
@@ -64,13 +66,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import processing.core.PConstants;
 import processing.event.Event;
-import processing.event.KeyEvent;
-import processing.event.MouseEvent;
 
 import java.util.*;
 
 import static fi.monopoly.text.UiTexts.text;
-import static processing.event.MouseEvent.CLICK;
 
 @Slf4j
 public class Game implements MonopolyEventListener {
@@ -131,6 +130,7 @@ public class Game implements MonopolyEventListener {
     private boolean gameOver;
     private Player winner;
     private final BotTurnScheduler botTurnScheduler = new BotTurnScheduler();
+    private final GameBotTurnDriver botTurnDriver = new GameBotTurnDriver(botTurnScheduler);
     private BotTurnScheduler.SpeedMode botSpeedMode = BotTurnScheduler.SpeedMode.NORMAL;
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private LayoutMetrics frameLayoutMetrics;
@@ -141,6 +141,7 @@ public class Game implements MonopolyEventListener {
     private long lastAnimationUpdateNanos = -1L;
     private final Map<HistoryEntryCacheKey, HistoryEntryLayout> historyLayoutCache = new HashMap<>();
     private final SessionViewFacade sessionViewFacade;
+    private final GameUiController gameUiController;
     private PrimaryTurnControlState primaryTurnControlState = PrimaryTurnControlState.NONE;
 
     public Game(MonopolyRuntime runtime) {
@@ -153,6 +154,18 @@ public class Game implements MonopolyEventListener {
         this.tradeButton = new MonopolyButton(runtime, "trade");
         this.botSpeedButton = new MonopolyButton(runtime, "botSpeed");
         this.languageButton = new MonopolyButton(runtime, "language");
+        this.gameUiController = new GameUiController(
+                endRoundButton,
+                retryDebtButton,
+                declareBankruptcyButton,
+                debugGodModeButton,
+                pauseButton,
+                tradeButton,
+                botSpeedButton,
+                languageButton,
+                SUPPORTED_UI_LOCALES,
+                new GameUiHooks()
+        );
         setupButtons();
         setupRuntimeDependencies();
         setupControllers();
@@ -351,18 +364,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void setupButtonActions() {
-        endRoundButton.addListener(e -> {
-            if (!runtime.popupService().isAnyVisible() && debtController.debtState() == null) {
-                endRound(true);
-            }
-        });
-        retryDebtButton.addListener(debtActionDispatcher::payDebt);
-        declareBankruptcyButton.addListener(debtActionDispatcher::declareBankruptcy);
-        debugGodModeButton.addListener(debugController::openGodModeMenu);
-        pauseButton.addListener(this::togglePause);
-        tradeButton.addListener(tradeController::openTradeMenu);
-        botSpeedButton.addListener(this::cycleBotSpeedMode);
-        languageButton.addListener(this::toggleLanguage);
+        gameUiController.bindButtonActions();
     }
 
     Players players() {
@@ -741,90 +743,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void runComputerPlayerStep() {
-        long stepStart = System.nanoTime();
-        updateLogTurnContext();
-        if (gameOver) {
-            return;
-        }
-        if (animations.isRunning()) {
-            return;
-        }
-        if (paused) {
-            return;
-        }
-        int now = runtime.app().millis();
-        if (botTurnScheduler.isWaiting(now)) {
-            return;
-        }
-        auctionViewAdapter.sync();
-        tradeViewAdapter.sync();
-        SessionState sessionState = sessionApplicationService.currentState();
-        if (sessionState.tradeState() != null) {
-            Player tradeActor = findPlayerById(resolveTradeActorId(sessionState));
-            if (tradeActor == null) {
-                return;
-            }
-            if (!tradeActor.isComputerControlled()) {
-                debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
-                return;
-            }
-            boolean acted = tradeController.handleComputerTradeTurn(tradeActor);
-            if (acted) {
-                scheduleNextComputerAction(BotTurnScheduler.DelayKind.TRADE, now);
-            }
-            debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
-            return;
-        }
-        if (sessionState.auctionState() != null) {
-            if (sessionState.auctionState().status() == AuctionStatus.WON_PENDING_RESOLUTION
-                    && !runtime.popupService().isAnyVisible()) {
-                boolean resolved = sessionApplicationService.handle(new FinishAuctionResolutionCommand(
-                        LOCAL_SESSION_ID,
-                        sessionState.auctionState().auctionId()
-                )).accepted();
-                if (resolved) {
-                    scheduleNextComputerAction(BotTurnScheduler.DelayKind.AUCTION_ACTION, now);
-                }
-                debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
-                return;
-            }
-            Player turnPlayer = players.getTurn();
-            if (runtime.popupService().isAnyVisible()) {
-                if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-                    boolean resolved = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
-                    if (resolved) {
-                        scheduleNextComputerAction(BotTurnScheduler.DelayKind.RESOLVE_POPUP, now);
-                    }
-                }
-                debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
-                return;
-            }
-            Player auctionActor = findPlayerById(sessionState.auctionState().currentActorPlayerId());
-            if (auctionActor == null || !auctionActor.isComputerControlled()) {
-                return;
-            }
-            if (sessionState.auctionState().status() != AuctionStatus.ACTIVE) {
-                return;
-            }
-            boolean acted = sessionApplicationService.handleComputerAuctionAction(sessionState.auctionState().currentActorPlayerId()).accepted();
-            if (acted) {
-                scheduleNextComputerAction(BotTurnScheduler.DelayKind.AUCTION_ACTION, now);
-            }
-            debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
-            return;
-        }
-
-        Player turnPlayer = players.getTurn();
-        if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
-            return;
-        }
-
-        GameComputerTurnContext context = new GameComputerTurnContext(turnPlayer);
-        boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile()).takeStep(context);
-        if (acted) {
-            scheduleNextComputerAction(context.delayKind(), now);
-        }
-        debugPerformanceStats.recordComputerStep(System.nanoTime() - stepStart);
+        botTurnDriver.step(new GameBotTurnHooks());
     }
 
     private Player findPlayerById(String playerId) {
@@ -856,6 +775,108 @@ public class Game implements MonopolyEventListener {
                 botSpeedMode,
                 players.getPlayers().stream().allMatch(Player::isComputerControlled)
         );
+    }
+
+    private final class GameBotTurnHooks implements GameBotTurnDriver.Hooks {
+        @Override
+        public void updateLogTurnContext() {
+            Game.this.updateLogTurnContext();
+        }
+
+        @Override
+        public boolean gameOver() {
+            return gameOver;
+        }
+
+        @Override
+        public boolean animationsRunning() {
+            return animations.isRunning();
+        }
+
+        @Override
+        public boolean paused() {
+            return paused;
+        }
+
+        @Override
+        public int now() {
+            return runtime.app().millis();
+        }
+
+        @Override
+        public void syncPresentationState() {
+            Game.this.syncTransientPresentationState();
+        }
+
+        @Override
+        public SessionState sessionState() {
+            return sessionApplicationService.currentState();
+        }
+
+        @Override
+        public Player currentTurnPlayer() {
+            return players.getTurn();
+        }
+
+        @Override
+        public Player findPlayerById(String playerId) {
+            return Game.this.findPlayerById(playerId);
+        }
+
+        @Override
+        public String resolveTradeActorId(SessionState sessionState) {
+            return Game.this.resolveTradeActorId(sessionState);
+        }
+
+        @Override
+        public boolean handleComputerTradeTurn(Player tradeActor) {
+            return tradeController.handleComputerTradeTurn(tradeActor);
+        }
+
+        @Override
+        public boolean popupVisible() {
+            return runtime.popupService().isAnyVisible();
+        }
+
+        @Override
+        public boolean finishAuctionResolution(FinishAuctionResolutionCommand command) {
+            return sessionApplicationService.handle(command).accepted();
+        }
+
+        @Override
+        public boolean resolveVisiblePopupFor(Player turnPlayer) {
+            return runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+        }
+
+        @Override
+        public boolean handleComputerAuctionAction(String actorPlayerId) {
+            return sessionApplicationService.handleComputerAuctionAction(actorPlayerId).accepted();
+        }
+
+        @Override
+        public ComputerTurnContext createTurnContext(Player turnPlayer) {
+            return new GameComputerTurnContext(turnPlayer);
+        }
+
+        @Override
+        public BotTurnScheduler.DelayKind delayKindFor(ComputerTurnContext context) {
+            return ((GameComputerTurnContext) context).delayKind();
+        }
+
+        @Override
+        public void scheduleNextAction(BotTurnScheduler.DelayKind delayKind, int now) {
+            scheduleNextComputerAction(delayKind, now);
+        }
+
+        @Override
+        public void recordStep(long durationNanos) {
+            debugPerformanceStats.recordComputerStep(durationNanos);
+        }
+
+        @Override
+        public String sessionId() {
+            return LOCAL_SESSION_ID;
+        }
     }
 
     private void endRound(boolean switchTurns) {
@@ -975,70 +996,7 @@ public class Game implements MonopolyEventListener {
 
     public boolean onEvent(Event event) {
         updateLogTurnContext();
-        boolean consumedEvent = false;
-        if (event instanceof KeyEvent keyEvent) {
-            char key = Character.toLowerCase(keyEvent.getKey());
-            if (gameOver) {
-                return false;
-            }
-            if (key == 'p') {
-                togglePause();
-                return true;
-            }
-            if (key == 'b') {
-                cycleBotSpeedMode();
-                return true;
-            }
-            if (runtime.popupService().isAnyVisible()) {
-                return consumedEvent;
-            }
-            if (debtController.debtState() != null) {
-                if (key == MonopolyApp.SPACE || key == MonopolyApp.ENTER) {
-                    debtActionDispatcher.payDebt();
-                    return true;
-                }
-                return false;
-            }
-            if (key == 't') {
-                tradeController.openTradeMenu();
-                consumedEvent = true;
-            }
-            if (endRoundButton.isVisible() && (key == MonopolyApp.SPACE || key == MonopolyApp.ENTER)) {
-                endRound(true);
-                consumedEvent = true;
-            }
-            if (MonopolyApp.DEBUG_MODE && key == 'e') {
-                log.debug("Ending round");
-                animations.finishAllAnimations();
-                endRound(true);
-                consumedEvent = true;
-            }
-            if (MonopolyApp.DEBUG_MODE && key == 'g') {
-                debugController.openGodModeMenu();
-                consumedEvent = true;
-            }
-            if (key == 'a') {
-                MonopolyApp.SKIP_ANNIMATIONS = !MonopolyApp.SKIP_ANNIMATIONS;
-                log.debug("Skip animations: {}", MonopolyApp.SKIP_ANNIMATIONS);
-                consumedEvent = true;
-            }
-        } else if (event instanceof MouseEvent mouseEvent) {
-            if (mouseEvent.getAction() == CLICK) {
-                if (runtime.popupService().isAnyVisible()) {
-                    return consumedEvent;
-                }
-                Spot hoveredSpot = board.getHoveredSpot();
-                //Debugging "flying mechanic"
-                if (hoveredSpot != null && MonopolyApp.DEBUG_MODE && dices.isVisible()) {
-                    dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
-                    if (playRound(hoveredSpot, DiceState.DEBUG_REROLL)) {
-                        consumedEvent = true;
-                        dices.hide();
-                    }
-                }
-            }
-        }
-        return consumedEvent;
+        return gameUiController.handleEvent(event);
     }
 
     private void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
@@ -1227,35 +1185,11 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebugButtons() {
-        if (gameOver) {
-            debugGodModeButton.hide();
-            pauseButton.hide();
-            tradeButton.hide();
-            botSpeedButton.hide();
-            languageButton.show();
-            return;
-        }
-        pauseButton.show();
-        tradeButton.show();
-        languageButton.show();
-        if (!MonopolyApp.DEBUG_MODE) {
-            debugGodModeButton.hide();
-            botSpeedButton.hide();
-            return;
-        }
-        debugGodModeButton.show();
-        botSpeedButton.show();
+        gameUiController.updatePersistentButtons(gameOver);
     }
 
     private void refreshLabels() {
-        endRoundButton.setLabel(text("game.button.endRound"));
-        retryDebtButton.setLabel(text("game.button.retryDebt"));
-        declareBankruptcyButton.setLabel(text("game.button.bankrupt"));
-        debugGodModeButton.setLabel(text("game.button.godMode"));
-        pauseButton.setLabel(paused ? text("game.button.resume") : text("game.button.pause"));
-        tradeButton.setLabel(text("game.button.trade"));
-        botSpeedButton.setLabel(text("game.button.botSpeed", text(botSpeedMode.labelKey())));
-        languageButton.setLabel(text("language.button.current", text("language.name.current")));
+        gameUiController.refreshLabels(paused, botSpeedMode);
     }
 
     private void togglePause() {
@@ -1272,13 +1206,6 @@ public class Game implements MonopolyEventListener {
         botTurnScheduler.markReadyNow(runtime.app().millis());
         refreshLabels();
         log.info("Bot speed mode={}", botSpeedMode);
-    }
-
-    private void toggleLanguage() {
-        Locale currentLocale = fi.monopoly.text.UiTexts.getLocale();
-        int currentIndex = SUPPORTED_UI_LOCALES.indexOf(currentLocale);
-        int nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % SUPPORTED_UI_LOCALES.size();
-        switchLanguage(SUPPORTED_UI_LOCALES.get(nextIndex));
     }
 
     private void switchLanguage(Locale locale) {
@@ -1551,6 +1478,104 @@ public class Game implements MonopolyEventListener {
             } catch (IllegalArgumentException ignored) {
                 return null;
             }
+        }
+    }
+
+    private final class GameUiHooks implements GameUiController.Hooks {
+        @Override
+        public boolean gameOver() {
+            return gameOver;
+        }
+
+        @Override
+        public boolean popupVisible() {
+            return runtime.popupService().isAnyVisible();
+        }
+
+        @Override
+        public boolean debtActive() {
+            return debtController.debtState() != null;
+        }
+
+        @Override
+        public boolean canEndTurn() {
+            return endRoundButton.isVisible();
+        }
+
+        @Override
+        public void togglePause() {
+            Game.this.togglePause();
+        }
+
+        @Override
+        public void cycleBotSpeedMode() {
+            Game.this.cycleBotSpeedMode();
+        }
+
+        @Override
+        public void openTradeMenu() {
+            tradeController.openTradeMenu();
+        }
+
+        @Override
+        public void payDebt() {
+            debtActionDispatcher.payDebt();
+        }
+
+        @Override
+        public void declareBankruptcy() {
+            debtActionDispatcher.declareBankruptcy();
+        }
+
+        @Override
+        public void endRound() {
+            if (!runtime.popupService().isAnyVisible() && debtController.debtState() == null) {
+                Game.this.endRound(true);
+            }
+        }
+
+        @Override
+        public void openGodModeMenu() {
+            debugController.openGodModeMenu();
+        }
+
+        @Override
+        public void finishAllAnimations() {
+            animations.finishAllAnimations();
+        }
+
+        @Override
+        public void toggleSkipAnimations() {
+            MonopolyApp.SKIP_ANNIMATIONS = !MonopolyApp.SKIP_ANNIMATIONS;
+            log.debug("Skip animations: {}", MonopolyApp.SKIP_ANNIMATIONS);
+        }
+
+        @Override
+        public Spot hoveredSpot() {
+            return board.getHoveredSpot();
+        }
+
+        @Override
+        public boolean debugFlyToHoveredSpot(Spot hoveredSpot) {
+            if (!dices.isVisible()) {
+                return false;
+            }
+            dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
+            boolean played = playRound(hoveredSpot, DiceState.DEBUG_REROLL);
+            if (played) {
+                dices.hide();
+            }
+            return played;
+        }
+
+        @Override
+        public Locale currentLocale() {
+            return fi.monopoly.text.UiTexts.getLocale();
+        }
+
+        @Override
+        public void switchLanguage(Locale locale) {
+            Game.this.switchLanguage(locale);
         }
     }
 
