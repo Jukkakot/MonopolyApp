@@ -2,26 +2,13 @@ package fi.monopoly.components;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.application.command.BuyPropertyCommand;
-import fi.monopoly.application.command.BuyBuildingRoundCommand;
-import fi.monopoly.application.command.DeclareBankruptcyCommand;
-import fi.monopoly.application.command.DeclinePropertyCommand;
-import fi.monopoly.application.command.EndTurnCommand;
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
-import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
-import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
-import fi.monopoly.application.command.RollDiceCommand;
-import fi.monopoly.application.command.SellBuildingForDebtCommand;
-import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
-import fi.monopoly.application.command.SessionCommand;
-import fi.monopoly.application.command.ToggleMortgageCommand;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
-import fi.monopoly.components.board.Path;
 import fi.monopoly.components.computer.*;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
@@ -29,17 +16,15 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
-import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.trade.TradeController;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeUiBuilder;
-import fi.monopoly.components.turn.*;
+import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeStatus;
@@ -49,6 +34,7 @@ import fi.monopoly.presentation.game.GameBotTurnDriver;
 import fi.monopoly.presentation.game.GameControlLayout;
 import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
+import fi.monopoly.presentation.game.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.game.GameUiController;
 import fi.monopoly.presentation.game.SessionBackedComputerTurnContext;
 import fi.monopoly.presentation.game.SessionViewFacade;
@@ -58,9 +44,11 @@ import fi.monopoly.presentation.session.projection.LegacySessionProjector;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
-import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.text.UiTexts;
-import fi.monopoly.types.*;
+import fi.monopoly.types.DiceState;
+import fi.monopoly.types.PlaceType;
+import fi.monopoly.types.PathMode;
+import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.DebugPerformanceStats;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.UiTokens;
@@ -127,7 +115,6 @@ public class Game implements MonopolyEventListener {
     private Animations animations;
     private int goMoneyAmount = 200;
     private Board board;
-    private TurnResult prevTurnResult;
     private boolean paused;
     private boolean gameOver;
     private Player winner;
@@ -141,6 +128,7 @@ public class Game implements MonopolyEventListener {
     private GameControlLayout gameControlLayout;
     private final GameSidebarPresenter gameSidebarPresenter;
     private final GameUiController gameUiController;
+    private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     private PrimaryTurnControlState primaryTurnControlState = PrimaryTurnControlState.NONE;
 
     public Game(MonopolyRuntime runtime) {
@@ -180,7 +168,7 @@ public class Game implements MonopolyEventListener {
                         () -> gameOver,
                         () -> winner,
                         this::isProjectedRollDiceActionAvailable,
-                this::isProjectedEndTurnActionAvailable
+                        this::isProjectedEndTurnActionAvailable
                 )::project
         );
         this.sessionApplicationService.configureRentAndDebtFlow(debtController);
@@ -253,6 +241,17 @@ public class Game implements MonopolyEventListener {
                 botSpeedButton,
                 languageButton,
                 dices
+        );
+        this.gameTurnFlowCoordinator = new GameTurnFlowCoordinator(
+                runtime,
+                players,
+                dices,
+                board,
+                animations,
+                turnEngine,
+                propertyPurchaseFlow,
+                () -> goMoneyAmount,
+                new GameTurnFlowHooks()
         );
         showRollDiceControl();
         setupButtonActions();
@@ -502,14 +501,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void rollDice() {
-        updateLogTurnContext();
-        if (runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
-            log.trace("Ignoring rollDice because popupVisible={} debtStateActive={}",
-                    runtime.popupService().isAnyVisible(), debtController.debtState() != null);
-            return;
-        }
-        log.debug("Starting turn roll for player {}", players.getTurn().getName());
-        playRound(dices.getValue());
+        gameTurnFlowCoordinator.rollDice();
     }
 
     private void runComputerPlayerStep() {
@@ -660,118 +652,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void endRound(boolean switchTurns) {
-        updateLogTurnContext();
-        if (gameOver) {
-            hidePrimaryTurnControls();
-            return;
-        }
-        Player currentTurn = players.getTurn();
-        prevTurnResult = null;
-        if (switchTurns) {
-            players.switchTurn();
-        }
-        updateLogTurnContext();
-        showRollDiceControl();
-        log.debug("Ending round. previousTurnPlayer={}, switchTurns={}, nextTurnPlayer={}",
-                currentTurn != null ? currentTurn.getName() : "none",
-                switchTurns,
-                players.getTurn() != null ? players.getTurn().getName() : "none");
-    }
-
-    private void playRound(DiceValue diceValue) {
-        Player turnPlayer = players.getTurn();
-        log.debug("Playing round for player {} with diceState={} value={}",
-                turnPlayer.getName(), diceValue.diceState(), diceValue.value());
-        if (turnPlayer.isInJail()) {
-            ((JailSpot) turnPlayer.getSpot()).handleInJailTurn(
-                    turnPlayer,
-                    diceValue,
-                    this::handlePaymentRequest,
-                    () -> applyTurnPlan(turnEngine.endTurn(false)),
-                    () -> applyTurnPlan(turnEngine.endTurn(true))
-            );
-            return;
-        }
-        if (DiceState.JAIL.equals(diceValue.diceState())) {
-            prevTurnResult = TurnResult.builder().shouldGoToJail(true).build();
-        }
-        applyTurnPlan(turnEngine.createMovementPlan(turnPlayer, board, diceValue));
-    }
-
-    private void addAnimationAndHandleSpot(Path path, CallbackAction onAnimationEnd) {
-        PlayerToken turnPlayer = players.getTurn();
-        animations.addAnimation(new Animation(turnPlayer, path, onAnimationEnd));
-    }
-
-    private boolean playRound(Spot newSpot, DiceState diceState) {
-        Player turnPlayer = players.getTurn();
-        if (newSpot.equals(turnPlayer.getSpot())) {
-            runtime.popupService().show(text("game.move.sameSpot"));
-            return false;
-        }
-        if (turnPlayer.isInJail()) {
-            runtime.popupService().show(text("game.move.inJail"));
-            return false;
-        }
-        PathMode pathMode = DiceState.DEBUG_REROLL.equals(diceState) || DiceState.JAIL.equals(diceState) ? PathMode.FLY : PathMode.NORMAL;
-        Path path = board.getPath(turnPlayer, newSpot, pathMode);
-        return playRound(path, diceState);
-    }
-
-    private boolean playRound(Path path, DiceState diceState) {
-        Player turnPlayer = players.getTurn();
-        log.trace("Animating player {} along path to {} with diceState={}",
-                turnPlayer.getName(), path.getLastSpot().getSpotType(), diceState);
-        addAnimationAndHandleSpot(path, () -> {
-            CallbackAction completeTurnMove = () -> {
-                turnPlayer.setSpot(path.getLastSpot());
-                log.trace("Player {} arrived at {}", turnPlayer.getName(), path.getLastSpot().getSpotType());
-                handleSpotLogic(diceState, path.getLastSpot());
-            };
-            if (path.passesGoSpot()) {
-                log.info("Player {} passed GO", turnPlayer.getName());
-                runtime.popupService().show(text("game.go.reward", goMoneyAmount), () -> {
-                    turnPlayer.addMoney(goMoneyAmount);
-                    completeTurnMove.doAction();
-                });
-                return;
-            }
-            completeTurnMove.doAction();
-        });
-        return true;
-    }
-
-    private void handleSpotLogic(DiceState diceState, Spot spot) {
-        log.debug("Handling spot logic for player {} on spot {} with diceState={}",
-                players.getTurn().getName(), spot.getSpotType(), diceState);
-        GameState gameState = new GameState(players, dices, board, TurnResult.copyOf(prevTurnResult), this::handlePaymentRequest, propertyPurchaseFlow);
-        prevTurnResult = null; //Important to clear previous turn result before getting next one!
-        prevTurnResult = spot.handleTurn(gameState, () -> doTurnEndEvent(diceState));
-        log.trace("Spot handling produced prevTurnResult={}", prevTurnResult);
-    }
-
-    private void doTurnEndEvent(DiceState diceState) {
-        log.trace("Running turn end event for player {} with diceState={} prevTurnResult={}",
-                players.getTurn().getName(), diceState, prevTurnResult);
-        applyTurnPlan(turnEngine.createFollowUpPlan(players.getTurn(), board, prevTurnResult, diceState));
-    }
-
-    private void applyTurnPlan(TurnPlan turnPlan) {
-        log.debug("Applying turn plan phase={} effectCount={}", turnPlan.phase(), turnPlan.effects().size());
-        for (TurnEffect effect : turnPlan.effects()) {
-            log.trace("Applying turn effect {}", effect.getClass().getSimpleName());
-            if (effect instanceof MovePlayerEffect movePlayerEffect) {
-                playRound(movePlayerEffect.path(), movePlayerEffect.diceState());
-            } else if (effect instanceof ShowDiceEffect) {
-                showRollDiceControl();
-            } else if (effect instanceof ShowEndTurnEffect) {
-                showEndTurnControl();
-            } else if (effect instanceof EndTurnEffect endTurnEffect) {
-                endRound(endTurnEffect.switchTurns());
-            } else {
-                throw new IllegalStateException("Unhandled turn effect: " + effect.getClass().getSimpleName());
-            }
-        }
+        gameTurnFlowCoordinator.endRound(switchTurns);
     }
 
     public boolean onEvent(Event event) {
@@ -884,6 +765,7 @@ public class Game implements MonopolyEventListener {
     private void debugResetTurnState() {
         log.debug("Debug action: reset turn state");
         animations.finishAllAnimations();
+        gameTurnFlowCoordinator.resetTransientTurnState();
         debtController.clearDebtState();
         updateDebtButtons();
         runtime.popupService().hideAll();
@@ -940,7 +822,7 @@ public class Game implements MonopolyEventListener {
         gameOver = true;
         winner = winningPlayer;
         paused = false;
-        prevTurnResult = null;
+        gameTurnFlowCoordinator.resetTransientTurnState();
         debtController.clearDebtState();
         updateDebtButtons();
         hidePrimaryTurnControls();
@@ -1030,7 +912,7 @@ public class Game implements MonopolyEventListener {
         @Override
         public void endRound() {
             if (!runtime.popupService().isAnyVisible() && debtController.debtState() == null) {
-                Game.this.endRound(true);
+                gameTurnFlowCoordinator.endRound(true);
             }
         }
 
@@ -1061,7 +943,7 @@ public class Game implements MonopolyEventListener {
                 return false;
             }
             dices.setValue(new DiceValue(DiceState.DEBUG_REROLL, 8));
-            boolean played = playRound(hoveredSpot, DiceState.DEBUG_REROLL);
+            boolean played = gameTurnFlowCoordinator.playDebugRound(hoveredSpot, DiceState.DEBUG_REROLL);
             if (played) {
                 dices.hide();
             }
@@ -1120,6 +1002,43 @@ public class Game implements MonopolyEventListener {
         NONE,
         ROLL_DICE,
         END_TURN
+    }
+
+    private final class GameTurnFlowHooks implements GameTurnFlowCoordinator.Hooks {
+        @Override
+        public void updateLogTurnContext() {
+            Game.this.updateLogTurnContext();
+        }
+
+        @Override
+        public boolean gameOver() {
+            return gameOver;
+        }
+
+        @Override
+        public boolean debtActive() {
+            return debtController.debtState() != null;
+        }
+
+        @Override
+        public void hidePrimaryTurnControls() {
+            Game.this.hidePrimaryTurnControls();
+        }
+
+        @Override
+        public void showRollDiceControl() {
+            Game.this.showRollDiceControl();
+        }
+
+        @Override
+        public void showEndTurnControl() {
+            Game.this.showEndTurnControl();
+        }
+
+        @Override
+        public void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
+            Game.this.handlePaymentRequest(request, onResolved);
+        }
     }
 
     private int estimateRent(Property property, Player owner) {
