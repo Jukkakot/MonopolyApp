@@ -146,7 +146,31 @@ public class Game implements MonopolyEventListener {
         setupButtons();
         setupRuntimeDependencies();
         setupControllers();
-        this.sessionApplicationService = new SessionApplicationService(
+        this.sessionApplicationService = createSessionApplicationService();
+        configureSessionApplicationService();
+        this.debtActionDispatcher = createDebtActionDispatcher();
+        this.auctionViewAdapter = createAuctionViewAdapter();
+        LegacyTradeGateway legacyTradeGateway = createLegacyTradeGateway();
+        this.tradeViewAdapter = createTradeViewAdapter(legacyTradeGateway);
+        this.propertyPurchaseFlow = createPropertyPurchaseFlow();
+        this.tradeController = createTradeController(legacyTradeGateway);
+        this.sessionViewFacade = createSessionViewFacade();
+        registerGameSession();
+        setupDefaultGameState();
+        setupPresentationCoordinators();
+        this.gameUiController = createGameUiController();
+        this.gamePresentationSupport = createGamePresentationSupport();
+        refreshLabels();
+        showRollDiceControl();
+        setupButtonActions();
+
+        if (FORCE_DEBT_DEBUG_SCENARIO) {
+            debugController.initializeDebtDebugScenario();
+        }
+    }
+
+    private SessionApplicationService createSessionApplicationService() {
+        return new SessionApplicationService(
                 LOCAL_SESSION_ID,
                 new LegacySessionProjector(
                         LOCAL_SESSION_ID,
@@ -160,27 +184,42 @@ public class Game implements MonopolyEventListener {
                         this::isProjectedEndTurnActionAvailable
                 )::project
         );
-        this.sessionApplicationService.configureRentAndDebtFlow(debtController);
-        this.sessionApplicationService.configureAuctionFlow(runtime.popupService(), players);
-        this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
-        this.sessionApplicationService.configureTradeFlow(() -> players != null ? players.getPlayers() : List.of());
-        this.sessionApplicationService.configureTurnActionFlow(
+    }
+
+    private void configureSessionApplicationService() {
+        sessionApplicationService.configureRentAndDebtFlow(debtController);
+        sessionApplicationService.configureAuctionFlow(runtime.popupService(), players);
+        sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
+        sessionApplicationService.configureTradeFlow(() -> players != null ? players.getPlayers() : List.of());
+        sessionApplicationService.configureTurnActionFlow(
                 new LegacyTurnActionGatewayAdapter(dices, () -> players != null ? players.getTurn() : null, () -> endRound(true))
         );
-        this.debtActionDispatcher = new DebtActionDispatcher(
+    }
+
+    private DebtActionDispatcher createDebtActionDispatcher() {
+        return new DebtActionDispatcher(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
                 runtime.popupService(),
                 () -> players != null ? players.getTurn() : null
         );
-        this.auctionViewAdapter = new AuctionViewAdapter(
+    }
+
+    private AuctionViewAdapter createAuctionViewAdapter() {
+        return new AuctionViewAdapter(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
                 runtime.popupService(),
                 players
         );
-        LegacyTradeGateway legacyTradeGateway = new LegacyTradeGateway(() -> players != null ? players.getPlayers() : List.of());
-        this.tradeViewAdapter = new TradeViewAdapter(
+    }
+
+    private LegacyTradeGateway createLegacyTradeGateway() {
+        return new LegacyTradeGateway(() -> players != null ? players.getPlayers() : List.of());
+    }
+
+    private TradeViewAdapter createTradeViewAdapter(LegacyTradeGateway legacyTradeGateway) {
+        return new TradeViewAdapter(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
                 runtime.popupService(),
@@ -188,14 +227,20 @@ public class Game implements MonopolyEventListener {
                 new TradeUiBuilder(new TradeOfferEvaluator()),
                 () -> players != null && players.getTurn() != null && players.getTurn().isComputerControlled()
         );
-        this.propertyPurchaseFlow = new PendingDecisionPopupAdapter(
+    }
+
+    private PropertyPurchaseFlow createPropertyPurchaseFlow() {
+        return new PendingDecisionPopupAdapter(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
                 runtime.popupService(),
                 sessionApplicationService::openPropertyPurchaseDecision,
                 auctionViewAdapter::sync
         );
-        this.tradeController = new TradeController(
+    }
+
+    private TradeController createTradeController(LegacyTradeGateway legacyTradeGateway) {
+        return new TradeController(
                 runtime,
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
@@ -205,7 +250,10 @@ public class Game implements MonopolyEventListener {
                 () -> players != null ? players.getTurn() : null,
                 () -> players != null ? players.getPlayers() : List.of()
         );
-        this.sessionViewFacade = new SessionViewFacade(
+    }
+
+    private SessionViewFacade createSessionViewFacade() {
+        return new SessionViewFacade(
                 runtime,
                 players,
                 board,
@@ -217,8 +265,9 @@ public class Game implements MonopolyEventListener {
                 () -> gameSessionQueries.countUnownedProperties(),
                 player -> gameSessionQueries.calculateBoardDangerScore(player)
         );
-        registerGameSession();
-        setupDefaultGameState();
+    }
+
+    private void setupPresentationCoordinators() {
         this.gameControlLayout = new GameControlLayout(
                 runtime,
                 endRoundButton,
@@ -252,7 +301,11 @@ public class Game implements MonopolyEventListener {
                         this::handlePaymentRequest
                 )
         );
-        this.gameBotTurnHooks = new GameBotTurnHooksAdapter(
+        this.gameBotTurnHooks = createGameBotTurnHooks();
+    }
+
+    private GameBotTurnDriver.Hooks createGameBotTurnHooks() {
+        return new GameBotTurnHooksAdapter(
                 runtime,
                 sessionApplicationService,
                 gameSessionQueries,
@@ -272,7 +325,10 @@ public class Game implements MonopolyEventListener {
                 this::isProjectedRollDiceActionAvailable,
                 this::isProjectedEndTurnActionAvailable
         );
-        this.gameUiController = new GameUiController(
+    }
+
+    private GameUiController createGameUiController() {
+        return new GameUiController(
                 endRoundButton,
                 retryDebtButton,
                 declareBankruptcyButton,
@@ -300,20 +356,16 @@ public class Game implements MonopolyEventListener {
                         this::switchLanguage
                 )
         );
-        this.gamePresentationSupport = new GamePresentationSupport(
+    }
+
+    private GamePresentationSupport createGamePresentationSupport() {
+        return new GamePresentationSupport(
                 retryDebtButton,
                 declareBankruptcyButton,
                 gameUiController,
                 auctionViewAdapter,
                 tradeViewAdapter
         );
-        refreshLabels();
-        showRollDiceControl();
-        setupButtonActions();
-
-        if (FORCE_DEBT_DEBUG_SCENARIO) {
-            debugController.initializeDebtDebugScenario();
-        }
     }
 
     private void setupButtons() {
