@@ -28,6 +28,7 @@ import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.game.GameBotTurnDriver;
 import fi.monopoly.presentation.game.GameControlLayout;
+import fi.monopoly.presentation.game.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
 import fi.monopoly.presentation.game.GameSessionQueries;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
@@ -122,11 +123,11 @@ public class Game implements MonopolyEventListener {
     private long lastAnimationUpdateNanos = -1L;
     private final SessionViewFacade sessionViewFacade;
     private GameControlLayout gameControlLayout;
+    private GamePrimaryTurnControls gamePrimaryTurnControls;
     private GameSessionQueries gameSessionQueries;
     private final GameSidebarPresenter gameSidebarPresenter;
     private final GameUiController gameUiController;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
-    private PrimaryTurnControlState primaryTurnControlState = PrimaryTurnControlState.NONE;
 
     public Game(MonopolyRuntime runtime) {
         this.runtime = runtime;
@@ -239,6 +240,7 @@ public class Game implements MonopolyEventListener {
                 languageButton,
                 dices
         );
+        this.gamePrimaryTurnControls = new GamePrimaryTurnControls(dices, endRoundButton, () -> gameOver, () -> players != null ? players.getTurn() : null);
         this.gameSessionQueries = new GameSessionQueries(players, board);
         this.gameTurnFlowCoordinator = new GameTurnFlowCoordinator(
                 runtime,
@@ -756,42 +758,15 @@ public class Game implements MonopolyEventListener {
     }
 
     private void showRollDiceControl() {
-        if (gameOver) {
-            hidePrimaryTurnControls();
-            return;
-        }
-        primaryTurnControlState = PrimaryTurnControlState.ROLL_DICE;
-        dices.reset();
-        Player turnPlayer = players.getTurn();
-        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            dices.hide();
-            endRoundButton.hide();
-            return;
-        }
-        dices.show();
-        endRoundButton.hide();
+        gamePrimaryTurnControls.showRollDiceControl();
     }
 
     private void showEndTurnControl() {
-        if (gameOver) {
-            hidePrimaryTurnControls();
-            return;
-        }
-        primaryTurnControlState = PrimaryTurnControlState.END_TURN;
-        Player turnPlayer = players.getTurn();
-        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            dices.hide();
-            endRoundButton.hide();
-            return;
-        }
-        dices.hide();
-        endRoundButton.show();
+        gamePrimaryTurnControls.showEndTurnControl();
     }
 
     private void hidePrimaryTurnControls() {
-        primaryTurnControlState = PrimaryTurnControlState.NONE;
-        dices.hide();
-        endRoundButton.hide();
+        gamePrimaryTurnControls.hide();
     }
 
     private void declareWinner(Player winningPlayer) {
@@ -829,14 +804,10 @@ public class Game implements MonopolyEventListener {
     }
 
     private void enforcePrimaryTurnControlInvariant() {
-        if (debtController.debtState() != null) {
-            hidePrimaryTurnControls();
-            return;
-        }
-        if (endRoundButton.isVisible() && dices.isVisible()) {
-            log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.");
-            dices.hide();
-        }
+        gamePrimaryTurnControls.enforceInvariant(
+                debtController.debtState() != null,
+                () -> log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.")
+        );
     }
 
     private final class GameUiHooks implements GameUiController.Hooks {
@@ -953,17 +924,19 @@ public class Game implements MonopolyEventListener {
     }
 
     private boolean isRollDiceActionAvailable(Player currentPlayer) {
-        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
-            return false;
-        }
-        return primaryTurnControlState == PrimaryTurnControlState.ROLL_DICE;
+        return gamePrimaryTurnControls.isRollDiceActionAvailable(
+                runtime.popupService().isAnyVisible(),
+                debtController.debtState() != null,
+                currentPlayer
+        );
     }
 
     private boolean isEndTurnActionAvailable(Player currentPlayer) {
-        if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
-            return false;
-        }
-        return primaryTurnControlState == PrimaryTurnControlState.END_TURN;
+        return gamePrimaryTurnControls.isEndTurnActionAvailable(
+                runtime.popupService().isAnyVisible(),
+                debtController.debtState() != null,
+                currentPlayer
+        );
     }
 
     private boolean isProjectedRollDiceActionAvailable() {
@@ -972,12 +945,6 @@ public class Game implements MonopolyEventListener {
 
     private boolean isProjectedEndTurnActionAvailable() {
         return isEndTurnActionAvailable(players != null ? players.getTurn() : null);
-    }
-
-    private enum PrimaryTurnControlState {
-        NONE,
-        ROLL_DICE,
-        END_TURN
     }
 
     private final class GameTurnFlowHooks implements GameTurnFlowCoordinator.Hooks {
