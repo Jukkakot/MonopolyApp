@@ -16,23 +16,20 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.spots.JailSpot;
-import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.trade.TradeController;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeUiBuilder;
 import fi.monopoly.components.turn.TurnEngine;
-import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.game.GameBotTurnDriver;
 import fi.monopoly.presentation.game.GameControlLayout;
 import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
+import fi.monopoly.presentation.game.GameSessionQueries;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
 import fi.monopoly.presentation.game.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.game.GameUiController;
@@ -46,7 +43,6 @@ import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.DiceState;
-import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -126,6 +122,7 @@ public class Game implements MonopolyEventListener {
     private long lastAnimationUpdateNanos = -1L;
     private final SessionViewFacade sessionViewFacade;
     private GameControlLayout gameControlLayout;
+    private GameSessionQueries gameSessionQueries;
     private final GameSidebarPresenter gameSidebarPresenter;
     private final GameUiController gameUiController;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
@@ -225,8 +222,8 @@ public class Game implements MonopolyEventListener {
                 declareBankruptcyButton::isVisible,
                 this::isRollDiceActionAvailable,
                 this::isEndTurnActionAvailable,
-                this::countUnownedProperties,
-                this::calculateBoardDangerScore
+                () -> gameSessionQueries.countUnownedProperties(),
+                player -> gameSessionQueries.calculateBoardDangerScore(player)
         );
         registerGameSession();
         setupDefaultGameState();
@@ -242,6 +239,7 @@ public class Game implements MonopolyEventListener {
                 languageButton,
                 dices
         );
+        this.gameSessionQueries = new GameSessionQueries(players, board);
         this.gameTurnFlowCoordinator = new GameTurnFlowCoordinator(
                 runtime,
                 players,
@@ -508,28 +506,6 @@ public class Game implements MonopolyEventListener {
         botTurnDriver.step(new GameBotTurnHooks());
     }
 
-    private Player findPlayerById(String playerId) {
-        if (playerId == null) {
-            return null;
-        }
-        for (Player player : players.getPlayers()) {
-            if (playerId.equals("player-" + player.getId())) {
-                return player;
-            }
-        }
-        return null;
-    }
-
-    private String resolveTradeActorId(SessionState sessionState) {
-        if (sessionState.tradeState() == null) {
-            return null;
-        }
-        if (sessionState.tradeState().status() == TradeStatus.EDITING) {
-            return sessionState.tradeState().editingPlayerId();
-        }
-        return sessionState.tradeState().decisionRequiredFromPlayerId();
-    }
-
     private void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
         botTurnScheduler.schedule(
                 delayKind,
@@ -582,12 +558,12 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public Player findPlayerById(String playerId) {
-            return Game.this.findPlayerById(playerId);
+            return gameSessionQueries.findPlayerById(playerId);
         }
 
         @Override
         public String resolveTradeActorId(SessionState sessionState) {
-            return Game.this.resolveTradeActorId(sessionState);
+            return gameSessionQueries.resolveTradeActorId(sessionState);
         }
 
         @Override
@@ -1039,60 +1015,6 @@ public class Game implements MonopolyEventListener {
         public void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
             Game.this.handlePaymentRequest(request, onResolved);
         }
-    }
-
-    private int estimateRent(Property property, Player owner) {
-        if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
-            return switch (owner.countOwnedProperties(property.getSpotType().streetType)) {
-                case 2 -> 70;
-                default -> 28;
-            };
-        }
-        Player nonOwner = null;
-        for (Player candidate : players.getPlayers()) {
-            if (candidate != owner) {
-                nonOwner = candidate;
-                break;
-            }
-        }
-        return nonOwner == null ? 0 : property.getRent(nonOwner);
-    }
-
-    private int calculateBoardDangerScore(Player player) {
-        int boardDangerScore = 0;
-        for (Spot spot : board.getSpots()) {
-            if (!(spot instanceof PropertySpot propertySpot)) {
-                continue;
-            }
-            Property property = propertySpot.getProperty();
-            if (!property.hasOwner() || !property.isNotOwner(player)) {
-                continue;
-            }
-            boardDangerScore += calculateDangerRent(property);
-        }
-        return boardDangerScore;
-    }
-
-    private int calculateDangerRent(Property property) {
-        Player owner = property.getOwnerPlayer();
-        if (owner == null) {
-            return 0;
-        }
-        return switch (property.getSpotType().streetType.placeType) {
-            case UTILITY -> owner.countOwnedProperties(property.getSpotType().streetType) >= 2 ? 70 : 28;
-            case RAILROAD, STREET -> estimateRent(property, owner);
-            default -> 0;
-        };
-    }
-
-    private int countUnownedProperties() {
-        int unownedProperties = 0;
-        for (Spot spot : board.getSpots()) {
-            if (spot instanceof PropertySpot propertySpot && !propertySpot.getProperty().hasOwner()) {
-                unownedProperties++;
-            }
-        }
-        return unownedProperties;
     }
 
 }
