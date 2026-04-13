@@ -45,6 +45,7 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.SessionViewFacade;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.projection.LegacySessionProjector;
@@ -139,8 +140,7 @@ public class Game implements MonopolyEventListener {
     private int lastSidebarLayoutHash = Integer.MIN_VALUE;
     private long lastAnimationUpdateNanos = -1L;
     private final Map<HistoryEntryCacheKey, HistoryEntryLayout> historyLayoutCache = new HashMap<>();
-    private final Map<Integer, CachedPlayerView> playerViewCache = new HashMap<>();
-    private CachedGameView cachedGameView;
+    private final SessionViewFacade sessionViewFacade;
     private PrimaryTurnControlState primaryTurnControlState = PrimaryTurnControlState.NONE;
 
     public Game(MonopolyRuntime runtime) {
@@ -212,6 +212,18 @@ public class Game implements MonopolyEventListener {
                 () -> !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null,
                 () -> players != null ? players.getTurn() : null,
                 () -> players != null ? players.getPlayers() : List.of()
+        );
+        this.sessionViewFacade = new SessionViewFacade(
+                runtime,
+                players,
+                board,
+                () -> debtController != null ? debtController.debtState() : null,
+                retryDebtButton::isVisible,
+                declareBankruptcyButton::isVisible,
+                this::isRollDiceActionAvailable,
+                this::isEndTurnActionAvailable,
+                this::countUnownedProperties,
+                this::calculateBoardDangerScore
         );
         registerGameSession();
         setupDefaultGameState();
@@ -652,18 +664,6 @@ public class Game implements MonopolyEventListener {
     private record HistoryEntryCacheKey(
             String message,
             int width
-    ) {
-    }
-
-    private record CachedPlayerView(
-            long signature,
-            PlayerView view
-    ) {
-    }
-
-    private record CachedGameView(
-            long signature,
-            GameView view
     ) {
     }
 
@@ -1556,49 +1556,7 @@ public class Game implements MonopolyEventListener {
 
     GameView createGameView(Player currentPlayer) {
         long snapshotStart = System.nanoTime();
-        long gameViewSignature = buildGameViewSignature(currentPlayer);
-        if (cachedGameView != null && cachedGameView.signature() == gameViewSignature) {
-            debugPerformanceStats.recordGameViewBuild(System.nanoTime() - snapshotStart);
-            return cachedGameView.view();
-        }
-        PopupView popupView = runtime.popupService().isAnyVisible()
-                ? new PopupView(
-                runtime.popupService().activePopupKind(),
-                runtime.popupService().activePopupMessage(),
-                runtime.popupService().activePopupActions(),
-                createPopupPropertyView(currentPlayer)
-        )
-                : null;
-        DebtState debtState = debtController.debtState();
-        DebtView debtView = debtState == null ? null : new DebtView(
-                debtState.paymentRequest().amount(),
-                debtState.paymentRequest().reason(),
-                debtState.bankruptcyRisk(),
-                debtState.paymentRequest().target().getClass().getSimpleName(),
-                debtTargetName(debtState.paymentRequest())
-        );
-        List<Player> playerList = players.getPlayers();
-        List<PlayerView> playerViews = playerList.stream()
-                .map(this::createPlayerView)
-                .sorted(Comparator.comparingInt(PlayerView::turnNumber))
-                .toList();
-        GameView view = new GameView(
-                currentPlayer.getId(),
-                playerViews,
-                new VisibleActionsView(
-                        runtime.popupService().isAnyVisible(),
-                        retryDebtButton.isVisible(),
-                        declareBankruptcyButton.isVisible(),
-                        isRollDiceActionAvailable(currentPlayer),
-                        isEndTurnActionAvailable(currentPlayer)
-                ),
-                popupView,
-                debtView,
-                countUnownedProperties(),
-                StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount(),
-                StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount()
-        );
-        cachedGameView = new CachedGameView(gameViewSignature, view);
+        GameView view = sessionViewFacade.createGameView(currentPlayer);
         debugPerformanceStats.recordGameViewBuild(System.nanoTime() - snapshotStart);
         return view;
     }
@@ -1608,100 +1566,7 @@ public class Game implements MonopolyEventListener {
     }
 
     PlayerView createPlayerView(Player player) {
-        long playerSignature = buildPlayerViewSignature(player);
-        CachedPlayerView cachedPlayerView = playerViewCache.get(player.getId());
-        if (cachedPlayerView != null && cachedPlayerView.signature() == playerSignature) {
-            return cachedPlayerView.view();
-        }
-        List<Property> ownedPlayerProperties = player.getOwnedProperties();
-        List<PropertyView> ownedProperties = ownedPlayerProperties.stream()
-                .map(property -> createPropertyView(player, property))
-                .sorted(Comparator.comparing(property -> property.spotType().ordinal()))
-                .toList();
-        List<StreetType> completedSets = ownedPlayerProperties.stream()
-                .map(Property::getSpotType)
-                .map(spotType -> spotType.streetType)
-                .distinct()
-                .filter(player::ownsAllStreetProperties)
-                .sorted(Comparator.comparingInt(Enum::ordinal))
-                .toList();
-        PlayerView playerView = new PlayerView(
-                player.getId(),
-                player.getName(),
-                player.getMoneyAmount(),
-                player.getTurnNumber(),
-                player.getComputerProfile(),
-                player.getSpot().getSpotType(),
-                player.isInJail(),
-                JailSpot.jailTimeLeftMap.getOrDefault(player, 0),
-                player.getGetOutOfJailCardCount(),
-                player.getTotalHouseCount(),
-                player.getTotalHotelCount(),
-                player.getTotalLiquidationValue(),
-                calculateBoardDangerScore(player),
-                completedSets,
-                ownedProperties
-        );
-        playerViewCache.put(player.getId(), new CachedPlayerView(playerSignature, playerView));
-        return playerView;
-    }
-
-    private long buildGameViewSignature(Player currentPlayer) {
-        long signature = currentPlayer == null ? 0 : currentPlayer.getId();
-        signature = signature * 31 + Boolean.hashCode(runtime.popupService().isAnyVisible());
-        if (runtime.popupService().isAnyVisible()) {
-            signature = signature * 31 + String.valueOf(runtime.popupService().activePopupKind()).hashCode();
-            signature = signature * 31 + String.valueOf(runtime.popupService().activePopupMessage()).hashCode();
-            signature = signature * 31 + runtime.popupService().activePopupActions().hashCode();
-        }
-        signature = signature * 31 + Boolean.hashCode(retryDebtButton.isVisible());
-        signature = signature * 31 + Boolean.hashCode(declareBankruptcyButton.isVisible());
-        signature = signature * 31 + Boolean.hashCode(isRollDiceActionAvailable(currentPlayer));
-        signature = signature * 31 + Boolean.hashCode(isEndTurnActionAvailable(currentPlayer));
-        signature = signature * 31 + countUnownedProperties();
-        signature = signature * 31 + (StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount());
-        signature = signature * 31 + (StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount());
-        DebtState debtState = debtController.debtState();
-        if (debtState != null) {
-            signature = signature * 31 + debtState.paymentRequest().amount();
-            signature = signature * 31 + debtState.paymentRequest().reason().hashCode();
-            signature = signature * 31 + Boolean.hashCode(debtState.bankruptcyRisk());
-        }
-        Property offeredProperty = runtime.popupService().activeOfferedProperty();
-        if (offeredProperty != null) {
-            signature = signature * 31 + offeredProperty.getSpotType().ordinal();
-        }
-        for (Player player : players.getPlayers()) {
-            signature = signature * 31 + buildPlayerViewSignature(player);
-        }
-        return signature;
-    }
-
-    private long buildPlayerViewSignature(Player player) {
-        long signature = player.getId();
-        signature = signature * 31 + player.getMoneyAmount();
-        signature = signature * 31 + player.getTurnNumber();
-        signature = signature * 31 + player.getSpot().getSpotType().ordinal();
-        signature = signature * 31 + Boolean.hashCode(player.isInJail());
-        signature = signature * 31 + JailSpot.jailTimeLeftMap.getOrDefault(player, 0);
-        signature = signature * 31 + player.getGetOutOfJailCardCount();
-        signature = signature * 31 + player.getTotalHouseCount();
-        signature = signature * 31 + player.getTotalHotelCount();
-        signature = signature * 31 + player.getTotalLiquidationValue();
-        signature = signature * 31 + calculateBoardDangerScore(player);
-        for (Property property : player.getOwnedProperties()) {
-            signature = signature * 31 + property.getSpotType().ordinal();
-            signature = signature * 31 + property.getPrice();
-            signature = signature * 31 + Boolean.hashCode(property.isMortgaged());
-            signature = signature * 31 + property.getLiquidationValue();
-            if (property instanceof StreetProperty streetProperty) {
-                signature = signature * 31 + streetProperty.getHousePrice();
-                signature = signature * 31 + streetProperty.getBuildingLevel();
-                signature = signature * 31 + streetProperty.getHouseCount();
-                signature = signature * 31 + streetProperty.getHotelCount();
-            }
-        }
-        return signature;
+        return sessionViewFacade.createPlayerView(player);
     }
 
     private boolean isRollDiceActionAvailable(Player currentPlayer) {
@@ -1730,35 +1595,6 @@ public class Game implements MonopolyEventListener {
         NONE,
         ROLL_DICE,
         END_TURN
-    }
-
-    private PropertyView createPropertyView(Player owner, Property property) {
-        int housePrice = 0;
-        int buildingLevel = 0;
-        int houseCount = 0;
-        int hotelCount = 0;
-        if (property instanceof StreetProperty streetProperty) {
-            housePrice = streetProperty.getHousePrice();
-            buildingLevel = streetProperty.getBuildingLevel();
-            houseCount = streetProperty.getHouseCount();
-            hotelCount = streetProperty.getHotelCount();
-        }
-        return new PropertyView(
-                property.getSpotType(),
-                property.getSpotType().streetType,
-                property.getSpotType().streetType.placeType,
-                property.getDisplayName(),
-                property.getPrice(),
-                property.isMortgaged(),
-                property.getMortgageValue(),
-                property.getLiquidationValue(),
-                housePrice,
-                buildingLevel,
-                houseCount,
-                hotelCount,
-                estimateRent(property, owner),
-                owner.ownsAllStreetProperties(property.getSpotType().streetType)
-        );
     }
 
     private int estimateRent(Property property, Player owner) {
@@ -1815,58 +1651,4 @@ public class Game implements MonopolyEventListener {
         return unownedProperties;
     }
 
-    private String debtTargetName(PaymentRequest paymentRequest) {
-        if (paymentRequest.target() instanceof PlayerTarget playerTarget) {
-            return playerTarget.player().getName();
-        }
-        return paymentRequest.target().getClass().getSimpleName();
-    }
-
-    private PropertyView createPopupPropertyView(Player currentPlayer) {
-        Property offeredProperty = runtime.popupService().activeOfferedProperty();
-        if (offeredProperty == null) {
-            return null;
-        }
-        return new PropertyView(
-                offeredProperty.getSpotType(),
-                offeredProperty.getSpotType().streetType,
-                offeredProperty.getSpotType().streetType.placeType,
-                offeredProperty.getDisplayName(),
-                offeredProperty.getPrice(),
-                offeredProperty.isMortgaged(),
-                offeredProperty.getMortgageValue(),
-                offeredProperty.getLiquidationValue(),
-                0,
-                0,
-                0,
-                0,
-                estimateOfferedPropertyRent(offeredProperty, currentPlayer),
-                currentPlayer != null && currentPlayer.countOwnedProperties(offeredProperty.getSpotType().streetType) + 1
-                        >= SpotType.getNumberOfSpots(offeredProperty.getSpotType().streetType)
-        );
-    }
-
-    private int estimateOfferedPropertyRent(Property property, Player currentPlayer) {
-        if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
-            int utilityCount = currentPlayer == null ? 0 : currentPlayer.countOwnedProperties(property.getSpotType().streetType) + 1;
-            return utilityCount >= 2 ? 70 : 28;
-        }
-        Player simulatedVisitor = null;
-        for (Player candidate : players.getPlayers()) {
-            if (candidate != currentPlayer) {
-                simulatedVisitor = candidate;
-                break;
-            }
-        }
-        if (simulatedVisitor == null) {
-            return 0;
-        }
-        Player originalOwner = property.getOwnerPlayer();
-        property.setOwnerPlayer(currentPlayer);
-        try {
-            return property.getRent(simulatedVisitor);
-        } finally {
-            property.setOwnerPlayer(originalOwner);
-        }
-    }
 }
