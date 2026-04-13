@@ -18,6 +18,7 @@ The docs folder is now organized around one main program:
 - then move toward persistence and later server extraction
 
 The main local-separation wave is already specified through PR1-PR8 design notes.
+Persistence/server follow-up is now also specified through PR9-PR10 notes.
 
 ## Read Order
 
@@ -86,6 +87,8 @@ Then read the PR notes in order:
 - [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr6-design-note-trade-flow.md)
 - [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr7-design-note-bot-command-unification.md)
 - [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr9-design-note-persistence-ready-session.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr9-design-note-persistence-ready-session.md)
+- [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
 
 ## Short Version
 
@@ -107,6 +110,12 @@ When continuing later, the right shorthand is:
 - `plan the next PR after PR6`
 
 That should be enough context together with this docs set.
+
+Useful later shorthands:
+
+- `continue from PR9`
+- `start the persistence wave`
+- `continue from the server MVP plan`
 
 ## Implementation Rule
 
@@ -133,10 +142,9 @@ Reason:
 
 The documentation is now in a state where the next sensible move is:
 
-- start implementation
-  from [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
+- continue implementation from the completed local-separation wave into
+  [pr9-design-note-persistence-ready-session.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr9-design-note-persistence-ready-session.md)
 
-If more planning is still desired before coding, the next topic should be:
+After that:
 
-- persistence/save-load design after PR8
-- then server extraction specifics
+- move to [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)

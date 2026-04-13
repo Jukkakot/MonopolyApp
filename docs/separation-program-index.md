@@ -342,16 +342,28 @@ Primary document:
 
 ### Phase 9: Persistence-ready authoritative session
 
-Future scope:
+PR9:
 
-- save/load around authoritative session state
+- stable session snapshot boundary
+- save/load on authoritative session
+- restore across pending decision / debt / auction / trade
+
+Primary document:
+
+- [pr9-design-note-persistence-ready-session.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr9-design-note-persistence-ready-session.md)
 
 ### Phase 10: Server extraction
 
-Future scope:
+PR10:
 
-- move application + domain into backend host
-- Processing becomes network client
+- backend session host
+- command transport
+- full snapshot sync
+- backend bots/autoplay
+
+Primary document:
+
+- [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
 
 ## Which PRs Are Ready Enough To Implement
 
@@ -365,15 +377,18 @@ Future scope:
 - PR6
 - PR7
 - PR8
+- PR9
+- PR10
 
-These are specified well enough that implementation could start without re-architecting first.
+These are specified well enough that implementation could start without reopening architecture first.
 
-### Partially specified, but not implementation-ready yet
+### Current branch status
 
-- persistence-ready authoritative session wave
-- server extraction wave
+On branch `separation-program`:
 
-These still need their own focused design notes before implementation.
+- PR1 through PR8 are already substantially implemented
+- the next planned implementation wave is PR9
+- PR10 remains design-ready but should follow PR9
 
 ## Suggested Task Breakdown
 
@@ -463,14 +478,12 @@ These are not blockers yet, but they will need explicit decisions before their d
 
 ## Recommended Immediate Next Planning Step
 
-The next best planning move is:
+The next best implementation move is:
 
-- decide whether to continue planning persistence/server extraction in the same level of detail now, or begin
-  implementation of PR1
+- finish validating PR8 cleanup boundaries in code
+- then begin PR9 persistence boundary implementation
 
 Reason:
 
-- PR1..PR8 now cover the full local separation wave
-- the next step is either:
-    - start executing from PR1
-    - or continue with persistence/server-side design notes
+- local separation is already specified and largely executable
+- the next architectural risk sits at the persistence boundary, not in more local UI cleanup
