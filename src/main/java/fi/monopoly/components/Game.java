@@ -47,8 +47,10 @@ import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.game.GameBotTurnDriver;
 import fi.monopoly.presentation.game.GameControlLayout;
+import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
 import fi.monopoly.presentation.game.GameUiController;
+import fi.monopoly.presentation.game.SessionBackedComputerTurnContext;
 import fi.monopoly.presentation.game.SessionViewFacade;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
@@ -178,14 +180,16 @@ public class Game implements MonopolyEventListener {
                         () -> gameOver,
                         () -> winner,
                         this::isProjectedRollDiceActionAvailable,
-                        this::isProjectedEndTurnActionAvailable
+                this::isProjectedEndTurnActionAvailable
                 )::project
         );
         this.sessionApplicationService.configureRentAndDebtFlow(debtController);
         this.sessionApplicationService.configureAuctionFlow(runtime.popupService(), players);
         this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
         this.sessionApplicationService.configureTradeFlow(() -> players != null ? players.getPlayers() : List.of());
-        this.sessionApplicationService.configureTurnActionFlow(new LegacyTurnActionGateway());
+        this.sessionApplicationService.configureTurnActionFlow(
+                new LegacyTurnActionGatewayAdapter(dices, () -> players != null ? players.getTurn() : null, () -> endRound(true))
+        );
         this.debtActionDispatcher = new DebtActionDispatcher(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
@@ -621,12 +625,22 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public ComputerTurnContext createTurnContext(Player turnPlayer) {
-            return new GameComputerTurnContext(turnPlayer);
+            return new SessionBackedComputerTurnContext(
+                    turnPlayer,
+                    sessionApplicationService,
+                    runtime,
+                    () -> createGameView(turnPlayer),
+                    () -> createPlayerView(turnPlayer),
+                    () -> tradeController.tryInitiateComputerTrade(turnPlayer),
+                    Game.this::syncTransientPresentationState,
+                    Game.this::isProjectedRollDiceActionAvailable,
+                    Game.this::isProjectedEndTurnActionAvailable
+            );
         }
 
         @Override
         public BotTurnScheduler.DelayKind delayKindFor(ComputerTurnContext context) {
-            return ((GameComputerTurnContext) context).delayKind();
+            return ((SessionBackedComputerTurnContext) context).delayKind();
         }
 
         @Override
@@ -964,175 +978,6 @@ public class Game implements MonopolyEventListener {
         if (endRoundButton.isVisible() && dices.isVisible()) {
             log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.");
             dices.hide();
-        }
-    }
-
-    private final class GameComputerTurnContext implements ComputerTurnContext {
-        private final Player player;
-        private BotTurnScheduler.DelayKind delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
-
-        private GameComputerTurnContext(Player player) {
-            this.player = player;
-        }
-
-        private BotTurnScheduler.DelayKind delayKind() {
-            return delayKind;
-        }
-
-        @Override
-        public GameView gameView() {
-            return createGameView(player);
-        }
-
-        @Override
-        public PlayerView currentPlayerView() {
-            return createPlayerView(player);
-        }
-
-        @Override
-        public SessionState sessionState() {
-            return sessionApplicationService.currentState();
-        }
-
-        @Override
-        public boolean submit(SessionCommand command) {
-            var result = sessionApplicationService.handle(command);
-            boolean accepted = result.accepted();
-            if (!accepted) {
-                SessionState state = sessionApplicationService.currentState();
-                if (!result.rejections().isEmpty()) {
-                    log.debug("Rejected bot command {} for player {}: {}",
-                            command.getClass().getSimpleName(),
-                            player.getName(),
-                            result.rejections().get(0).message());
-                }
-                log.debug("Bot command seam state: phase={}, pendingDecision={}, auctionState={}, tradeState={}, debtState={}, rollAvailable={}, endTurnAvailable={}",
-                        state.turn().phase(),
-                        state.pendingDecision() != null,
-                        state.auctionState() != null,
-                        state.tradeState() != null,
-                        state.activeDebt() != null,
-                        isProjectedRollDiceActionAvailable(),
-                        isProjectedEndTurnActionAvailable());
-                return false;
-            }
-            delayKind = delayKindForCommand(command);
-            syncTransientPresentationState();
-            return true;
-        }
-
-        @Override
-        public boolean resolveActivePopup() {
-            boolean resolved = runtime.popupService().resolveForComputer(player.getComputerProfile());
-            if (resolved) {
-                delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
-            }
-            return resolved;
-        }
-
-        @Override
-        public boolean acceptActivePopup() {
-            boolean accepted = runtime.popupService().triggerPrimaryComputerAction();
-            if (accepted) {
-                delayKind = BotTurnScheduler.DelayKind.ACCEPT_POPUP;
-            }
-            return accepted;
-        }
-
-        @Override
-        public boolean declineActivePopup() {
-            boolean declined = runtime.popupService().triggerSecondaryComputerAction();
-            if (declined) {
-                delayKind = BotTurnScheduler.DelayKind.DECLINE_POPUP;
-            }
-            return declined;
-        }
-
-        @Override
-        public ComputerDecision initiateTrade() {
-            ComputerDecision decision = tradeController.tryInitiateComputerTrade(player);
-            if (decision != null) {
-                delayKind = BotTurnScheduler.DelayKind.TRADE;
-            }
-            return decision;
-        }
-
-        private BotTurnScheduler.DelayKind delayKindForCommand(SessionCommand command) {
-            if (command instanceof BuyPropertyCommand) {
-                return BotTurnScheduler.DelayKind.ACCEPT_POPUP;
-            }
-            if (command instanceof DeclinePropertyCommand) {
-                return BotTurnScheduler.DelayKind.DECLINE_POPUP;
-            }
-            if (command instanceof PayDebtCommand) {
-                return BotTurnScheduler.DelayKind.RETRY_DEBT_PAYMENT;
-            }
-            if (command instanceof MortgagePropertyForDebtCommand) {
-                return BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
-            }
-            if (command instanceof SellBuildingForDebtCommand || command instanceof SellBuildingRoundsAcrossSetForDebtCommand) {
-                return BotTurnScheduler.DelayKind.SELL_BUILDING;
-            }
-            if (command instanceof DeclareBankruptcyCommand) {
-                return BotTurnScheduler.DelayKind.DECLARE_BANKRUPTCY;
-            }
-            if (command instanceof BuyBuildingRoundCommand) {
-                return BotTurnScheduler.DelayKind.BUILD_ROUND;
-            }
-            if (command instanceof ToggleMortgageCommand toggleMortgageCommand) {
-                Property property = PropertyFactory.getProperty(SpotType.valueOf(toggleMortgageCommand.propertyId()));
-                return property != null && property.isMortgaged()
-                        ? BotTurnScheduler.DelayKind.UNMORTGAGE_PROPERTY
-                        : BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
-            }
-            if (command instanceof RollDiceCommand) {
-                return BotTurnScheduler.DelayKind.ROLL_DICE;
-            }
-            if (command instanceof EndTurnCommand) {
-                return BotTurnScheduler.DelayKind.END_TURN;
-            }
-            return BotTurnScheduler.DelayKind.RESOLVE_POPUP;
-        }
-    }
-
-    private final class LegacyTurnActionGateway implements TurnActionGateway {
-        @Override
-        public boolean rollDice() {
-            if (dices == null) {
-                return false;
-            }
-            dices.rollDice();
-            return true;
-        }
-
-        @Override
-        public boolean endTurn() {
-            if (players == null || players.getTurn() == null) {
-                return false;
-            }
-            Game.this.endRound(true);
-            return true;
-        }
-
-        @Override
-        public boolean buyBuildingRound(String propertyId) {
-            Property property = propertyById(propertyId);
-            return property instanceof StreetProperty streetProperty
-                    && streetProperty.buyBuildingRoundsAcrossSet(1);
-        }
-
-        @Override
-        public boolean toggleMortgage(String propertyId) {
-            Property property = propertyById(propertyId);
-            return property != null && property.handleMortgaging();
-        }
-
-        private Property propertyById(String propertyId) {
-            try {
-                return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
-            } catch (IllegalArgumentException ignored) {
-                return null;
-            }
         }
     }
 
