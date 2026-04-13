@@ -3,15 +3,19 @@ package fi.monopoly.components;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.command.BuyPropertyCommand;
+import fi.monopoly.application.command.BuyBuildingRoundCommand;
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.EndTurnCommand;
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
 import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
+import fi.monopoly.application.command.RollDiceCommand;
 import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
 import fi.monopoly.application.command.SessionCommand;
+import fi.monopoly.application.command.ToggleMortgageCommand;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.animation.Animation;
@@ -47,6 +51,7 @@ import fi.monopoly.presentation.session.projection.LegacySessionProjector;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
+import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.*;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -136,6 +141,7 @@ public class Game implements MonopolyEventListener {
     private final Map<HistoryEntryCacheKey, HistoryEntryLayout> historyLayoutCache = new HashMap<>();
     private final Map<Integer, CachedPlayerView> playerViewCache = new HashMap<>();
     private CachedGameView cachedGameView;
+    private PrimaryTurnControlState primaryTurnControlState = PrimaryTurnControlState.NONE;
 
     public Game(MonopolyRuntime runtime) {
         this.runtime = runtime;
@@ -160,14 +166,15 @@ public class Game implements MonopolyEventListener {
                         () -> paused,
                         () -> gameOver,
                         () -> winner,
-                        () -> dices != null && dices.isVisible(),
-                        () -> endRoundButton.isVisible()
+                        this::isProjectedRollDiceActionAvailable,
+                        this::isProjectedEndTurnActionAvailable
                 )::project
         );
         this.sessionApplicationService.configureRentAndDebtFlow(debtController);
         this.sessionApplicationService.configureAuctionFlow(runtime.popupService(), players);
         this.sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
         this.sessionApplicationService.configureTradeFlow(() -> players != null ? players.getPlayers() : List.of());
+        this.sessionApplicationService.configureTurnActionFlow(new LegacyTurnActionGateway());
         this.debtActionDispatcher = new DebtActionDispatcher(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
@@ -208,6 +215,7 @@ public class Game implements MonopolyEventListener {
         );
         registerGameSession();
         setupDefaultGameState();
+        showRollDiceControl();
         setupButtonActions();
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
@@ -1298,10 +1306,12 @@ public class Game implements MonopolyEventListener {
             hidePrimaryTurnControls();
             return;
         }
+        primaryTurnControlState = PrimaryTurnControlState.ROLL_DICE;
         dices.reset();
         Player turnPlayer = players.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            hidePrimaryTurnControls();
+            dices.hide();
+            endRoundButton.hide();
             return;
         }
         dices.show();
@@ -1313,9 +1323,11 @@ public class Game implements MonopolyEventListener {
             hidePrimaryTurnControls();
             return;
         }
+        primaryTurnControlState = PrimaryTurnControlState.END_TURN;
         Player turnPlayer = players.getTurn();
         if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            hidePrimaryTurnControls();
+            dices.hide();
+            endRoundButton.hide();
             return;
         }
         dices.hide();
@@ -1323,6 +1335,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void hidePrimaryTurnControls() {
+        primaryTurnControlState = PrimaryTurnControlState.NONE;
         dices.hide();
         endRoundButton.hide();
     }
@@ -1401,8 +1414,24 @@ public class Game implements MonopolyEventListener {
 
         @Override
         public boolean submit(SessionCommand command) {
-            boolean accepted = sessionApplicationService.handle(command).accepted();
+            var result = sessionApplicationService.handle(command);
+            boolean accepted = result.accepted();
             if (!accepted) {
+                SessionState state = sessionApplicationService.currentState();
+                if (!result.rejections().isEmpty()) {
+                    log.debug("Rejected bot command {} for player {}: {}",
+                            command.getClass().getSimpleName(),
+                            player.getName(),
+                            result.rejections().get(0).message());
+                }
+                log.debug("Bot command seam state: phase={}, pendingDecision={}, auctionState={}, tradeState={}, debtState={}, rollAvailable={}, endTurnAvailable={}",
+                        state.turn().phase(),
+                        state.pendingDecision() != null,
+                        state.auctionState() != null,
+                        state.tradeState() != null,
+                        state.activeDebt() != null,
+                        isProjectedRollDiceActionAvailable(),
+                        isProjectedEndTurnActionAvailable());
                 return false;
             }
             delayKind = delayKindForCommand(command);
@@ -1438,89 +1467,12 @@ public class Game implements MonopolyEventListener {
         }
 
         @Override
-        public boolean sellBuilding(SpotType spotType, int count) {
-            if (debtController.debtState() != null) {
-                boolean soldForDebt = debtActionDispatcher.sellBuilding(spotType, count);
-                if (soldForDebt) {
-                    delayKind = BotTurnScheduler.DelayKind.SELL_BUILDING;
-                }
-                return soldForDebt;
-            }
-            Property property = PropertyFactory.getProperty(spotType);
-            if (!(property instanceof StreetProperty streetProperty)) {
-                return false;
-            }
-            boolean sold = streetProperty.sellHouses(count);
-            if (sold) {
-                delayKind = BotTurnScheduler.DelayKind.SELL_BUILDING;
-            }
-            return sold;
-        }
-
-        @Override
-        public boolean buyBuildingRound(SpotType spotType) {
-            Property property = PropertyFactory.getProperty(spotType);
-            if (!(property instanceof StreetProperty streetProperty)) {
-                return false;
-            }
-            boolean built = streetProperty.buyBuildingRoundsAcrossSet(1);
-            if (built) {
-                delayKind = BotTurnScheduler.DelayKind.BUILD_ROUND;
-            }
-            return built;
-        }
-
-        @Override
-        public boolean toggleMortgage(SpotType spotType) {
-            if (debtController.debtState() != null) {
-                boolean mortgagedForDebt = debtActionDispatcher.mortgageProperty(spotType);
-                if (mortgagedForDebt) {
-                    delayKind = BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
-                }
-                return mortgagedForDebt;
-            }
-            Property property = PropertyFactory.getProperty(spotType);
-            boolean wasMortgaged = property.isMortgaged();
-            boolean toggled = property.handleMortgaging();
-            if (toggled) {
-                delayKind = wasMortgaged
-                        ? BotTurnScheduler.DelayKind.UNMORTGAGE_PROPERTY
-                        : BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
-            }
-            return toggled;
-        }
-
-        @Override
         public ComputerDecision initiateTrade() {
             ComputerDecision decision = tradeController.tryInitiateComputerTrade(player);
             if (decision != null) {
                 delayKind = BotTurnScheduler.DelayKind.TRADE;
             }
             return decision;
-        }
-
-        @Override
-        public void retryPendingDebtPayment() {
-            delayKind = BotTurnScheduler.DelayKind.RETRY_DEBT_PAYMENT;
-            debtActionDispatcher.payDebt();
-        }
-
-        @Override
-        public void declareBankruptcy() {
-            delayKind = BotTurnScheduler.DelayKind.DECLARE_BANKRUPTCY;
-            debtActionDispatcher.declareBankruptcy();
-        }
-
-        @Override
-        public void rollDice() {
-            delayKind = BotTurnScheduler.DelayKind.ROLL_DICE;
-            dices.rollDice();
-        }
-
-        @Override
-        public void endTurn() {
-            delayKind = BotTurnScheduler.DelayKind.END_TURN;
-            Game.this.endRound(true);
         }
 
         private BotTurnScheduler.DelayKind delayKindForCommand(SessionCommand command) {
@@ -1542,7 +1494,63 @@ public class Game implements MonopolyEventListener {
             if (command instanceof DeclareBankruptcyCommand) {
                 return BotTurnScheduler.DelayKind.DECLARE_BANKRUPTCY;
             }
+            if (command instanceof BuyBuildingRoundCommand) {
+                return BotTurnScheduler.DelayKind.BUILD_ROUND;
+            }
+            if (command instanceof ToggleMortgageCommand toggleMortgageCommand) {
+                Property property = PropertyFactory.getProperty(SpotType.valueOf(toggleMortgageCommand.propertyId()));
+                return property != null && property.isMortgaged()
+                        ? BotTurnScheduler.DelayKind.UNMORTGAGE_PROPERTY
+                        : BotTurnScheduler.DelayKind.MORTGAGE_PROPERTY;
+            }
+            if (command instanceof RollDiceCommand) {
+                return BotTurnScheduler.DelayKind.ROLL_DICE;
+            }
+            if (command instanceof EndTurnCommand) {
+                return BotTurnScheduler.DelayKind.END_TURN;
+            }
             return BotTurnScheduler.DelayKind.RESOLVE_POPUP;
+        }
+    }
+
+    private final class LegacyTurnActionGateway implements TurnActionGateway {
+        @Override
+        public boolean rollDice() {
+            if (dices == null) {
+                return false;
+            }
+            dices.rollDice();
+            return true;
+        }
+
+        @Override
+        public boolean endTurn() {
+            if (players == null || players.getTurn() == null) {
+                return false;
+            }
+            Game.this.endRound(true);
+            return true;
+        }
+
+        @Override
+        public boolean buyBuildingRound(String propertyId) {
+            Property property = propertyById(propertyId);
+            return property instanceof StreetProperty streetProperty
+                    && streetProperty.buyBuildingRoundsAcrossSet(1);
+        }
+
+        @Override
+        public boolean toggleMortgage(String propertyId) {
+            Property property = propertyById(propertyId);
+            return property != null && property.handleMortgaging();
+        }
+
+        private Property propertyById(String propertyId) {
+            try {
+                return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
         }
     }
 
@@ -1700,20 +1708,28 @@ public class Game implements MonopolyEventListener {
         if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
             return false;
         }
-        if (!currentPlayer.isComputerControlled()) {
-            return dices.isVisible();
-        }
-        return dices.getValue() == null;
+        return primaryTurnControlState == PrimaryTurnControlState.ROLL_DICE;
     }
 
     private boolean isEndTurnActionAvailable(Player currentPlayer) {
         if (currentPlayer == null || runtime.popupService().isAnyVisible() || debtController.debtState() != null) {
             return false;
         }
-        if (!currentPlayer.isComputerControlled()) {
-            return endRoundButton.isVisible();
-        }
-        return dices.getValue() != null;
+        return primaryTurnControlState == PrimaryTurnControlState.END_TURN;
+    }
+
+    private boolean isProjectedRollDiceActionAvailable() {
+        return isRollDiceActionAvailable(players != null ? players.getTurn() : null);
+    }
+
+    private boolean isProjectedEndTurnActionAvailable() {
+        return isEndTurnActionAvailable(players != null ? players.getTurn() : null);
+    }
+
+    private enum PrimaryTurnControlState {
+        NONE,
+        ROLL_DICE,
+        END_TURN
     }
 
     private PropertyView createPropertyView(Player owner, Property property) {

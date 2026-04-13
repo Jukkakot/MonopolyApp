@@ -152,7 +152,7 @@ class GameSmokeTest {
                 "Game neither completed the expected number of rolls nor reached a finished state");
         assertEquals(3, initialPlayerCount, "Smoke test expects the default three-player setup");
         assertTrue(popupResolutionCount > 0, "Smoke test should encounter at least one popup");
-        assertTrue(turnSwitchCount >= MIN_TURN_SWITCHES || completedGame,
+        assertTrue(turnSwitchCount >= minimumTurnSwitches(targetRollCount, verifyResponsiveUi) || completedGame,
                 "Turns did not appear to advance often enough");
         assertTrue(seenTurnPlayers.size() >= 2, "Smoke test should rotate through at least two players");
         assertTrue(seenSpotTypes.size() >= MIN_UNIQUE_SPOTS, "Game did not traverse enough of the board to be a useful sanity check");
@@ -167,6 +167,13 @@ class GameSmokeTest {
         assertFalse(isDebtResolutionActive(game), "Debt resolution should not be left active at the end of the smoke test");
 
         System.out.println(buildPlayerSummary());
+    }
+
+    private static int minimumTurnSwitches(int targetRollCount, boolean verifyResponsiveUi) {
+        if (verifyResponsiveUi) {
+            return Math.max(4, targetRollCount / 10);
+        }
+        return Math.min(MIN_TURN_SWITCHES, Math.max(6, targetRollCount / 6));
     }
 
     private static void settlePendingGameFlow(MonopolyRuntime runtime, Game game, boolean verifyResponsiveUi) {

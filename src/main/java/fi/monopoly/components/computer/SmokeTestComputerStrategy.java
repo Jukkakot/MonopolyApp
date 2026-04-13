@@ -3,8 +3,10 @@ package fi.monopoly.components.computer;
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.EndTurnCommand;
 import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
 import fi.monopoly.application.command.PayDebtCommand;
+import fi.monopoly.application.command.RollDiceCommand;
 import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.session.SessionState;
@@ -43,12 +45,10 @@ final class SmokeTestComputerStrategy implements ComputerTurnStrategy {
             return resolveDebt(context, player);
         }
         if (view.visibleActions().rollDiceVisible()) {
-            context.rollDice();
-            return true;
+            return context.submit(new RollDiceCommand(state.sessionId(), playerId(player)));
         }
         if (view.visibleActions().endTurnVisible()) {
-            context.endTurn();
-            return true;
+            return context.submit(new EndTurnCommand(state.sessionId(), playerId(player)));
         }
         return false;
     }

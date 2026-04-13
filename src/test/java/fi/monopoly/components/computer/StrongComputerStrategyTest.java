@@ -1,13 +1,17 @@
 package fi.monopoly.components.computer;
 
 import fi.monopoly.application.command.BuyPropertyCommand;
+import fi.monopoly.application.command.BuyBuildingRoundCommand;
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.EndTurnCommand;
 import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
 import fi.monopoly.application.command.PayDebtCommand;
+import fi.monopoly.application.command.RollDiceCommand;
 import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
 import fi.monopoly.application.command.SessionCommand;
+import fi.monopoly.application.command.ToggleMortgageCommand;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
@@ -634,6 +638,12 @@ class StrongComputerStrategyTest {
             if (command instanceof MortgagePropertyForDebtCommand mortgagePropertyForDebtCommand) {
                 return toggleMortgage(SpotType.valueOf(mortgagePropertyForDebtCommand.propertyId()));
             }
+            if (command instanceof BuyBuildingRoundCommand buyBuildingRoundCommand) {
+                return buyBuildingRound(SpotType.valueOf(buyBuildingRoundCommand.propertyId()));
+            }
+            if (command instanceof ToggleMortgageCommand toggleMortgageCommand) {
+                return toggleMortgage(SpotType.valueOf(toggleMortgageCommand.propertyId()));
+            }
             if (command instanceof PayDebtCommand) {
                 operations.add("retry");
                 return true;
@@ -641,6 +651,14 @@ class StrongComputerStrategyTest {
             if (command instanceof DeclareBankruptcyCommand) {
                 bankrupt = true;
                 operations.add("bankrupt");
+                return true;
+            }
+            if (command instanceof RollDiceCommand) {
+                operations.add("rollDice");
+                return true;
+            }
+            if (command instanceof EndTurnCommand) {
+                operations.add("endTurn");
                 return true;
             }
             return false;
@@ -666,8 +684,7 @@ class StrongComputerStrategyTest {
             return true;
         }
 
-        @Override
-        public boolean sellBuilding(SpotType spotType, int count) {
+        private boolean sellBuilding(SpotType spotType, int count) {
             PropertyView property = findProperty(spotType);
             if (property == null || property.buildingLevel() < count) {
                 return false;
@@ -712,8 +729,7 @@ class StrongComputerStrategyTest {
             return true;
         }
 
-        @Override
-        public boolean buyBuildingRound(SpotType spotType) {
+        private boolean buyBuildingRound(SpotType spotType) {
             PropertyView property = findProperty(spotType);
             if (property == null) {
                 return false;
@@ -764,8 +780,7 @@ class StrongComputerStrategyTest {
             return true;
         }
 
-        @Override
-        public boolean toggleMortgage(SpotType spotType) {
+        private boolean toggleMortgage(SpotType spotType) {
             PropertyView property = findProperty(spotType);
             if (property == null) {
                 return false;
@@ -856,26 +871,6 @@ class StrongComputerStrategyTest {
             }
             operations.add("trade");
             return tradeDecision;
-        }
-
-        @Override
-        public void retryPendingDebtPayment() {
-            operations.add("retry");
-        }
-
-        @Override
-        public void declareBankruptcy() {
-            bankrupt = true;
-            operations.add("bankrupt");
-        }
-
-        @Override
-        public void rollDice() {
-        }
-
-        @Override
-        public void endTurn() {
-            operations.add("endTurn");
         }
 
         private PropertyView findProperty(SpotType spotType) {

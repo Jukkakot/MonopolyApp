@@ -1,8 +1,10 @@
 package fi.monopoly.application.session;
 
 import fi.monopoly.application.command.BuyPropertyCommand;
+import fi.monopoly.application.command.BuyBuildingRoundCommand;
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.EndTurnCommand;
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.command.AcceptTradeCommand;
 import fi.monopoly.application.command.CancelTradeCommand;
@@ -11,6 +13,7 @@ import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.PassAuctionCommand;
 import fi.monopoly.application.command.PlaceAuctionBidCommand;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
+import fi.monopoly.application.command.RollDiceCommand;
 import fi.monopoly.application.command.CounterTradeCommand;
 import fi.monopoly.application.command.DeclineTradeCommand;
 import fi.monopoly.application.command.EditTradeOfferCommand;
@@ -19,11 +22,14 @@ import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
 import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.command.SubmitTradeOfferCommand;
+import fi.monopoly.application.command.ToggleMortgageCommand;
 import fi.monopoly.application.session.auction.AuctionCommandHandler;
 import fi.monopoly.application.session.debt.DebtRemediationCommandHandler;
 import fi.monopoly.application.session.debt.RentAndDebtOpeningHandler;
 import fi.monopoly.application.session.purchase.PropertyPurchaseCommandHandler;
 import fi.monopoly.application.session.trade.TradeCommandHandler;
+import fi.monopoly.application.session.turn.TurnActionCommandHandler;
+import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.components.CallbackAction;
@@ -61,6 +67,7 @@ public final class SessionApplicationService {
     private RentAndDebtOpeningHandler rentAndDebtOpeningHandler;
     private DebtRemediationCommandHandler debtRemediationCommandHandler;
     private TradeCommandHandler tradeCommandHandler;
+    private TurnActionCommandHandler turnActionCommandHandler;
 
     public SessionApplicationService(String sessionId, Supplier<SessionState> sessionStateSupplier) {
         this.sessionId = sessionId;
@@ -73,6 +80,14 @@ public final class SessionApplicationService {
         AuctionState auctionState = auctionStateOverride != null ? auctionStateOverride : baseState.auctionState();
         DebtStateModel activeDebt = activeDebtOverride != null ? activeDebtOverride : baseState.activeDebt();
         TradeState tradeState = tradeStateOverride != null ? tradeStateOverride : baseState.tradeState();
+        if (pendingDecisionOverride != null
+                && baseState.pendingDecision() == null
+                && auctionState == null
+                && activeDebt == null
+                && tradeState == null) {
+            pendingDecisionOverride = null;
+            pendingDecision = null;
+        }
         TurnState turnState = baseState.turn();
         if (activeDebt != null) {
             turnState = new TurnState(turnState.activePlayerId(), TurnPhase.RESOLVING_DEBT, false, false);
@@ -140,6 +155,14 @@ public final class SessionApplicationService {
         );
     }
 
+    public void configureTurnActionFlow(TurnActionGateway gateway) {
+        turnActionCommandHandler = new TurnActionCommandHandler(
+                sessionId,
+                this::currentState,
+                gateway
+        );
+    }
+
     public PendingDecision openPropertyPurchaseDecision(Player player, Property property, String message, CallbackAction onComplete) {
         if (propertyPurchaseCommandHandler == null) {
             throw new IllegalStateException("Property purchase flow has not been configured");
@@ -201,6 +224,13 @@ public final class SessionApplicationService {
                 || command instanceof CounterTradeCommand
                 || command instanceof CancelTradeCommand)) {
             return tradeCommandHandler.handle(command);
+        }
+        if (turnActionCommandHandler != null
+                && (command instanceof RollDiceCommand
+                || command instanceof EndTurnCommand
+                || command instanceof BuyBuildingRoundCommand
+                || command instanceof ToggleMortgageCommand)) {
+            return turnActionCommandHandler.handle(command);
         }
         if (command instanceof RefreshSessionViewCommand refreshSessionViewCommand) {
             if (!sessionId.equals(refreshSessionViewCommand.sessionId())) {
