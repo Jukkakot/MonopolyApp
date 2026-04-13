@@ -50,6 +50,21 @@ Even after subsystem migration, the runtime still depends on live in-memory obje
 
 This is enough for local play, but not enough for real save/load or reconnect.
 
+## First Technical Gap To Close
+
+Before PR9 can be complete, the authoritative session model must explicitly carry property-level state.
+
+At minimum this means:
+
+- ownership
+- mortgage state
+- building count / hotel state
+- any restore-critical property metadata that currently still lives only in runtime objects
+
+Without this, snapshot roundtrip can preserve turn/debt/auction/trade flow, but not full board economy faithfully.
+
+This should be treated as the first implementation sub-slice inside PR9, not as a later optional improvement.
+
 ## Required End State
 
 PR9 should establish two distinct models:
@@ -230,17 +245,26 @@ Why:
 
 ### Step 2
 
-Implement one-way export from authoritative session to snapshot.
+Add authoritative property-state coverage to the session model.
+
+Why:
+
+- save/load fidelity depends on this
+- server extraction later depends on this even more
 
 ### Step 3
 
-Implement restore into authoritative session state.
+Implement one-way export from authoritative session to snapshot.
 
 ### Step 4
 
-Reconnect local presentation runtime to restored state.
+Implement restore into authoritative session state.
 
 ### Step 5
+
+Reconnect local presentation runtime to restored state.
+
+### Step 6
 
 Add save/load UI entry points if desired.
 
