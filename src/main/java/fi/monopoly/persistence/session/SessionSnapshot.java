@@ -21,6 +21,7 @@ public record SessionSnapshot(
         SessionStatus status,
         List<SeatSnapshot> seats,
         List<PlayerSnapshot> players,
+        List<PropertySnapshot> properties,
         TurnSnapshot turn,
         PendingDecisionSnapshot pendingDecision,
         AuctionSnapshot auctionState,
@@ -33,6 +34,7 @@ public record SessionSnapshot(
     public SessionSnapshot {
         seats = List.copyOf(seats == null ? List.of() : seats);
         players = List.copyOf(players == null ? List.of() : players);
+        properties = List.copyOf(properties == null ? List.of() : properties);
     }
 
     public record SeatSnapshot(
@@ -60,6 +62,15 @@ public record SessionSnapshot(
         public PlayerSnapshot {
             ownedPropertyIds = List.copyOf(ownedPropertyIds == null ? List.of() : ownedPropertyIds);
         }
+    }
+
+    public record PropertySnapshot(
+            String propertyId,
+            String ownerPlayerId,
+            boolean mortgaged,
+            int houseCount,
+            int hotelCount
+    ) {
     }
 
     public record TurnSnapshot(

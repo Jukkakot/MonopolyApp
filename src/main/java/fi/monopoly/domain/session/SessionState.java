@@ -11,6 +11,7 @@ public record SessionState(
         SessionStatus status,
         List<SeatState> seats,
         List<PlayerSnapshot> players,
+        List<PropertyStateSnapshot> properties,
         TurnState turn,
         PendingDecision pendingDecision,
         AuctionState auctionState,
@@ -21,5 +22,6 @@ public record SessionState(
     public SessionState {
         seats = List.copyOf(seats);
         players = List.copyOf(players);
+        properties = List.copyOf(properties);
     }
 }

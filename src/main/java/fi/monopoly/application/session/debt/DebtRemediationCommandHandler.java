@@ -195,6 +195,7 @@ public final class DebtRemediationCommandHandler {
                     state.status(),
                     state.seats(),
                     state.players(),
+                    state.properties(),
                     new TurnState(state.turn().activePlayerId(), TurnPhase.WAITING_FOR_END_TURN, false, true),
                     state.pendingDecision(),
                     state.auctionState(),

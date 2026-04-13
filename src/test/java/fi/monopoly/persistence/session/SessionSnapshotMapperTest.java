@@ -11,6 +11,7 @@ import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.PlayerSnapshot;
+import fi.monopoly.domain.session.PropertyStateSnapshot;
 import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SeatState;
 import fi.monopoly.domain.session.SessionState;
@@ -46,6 +47,11 @@ class SessionSnapshotMapperTest {
                 List.of(
                         new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 7, false, false, false, 1, List.of("B1", "B2")),
                         new PlayerSnapshot("player-2", "seat-2", "Toka", 1200, 12, false, false, true, 0, List.of("RR1"))
+                ),
+                List.of(
+                        new PropertyStateSnapshot("B1", "player-1", false, 1, 0),
+                        new PropertyStateSnapshot("B2", "player-1", true, 0, 0),
+                        new PropertyStateSnapshot("RR1", "player-2", false, 0, 0)
                 ),
                 new TurnState("player-1", TurnPhase.WAITING_FOR_DECISION, false, true),
                 new PendingDecision(
@@ -115,6 +121,7 @@ class SessionSnapshotMapperTest {
                 "session-1",
                 1L,
                 SessionStatus.IN_PROGRESS,
+                List.of(),
                 List.of(),
                 List.of(),
                 null,

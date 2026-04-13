@@ -4,12 +4,17 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.components.properties.Property;
+import fi.monopoly.components.properties.PropertyFactory;
+import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.types.PlaceType;
+import fi.monopoly.types.SpotType;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
@@ -61,6 +66,7 @@ public final class LegacySessionProjector {
                 buildSessionStatus(),
                 buildSeats(playerList, identities),
                 buildPlayerSnapshots(playerList, identities),
+                buildPropertySnapshots(identities),
                 turnState,
                 buildPendingDecision(turnState.activePlayerId()),
                 null,
@@ -143,6 +149,39 @@ public final class LegacySessionProjector {
                     player.isInJail(),
                     player.getGetOutOfJailCardCount(),
                     player.getOwnedProperties().stream().map(property -> property.getSpotType().name()).toList()
+            ));
+        }
+        return snapshots;
+    }
+
+    private List<PropertyStateSnapshot> buildPropertySnapshots(Map<Player, PlayerIdentity> identities) {
+        List<PropertyStateSnapshot> snapshots = new ArrayList<>();
+        for (SpotType spotType : SpotType.values()) {
+            if (spotType.streetType == null || spotType.streetType.placeType == null) {
+                continue;
+            }
+            PlaceType placeType = spotType.streetType.placeType;
+            if (placeType != PlaceType.STREET && placeType != PlaceType.RAILROAD && placeType != PlaceType.UTILITY) {
+                continue;
+            }
+            Property property = PropertyFactory.getProperty(spotType);
+            String ownerPlayerId = null;
+            if (property.getOwnerPlayer() != null) {
+                PlayerIdentity identity = identities.get(property.getOwnerPlayer());
+                ownerPlayerId = identity != null ? identity.playerId() : playerId(property.getOwnerPlayer());
+            }
+            int houseCount = 0;
+            int hotelCount = 0;
+            if (property instanceof StreetProperty streetProperty) {
+                houseCount = streetProperty.getHouseCount();
+                hotelCount = streetProperty.getHotelCount();
+            }
+            snapshots.add(new PropertyStateSnapshot(
+                    spotType.name(),
+                    ownerPlayerId,
+                    property.isMortgaged(),
+                    houseCount,
+                    hotelCount
             ));
         }
         return snapshots;

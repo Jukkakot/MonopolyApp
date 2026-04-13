@@ -155,6 +155,7 @@ class TradeCommandHandlerTest {
                                 new PlayerSnapshot(playerId(proposer), "seat-0", proposer.getName(), proposer.getMoneyAmount(), -1, false, false, false, 0, List.of()),
                                 new PlayerSnapshot(playerId(recipient), "seat-1", recipient.getName(), recipient.getMoneyAmount(), -1, false, false, false, 0, List.of())
                         ),
+                        List.of(),
                         new TurnState(playerId(proposer), TurnPhase.WAITING_FOR_DECISION, false, false),
                         null,
                         null,

@@ -608,6 +608,7 @@ class StrongComputerStrategyTest {
                     SessionStatus.IN_PROGRESS,
                     List.of(new SeatState("seat-0", 0, "player-" + self.id(), SeatKind.BOT, ControlMode.MANUAL, self.name())),
                     List.of(new PlayerSnapshot("player-" + self.id(), "seat-0", self.name(), self.moneyAmount(), -1, false, false, self.inJail(), self.getOutOfJailCardCount(), List.of())),
+                    List.of(),
                     new TurnState("player-" + self.id(), activeDebt == null ? TurnPhase.WAITING_FOR_DECISION : TurnPhase.RESOLVING_DEBT, false, false),
                     pendingDecision,
                     null,

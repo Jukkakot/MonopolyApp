@@ -91,6 +91,7 @@ class TurnActionCommandHandlerTest {
                 SessionStatus.IN_PROGRESS,
                 List.of(new SeatState("seat-1", 0, "player-1", SeatKind.BOT, ControlMode.MANUAL, "Bot")),
                 List.of(new PlayerSnapshot("player-1", "seat-1", "Bot", 1500, SpotType.GO_SPOT.ordinal(), false, false, false, 0, List.of())),
+                List.of(),
                 new TurnState("player-1", phase, false, false),
                 null,
                 null,

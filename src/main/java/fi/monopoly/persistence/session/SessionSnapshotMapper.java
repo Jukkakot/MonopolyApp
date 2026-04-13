@@ -5,6 +5,7 @@ import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.PlayerSnapshot;
+import fi.monopoly.domain.session.PropertyStateSnapshot;
 import fi.monopoly.domain.session.SeatState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeHistoryEntry;
@@ -24,6 +25,7 @@ public final class SessionSnapshotMapper {
                 sessionState.status(),
                 sessionState.seats().stream().map(this::toSeatSnapshot).toList(),
                 sessionState.players().stream().map(this::toPlayerSnapshot).toList(),
+                sessionState.properties().stream().map(this::toPropertySnapshot).toList(),
                 toTurnSnapshot(sessionState.turn()),
                 toPendingDecisionSnapshot(sessionState.pendingDecision()),
                 toAuctionSnapshot(sessionState.auctionState()),
@@ -41,6 +43,7 @@ public final class SessionSnapshotMapper {
                 snapshot.status(),
                 snapshot.seats().stream().map(this::fromSeatSnapshot).toList(),
                 snapshot.players().stream().map(this::fromPlayerSnapshot).toList(),
+                snapshot.properties().stream().map(this::fromPropertySnapshot).toList(),
                 fromTurnSnapshot(snapshot.turn()),
                 fromPendingDecisionSnapshot(snapshot.pendingDecision()),
                 fromAuctionSnapshot(snapshot.auctionState()),
@@ -105,6 +108,26 @@ public final class SessionSnapshotMapper {
                 playerSnapshot.inJail(),
                 playerSnapshot.getOutOfJailCards(),
                 playerSnapshot.ownedPropertyIds()
+        );
+    }
+
+    private SessionSnapshot.PropertySnapshot toPropertySnapshot(PropertyStateSnapshot propertyStateSnapshot) {
+        return new SessionSnapshot.PropertySnapshot(
+                propertyStateSnapshot.propertyId(),
+                propertyStateSnapshot.ownerPlayerId(),
+                propertyStateSnapshot.mortgaged(),
+                propertyStateSnapshot.houseCount(),
+                propertyStateSnapshot.hotelCount()
+        );
+    }
+
+    private PropertyStateSnapshot fromPropertySnapshot(SessionSnapshot.PropertySnapshot propertySnapshot) {
+        return new PropertyStateSnapshot(
+                propertySnapshot.propertyId(),
+                propertySnapshot.ownerPlayerId(),
+                propertySnapshot.mortgaged(),
+                propertySnapshot.houseCount(),
+                propertySnapshot.hotelCount()
         );
     }
 

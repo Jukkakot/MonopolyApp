@@ -104,6 +104,7 @@ public final class SessionApplicationService {
                 baseState.status(),
                 baseState.seats(),
                 baseState.players(),
+                baseState.properties(),
                 turnState,
                 pendingDecision,
                 auctionState,

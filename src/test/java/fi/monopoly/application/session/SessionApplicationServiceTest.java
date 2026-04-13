@@ -42,6 +42,7 @@ class SessionApplicationServiceTest {
                 SessionStatus.IN_PROGRESS,
                 List.of(new SeatState("seat-0", 0, "player-0", SeatKind.HUMAN, ControlMode.MANUAL, "Human")),
                 List.of(new PlayerSnapshot("player-0", "seat-0", "Human", 1500, -1, false, false, false, 0, List.of())),
+                List.of(),
                 new TurnState("player-0", TurnPhase.WAITING_FOR_ROLL, true, false),
                 null,
                 null,

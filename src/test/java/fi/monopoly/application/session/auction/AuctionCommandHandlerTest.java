@@ -158,6 +158,7 @@ class AuctionCommandHandlerTest {
                                 snapshot(players.firstBidder()),
                                 snapshot(players.secondBidder())
                         ),
+                        List.of(),
                         new TurnState(players.triggeringPlayerId(), auctionStateRef.get() == null ? TurnPhase.WAITING_FOR_ROLL : TurnPhase.WAITING_FOR_AUCTION, false, false),
                         null,
                         auctionStateRef.get(),

@@ -131,6 +131,7 @@ class DebtRemediationCommandHandlerTest {
                         SessionStatus.IN_PROGRESS,
                         List.of(new SeatState("seat-0", 0, playerId(debtor), SeatKind.HUMAN, ControlMode.MANUAL, debtor.getName())),
                         List.of(new PlayerSnapshot(playerId(debtor), "seat-0", debtor.getName(), debtor.getMoneyAmount(), -1, false, false, false, 0, List.of())),
+                        List.of(),
                         new TurnState(playerId(debtor), debtSupplier.get() == null ? TurnPhase.WAITING_FOR_END_TURN : TurnPhase.RESOLVING_DEBT, false, false),
                         null,
                         null,
