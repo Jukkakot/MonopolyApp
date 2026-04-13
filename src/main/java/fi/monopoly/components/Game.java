@@ -46,6 +46,7 @@ import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.game.GameBotTurnDriver;
+import fi.monopoly.presentation.game.GameControlLayout;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
 import fi.monopoly.presentation.game.GameUiController;
 import fi.monopoly.presentation.game.SessionViewFacade;
@@ -133,12 +134,9 @@ public class Game implements MonopolyEventListener {
     private BotTurnScheduler.SpeedMode botSpeedMode = BotTurnScheduler.SpeedMode.NORMAL;
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private LayoutMetrics frameLayoutMetrics;
-    private float frameSidebarHistoryHeight;
-    private float frameSidebarHistoryPanelY;
-    private float frameSidebarReservedTop;
-    private int lastSidebarLayoutHash = Integer.MIN_VALUE;
     private long lastAnimationUpdateNanos = -1L;
     private final SessionViewFacade sessionViewFacade;
+    private GameControlLayout gameControlLayout;
     private final GameSidebarPresenter gameSidebarPresenter;
     private final GameUiController gameUiController;
     private PrimaryTurnControlState primaryTurnControlState = PrimaryTurnControlState.NONE;
@@ -240,6 +238,18 @@ public class Game implements MonopolyEventListener {
         );
         registerGameSession();
         setupDefaultGameState();
+        this.gameControlLayout = new GameControlLayout(
+                runtime,
+                endRoundButton,
+                retryDebtButton,
+                declareBankruptcyButton,
+                debugGodModeButton,
+                pauseButton,
+                tradeButton,
+                botSpeedButton,
+                languageButton,
+                dices
+        );
         showRollDiceControl();
         setupButtonActions();
 
@@ -431,11 +441,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {
-        frameLayoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
-        frameSidebarReservedTop = frameLayoutMetrics.sidebarReservedTop(MonopolyApp.DEBUG_MODE);
-        float availableHistoryHeight = runtime.app().height - frameSidebarReservedTop - frameLayoutMetrics.sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin();
-        frameSidebarHistoryHeight = Math.max(UiTokens.sidebarHistoryMinHeight(), Math.min(UiTokens.sidebarHistoryPreferredHeight(), availableHistoryHeight));
-        frameSidebarHistoryPanelY = runtime.app().height - frameSidebarHistoryHeight - frameLayoutMetrics.sidebarHistoryBottomMargin();
+        frameLayoutMetrics = gameControlLayout.updateFrameLayoutMetrics();
         return frameLayoutMetrics;
     }
 
@@ -785,126 +791,19 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateSidebarControlPositions(LayoutMetrics layoutMetrics) {
-        int layoutHash = java.util.Objects.hash(
-                layoutMetrics.hasSidebarSpace(),
-                Math.round(layoutMetrics.sidebarX()),
-                Math.round(layoutMetrics.sidebarRight()),
-                Math.round(layoutMetrics.sidebarPrimaryButtonY()),
-                Math.round(layoutMetrics.sidebarDebugButtonRow1Y()),
-                Math.round(frameSidebarHistoryHeight),
-                Math.round(frameSidebarHistoryPanelY),
-                MonopolyApp.DEBUG_MODE,
-                pauseButton.getWidth(),
-                tradeButton.getWidth(),
-                botSpeedButton.getWidth(),
-                languageButton.getWidth(),
-                declareBankruptcyButton.getWidth()
-        );
-        if (layoutHash == lastSidebarLayoutHash) {
-            dices.updateLayout(layoutMetrics);
-            return;
-        }
-        lastSidebarLayoutHash = layoutHash;
-        if (!layoutMetrics.hasSidebarSpace()) {
-            layoutOverlayControls(layoutMetrics);
-            dices.updateLayout(layoutMetrics);
-            return;
-        }
-
-        float sidebarLeftX = layoutMetrics.sidebarX() + UiTokens.spacingMd();
-        float sidebarRightAlignedX = layoutMetrics.sidebarRight() - UiTokens.spacingMd();
-        float primaryButtonY = layoutMetrics.sidebarPrimaryButtonY();
-        float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
-        float controlRow1Y = frameSidebarHistoryPanelY + frameSidebarHistoryHeight + UiTokens.spacingSm();
-        boolean showBotSpeed = MonopolyApp.DEBUG_MODE;
-        float controlRow2Y = controlRow1Y + pauseButton.getHeight() + UiTokens.spacingXs();
-        float lowestControlBottom = (showBotSpeed ? controlRow2Y : controlRow1Y) + languageButton.getHeight();
-        if (lowestControlBottom > runtime.app().height - UiTokens.spacingMd()) {
-            layoutOverlayControls(layoutMetrics);
-            dices.updateLayout(layoutMetrics);
-            return;
-        }
-
-        endRoundButton.setPosition(sidebarLeftX, primaryButtonY);
-        retryDebtButton.setPosition(sidebarLeftX, primaryButtonY);
-        declareBankruptcyButton.setPosition(sidebarRightAlignedX - declareBankruptcyButton.getWidth(), primaryButtonY);
-        debugGodModeButton.setPosition(sidebarLeftX, debugRow1Y);
-        if (showBotSpeed) {
-            pauseButton.setPosition(sidebarRightAlignedX - pauseButton.getWidth(), controlRow1Y);
-            tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
-            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow2Y);
-            botSpeedButton.setPosition(languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs(), controlRow2Y);
-        } else {
-            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow1Y);
-            pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
-            tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
-        }
-        dices.updateLayout(layoutMetrics);
-    }
-
-    private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
-        float leftX = UiTokens.overlayMargin();
-        float rightX = layoutMetrics.boardWidth() - UiTokens.overlayMargin();
-        float overlayTopRowY = UiTokens.overlaySecondaryRow3Y();
-        boolean showBotSpeed = MonopolyApp.DEBUG_MODE;
-        float overlayBottomRowY = Math.min(
-                overlayTopRowY + languageButton.getHeight() + UiTokens.spacingXs(),
-                runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
-        );
-
-        endRoundButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());
-        retryDebtButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());
-        declareBankruptcyButton.setPosition(rightX - declareBankruptcyButton.getWidth(), UiTokens.overlayPrimaryButtonY());
-        debugGodModeButton.setPosition(leftX, UiTokens.overlaySecondaryRow1Y());
-        if (showBotSpeed) {
-            languageButton.setPosition(
-                    Math.max(leftX, rightX - languageButton.getWidth()),
-                    overlayBottomRowY
-            );
-            botSpeedButton.setPosition(
-                    Math.max(leftX, languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs()),
-                    overlayBottomRowY
-            );
-            pauseButton.setPosition(
-                    Math.max(leftX, rightX - pauseButton.getWidth()),
-                    overlayTopRowY
-            );
-            tradeButton.setPosition(
-                    Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs()),
-                    overlayTopRowY
-            );
-        } else {
-            languageButton.setPosition(
-                    Math.max(leftX, rightX - languageButton.getWidth()),
-                    overlayTopRowY
-            );
-            pauseButton.setPosition(
-                    Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs()),
-                    overlayTopRowY
-            );
-            tradeButton.setPosition(
-                    Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs()),
-                    overlayTopRowY
-            );
-        }
+        gameControlLayout.updateSidebarControlPositions(layoutMetrics);
     }
 
     private float getSidebarHistoryHeight() {
-        return frameSidebarHistoryHeight > 0 ? frameSidebarHistoryHeight : Math.max(
-                UiTokens.sidebarHistoryMinHeight(),
-                Math.min(
-                        UiTokens.sidebarHistoryPreferredHeight(),
-                        runtime.app().height - getSidebarReservedTop() - getLayoutMetrics().sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin()
-                )
-        );
+        return gameControlLayout.historyHeight(getLayoutMetrics());
     }
 
     private float getSidebarHistoryPanelY() {
-        return frameSidebarHistoryPanelY > 0 ? frameSidebarHistoryPanelY : runtime.app().height - getSidebarHistoryHeight() - getLayoutMetrics().sidebarHistoryBottomMargin();
+        return gameControlLayout.historyPanelY(getLayoutMetrics());
     }
 
     private float getSidebarReservedTop() {
-        return frameSidebarReservedTop > 0 ? frameSidebarReservedTop : getLayoutMetrics().sidebarReservedTop(MonopolyApp.DEBUG_MODE);
+        return gameControlLayout.reservedTop(getLayoutMetrics());
     }
 
     private GameSidebarPresenter.SidebarState createSidebarState() {
