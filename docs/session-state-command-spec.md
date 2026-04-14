@@ -112,10 +112,12 @@ Proposed shape:
 - `playerId`
 - `seatKind`
 - `controlMode`
+- `controllerProfileId`
 - `botProfile`
 - `ownerIdentity`
 - `connected`
 - `displayName`
+- `tokenColorHex`
 - `tokenColorKey`
 
 ### SeatKind
@@ -175,7 +177,7 @@ Proposed shape:
 - `cash`
 - `position`
 - `inJail`
-- `jailTurnsRemaining`
+- `jailRoundsRemaining`
 - `getOutOfJailCards`
 - `bankrupt`
 - `eliminated`

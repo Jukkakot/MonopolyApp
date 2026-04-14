@@ -11,6 +11,7 @@ public record PlayerSnapshot(
         boolean bankrupt,
         boolean eliminated,
         boolean inJail,
+        int jailRoundsRemaining,
         int getOutOfJailCards,
         List<String> ownedPropertyIds
 ) {

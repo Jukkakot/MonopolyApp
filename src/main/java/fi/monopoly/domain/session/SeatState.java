@@ -6,6 +6,8 @@ public record SeatState(
         String playerId,
         SeatKind seatKind,
         ControlMode controlMode,
-        String displayName
+        String displayName,
+        String controllerProfileId,
+        String tokenColorHex
 ) {
 }

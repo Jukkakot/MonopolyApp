@@ -41,12 +41,12 @@ class SessionSnapshotMapperTest {
                 42L,
                 SessionStatus.IN_PROGRESS,
                 List.of(
-                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka"),
-                        new SeatState("seat-2", 1, "player-2", SeatKind.BOT, ControlMode.AUTOPLAY, "Toka")
+                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB"),
+                        new SeatState("seat-2", 1, "player-2", SeatKind.BOT, ControlMode.AUTOPLAY, "Toka", "STRONG", "#FFC0CB")
                 ),
                 List.of(
-                        new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 7, false, false, false, 1, List.of("B1", "B2")),
-                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1200, 12, false, false, true, 0, List.of("RR1"))
+                        new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 7, false, false, false, 0, 1, List.of("B1", "B2")),
+                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1200, 12, false, false, true, 2, 0, List.of("RR1"))
                 ),
                 List.of(
                         new PropertyStateSnapshot("B1", "player-1", false, 1, 0),

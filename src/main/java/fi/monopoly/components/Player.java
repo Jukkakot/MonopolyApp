@@ -29,10 +29,10 @@ import static fi.monopoly.text.UiTexts.text;
 @Slf4j
 public class Player extends PlayerToken {
     private static int NEXT_ID = 0;
+    private static final int STARTING_MONEY_AMOUNT = 1500;
     @Getter
     private final int id;
     private final String name;
-    private final int STARTING_MONEY_AMOUNT = 1500;
     private final Properties ownedProperties = new Properties();
     @Getter
     private Integer moneyAmount;
@@ -49,14 +49,7 @@ public class Player extends PlayerToken {
     }
 
     public Player(MonopolyRuntime runtime, String name, Color color, Spot spot, ComputerPlayerProfile computerProfile) {
-        super(runtime, spot, color);
-        this.id = NEXT_ID++;
-        this.name = name;
-        this.moneyAmount = STARTING_MONEY_AMOUNT;
-        this.computerProfile = computerProfile;
-        // turn number is id by default. Later maybe implement so that this can change
-        this.turnNumber = id + 1; // Turn numbers starts from 1
-        setSpot(spot);
+        this(runtime, name, color, spot, computerProfile, NEXT_ID++, STARTING_MONEY_AMOUNT, -1, 0);
     }
 
     public Player(String name, Color color, int moneyAmount, int turnNumber) {
@@ -64,12 +57,46 @@ public class Player extends PlayerToken {
     }
 
     public Player(String name, Color color, int moneyAmount, int turnNumber, ComputerPlayerProfile computerProfile) {
-        super(null, new Coordinates(), color);
-        this.id = turnNumber - 1;
+        this(null, name, color, null, computerProfile, turnNumber - 1, moneyAmount, turnNumber, 0);
+    }
+
+    public static Player restore(
+            MonopolyRuntime runtime,
+            String name,
+            Color color,
+            Spot spot,
+            ComputerPlayerProfile computerProfile,
+            int id,
+            int moneyAmount,
+            int turnNumber,
+            int getOutOfJailCardCount
+    ) {
+        Player player = new Player(runtime, name, color, spot, computerProfile, id, moneyAmount, turnNumber, getOutOfJailCardCount);
+        syncNextId(id + 1);
+        return player;
+    }
+
+    private Player(
+            MonopolyRuntime runtime,
+            String name,
+            Color color,
+            Spot spot,
+            ComputerPlayerProfile computerProfile,
+            int id,
+            int moneyAmount,
+            int turnNumber,
+            int getOutOfJailCardCount
+    ) {
+        super(runtime, spot == null ? new Coordinates() : spot.getTokenCoords(), color);
+        this.id = id;
         this.name = name;
         this.moneyAmount = moneyAmount;
-        this.turnNumber = turnNumber;
+        this.turnNumber = turnNumber > 0 ? turnNumber : id + 1;
         this.computerProfile = computerProfile;
+        setGetOutOfJailCardCount(getOutOfJailCardCount);
+        if (spot != null) {
+            setSpot(spot);
+        }
     }
 
     public String getName() {
@@ -77,9 +104,13 @@ public class Player extends PlayerToken {
     }
 
     public void setSpot(Spot newSpot) {
-        spot.removePlayer(this);
+        if (spot != null) {
+            spot.removePlayer(this);
+        }
         spot = newSpot;
-        spot.addPlayer(this);
+        if (spot != null) {
+            spot.addPlayer(this);
+        }
     }
 
     private void giveProperty(Property property) {
@@ -328,5 +359,9 @@ public class Player extends PlayerToken {
 
     public boolean isComputerControlled() {
         return computerProfile.isComputerControlled();
+    }
+
+    private static void syncNextId(int candidateNextId) {
+        NEXT_ID = Math.max(NEXT_ID, candidateNextId);
     }
 }

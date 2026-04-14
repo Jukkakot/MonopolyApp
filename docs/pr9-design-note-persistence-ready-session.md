@@ -89,7 +89,9 @@ The snapshot must contain at least:
 - session identity and version
 - board rules/config relevant to the session
 - player/seat ownership and control mode
+- seat controller profile and token color
 - money, jail state, bankruptcy state
+- jail rounds remaining
 - property ownership, mortgage state, building counts
 - current turn / active actor
 - pending decision payload

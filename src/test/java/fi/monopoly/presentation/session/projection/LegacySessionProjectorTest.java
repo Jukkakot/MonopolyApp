@@ -53,6 +53,9 @@ class LegacySessionProjectorTest {
         var state = projector(null, () -> false, () -> false, () -> true, () -> true, () -> false).project();
         assertEquals(SeatKind.HUMAN, state.seats().get(0).seatKind());
         assertEquals(SeatKind.BOT, state.seats().get(1).seatKind());
+        assertEquals("HUMAN", state.seats().get(0).controllerProfileId());
+        assertEquals("STRONG", state.seats().get(1).controllerProfileId());
+        assertEquals("#9370DB", state.seats().get(0).tokenColorHex());
     }
 
     @Test
@@ -73,6 +76,30 @@ class LegacySessionProjectorTest {
         assertNotNull(state.activeDebt());
         assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET, DebtAction.DECLARE_BANKRUPTCY), state.activeDebt().allowedActions());
         assertEquals(1500, state.activeDebt().currentCash());
+    }
+
+    @Test
+    void projectsJailRoundsRemaining() {
+        Players players = samplePlayers();
+        Player human = players.getPlayers().get(0);
+        fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.put(human, 2);
+        try {
+            var state = new LegacySessionProjector(
+                    "local-session",
+                    () -> players,
+                    () -> null,
+                    () -> null,
+                    () -> false,
+                    () -> false,
+                    () -> null,
+                    () -> true,
+                    () -> false
+            ).project();
+            assertTrue(state.players().get(0).inJail());
+            assertEquals(2, state.players().get(0).jailRoundsRemaining());
+        } finally {
+            fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.clear();
+        }
     }
 
     private LegacySessionProjector projector(

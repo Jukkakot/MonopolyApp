@@ -7,6 +7,7 @@ import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
+import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
@@ -128,7 +129,9 @@ public final class LegacySessionProjector {
                     identity.playerId(),
                     player.isComputerControlled() ? SeatKind.BOT : SeatKind.HUMAN,
                     ControlMode.MANUAL,
-                    player.getName()
+                    player.getName(),
+                    player.getComputerProfile().name(),
+                    toColorHex(player.getColor())
             ));
         }
         return seats;
@@ -147,6 +150,7 @@ public final class LegacySessionProjector {
                     false,
                     false,
                     player.isInJail(),
+                    JailSpot.jailTimeLeftMap.getOrDefault(player, 0),
                     player.getGetOutOfJailCardCount(),
                     player.getOwnedProperties().stream().map(property -> property.getSpotType().name()).toList()
             ));
@@ -281,6 +285,18 @@ public final class LegacySessionProjector {
 
     private String playerId(Player player) {
         return player == null ? null : "player-" + player.getId();
+    }
+
+    private String toColorHex(javafx.scene.paint.Color color) {
+        if (color == null) {
+            return "#000000";
+        }
+        return String.format(
+                "#%02X%02X%02X",
+                Math.round(color.getRed() * 255),
+                Math.round(color.getGreen() * 255),
+                Math.round(color.getBlue() * 255)
+        );
     }
 
     private record PlayerIdentity(String seatId, String playerId, int seatIndex) {

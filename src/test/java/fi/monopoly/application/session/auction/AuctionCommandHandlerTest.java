@@ -149,9 +149,9 @@ class AuctionCommandHandlerTest {
                         0L,
                         SessionStatus.IN_PROGRESS,
                         List.of(
-                                new SeatState("seat-0", 0, players.triggeringPlayerId(), SeatKind.HUMAN, ControlMode.MANUAL, players.triggeringPlayer().getName()),
-                                new SeatState("seat-1", 1, players.firstBidderId(), SeatKind.HUMAN, ControlMode.MANUAL, players.firstBidder().getName()),
-                                new SeatState("seat-2", 2, players.secondActorId(), SeatKind.HUMAN, ControlMode.MANUAL, players.secondBidder().getName())
+                                new SeatState("seat-0", 0, players.triggeringPlayerId(), SeatKind.HUMAN, ControlMode.MANUAL, players.triggeringPlayer().getName(), "HUMAN", "#000000"),
+                                new SeatState("seat-1", 1, players.firstBidderId(), SeatKind.HUMAN, ControlMode.MANUAL, players.firstBidder().getName(), "HUMAN", "#000000"),
+                                new SeatState("seat-2", 2, players.secondActorId(), SeatKind.HUMAN, ControlMode.MANUAL, players.secondBidder().getName(), "HUMAN", "#000000")
                         ),
                         List.of(
                                 snapshot(players.triggeringPlayer()),
@@ -181,6 +181,7 @@ class AuctionCommandHandlerTest {
                 false,
                 false,
                 false,
+                0,
                 0,
                 List.of()
         );

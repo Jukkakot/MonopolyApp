@@ -442,6 +442,11 @@ public class StreetProperty extends Property {
         NO_HOUSES_TO_BREAK_HOTEL
     }
 
+    public void restoreBuildings(int houseCount, int hotelCount) {
+        this.houseCount = houseCount;
+        this.hotelCount = hotelCount;
+    }
+
     @Override
     void resetState() {
         super.resetState();

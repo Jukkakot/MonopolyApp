@@ -102,6 +102,11 @@ public abstract class Property {
         return true;
     }
 
+    public void restoreState(Player ownerPlayer, boolean mortgaged) {
+        this.ownerPlayer = ownerPlayer;
+        this.isMortgaged = mortgaged;
+    }
+
     void resetState() {
         ownerPlayer = null;
         isMortgaged = false;

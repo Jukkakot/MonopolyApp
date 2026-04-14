@@ -148,12 +148,12 @@ class TradeCommandHandlerTest {
                         0L,
                         SessionStatus.IN_PROGRESS,
                         List.of(
-                                new SeatState("seat-0", 0, playerId(proposer), SeatKind.HUMAN, ControlMode.MANUAL, proposer.getName()),
-                                new SeatState("seat-1", 1, playerId(recipient), SeatKind.HUMAN, ControlMode.MANUAL, recipient.getName())
+                                new SeatState("seat-0", 0, playerId(proposer), SeatKind.HUMAN, ControlMode.MANUAL, proposer.getName(), "HUMAN", "#000000"),
+                                new SeatState("seat-1", 1, playerId(recipient), SeatKind.HUMAN, ControlMode.MANUAL, recipient.getName(), "HUMAN", "#000000")
                         ),
                         List.of(
-                                new PlayerSnapshot(playerId(proposer), "seat-0", proposer.getName(), proposer.getMoneyAmount(), -1, false, false, false, 0, List.of()),
-                                new PlayerSnapshot(playerId(recipient), "seat-1", recipient.getName(), recipient.getMoneyAmount(), -1, false, false, false, 0, List.of())
+                                new PlayerSnapshot(playerId(proposer), "seat-0", proposer.getName(), proposer.getMoneyAmount(), -1, false, false, false, 0, 0, List.of()),
+                                new PlayerSnapshot(playerId(recipient), "seat-1", recipient.getName(), recipient.getMoneyAmount(), -1, false, false, false, 0, 0, List.of())
                         ),
                         List.of(),
                         new TurnState(playerId(proposer), TurnPhase.WAITING_FOR_DECISION, false, false),

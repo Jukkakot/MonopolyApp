@@ -43,7 +43,9 @@ public record SessionSnapshot(
             String playerId,
             SeatKind seatKind,
             ControlMode controlMode,
-            String displayName
+            String displayName,
+            String controllerProfileId,
+            String tokenColorHex
     ) {
     }
 
@@ -56,6 +58,7 @@ public record SessionSnapshot(
             boolean bankrupt,
             boolean eliminated,
             boolean inJail,
+            int jailRoundsRemaining,
             int getOutOfJailCards,
             List<String> ownedPropertyIds
     ) {

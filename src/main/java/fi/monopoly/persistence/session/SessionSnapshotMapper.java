@@ -66,7 +66,9 @@ public final class SessionSnapshotMapper {
                 seatState.playerId(),
                 seatState.seatKind(),
                 seatState.controlMode(),
-                seatState.displayName()
+                seatState.displayName(),
+                seatState.controllerProfileId(),
+                seatState.tokenColorHex()
         );
     }
 
@@ -77,7 +79,9 @@ public final class SessionSnapshotMapper {
                 seatSnapshot.playerId(),
                 seatSnapshot.seatKind(),
                 seatSnapshot.controlMode(),
-                seatSnapshot.displayName()
+                seatSnapshot.displayName(),
+                seatSnapshot.controllerProfileId(),
+                seatSnapshot.tokenColorHex()
         );
     }
 
@@ -91,6 +95,7 @@ public final class SessionSnapshotMapper {
                 playerSnapshot.bankrupt(),
                 playerSnapshot.eliminated(),
                 playerSnapshot.inJail(),
+                playerSnapshot.jailRoundsRemaining(),
                 playerSnapshot.getOutOfJailCards(),
                 playerSnapshot.ownedPropertyIds()
         );
@@ -106,6 +111,7 @@ public final class SessionSnapshotMapper {
                 playerSnapshot.bankrupt(),
                 playerSnapshot.eliminated(),
                 playerSnapshot.inJail(),
+                playerSnapshot.jailRoundsRemaining(),
                 playerSnapshot.getOutOfJailCards(),
                 playerSnapshot.ownedPropertyIds()
         );

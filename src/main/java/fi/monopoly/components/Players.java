@@ -209,6 +209,14 @@ public class Players {
         return fallbackTurn;
     }
 
+    public void restoreTurn(Player player) {
+        if (player == null) {
+            return;
+        }
+        turnNum = player.getTurnNumber();
+        selectPlayer(player);
+    }
+
     /**
      * Keeps the sidebar focused on a specific player when another game mode,
      * such as debt resolution, needs that player's assets to stay visible.
