@@ -365,6 +365,28 @@ Primary document:
 
 - [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
 
+### Phase 11: Callback elimination and authoritative turn continuation
+
+PR11:
+
+- replace callback-owned gameplay continuation with authoritative continuation state
+- make save/load truly resumable across property purchase / debt / auction
+
+Primary document:
+
+- [pr11-design-note-turn-continuation-state.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr11-design-note-turn-continuation-state.md)
+
+### Phase 12: Local load reattachment
+
+PR12:
+
+- reattach local runtime/presentation to restored authoritative session
+- make saved local sessions actually resumable in the client
+
+Primary document:
+
+- [pr12-design-note-local-load-reattachment.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr12-design-note-local-load-reattachment.md)
+
 ## Which PRs Are Ready Enough To Implement
 
 ### Ready now
@@ -379,6 +401,8 @@ Primary document:
 - PR8
 - PR9
 - PR10
+- PR11
+- PR12
 
 These are specified well enough that implementation could start without reopening architecture first.
 
@@ -389,6 +413,7 @@ On branch `separation-program`:
 - PR1 through PR8 are already substantially implemented
 - the next planned implementation wave is PR9
 - PR10 remains design-ready but should follow PR9
+- PR11 and PR12 now define the remaining local-authority cleanup before backend work
 
 ## Suggested Task Breakdown
 

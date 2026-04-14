@@ -18,7 +18,7 @@ The docs folder is now organized around one main program:
 - then move toward persistence and later server extraction
 
 The main local-separation wave is already specified through PR1-PR8 design notes.
-Persistence/server follow-up is now also specified through PR9-PR10 notes.
+Persistence/server follow-up is now specified through PR9-PR12 notes.
 
 ## Read Order
 
@@ -89,6 +89,8 @@ Then read the PR notes in order:
 - [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
 - [pr9-design-note-persistence-ready-session.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr9-design-note-persistence-ready-session.md)
 - [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
+- [pr11-design-note-turn-continuation-state.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr11-design-note-turn-continuation-state.md)
+- [pr12-design-note-local-load-reattachment.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr12-design-note-local-load-reattachment.md)
 
 ## Short Version
 
@@ -114,6 +116,7 @@ That should be enough context together with this docs set.
 Useful later shorthands:
 
 - `continue from PR9`
+- `continue from PR11`
 - `start the persistence wave`
 - `continue from the server MVP plan`
 
@@ -147,4 +150,8 @@ The documentation is now in a state where the next sensible move is:
 
 After that:
 
-- move to [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
+- finish callback elimination via
+  [pr11-design-note-turn-continuation-state.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr11-design-note-turn-continuation-state.md)
+- then local load reattachment via
+  [pr12-design-note-local-load-reattachment.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr12-design-note-local-load-reattachment.md)
+- then move to [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
