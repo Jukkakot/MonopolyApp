@@ -10,6 +10,7 @@ import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.PaymentObligation;
+import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
 
 import java.util.ArrayList;
@@ -19,23 +20,31 @@ import java.util.function.Consumer;
 
 public final class RentAndDebtOpeningHandler {
     private final Consumer<DebtStateModel> activeDebtUpdater;
+    private final Consumer<TurnContinuationState> turnContinuationUpdater;
     private final LegacyPaymentGateway paymentGateway;
 
-    public RentAndDebtOpeningHandler(Consumer<DebtStateModel> activeDebtUpdater, LegacyPaymentGateway paymentGateway) {
+    public RentAndDebtOpeningHandler(
+            Consumer<DebtStateModel> activeDebtUpdater,
+            Consumer<TurnContinuationState> turnContinuationUpdater,
+            LegacyPaymentGateway paymentGateway
+    ) {
         this.activeDebtUpdater = Objects.requireNonNull(activeDebtUpdater);
+        this.turnContinuationUpdater = Objects.requireNonNull(turnContinuationUpdater);
         this.paymentGateway = Objects.requireNonNull(paymentGateway);
     }
 
-    public void handle(PaymentRequest request, CallbackAction onResolved) {
+    public void handle(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
         PaymentResult result = paymentGateway.tryResolve(request);
         if (result.status() == PaymentStatus.PAID) {
             activeDebtUpdater.accept(null);
+            turnContinuationUpdater.accept(null);
             onResolved.doAction();
             return;
         }
 
         boolean bankruptcyRisk = result.status() == PaymentStatus.BANKRUPT;
         activeDebtUpdater.accept(toDebtStateModel(request, result.missingAmount(), bankruptcyRisk));
+        turnContinuationUpdater.accept(continuationState);
         paymentGateway.openDebtState(request, onResolved, result);
     }
 

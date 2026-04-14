@@ -8,6 +8,7 @@ import fi.monopoly.domain.session.PlayerSnapshot;
 import fi.monopoly.domain.session.PropertyStateSnapshot;
 import fi.monopoly.domain.session.SeatState;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.TradeHistoryEntry;
 import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeSelectionState;
@@ -31,6 +32,7 @@ public final class SessionSnapshotMapper {
                 toAuctionSnapshot(sessionState.auctionState()),
                 toDebtSnapshot(sessionState.activeDebt()),
                 toTradeSnapshot(sessionState.tradeState()),
+                toTurnContinuationSnapshot(sessionState.turnContinuationState()),
                 sessionState.winnerPlayerId()
         );
     }
@@ -49,6 +51,7 @@ public final class SessionSnapshotMapper {
                 fromAuctionSnapshot(snapshot.auctionState()),
                 fromDebtSnapshot(snapshot.activeDebt()),
                 fromTradeSnapshot(snapshot.tradeState()),
+                fromTurnContinuationSnapshot(snapshot.turnContinuation()),
                 snapshot.winnerPlayerId()
         );
     }
@@ -385,6 +388,34 @@ public final class SessionSnapshotMapper {
                 tradeHistoryEntrySnapshot.actorPlayerId(),
                 tradeHistoryEntrySnapshot.actionType(),
                 tradeHistoryEntrySnapshot.summary()
+        );
+    }
+
+    private SessionSnapshot.TurnContinuationSnapshot toTurnContinuationSnapshot(TurnContinuationState turnContinuationState) {
+        if (turnContinuationState == null) {
+            return null;
+        }
+        return new SessionSnapshot.TurnContinuationSnapshot(
+                turnContinuationState.continuationId(),
+                turnContinuationState.activePlayerId(),
+                turnContinuationState.continuationType(),
+                turnContinuationState.completionAction(),
+                turnContinuationState.propertyId(),
+                turnContinuationState.reason()
+        );
+    }
+
+    private TurnContinuationState fromTurnContinuationSnapshot(SessionSnapshot.TurnContinuationSnapshot turnContinuationSnapshot) {
+        if (turnContinuationSnapshot == null) {
+            return null;
+        }
+        return new TurnContinuationState(
+                turnContinuationSnapshot.continuationId(),
+                turnContinuationSnapshot.activePlayerId(),
+                turnContinuationSnapshot.continuationType(),
+                turnContinuationSnapshot.completionAction(),
+                turnContinuationSnapshot.propertyId(),
+                turnContinuationSnapshot.reason()
         );
     }
 }

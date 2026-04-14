@@ -43,6 +43,7 @@ import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.TradeState;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
@@ -62,6 +63,7 @@ public final class SessionApplicationService {
     private AuctionState auctionStateOverride;
     private DebtStateModel activeDebtOverride;
     private TradeState tradeStateOverride;
+    private TurnContinuationState turnContinuationOverride;
     private AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseCommandHandler propertyPurchaseCommandHandler;
     private RentAndDebtOpeningHandler rentAndDebtOpeningHandler;
@@ -80,6 +82,7 @@ public final class SessionApplicationService {
         AuctionState auctionState = auctionStateOverride != null ? auctionStateOverride : baseState.auctionState();
         DebtStateModel activeDebt = activeDebtOverride != null ? activeDebtOverride : baseState.activeDebt();
         TradeState tradeState = tradeStateOverride != null ? tradeStateOverride : baseState.tradeState();
+        TurnContinuationState turnContinuationState = turnContinuationOverride != null ? turnContinuationOverride : baseState.turnContinuationState();
         if (pendingDecisionOverride != null
                 && baseState.pendingDecision() == null
                 && auctionState == null
@@ -110,6 +113,7 @@ public final class SessionApplicationService {
                 auctionState,
                 activeDebt,
                 tradeState,
+                turnContinuationState,
                 baseState.winnerPlayerId()
         );
     }
@@ -119,6 +123,7 @@ public final class SessionApplicationService {
                 sessionId,
                 this::currentState,
                 this::setAuctionStateOverride,
+                this::setTurnContinuationOverride,
                 new LegacyAuctionGateway(popupService, players)
         );
     }
@@ -132,17 +137,23 @@ public final class SessionApplicationService {
                 this::currentState,
                 this::setPendingDecisionOverride,
                 this::setAuctionStateOverride,
+                this::setTurnContinuationOverride,
                 new LegacyPropertyPurchaseGateway(popupService, players),
                 auctionCommandHandler
         );
     }
 
     public void configureRentAndDebtFlow(DebtController debtController) {
-        rentAndDebtOpeningHandler = new RentAndDebtOpeningHandler(this::setActiveDebtOverride, new LegacyPaymentGateway(debtController));
+        rentAndDebtOpeningHandler = new RentAndDebtOpeningHandler(
+                this::setActiveDebtOverride,
+                this::setTurnContinuationOverride,
+                new LegacyPaymentGateway(debtController)
+        );
         debtRemediationCommandHandler = new DebtRemediationCommandHandler(
                 sessionId,
                 this::currentState,
                 this::setActiveDebtOverride,
+                this::setTurnContinuationOverride,
                 new LegacyDebtRemediationGateway(debtController)
         );
     }
@@ -164,18 +175,24 @@ public final class SessionApplicationService {
         );
     }
 
-    public PendingDecision openPropertyPurchaseDecision(Player player, Property property, String message, CallbackAction onComplete) {
+    public PendingDecision openPropertyPurchaseDecision(
+            Player player,
+            Property property,
+            String message,
+            TurnContinuationState continuationState,
+            CallbackAction onComplete
+    ) {
         if (propertyPurchaseCommandHandler == null) {
             throw new IllegalStateException("Property purchase flow has not been configured");
         }
-        return propertyPurchaseCommandHandler.openDecision(player, property, message, onComplete);
+        return propertyPurchaseCommandHandler.openDecision(player, property, message, continuationState, onComplete);
     }
 
-    public void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
+    public void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
         if (rentAndDebtOpeningHandler == null) {
             throw new IllegalStateException("Rent and debt flow has not been configured");
         }
-        rentAndDebtOpeningHandler.handle(request, onResolved);
+        rentAndDebtOpeningHandler.handle(request, continuationState, onResolved);
     }
 
     public void clearActiveDebtOverride() {
@@ -190,18 +207,36 @@ public final class SessionApplicationService {
         return currentState().tradeState() != null;
     }
 
+    public boolean hasAuctionOverride() {
+        return auctionStateOverride != null;
+    }
+
+    public boolean hasTradeOverride() {
+        return tradeStateOverride != null;
+    }
+
+    public boolean hasPendingDecisionOverride() {
+        return pendingDecisionOverride != null;
+    }
+
     public void restoreFrom(SessionState restoredState) {
         if (restoredState == null) {
             pendingDecisionOverride = null;
             auctionStateOverride = null;
             activeDebtOverride = null;
             tradeStateOverride = null;
+            turnContinuationOverride = null;
             return;
         }
         pendingDecisionOverride = restoredState.pendingDecision();
         auctionStateOverride = restoredState.auctionState();
         activeDebtOverride = restoredState.activeDebt();
         tradeStateOverride = restoredState.tradeState();
+        turnContinuationOverride = restoredState.turnContinuationState();
+    }
+
+    public void setTurnContinuationOverride(TurnContinuationState turnContinuationState) {
+        this.turnContinuationOverride = turnContinuationState;
     }
 
     public CommandResult handleComputerAuctionAction(String actorPlayerId) {

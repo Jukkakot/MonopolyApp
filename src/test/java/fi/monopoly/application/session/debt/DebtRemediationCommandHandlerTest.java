@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,7 +42,8 @@ class DebtRemediationCommandHandlerTest {
         ActiveDebtSupplier debtSupplier = new ActiveDebtSupplier(debtor, false);
         FakeGateway gateway = new FakeGateway();
         gateway.debtSupplier = debtSupplier;
-        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, gateway);
+        AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>(continuationFor(debtor));
+        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, continuationRef, gateway);
 
         var result = handler.handle(new MortgagePropertyForDebtCommand("local-session", playerId(debtor), debtSupplier.debtId(), SpotType.RR1.name()));
 
@@ -65,7 +67,8 @@ class DebtRemediationCommandHandlerTest {
         ActiveDebtSupplier debtSupplier = new ActiveDebtSupplier(debtor, false);
         FakeGateway gateway = new FakeGateway();
         gateway.debtSupplier = debtSupplier;
-        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, gateway);
+        AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>(continuationFor(debtor));
+        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, continuationRef, gateway);
 
         var result = handler.handle(new SellBuildingForDebtCommand("local-session", playerId(debtor), debtSupplier.debtId(), SpotType.B1.name(), 1));
 
@@ -82,7 +85,8 @@ class DebtRemediationCommandHandlerTest {
         ActiveDebtSupplier debtSupplier = new ActiveDebtSupplier(debtor, false);
         FakeGateway gateway = new FakeGateway();
         gateway.debtSupplier = debtSupplier;
-        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, gateway);
+        AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>(continuationFor(debtor));
+        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, continuationRef, gateway);
 
         var result = handler.handle(new PayDebtCommand("local-session", playerId(debtor), debtSupplier.debtId()));
 
@@ -98,13 +102,16 @@ class DebtRemediationCommandHandlerTest {
         FakeGateway gateway = new FakeGateway();
         gateway.debtSupplier = debtSupplier;
         gateway.onPayDebt = debtSupplier::clear;
-        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, gateway);
+        AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>(continuationFor(debtor));
+        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, continuationRef, gateway);
 
         var result = handler.handle(new PayDebtCommand("local-session", playerId(debtor), debtSupplier.debtId()));
 
         assertTrue(result.accepted());
         assertTrue(gateway.payDebtCalled.get());
         assertNull(result.sessionState().activeDebt());
+        assertNull(result.sessionState().turnContinuationState());
+        assertNull(continuationRef.get());
         assertEquals(TurnPhase.WAITING_FOR_END_TURN, result.sessionState().turn().phase());
     }
 
@@ -114,7 +121,8 @@ class DebtRemediationCommandHandlerTest {
         ActiveDebtSupplier debtSupplier = new ActiveDebtSupplier(debtor, false);
         FakeGateway gateway = new FakeGateway();
         gateway.debtSupplier = debtSupplier;
-        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, gateway);
+        AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>(continuationFor(debtor));
+        DebtRemediationCommandHandler handler = newHandler(debtor, debtSupplier, continuationRef, gateway);
 
         var result = handler.handle(new DeclareBankruptcyCommand("local-session", playerId(debtor), debtSupplier.debtId()));
 
@@ -122,7 +130,12 @@ class DebtRemediationCommandHandlerTest {
         assertEquals("BANKRUPTCY_NOT_ALLOWED", result.rejections().get(0).code());
     }
 
-    private DebtRemediationCommandHandler newHandler(Player debtor, ActiveDebtSupplier debtSupplier, FakeGateway gateway) {
+    private DebtRemediationCommandHandler newHandler(
+            Player debtor,
+            ActiveDebtSupplier debtSupplier,
+            AtomicReference<TurnContinuationState> continuationRef,
+            FakeGateway gateway
+    ) {
         return new DebtRemediationCommandHandler(
                 "local-session",
                 () -> new SessionState(
@@ -137,10 +150,23 @@ class DebtRemediationCommandHandlerTest {
                         null,
                         debtSupplier.get(),
                         null,
+                        continuationRef.get(),
                         null
                 ),
                 debtSupplier::set,
+                continuationRef::set,
                 gateway
+        );
+    }
+
+    private TurnContinuationState continuationFor(Player debtor) {
+        return new TurnContinuationState(
+                "continuation:debt:" + debtor.getId(),
+                playerId(debtor),
+                TurnContinuationType.RESUME_AFTER_DEBT,
+                TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                null,
+                "resume-after-debt"
         );
     }
 

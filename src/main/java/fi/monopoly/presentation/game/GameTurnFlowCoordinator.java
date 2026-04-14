@@ -23,6 +23,7 @@ import fi.monopoly.components.turn.ShowEndTurnEffect;
 import fi.monopoly.components.turn.TurnEffect;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.components.turn.TurnPlan;
+import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.TurnResult;
@@ -113,7 +114,7 @@ public final class GameTurnFlowCoordinator {
             ((JailSpot) turnPlayer.getSpot()).handleInJailTurn(
                     turnPlayer,
                     diceValue,
-                    hooks::handlePaymentRequest,
+                    (request, onResolved) -> hooks.handlePaymentRequest(request, null, onResolved),
                     () -> applyTurnPlan(turnEngine.endTurn(false)),
                     () -> applyTurnPlan(turnEngine.endTurn(true))
             );
@@ -172,7 +173,7 @@ public final class GameTurnFlowCoordinator {
     private void handleSpotLogic(DiceState diceState, Spot spot) {
         log.debug("Handling spot logic for player {} on spot {} with diceState={}",
                 players.getTurn().getName(), spot.getSpotType(), diceState);
-        GameState gameState = new GameState(players, dices, board, TurnResult.copyOf(prevTurnResult), hooks::handlePaymentRequest, propertyPurchaseFlow);
+        GameState gameState = new GameState(players, dices, board, TurnResult.copyOf(prevTurnResult), new GameFlowPaymentHandler(hooks), propertyPurchaseFlow);
         prevTurnResult = null;
         prevTurnResult = spot.handleTurn(gameState, () -> doTurnEndEvent(diceState));
         log.trace("Spot handling produced prevTurnResult={}", prevTurnResult);
@@ -215,6 +216,24 @@ public final class GameTurnFlowCoordinator {
 
         void showEndTurnControl();
 
-        void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved);
+        void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved);
+    }
+
+    private static final class GameFlowPaymentHandler implements fi.monopoly.components.payment.PaymentHandler {
+        private final Hooks hooks;
+
+        private GameFlowPaymentHandler(Hooks hooks) {
+            this.hooks = hooks;
+        }
+
+        @Override
+        public void requestPayment(PaymentRequest request, CallbackAction onResolved) {
+            hooks.handlePaymentRequest(request, null, onResolved);
+        }
+
+        @Override
+        public void requestPayment(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
+            hooks.handlePaymentRequest(request, continuationState, onResolved);
+        }
     }
 }

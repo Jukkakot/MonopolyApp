@@ -2,6 +2,7 @@ package fi.monopoly.presentation.game;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.domain.session.TurnContinuationState;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -64,12 +65,12 @@ public final class GameTurnFlowHooksAdapter implements GameTurnFlowCoordinator.H
     }
 
     @Override
-    public void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
-        paymentHandler.handle(request, onResolved);
+    public void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
+        paymentHandler.handle(request, continuationState, onResolved);
     }
 
     @FunctionalInterface
     public interface BiCallbackPaymentHandler {
-        void handle(PaymentRequest request, CallbackAction onResolved);
+        void handle(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved);
     }
 }

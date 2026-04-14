@@ -8,6 +8,8 @@ import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SessionStatus;
+import fi.monopoly.domain.session.TurnContinuationAction;
+import fi.monopoly.domain.session.TurnContinuationType;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.domain.turn.TurnPhase;
 
@@ -27,6 +29,7 @@ public record SessionSnapshot(
         AuctionSnapshot auctionState,
         DebtSnapshot activeDebt,
         TradeSnapshot tradeState,
+        TurnContinuationSnapshot turnContinuation,
         String winnerPlayerId
 ) {
     public static final int CURRENT_SCHEMA_VERSION = 1;
@@ -180,6 +183,16 @@ public record SessionSnapshot(
             String actorPlayerId,
             String actionType,
             String summary
+    ) {
+    }
+
+    public record TurnContinuationSnapshot(
+            String continuationId,
+            String activePlayerId,
+            TurnContinuationType continuationType,
+            TurnContinuationAction completionAction,
+            String propertyId,
+            String reason
     ) {
     }
 }

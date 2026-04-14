@@ -9,6 +9,7 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.domain.decision.PendingDecision;
+import fi.monopoly.domain.session.TurnContinuationState;
 
 public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final String sessionId;
@@ -32,8 +33,14 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     }
 
     @Override
-    public void begin(fi.monopoly.components.Player player, Property property, String message, CallbackAction onComplete) {
-        PendingDecision pendingDecision = propertyPurchaseDecisionSupport.openDecision(player, property, message, onComplete);
+    public void begin(
+            fi.monopoly.components.Player player,
+            Property property,
+            String message,
+            TurnContinuationState continuationState,
+            CallbackAction onComplete
+    ) {
+        PendingDecision pendingDecision = propertyPurchaseDecisionSupport.openDecision(player, property, message, continuationState, onComplete);
         popupService.showPropertyOffer(
                 property,
                 pendingDecision.summaryText(),
@@ -61,6 +68,12 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     }
 
     public interface LegacyPropertyPurchaseDecisionSupport {
-        PendingDecision openDecision(fi.monopoly.components.Player player, Property property, String message, CallbackAction onComplete);
+        PendingDecision openDecision(
+                fi.monopoly.components.Player player,
+                Property property,
+                String message,
+                TurnContinuationState continuationState,
+                CallbackAction onComplete
+        );
     }
 }

@@ -37,17 +37,25 @@ class PropertyPurchaseCommandHandlerTest {
         StreetProperty property = new StreetProperty(SpotType.B1);
         var pendingDecisionRef = new AtomicReference<PendingDecision>();
         var auctionStateRef = new AtomicReference<AuctionState>();
+        var continuationRef = new AtomicReference<TurnContinuationState>();
         var callbackTriggered = new AtomicBoolean(false);
         FakeGateway gateway = new FakeGateway();
-        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, gateway);
+        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, gateway);
 
-        PendingDecision decision = handler.openDecision(human, property, "Buy Brown 1?", () -> callbackTriggered.set(true));
+        PendingDecision decision = handler.openDecision(
+                human,
+                property,
+                "Buy Brown 1?",
+                continuationFor(human, property, TurnContinuationType.RESUME_TURN_FOLLOW_UP),
+                () -> callbackTriggered.set(true)
+        );
 
         var result = handler.handle(new BuyPropertyCommand("local-session", "player-" + human.getId(), decision.decisionId(), property.getSpotType().name()));
 
         assertTrue(result.accepted());
         assertEquals(human, property.getOwnerPlayer());
         assertNull(pendingDecisionRef.get());
+        assertNull(continuationRef.get());
         assertTrue(callbackTriggered.get());
     }
 
@@ -57,10 +65,17 @@ class PropertyPurchaseCommandHandlerTest {
         StreetProperty property = new StreetProperty(SpotType.B1);
         var pendingDecisionRef = new AtomicReference<PendingDecision>();
         var auctionStateRef = new AtomicReference<AuctionState>();
-        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, new FakeGateway());
+        var continuationRef = new AtomicReference<TurnContinuationState>();
+        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, new FakeGateway());
 
-        PendingDecision decision = handler.openDecision(human, property, "Buy Brown 1?", () -> {
-        });
+        PendingDecision decision = handler.openDecision(
+                human,
+                property,
+                "Buy Brown 1?",
+                continuationFor(human, property, TurnContinuationType.RESUME_INTERACTIVE_EFFECTS),
+                () -> {
+                }
+        );
 
         var result = handler.handle(new BuyPropertyCommand("local-session", "player-999", decision.decisionId(), property.getSpotType().name()));
 
@@ -76,11 +91,18 @@ class PropertyPurchaseCommandHandlerTest {
         StreetProperty property = new StreetProperty(SpotType.B1);
         var pendingDecisionRef = new AtomicReference<PendingDecision>();
         var auctionStateRef = new AtomicReference<AuctionState>();
+        var continuationRef = new AtomicReference<TurnContinuationState>();
         FakeGateway gateway = new FakeGateway();
-        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, gateway);
+        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, gateway);
 
-        PendingDecision decision = handler.openDecision(human, property, "Buy Brown 1?", () -> {
-        });
+        PendingDecision decision = handler.openDecision(
+                human,
+                property,
+                "Buy Brown 1?",
+                continuationFor(human, property, TurnContinuationType.RESUME_TURN_FOLLOW_UP),
+                () -> {
+                }
+        );
 
         var result = handler.handle(new BuyPropertyCommand("local-session", "player-" + human.getId(), decision.decisionId(), property.getSpotType().name()));
 
@@ -96,17 +118,25 @@ class PropertyPurchaseCommandHandlerTest {
         StreetProperty property = new StreetProperty(SpotType.B1);
         var pendingDecisionRef = new AtomicReference<PendingDecision>();
         var auctionStateRef = new AtomicReference<AuctionState>();
+        var continuationRef = new AtomicReference<TurnContinuationState>();
         FakeGateway gateway = new FakeGateway();
-        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, gateway);
+        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, gateway);
 
-        PendingDecision decision = handler.openDecision(human, property, "Buy Brown 1?", () -> {
-        });
+        PendingDecision decision = handler.openDecision(
+                human,
+                property,
+                "Buy Brown 1?",
+                continuationFor(human, property, TurnContinuationType.RESUME_INTERACTIVE_EFFECTS),
+                () -> {
+                }
+        );
 
         var result = handler.handle(new DeclinePropertyCommand("local-session", "player-" + human.getId(), decision.decisionId(), property.getSpotType().name()));
 
         assertTrue(result.accepted());
         assertNull(pendingDecisionRef.get());
         assertNotNull(auctionStateRef.get());
+        assertEquals(continuationRef.get(), continuationFor(human, property, TurnContinuationType.RESUME_INTERACTIVE_EFFECTS));
         assertEquals(property.getSpotType().name(), auctionStateRef.get().propertyId());
         assertEquals(AuctionStatus.ACTIVE, auctionStateRef.get().status());
     }
@@ -115,6 +145,7 @@ class PropertyPurchaseCommandHandlerTest {
             Player human,
             AtomicReference<PendingDecision> pendingDecisionRef,
             AtomicReference<AuctionState> auctionStateRef,
+            AtomicReference<TurnContinuationState> continuationRef,
             PropertyPurchaseGateway gateway
     ) {
         return new PropertyPurchaseCommandHandler(
@@ -131,10 +162,12 @@ class PropertyPurchaseCommandHandlerTest {
                         auctionStateRef.get(),
                         null,
                         null,
+                        continuationRef.get(),
                         null
                 ),
                 pendingDecisionRef::set,
                 auctionStateRef::set,
+                continuationRef::set,
                 gateway,
                 new AuctionCommandHandler(
                         "local-session",
@@ -150,9 +183,11 @@ class PropertyPurchaseCommandHandlerTest {
                                 auctionStateRef.get(),
                                 null,
                                 null,
+                                continuationRef.get(),
                                 null
                         ),
                         auctionStateRef::set,
+                        continuationRef::set,
                         new AuctionGateway() {
                             @Override
                             public List<String> eligibleBidderIds(Player triggeringPlayer, fi.monopoly.components.properties.Property property) {
@@ -185,6 +220,17 @@ class PropertyPurchaseCommandHandlerTest {
                             }
                         }
                 )
+        );
+    }
+
+    private TurnContinuationState continuationFor(Player player, StreetProperty property, TurnContinuationType type) {
+        return new TurnContinuationState(
+                "continuation:" + player.getId() + ":" + property.getSpotType().name(),
+                "player-" + player.getId(),
+                type,
+                type == TurnContinuationType.RESUME_TURN_FOLLOW_UP ? TurnContinuationAction.APPLY_TURN_FOLLOW_UP : TurnContinuationAction.NONE,
+                property.getSpotType().name(),
+                type == TurnContinuationType.RESUME_TURN_FOLLOW_UP ? "resume-turn-follow-up" : "resume-interactive-effects"
         );
     }
 

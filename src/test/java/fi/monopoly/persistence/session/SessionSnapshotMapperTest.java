@@ -16,6 +16,9 @@ import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SeatState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
+import fi.monopoly.domain.session.TurnContinuationAction;
+import fi.monopoly.domain.session.TurnContinuationState;
+import fi.monopoly.domain.session.TurnContinuationType;
 import fi.monopoly.domain.session.TradeHistoryEntry;
 import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeSelectionState;
@@ -105,6 +108,14 @@ class SessionSnapshotMapperTest {
                         "player-1",
                         List.of(new TradeHistoryEntry("player-2", "COUNTERED", "Countered for RR1"))
                 ),
+                new TurnContinuationState(
+                        "continuation-1",
+                        "player-1",
+                        TurnContinuationType.RESUME_AFTER_AUCTION,
+                        TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                        "U2",
+                        "Resume turn after property auction"
+                ),
                 null
         );
 
@@ -124,6 +135,7 @@ class SessionSnapshotMapperTest {
                 List.of(),
                 List.of(),
                 List.of(),
+                null,
                 null,
                 null,
                 null,

@@ -16,6 +16,7 @@ import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.TurnContinuationState;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +28,7 @@ public final class PropertyPurchaseCommandHandler {
     private final Supplier<SessionState> currentStateSupplier;
     private final Consumer<PendingDecision> pendingDecisionSetter;
     private final Consumer<AuctionState> auctionStateSetter;
+    private final Consumer<TurnContinuationState> turnContinuationSetter;
     private final PropertyPurchaseGateway gateway;
     private final AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseContext activeContext;
@@ -36,6 +38,7 @@ public final class PropertyPurchaseCommandHandler {
             Supplier<SessionState> currentStateSupplier,
             Consumer<PendingDecision> pendingDecisionSetter,
             Consumer<AuctionState> auctionStateSetter,
+            Consumer<TurnContinuationState> turnContinuationSetter,
             PropertyPurchaseGateway gateway,
             AuctionCommandHandler auctionCommandHandler
     ) {
@@ -43,11 +46,18 @@ public final class PropertyPurchaseCommandHandler {
         this.currentStateSupplier = currentStateSupplier;
         this.pendingDecisionSetter = pendingDecisionSetter;
         this.auctionStateSetter = auctionStateSetter;
+        this.turnContinuationSetter = turnContinuationSetter;
         this.gateway = gateway;
         this.auctionCommandHandler = auctionCommandHandler;
     }
 
-    public PendingDecision openDecision(Player player, Property property, String message, CallbackAction onComplete) {
+    public PendingDecision openDecision(
+            Player player,
+            Property property,
+            String message,
+            TurnContinuationState continuationState,
+            CallbackAction onComplete
+    ) {
         String propertyId = property.getSpotType().name();
         PendingDecision decision = new PendingDecision(
                 "property-purchase:" + player.getId() + ":" + propertyId,
@@ -57,8 +67,9 @@ public final class PropertyPurchaseCommandHandler {
                 message,
                 new PropertyPurchaseDecisionPayload(propertyId, property.getDisplayName(), property.getPrice())
         );
-        activeContext = new PropertyPurchaseContext(decision.decisionId(), player, property, onComplete);
+        activeContext = new PropertyPurchaseContext(decision.decisionId(), player, property, continuationState, onComplete);
         auctionStateSetter.accept(null);
+        turnContinuationSetter.accept(continuationState);
         pendingDecisionSetter.accept(decision);
         return decision;
     }
@@ -87,6 +98,7 @@ public final class PropertyPurchaseCommandHandler {
         }
         pendingDecisionSetter.accept(null);
         auctionStateSetter.accept(null);
+        turnContinuationSetter.accept(null);
         PropertyPurchaseContext resolvedContext = activeContext;
         activeContext = null;
         resolvedContext.onComplete().doAction();
@@ -105,7 +117,7 @@ public final class PropertyPurchaseCommandHandler {
             return reject("INVALID_PROPERTY_PURCHASE", "Property decline command is not valid in the current state");
         }
         pendingDecisionSetter.accept(null);
-        auctionCommandHandler.startAuction(context.player(), context.property(), context.onComplete());
+        auctionCommandHandler.startAuction(context.player(), context.property(), context.continuationState(), context.onComplete());
         activeContext = null;
         return new CommandResult(
                 true,
@@ -156,6 +168,7 @@ public final class PropertyPurchaseCommandHandler {
             String decisionId,
             Player player,
             Property property,
+            TurnContinuationState continuationState,
             CallbackAction onComplete
     ) {
     }

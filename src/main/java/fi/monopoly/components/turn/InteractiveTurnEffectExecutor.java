@@ -8,6 +8,9 @@ import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.popup.PopupService;
 import lombok.extern.slf4j.Slf4j;
+import fi.monopoly.domain.session.TurnContinuationAction;
+import fi.monopoly.domain.session.TurnContinuationState;
+import fi.monopoly.domain.session.TurnContinuationType;
 
 import java.util.List;
 
@@ -75,19 +78,56 @@ public class InteractiveTurnEffectExecutor {
                     offerToBuyPropertyEffect.player(),
                     offerToBuyPropertyEffect.property(),
                     offerToBuyPropertyEffect.message(),
+                    propertyPurchaseContinuation(offerToBuyPropertyEffect, index, effects),
                     next
             );
         } else if (effect instanceof PayRentEffect payRentEffect) {
             popupService.show(payRentEffect.message(), () -> {
-                gameState.getPaymentHandler().requestPayment(new PaymentRequest(
-                        payRentEffect.fromPlayer(),
-                        new PlayerTarget(payRentEffect.toPlayer()),
-                        payRentEffect.amount(),
-                        payRentEffect.message()
-                ), next);
+                gameState.getPaymentHandler().requestPayment(
+                        new PaymentRequest(
+                                payRentEffect.fromPlayer(),
+                                new PlayerTarget(payRentEffect.toPlayer()),
+                                payRentEffect.amount(),
+                                payRentEffect.message()
+                        ),
+                        rentContinuation(payRentEffect, index, effects),
+                        next
+                );
             });
         } else {
             throw new IllegalStateException("Unhandled interactive turn effect: " + effect.getClass().getSimpleName());
         }
+    }
+
+    private TurnContinuationState propertyPurchaseContinuation(
+            OfferToBuyPropertyEffect effect,
+            int index,
+            List<TurnEffect> effects
+    ) {
+        boolean hasRemainingEffects = index + 1 < effects.size();
+        return new TurnContinuationState(
+                "turn-continuation:purchase:" + effect.player().getId() + ":" + effect.property().getSpotType().name() + ":" + index,
+                "player-" + effect.player().getId(),
+                hasRemainingEffects ? TurnContinuationType.RESUME_INTERACTIVE_EFFECTS : TurnContinuationType.RESUME_TURN_FOLLOW_UP,
+                hasRemainingEffects ? TurnContinuationAction.NONE : TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                effect.property().getSpotType().name(),
+                hasRemainingEffects ? "resume-interactive-effects" : "resume-turn-follow-up"
+        );
+    }
+
+    private TurnContinuationState rentContinuation(
+            PayRentEffect effect,
+            int index,
+            List<TurnEffect> effects
+    ) {
+        boolean hasRemainingEffects = index + 1 < effects.size();
+        return new TurnContinuationState(
+                "turn-continuation:rent:" + effect.fromPlayer().getId() + ":" + effect.toPlayer().getId() + ":" + index,
+                "player-" + effect.fromPlayer().getId(),
+                TurnContinuationType.RESUME_AFTER_DEBT,
+                hasRemainingEffects ? TurnContinuationAction.NONE : TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                null,
+                hasRemainingEffects ? "resume-interactive-effects-after-debt" : "resume-turn-follow-up-after-debt"
+        );
     }
 }

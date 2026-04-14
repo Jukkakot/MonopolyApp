@@ -35,6 +35,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final Supplier<String> sessionIdSupplier;
     private final BooleanSupplier projectedRollDiceAvailableSupplier;
     private final BooleanSupplier projectedEndTurnAvailableSupplier;
+    private final BooleanSupplier recoverPrimaryTurnControlsSupplier;
 
     public GameBotTurnHooksAdapter(
             MonopolyRuntime runtime,
@@ -54,7 +55,8 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
             Consumer<BotTurnScheduler.DelayKind> scheduleNextActionConsumer,
             Supplier<String> sessionIdSupplier,
             BooleanSupplier projectedRollDiceAvailableSupplier,
-            BooleanSupplier projectedEndTurnAvailableSupplier
+            BooleanSupplier projectedEndTurnAvailableSupplier,
+            BooleanSupplier recoverPrimaryTurnControlsSupplier
     ) {
         this.runtime = runtime;
         this.sessionApplicationService = sessionApplicationService;
@@ -74,6 +76,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
         this.sessionIdSupplier = sessionIdSupplier;
         this.projectedRollDiceAvailableSupplier = projectedRollDiceAvailableSupplier;
         this.projectedEndTurnAvailableSupplier = projectedEndTurnAvailableSupplier;
+        this.recoverPrimaryTurnControlsSupplier = recoverPrimaryTurnControlsSupplier;
     }
 
     @Override
@@ -184,5 +187,10 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     @Override
     public String sessionId() {
         return sessionIdSupplier.get();
+    }
+
+    @Override
+    public boolean recoverPrimaryTurnControlsForCurrentComputerTurn() {
+        return recoverPrimaryTurnControlsSupplier.getAsBoolean();
     }
 }

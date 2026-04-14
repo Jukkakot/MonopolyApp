@@ -45,6 +45,10 @@ public final class GameBotTurnDriver {
 
         ComputerTurnContext context = hooks.createTurnContext(turnPlayer);
         boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile()).takeStep(context);
+        if (!acted && hooks.recoverPrimaryTurnControlsForCurrentComputerTurn()) {
+            hooks.syncPresentationState();
+            acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile()).takeStep(context);
+        }
         if (acted) {
             hooks.scheduleNextAction(hooks.delayKindFor(context), now);
         }
@@ -138,5 +142,7 @@ public final class GameBotTurnDriver {
         void recordStep(long durationNanos);
 
         String sessionId();
+
+        boolean recoverPrimaryTurnControlsForCurrentComputerTurn();
     }
 }

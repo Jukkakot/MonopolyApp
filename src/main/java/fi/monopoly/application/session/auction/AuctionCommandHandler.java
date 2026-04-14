@@ -14,6 +14,7 @@ import fi.monopoly.components.turn.PropertyAuctionResolver;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.TurnContinuationState;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -27,6 +28,7 @@ public final class AuctionCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> currentStateSupplier;
     private final Consumer<AuctionState> auctionStateSetter;
+    private final Consumer<TurnContinuationState> turnContinuationSetter;
     private final AuctionGateway gateway;
     private ActiveAuctionContext activeContext;
 
@@ -34,15 +36,22 @@ public final class AuctionCommandHandler {
             String sessionId,
             Supplier<SessionState> currentStateSupplier,
             Consumer<AuctionState> auctionStateSetter,
+            Consumer<TurnContinuationState> turnContinuationSetter,
             AuctionGateway gateway
     ) {
         this.sessionId = sessionId;
         this.currentStateSupplier = currentStateSupplier;
         this.auctionStateSetter = auctionStateSetter;
+        this.turnContinuationSetter = turnContinuationSetter;
         this.gateway = gateway;
     }
 
-    public AuctionState startAuction(Player triggeringPlayer, Property property, CallbackAction onComplete) {
+    public AuctionState startAuction(
+            Player triggeringPlayer,
+            Property property,
+            TurnContinuationState continuationState,
+            CallbackAction onComplete
+    ) {
         List<String> eligibleBidderIds = gateway.eligibleBidderIds(triggeringPlayer, property);
         if (eligibleBidderIds.isEmpty()) {
             activeContext = null;
@@ -63,7 +72,8 @@ public final class AuctionCommandHandler {
                 0,
                 null
         );
-        activeContext = new ActiveAuctionContext(state.auctionId(), property, onComplete);
+        activeContext = new ActiveAuctionContext(state.auctionId(), property, continuationState, onComplete);
+        turnContinuationSetter.accept(continuationState);
         auctionStateSetter.accept(state);
         return state;
     }
@@ -202,6 +212,7 @@ public final class AuctionCommandHandler {
             ActiveAuctionContext resolvedContext = activeContext;
             activeContext = null;
             auctionStateSetter.accept(null);
+            turnContinuationSetter.accept(null);
             resolvedContext.onComplete().doAction();
             return new CommandResult(
                     true,
@@ -276,6 +287,7 @@ public final class AuctionCommandHandler {
         ActiveAuctionContext resolvedContext = activeContext;
         activeContext = null;
         auctionStateSetter.accept(null);
+        turnContinuationSetter.accept(null);
         resolvedContext.onComplete().doAction();
         return new CommandResult(
                 true,
@@ -354,6 +366,7 @@ public final class AuctionCommandHandler {
     private record ActiveAuctionContext(
             String auctionId,
             Property property,
+            TurnContinuationState continuationState,
             CallbackAction onComplete
     ) {
     }

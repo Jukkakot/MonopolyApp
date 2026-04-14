@@ -298,7 +298,7 @@ public class Game implements MonopolyEventListener {
                         this::showEndTurnControl,
                         () -> gameOver,
                         () -> debtController.debtState() != null,
-                        this::handlePaymentRequest
+                        (request, continuationState, onResolved) -> handlePaymentRequest(request, continuationState, onResolved)
                 )
         );
         this.gameBotTurnHooks = createGameBotTurnHooks();
@@ -320,12 +320,13 @@ public class Game implements MonopolyEventListener {
                 animations::isRunning,
                 () -> paused,
                 () -> runtime.app().millis(),
-                delayKind -> scheduleNextComputerAction(delayKind, runtime.app().millis()),
-                () -> LOCAL_SESSION_ID,
-                this::isProjectedRollDiceActionAvailable,
-                this::isProjectedEndTurnActionAvailable
-        );
-    }
+                 delayKind -> scheduleNextComputerAction(delayKind, runtime.app().millis()),
+                 () -> LOCAL_SESSION_ID,
+                 this::isProjectedRollDiceActionAvailable,
+                 this::isProjectedEndTurnActionAvailable,
+                 this::restoreBotTurnControlsIfNeeded
+         );
+     }
 
     private GameUiController createGameUiController() {
         return new GameUiController(
@@ -441,7 +442,7 @@ public class Game implements MonopolyEventListener {
                 this::debugResetTurnState,
                 this::restoreNormalTurnControls,
                 this::retryPendingDebtPaymentAction,
-                this::handlePaymentRequest
+                (request, onResolved) -> handlePaymentRequest(request, null, onResolved)
         );
     }
 
@@ -480,6 +481,7 @@ public class Game implements MonopolyEventListener {
         if (sessionApplicationService != null) {
             sessionApplicationService.clearActiveDebtOverride();
         }
+        restoreBotTurnControlsIfNeeded();
     }
 
     private void setupButtonActions() {
@@ -604,9 +606,9 @@ public class Game implements MonopolyEventListener {
         return gameUiController.handleEvent(event);
     }
 
-    private void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
+    private void handlePaymentRequest(PaymentRequest request, fi.monopoly.domain.session.TurnContinuationState continuationState, CallbackAction onResolved) {
         updateLogTurnContext();
-        sessionApplicationService.handlePaymentRequest(request, onResolved);
+        sessionApplicationService.handlePaymentRequest(request, continuationState, onResolved);
     }
 
     private void retryPendingDebtPaymentAction() {
@@ -756,6 +758,7 @@ public class Game implements MonopolyEventListener {
 
     private void syncTransientPresentationState() {
         gamePresentationSupport.syncTransientPresentationState();
+        restoreBotTurnControlsIfNeeded();
     }
 
     private void enforcePrimaryTurnControlInvariant() {
@@ -781,19 +784,25 @@ public class Game implements MonopolyEventListener {
     }
 
     private boolean isRollDiceActionAvailable(Player currentPlayer) {
-        return gamePrimaryTurnControls.isRollDiceActionAvailable(
+        if (gamePrimaryTurnControls.isRollDiceActionAvailable(
                 runtime.popupService().isAnyVisible(),
                 debtController.debtState() != null,
                 currentPlayer
-        );
+        )) {
+            return true;
+        }
+        return deriveBotTurnActionAvailability(currentPlayer) == GamePrimaryAction.ROLL_DICE;
     }
 
     private boolean isEndTurnActionAvailable(Player currentPlayer) {
-        return gamePrimaryTurnControls.isEndTurnActionAvailable(
+        if (gamePrimaryTurnControls.isEndTurnActionAvailable(
                 runtime.popupService().isAnyVisible(),
                 debtController.debtState() != null,
                 currentPlayer
-        );
+        )) {
+            return true;
+        }
+        return deriveBotTurnActionAvailability(currentPlayer) == GamePrimaryAction.END_TURN;
     }
 
     private boolean isProjectedRollDiceActionAvailable() {
@@ -802,6 +811,56 @@ public class Game implements MonopolyEventListener {
 
     private boolean isProjectedEndTurnActionAvailable() {
         return isEndTurnActionAvailable(players != null ? players.getTurn() : null);
+    }
+
+    private boolean restoreBotTurnControlsIfNeeded() {
+        Player currentPlayer = players != null ? players.getTurn() : null;
+        if (currentPlayer == null || !currentPlayer.isComputerControlled()) {
+            return false;
+        }
+        if (gameOver
+                || runtime.popupService().isAnyVisible()
+                || debtController.debtState() != null
+                || animations.isRunning()
+                || sessionApplicationService.hasActiveAuction()
+                || sessionApplicationService.hasActiveTrade()) {
+            return false;
+        }
+        if (isRollDiceActionAvailable(currentPlayer) || isEndTurnActionAvailable(currentPlayer)) {
+            return false;
+        }
+        GamePrimaryAction derivedAction = deriveBotTurnActionAvailability(currentPlayer);
+        if (derivedAction == GamePrimaryAction.ROLL_DICE) {
+            showRollDiceControl();
+            return true;
+        }
+        if (derivedAction == GamePrimaryAction.END_TURN) {
+            showEndTurnControl();
+            return true;
+        }
+        return false;
+    }
+
+    private GamePrimaryAction deriveBotTurnActionAvailability(Player currentPlayer) {
+        if (currentPlayer == null
+                || !currentPlayer.isComputerControlled()
+                || runtime.popupService().isAnyVisible()
+                || debtController.debtState() != null
+                || sessionApplicationService.hasAuctionOverride()
+                || sessionApplicationService.hasTradeOverride()
+                || sessionApplicationService.hasPendingDecisionOverride()) {
+            return GamePrimaryAction.NONE;
+        }
+        if (dices.getValue() == null || dices.getValue().diceState() == fi.monopoly.types.DiceState.DOUBLES) {
+            return GamePrimaryAction.ROLL_DICE;
+        }
+        return GamePrimaryAction.END_TURN;
+    }
+
+    private enum GamePrimaryAction {
+        NONE,
+        ROLL_DICE,
+        END_TURN
     }
 
 }

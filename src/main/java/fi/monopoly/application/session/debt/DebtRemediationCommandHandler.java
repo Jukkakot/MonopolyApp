@@ -10,6 +10,7 @@ import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.PaymentObligation;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.components.Player;
@@ -26,16 +27,19 @@ public final class DebtRemediationCommandHandler {
     private final Supplier<SessionState> sessionStateSupplier;
     private final LegacyDebtRemediationGateway gateway;
     private final Consumer<DebtStateModel> activeDebtUpdater;
+    private final Consumer<TurnContinuationState> turnContinuationUpdater;
 
     public DebtRemediationCommandHandler(
             String sessionId,
             Supplier<SessionState> sessionStateSupplier,
             Consumer<DebtStateModel> activeDebtUpdater,
+            Consumer<TurnContinuationState> turnContinuationUpdater,
             LegacyDebtRemediationGateway gateway
     ) {
         this.sessionId = sessionId;
         this.sessionStateSupplier = sessionStateSupplier;
         this.activeDebtUpdater = activeDebtUpdater;
+        this.turnContinuationUpdater = turnContinuationUpdater;
         this.gateway = gateway;
     }
 
@@ -61,6 +65,7 @@ public final class DebtRemediationCommandHandler {
             if (debt.currentCash() < debt.amountRemaining()) {
                 return rejected("DEBT_NOT_PAYABLE", "Current cash does not cover the debt");
             }
+            turnContinuationUpdater.accept(null);
             gateway.payDebtNow();
             return accepted("DebtResolved");
         }
@@ -122,6 +127,7 @@ public final class DebtRemediationCommandHandler {
             return rejected("BANKRUPTCY_NOT_ALLOWED", "Debt can still be covered by available assets");
         }
         activeDebtUpdater.accept(null);
+        turnContinuationUpdater.accept(null);
         gateway.declareBankruptcy();
         return accepted("BankruptcyDeclared");
     }
@@ -201,6 +207,7 @@ public final class DebtRemediationCommandHandler {
                     state.auctionState(),
                     null,
                     state.tradeState(),
+                    null,
                     state.winnerPlayerId()
             );
         }

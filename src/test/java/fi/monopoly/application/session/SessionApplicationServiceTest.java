@@ -72,6 +72,14 @@ class SessionApplicationServiceTest {
                         "player-0",
                         List.of()
                 ),
+                new TurnContinuationState(
+                        "continuation-restore",
+                        "player-0",
+                        TurnContinuationType.RESUME_AFTER_DEBT,
+                        TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                        null,
+                        "Resume after debt resolution"
+                ),
                 null
         );
 
@@ -82,7 +90,25 @@ class SessionApplicationServiceTest {
         assertEquals(restoredState.auctionState(), currentState.auctionState());
         assertEquals(restoredState.activeDebt(), currentState.activeDebt());
         assertEquals(restoredState.tradeState(), currentState.tradeState());
+        assertEquals(restoredState.turnContinuationState(), currentState.turnContinuationState());
         assertEquals(TurnPhase.RESOLVING_DEBT, currentState.turn().phase());
+    }
+
+    @Test
+    void explicitTurnContinuationOverrideIsReflectedInCurrentState() {
+        SessionApplicationService service = new SessionApplicationService("local-session", this::sampleState);
+        TurnContinuationState continuationState = new TurnContinuationState(
+                "continuation-1",
+                "player-0",
+                TurnContinuationType.RESUME_AFTER_AUCTION,
+                TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                "B1",
+                "Resume current turn"
+        );
+
+        service.setTurnContinuationOverride(continuationState);
+
+        assertEquals(continuationState, service.currentState().turnContinuationState());
     }
 
     private SessionState sampleState() {
