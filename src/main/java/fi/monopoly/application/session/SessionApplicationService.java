@@ -190,6 +190,20 @@ public final class SessionApplicationService {
         return currentState().tradeState() != null;
     }
 
+    public void restoreFrom(SessionState restoredState) {
+        if (restoredState == null) {
+            pendingDecisionOverride = null;
+            auctionStateOverride = null;
+            activeDebtOverride = null;
+            tradeStateOverride = null;
+            return;
+        }
+        pendingDecisionOverride = restoredState.pendingDecision();
+        auctionStateOverride = restoredState.auctionState();
+        activeDebtOverride = restoredState.activeDebt();
+        tradeStateOverride = restoredState.tradeState();
+    }
+
     public CommandResult handleComputerAuctionAction(String actorPlayerId) {
         if (auctionCommandHandler == null) {
             return rejected("AUCTION_NOT_CONFIGURED", "Auction flow has not been configured");

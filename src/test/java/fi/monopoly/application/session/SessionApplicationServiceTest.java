@@ -1,12 +1,16 @@
 package fi.monopoly.application.session;
 
 import fi.monopoly.application.command.RefreshSessionViewCommand;
+import fi.monopoly.domain.decision.DecisionAction;
+import fi.monopoly.domain.decision.DecisionType;
+import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,6 +37,52 @@ class SessionApplicationServiceTest {
         assertFalse(result.accepted());
         assertEquals(1, result.rejections().size());
         assertEquals("WRONG_SESSION", result.rejections().get(0).code());
+    }
+
+    @Test
+    void restoreFromSeedsAuthoritativeSubsystemOverrides() {
+        SessionApplicationService service = new SessionApplicationService("local-session", this::sampleState);
+        SessionState restoredState = new SessionState(
+                "local-session",
+                4L,
+                SessionStatus.IN_PROGRESS,
+                sampleState().seats(),
+                sampleState().players(),
+                sampleState().properties(),
+                new TurnState("player-0", TurnPhase.WAITING_FOR_DECISION, false, false),
+                new PendingDecision(
+                        "decision-1",
+                        DecisionType.GENERIC_CONFIRM,
+                        "player-0",
+                        List.of(DecisionAction.PRIMARY),
+                        "Confirm something",
+                        null
+                ),
+                new AuctionState("auction-1", "B1", "player-0", "player-0", null, 0, 10, Set.of(), List.of("player-0"), AuctionStatus.ACTIVE, 0, null),
+                new DebtStateModel("debt-1", "player-0", DebtCreditorType.BANK, null, 100, "Debt", false, 50, 0, List.of(DebtAction.PAY_DEBT_NOW)),
+                new TradeState(
+                        "trade-1",
+                        "player-0",
+                        "player-1",
+                        TradeStatus.EDITING,
+                        null,
+                        "player-0",
+                        true,
+                        "player-1",
+                        "player-0",
+                        List.of()
+                ),
+                null
+        );
+
+        service.restoreFrom(restoredState);
+        SessionState currentState = service.currentState();
+
+        assertEquals(restoredState.pendingDecision(), currentState.pendingDecision());
+        assertEquals(restoredState.auctionState(), currentState.auctionState());
+        assertEquals(restoredState.activeDebt(), currentState.activeDebt());
+        assertEquals(restoredState.tradeState(), currentState.tradeState());
+        assertEquals(TurnPhase.RESOLVING_DEBT, currentState.turn().phase());
     }
 
     private SessionState sampleState() {
