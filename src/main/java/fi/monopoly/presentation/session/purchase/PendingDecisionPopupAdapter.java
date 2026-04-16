@@ -5,10 +5,18 @@ import fi.monopoly.application.command.DeclinePropertyCommand;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
+import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
+import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.domain.decision.PendingDecision;
+import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
+import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
+import fi.monopoly.types.SpotType;
+
+import java.util.Objects;
+import java.util.function.Function;
 
 public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final String sessionId;
@@ -16,19 +24,23 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final PopupService popupService;
     private final LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport;
     private final Runnable postHandleSync;
+    private final Function<String, Player> playerResolver;
+    private String renderedDecisionId;
 
     public PendingDecisionPopupAdapter(
             String sessionId,
             SessionApplicationService sessionApplicationService,
             PopupService popupService,
             LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport,
-            Runnable postHandleSync
+            Runnable postHandleSync,
+            Function<String, Player> playerResolver
     ) {
         this.sessionId = sessionId;
         this.sessionApplicationService = sessionApplicationService;
         this.popupService = popupService;
         this.propertyPurchaseDecisionSupport = propertyPurchaseDecisionSupport;
         this.postHandleSync = postHandleSync;
+        this.playerResolver = playerResolver;
     }
 
     @Override
@@ -39,6 +51,36 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
             TurnContinuationState continuationState
     ) {
         PendingDecision pendingDecision = propertyPurchaseDecisionSupport.openDecision(player, property, message, continuationState);
+        renderedDecisionId = pendingDecision.decisionId();
+        showPropertyOffer(pendingDecision, property);
+    }
+
+    public void sync() {
+        SessionState state = sessionApplicationService.currentState();
+        PendingDecision pendingDecision = state.pendingDecision();
+        if (pendingDecision == null) {
+            renderedDecisionId = null;
+            return;
+        }
+        if (!(pendingDecision.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
+            renderedDecisionId = null;
+            return;
+        }
+        Player actor = playerResolver.apply(pendingDecision.actorPlayerId());
+        if (actor == null) {
+            renderedDecisionId = null;
+            return;
+        }
+        if (Objects.equals(renderedDecisionId, pendingDecision.decisionId())
+                && "propertyOffer".equals(popupService.activePopupKind())) {
+            return;
+        }
+        Property property = PropertyFactory.getProperty(SpotType.valueOf(payload.propertyId()));
+        renderedDecisionId = pendingDecision.decisionId();
+        showPropertyOffer(pendingDecision, property);
+    }
+
+    private void showPropertyOffer(PendingDecision pendingDecision, Property property) {
         popupService.showPropertyOffer(
                 property,
                 pendingDecision.summaryText(),
@@ -58,6 +100,7 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     }
 
     private void handleResult(CommandResult result) {
+        renderedDecisionId = null;
         postHandleSync.run();
         if (result.accepted() || result.rejections().isEmpty()) {
             return;

@@ -5,6 +5,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
+import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import org.slf4j.MDC;
 
@@ -13,6 +14,7 @@ public final class GamePresentationSupport {
     private final MonopolyButton declareBankruptcyButton;
     private final GameUiController gameUiController;
     private final AuctionViewAdapter auctionViewAdapter;
+    private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
     private final TradeViewAdapter tradeViewAdapter;
 
     public GamePresentationSupport(
@@ -20,12 +22,14 @@ public final class GamePresentationSupport {
             MonopolyButton declareBankruptcyButton,
             GameUiController gameUiController,
             AuctionViewAdapter auctionViewAdapter,
+            PendingDecisionPopupAdapter pendingDecisionPopupAdapter,
             TradeViewAdapter tradeViewAdapter
     ) {
         this.retryDebtButton = retryDebtButton;
         this.declareBankruptcyButton = declareBankruptcyButton;
         this.gameUiController = gameUiController;
         this.auctionViewAdapter = auctionViewAdapter;
+        this.pendingDecisionPopupAdapter = pendingDecisionPopupAdapter;
         this.tradeViewAdapter = tradeViewAdapter;
     }
 
@@ -61,6 +65,7 @@ public final class GamePresentationSupport {
     }
 
     public void syncTransientPresentationState() {
+        pendingDecisionPopupAdapter.sync();
         auctionViewAdapter.sync();
         tradeViewAdapter.sync();
     }

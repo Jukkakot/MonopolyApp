@@ -103,14 +103,13 @@ public class InteractiveTurnEffectExecutor {
             int index,
             List<TurnEffect> effects
     ) {
-        boolean hasRemainingEffects = index + 1 < effects.size();
         return new TurnContinuationState(
                 "turn-continuation:purchase:" + effect.player().getId() + ":" + effect.property().getSpotType().name() + ":" + index,
                 "player-" + effect.player().getId(),
-                hasRemainingEffects ? TurnContinuationType.RESUME_INTERACTIVE_EFFECTS : TurnContinuationType.RESUME_TURN_FOLLOW_UP,
-                hasRemainingEffects ? TurnContinuationAction.NONE : TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                TurnContinuationType.RESUME_TURN_FOLLOW_UP,
+                TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
                 effect.property().getSpotType().name(),
-                hasRemainingEffects ? "resume-interactive-effects" : "resume-turn-follow-up"
+                "resume-turn-follow-up"
         );
     }
 
@@ -119,14 +118,13 @@ public class InteractiveTurnEffectExecutor {
             int index,
             List<TurnEffect> effects
     ) {
-        boolean hasRemainingEffects = index + 1 < effects.size();
         return new TurnContinuationState(
                 "turn-continuation:rent:" + effect.fromPlayer().getId() + ":" + effect.toPlayer().getId() + ":" + index,
                 "player-" + effect.fromPlayer().getId(),
                 TurnContinuationType.RESUME_AFTER_DEBT,
-                hasRemainingEffects ? TurnContinuationAction.NONE : TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
                 null,
-                hasRemainingEffects ? "resume-interactive-effects-after-debt" : "resume-turn-follow-up-after-debt"
+                "resume-turn-follow-up-after-debt"
         );
     }
 }

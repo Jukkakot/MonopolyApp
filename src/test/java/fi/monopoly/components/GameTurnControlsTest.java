@@ -7,7 +7,19 @@ import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.dices.Dice;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.domain.decision.DecisionAction;
+import fi.monopoly.domain.decision.DecisionType;
+import fi.monopoly.domain.decision.PendingDecision;
+import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
+import fi.monopoly.domain.session.ControlMode;
+import fi.monopoly.domain.session.PlayerSnapshot;
+import fi.monopoly.domain.session.SeatKind;
+import fi.monopoly.domain.session.SeatState;
+import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.SessionStatus;
 import fi.monopoly.support.TestGameSessions;
+import fi.monopoly.domain.turn.TurnPhase;
+import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
@@ -631,5 +643,42 @@ class GameTurnControlsTest {
 
         assertNotEquals(players.get(0).getCoords(), players.get(1).getCoords(),
                 "Players on the same spot must not collapse to the same token coordinates");
+    }
+
+    @Test
+    void restoredGameReopensPendingPropertyPurchaseDecision() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                3L,
+                SessionStatus.IN_PROGRESS,
+                List.of(new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB")),
+                List.of(new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 0, false, false, false, 0, 0, List.of())),
+                List.of(),
+                new TurnState("player-1", TurnPhase.WAITING_FOR_DECISION, false, false),
+                new PendingDecision(
+                        "decision-1",
+                        DecisionType.PROPERTY_PURCHASE,
+                        "player-1",
+                        List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
+                        "Buy WATER WORKS?",
+                        new PropertyPurchaseDecisionPayload("U2", "WATER WORKS", 150)
+                ),
+                null,
+                null,
+                null,
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertEquals("Eka", game.players().getTurn().getName());
+        assertNotNull(game.projectedSessionState().pendingDecision());
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertEquals("Buy WATER WORKS?", runtime.popupService().activePopupMessage());
+        assertFalse(game.dices().isVisible(), "Roll dice should stay hidden while restored decision is pending");
+        assertFalse(getEndRoundButton(game).isVisible(), "End turn should stay hidden while restored decision is pending");
     }
 }

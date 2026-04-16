@@ -34,6 +34,7 @@ class GameSmokeTest {
     private static final int MAX_STAGNANT_STEPS = 250;
     private static final int MIN_TURN_SWITCHES = 15;
     private static final int MIN_UNIQUE_SPOTS = 12;
+    private static Game activeGame;
     private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
 
     private static void runAutoConfirmedRollSmokeTest(int targetRollCount) {
@@ -45,6 +46,7 @@ class GameSmokeTest {
         MonopolyApp.SKIP_ANNIMATIONS = true;
         MonopolyRuntime runtime = initHeadlessRuntime(width, height);
         Game game = new Game(runtime);
+        activeGame = game;
         runtime.eventBus().flushPendingChanges();
 
         int initialPlayerCount = players().count();
@@ -79,6 +81,18 @@ class GameSmokeTest {
                 boolean resolvedForComputer = false;
                 if (turnPlayer != null && turnPlayer.isComputerControlled()) {
                     resolvedForComputer = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                    if (!resolvedForComputer) {
+                        var offeredProperty = runtime.popupService().activeOfferedProperty();
+                        if (offeredProperty != null) {
+                            resolvedForComputer = turnPlayer.getMoneyAmount() >= offeredProperty.getPrice()
+                                    ? runtime.popupService().triggerPrimaryComputerAction()
+                                    : runtime.popupService().triggerSecondaryComputerAction();
+                        }
+                    }
+                    if (!resolvedForComputer) {
+                        invokeNoArgMethod(game, "runComputerPlayerStep");
+                        resolvedForComputer = !runtime.popupService().isAnyVisible();
+                    }
                 }
                 if (!resolvedForComputer) {
                     dispatchKey(runtime, '1');
@@ -128,7 +142,12 @@ class GameSmokeTest {
             }
 
             String currentSnapshot = snapshot();
-            if (currentSnapshot.equals(previousSnapshot)) {
+            boolean transientFlowActive = runtime.popupService().isAnyVisible()
+                    || isDebtResolutionActive(game)
+                    || (activeGame != null && activeGame.projectedSessionState().pendingDecision() != null)
+                    || (activeGame != null && activeGame.projectedSessionState().auctionState() != null)
+                    || (activeGame != null && activeGame.projectedSessionState().tradeState() != null);
+            if (currentSnapshot.equals(previousSnapshot) && !transientFlowActive) {
                 stagnantStepCount++;
             } else {
                 stagnantStepCount = 0;
@@ -146,6 +165,7 @@ class GameSmokeTest {
         settlePendingGameFlow(runtime, game, verifyResponsiveUi);
         settlePendingGameFlow(runtime, game, verifyResponsiveUi);
         forceDrainPresentationTail(runtime, game);
+        resolveFinalBotPopupIfPossible(runtime, game);
         assertCoreInvariants(game, initialPlayerCount);
 
         assertTrue(rollCount >= targetRollCount || completedGame,
@@ -195,6 +215,18 @@ class GameSmokeTest {
                 boolean resolvedForComputer = false;
                 if (turnPlayer != null && turnPlayer.isComputerControlled()) {
                     resolvedForComputer = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                    if (!resolvedForComputer) {
+                        var offeredProperty = runtime.popupService().activeOfferedProperty();
+                        if (offeredProperty != null) {
+                            resolvedForComputer = turnPlayer.getMoneyAmount() >= offeredProperty.getPrice()
+                                    ? runtime.popupService().triggerPrimaryComputerAction()
+                                    : runtime.popupService().triggerSecondaryComputerAction();
+                        }
+                    }
+                    if (!resolvedForComputer) {
+                        invokeNoArgMethod(game, "runComputerPlayerStep");
+                        resolvedForComputer = !runtime.popupService().isAnyVisible();
+                    }
                 }
                 if (!resolvedForComputer) {
                     dispatchKey(runtime, '1');
@@ -233,6 +265,18 @@ class GameSmokeTest {
                 boolean resolvedForComputer = false;
                 if (turnPlayer != null && turnPlayer.isComputerControlled()) {
                     resolvedForComputer = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+                    if (!resolvedForComputer) {
+                        var offeredProperty = runtime.popupService().activeOfferedProperty();
+                        if (offeredProperty != null) {
+                            resolvedForComputer = turnPlayer.getMoneyAmount() >= offeredProperty.getPrice()
+                                    ? runtime.popupService().triggerPrimaryComputerAction()
+                                    : runtime.popupService().triggerSecondaryComputerAction();
+                        }
+                    }
+                    if (!resolvedForComputer) {
+                        invokeNoArgMethod(game, "runComputerPlayerStep");
+                        resolvedForComputer = !runtime.popupService().isAnyVisible();
+                    }
                 }
                 if (!resolvedForComputer) {
                     dispatchKey(runtime, '1');
@@ -252,6 +296,29 @@ class GameSmokeTest {
                 return;
             }
         }
+    }
+
+    private static void resolveFinalBotPopupIfPossible(MonopolyRuntime runtime, Game game) {
+        if (!runtime.popupService().isAnyVisible()) {
+            return;
+        }
+        Player turnPlayer = players().getTurn();
+        if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
+            return;
+        }
+        boolean resolved = runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+        if (!resolved) {
+            var offeredProperty = runtime.popupService().activeOfferedProperty();
+            if (offeredProperty != null) {
+                resolved = turnPlayer.getMoneyAmount() >= offeredProperty.getPrice()
+                        ? runtime.popupService().triggerPrimaryComputerAction()
+                        : runtime.popupService().triggerSecondaryComputerAction();
+            }
+        }
+        if (!resolved) {
+            invokeNoArgMethod(game, "runComputerPlayerStep");
+        }
+        runtime.eventBus().flushPendingChanges();
     }
 
     private static void assertResponsiveUiState(Game game, MonopolyRuntime runtime) {
@@ -482,6 +549,7 @@ class GameSmokeTest {
         String turnSpot = turn != null && turn.getSpot() != null ? turn.getSpot().getSpotType().name() : "none";
         int turnMoney = turn != null ? turn.getMoneyAmount() : -1;
         String diceValue = dices().getValue() != null ? dices().getValue().toString() : "null";
+        var projectedState = activeGame != null ? activeGame.projectedSessionState() : null;
         return turnName
                 + "|spot=" + turnSpot
                 + "|money=" + turnMoney
@@ -490,7 +558,13 @@ class GameSmokeTest {
                 + "|dice=" + diceValue
                 + "|animations=" + animations().isRunning()
                 + "|players=" + players().count()
-                + "|debt=" + MonopolyRuntime.get().gameSession().isDebtResolutionActive();
+                + "|debt=" + MonopolyRuntime.get().gameSession().isDebtResolutionActive()
+                + "|phase=" + (projectedState != null && projectedState.turn() != null ? projectedState.turn().phase() : "none")
+                + "|canRoll=" + (projectedState != null && projectedState.turn() != null && projectedState.turn().canRoll())
+                + "|canEnd=" + (projectedState != null && projectedState.turn() != null && projectedState.turn().canEndTurn())
+                + "|pending=" + (projectedState != null && projectedState.pendingDecision() != null)
+                + "|auction=" + (projectedState != null && projectedState.auctionState() != null)
+                + "|trade=" + (projectedState != null && projectedState.tradeState() != null);
     }
 
     @BeforeEach
@@ -505,6 +579,7 @@ class GameSmokeTest {
         }
         MonopolyApp.DEBUG_MODE = false;
         MonopolyApp.SKIP_ANNIMATIONS = false;
+        activeGame = null;
         fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.clear();
     }
 

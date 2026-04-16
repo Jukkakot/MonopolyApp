@@ -40,6 +40,8 @@ import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
+import fi.monopoly.components.properties.PropertyFactory;
+import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.DebtStateModel;
@@ -53,6 +55,7 @@ import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
 import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
 import fi.monopoly.presentation.session.purchase.LegacyPropertyPurchaseGateway;
 import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
+import fi.monopoly.types.SpotType;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -85,11 +88,7 @@ public final class SessionApplicationService {
         DebtStateModel activeDebt = activeDebtOverride != null ? activeDebtOverride : baseState.activeDebt();
         TradeState tradeState = tradeStateOverride != null ? tradeStateOverride : baseState.tradeState();
         TurnContinuationState turnContinuationState = turnContinuationOverride != null ? turnContinuationOverride : baseState.turnContinuationState();
-        if (pendingDecisionOverride != null
-                && baseState.pendingDecision() == null
-                && auctionState == null
-                && activeDebt == null
-                && tradeState == null) {
+        if (shouldClearStalePendingDecisionOverride(baseState, auctionState, activeDebt, tradeState)) {
             pendingDecisionOverride = null;
             pendingDecision = null;
         }
@@ -328,5 +327,25 @@ public final class SessionApplicationService {
 
     private void setTradeStateOverride(TradeState tradeState) {
         this.tradeStateOverride = tradeState;
+    }
+
+    private boolean shouldClearStalePendingDecisionOverride(
+            SessionState baseState,
+            AuctionState auctionState,
+            DebtStateModel activeDebt,
+            TradeState tradeState
+    ) {
+        if (pendingDecisionOverride == null
+                || baseState.pendingDecision() != null
+                || auctionState != null
+                || activeDebt != null
+                || tradeState != null) {
+            return false;
+        }
+        if (!(pendingDecisionOverride.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
+            return false;
+        }
+        Property property = PropertyFactory.getProperty(SpotType.valueOf(payload.propertyId()));
+        return property == null || property.getOwnerPlayer() != null;
     }
 }

@@ -45,6 +45,8 @@ import fi.monopoly.presentation.session.projection.LegacySessionProjector;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
+import fi.monopoly.persistence.session.LegacySessionRuntimeRestorer;
+import fi.monopoly.persistence.session.RestoredLegacySessionRuntime;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -90,6 +92,7 @@ public class Game implements MonopolyEventListener {
     private final TurnEngine turnEngine = new TurnEngine();
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
+    private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
     private final DebtActionDispatcher debtActionDispatcher;
     private final AuctionViewAdapter auctionViewAdapter;
     private final TradeViewAdapter tradeViewAdapter;
@@ -134,6 +137,10 @@ public class Game implements MonopolyEventListener {
     private GameBotTurnDriver.Hooks gameBotTurnHooks;
 
     public Game(MonopolyRuntime runtime) {
+        this(runtime, null);
+    }
+
+    public Game(MonopolyRuntime runtime, SessionState restoredSessionState) {
         this.runtime = runtime;
         this.endRoundButton = new MonopolyButton(runtime, "endRound");
         this.retryDebtButton = new MonopolyButton(runtime, "retryDebt");
@@ -145,7 +152,7 @@ public class Game implements MonopolyEventListener {
         this.languageButton = new MonopolyButton(runtime, "language");
         this.gameSidebarPresenter = new GameSidebarPresenter(runtime);
         setupButtons();
-        setupRuntimeDependencies();
+        setupRuntimeDependencies(restoredSessionState);
         setupControllers();
         this.sessionApplicationService = createSessionApplicationService();
         configureSessionApplicationService();
@@ -153,16 +160,16 @@ public class Game implements MonopolyEventListener {
         this.auctionViewAdapter = createAuctionViewAdapter();
         LegacyTradeGateway legacyTradeGateway = createLegacyTradeGateway();
         this.tradeViewAdapter = createTradeViewAdapter(legacyTradeGateway);
-        this.propertyPurchaseFlow = createPropertyPurchaseFlow();
+        this.pendingDecisionPopupAdapter = createPropertyPurchaseFlow();
+        this.propertyPurchaseFlow = pendingDecisionPopupAdapter;
         this.tradeController = createTradeController(legacyTradeGateway);
         this.sessionViewFacade = createSessionViewFacade();
+        seedRestoredSession(restoredSessionState);
         registerGameSession();
-        setupDefaultGameState();
         setupPresentationCoordinators();
         this.gameUiController = createGameUiController();
         this.gamePresentationSupport = createGamePresentationSupport();
-        refreshLabels();
-        showRollDiceControl();
+        initializeSessionPresentation(restoredSessionState);
         setupButtonActions();
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
@@ -230,13 +237,14 @@ public class Game implements MonopolyEventListener {
         );
     }
 
-    private PropertyPurchaseFlow createPropertyPurchaseFlow() {
+    private PendingDecisionPopupAdapter createPropertyPurchaseFlow() {
         return new PendingDecisionPopupAdapter(
                 LOCAL_SESSION_ID,
                 sessionApplicationService,
                 runtime.popupService(),
                 sessionApplicationService::openPropertyPurchaseDecision,
-                auctionViewAdapter::sync
+                auctionViewAdapter::sync,
+                this::playerById
         );
     }
 
@@ -371,6 +379,7 @@ public class Game implements MonopolyEventListener {
                 declareBankruptcyButton,
                 gameUiController,
                 auctionViewAdapter,
+                pendingDecisionPopupAdapter,
                 tradeViewAdapter
         );
     }
@@ -421,15 +430,22 @@ public class Game implements MonopolyEventListener {
         botSpeedButton.hide();
     }
 
-    private void setupRuntimeDependencies() {
+    private void setupRuntimeDependencies(SessionState restoredSessionState) {
         UiTexts.addChangeListener(this::refreshLabels);
         runtime.eventBus().addListener(this);
-        PropertyFactory.resetState();
-        JailSpot.jailTimeLeftMap.clear();
-        board = new Board(runtime);
         dices = Dices.setRollDice(runtime, this::rollDice);
-        players = new Players(runtime);
         animations = new Animations();
+        if (restoredSessionState == null) {
+            PropertyFactory.resetState();
+            JailSpot.jailTimeLeftMap.clear();
+            board = new Board(runtime);
+            players = new Players(runtime);
+            setupDefaultGameState();
+            return;
+        }
+        RestoredLegacySessionRuntime restoredRuntime = new LegacySessionRuntimeRestorer().restore(runtime, restoredSessionState);
+        board = restoredRuntime.board();
+        players = restoredRuntime.players();
     }
 
     private void setupControllers() {
@@ -464,6 +480,52 @@ public class Game implements MonopolyEventListener {
 
     private void setupDefaultGameState() {
         setupDebugGameConfigs(runtime);
+    }
+
+    private void seedRestoredSession(SessionState restoredSessionState) {
+        if (restoredSessionState == null) {
+            return;
+        }
+        sessionApplicationService.restoreFrom(restoredSessionState);
+        paused = restoredSessionState.status() == fi.monopoly.domain.session.SessionStatus.PAUSED;
+        gameOver = restoredSessionState.status() == fi.monopoly.domain.session.SessionStatus.GAME_OVER
+                || restoredSessionState.winnerPlayerId() != null;
+        winner = restoredSessionState.winnerPlayerId() == null ? null : playerById(restoredSessionState.winnerPlayerId());
+    }
+
+    private void initializeSessionPresentation(SessionState restoredSessionState) {
+        refreshLabels();
+        if (restoredSessionState == null) {
+            showRollDiceControl();
+            return;
+        }
+        updateDebtButtons();
+        syncTransientPresentationState();
+        restorePresentationStateFromSession();
+    }
+
+    private void restorePresentationStateFromSession() {
+        SessionState state = sessionApplicationService.currentState();
+        if (gameOver || state == null) {
+            hidePrimaryTurnControls();
+            return;
+        }
+        if (state.activeDebt() != null
+                || state.pendingDecision() != null
+                || state.auctionState() != null
+                || state.tradeState() != null) {
+            hidePrimaryTurnControls();
+            return;
+        }
+        if (state.turn() != null && state.turn().canEndTurn()) {
+            showEndTurnControl();
+            return;
+        }
+        if (state.turn() != null && state.turn().canRoll()) {
+            showRollDiceControl();
+            return;
+        }
+        hidePrimaryTurnControls();
     }
 
     Board getBoard() {
@@ -765,6 +827,16 @@ public class Game implements MonopolyEventListener {
     private void syncTransientPresentationState() {
         gamePresentationSupport.syncTransientPresentationState();
         restoreBotTurnControlsIfNeeded();
+    }
+
+    private Player playerById(String playerId) {
+        if (playerId == null || players == null) {
+            return null;
+        }
+        return players.getPlayers().stream()
+                .filter(player -> ("player-" + player.getId()).equals(playerId))
+                .findFirst()
+                .orElse(null);
     }
 
     private void enforcePrimaryTurnControlInvariant() {
