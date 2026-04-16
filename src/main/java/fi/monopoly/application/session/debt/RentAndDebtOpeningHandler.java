@@ -21,15 +21,18 @@ import java.util.function.Consumer;
 public final class RentAndDebtOpeningHandler {
     private final Consumer<DebtStateModel> activeDebtUpdater;
     private final Consumer<TurnContinuationState> turnContinuationUpdater;
+    private final Consumer<TurnContinuationState> turnContinuationResolver;
     private final LegacyPaymentGateway paymentGateway;
 
     public RentAndDebtOpeningHandler(
             Consumer<DebtStateModel> activeDebtUpdater,
             Consumer<TurnContinuationState> turnContinuationUpdater,
+            Consumer<TurnContinuationState> turnContinuationResolver,
             LegacyPaymentGateway paymentGateway
     ) {
         this.activeDebtUpdater = Objects.requireNonNull(activeDebtUpdater);
         this.turnContinuationUpdater = Objects.requireNonNull(turnContinuationUpdater);
+        this.turnContinuationResolver = Objects.requireNonNull(turnContinuationResolver);
         this.paymentGateway = Objects.requireNonNull(paymentGateway);
     }
 
@@ -38,14 +41,24 @@ public final class RentAndDebtOpeningHandler {
         if (result.status() == PaymentStatus.PAID) {
             activeDebtUpdater.accept(null);
             turnContinuationUpdater.accept(null);
-            onResolved.doAction();
+            if (continuationState != null) {
+                turnContinuationResolver.accept(continuationState);
+            } else {
+                onResolved.doAction();
+            }
             return;
         }
 
         boolean bankruptcyRisk = result.status() == PaymentStatus.BANKRUPT;
         activeDebtUpdater.accept(toDebtStateModel(request, result.missingAmount(), bankruptcyRisk));
         turnContinuationUpdater.accept(continuationState);
-        paymentGateway.openDebtState(request, onResolved, result);
+        paymentGateway.openDebtState(
+                request,
+                continuationState != null
+                        ? () -> turnContinuationResolver.accept(continuationState)
+                        : onResolved::doAction,
+                result
+        );
     }
 
     private DebtStateModel toDebtStateModel(PaymentRequest request, int missingAmount, boolean bankruptcyRisk) {

@@ -65,7 +65,7 @@ public final class DebtController {
             return;
         }
 
-        debtState = new DebtState(request, onResolved, result.status() == PaymentStatus.BANKRUPT);
+        debtState = new DebtState(request, onResolved::doAction, result.status() == PaymentStatus.BANKRUPT);
         hidePrimaryTurnControls.run();
         onStateChanged.run();
         log.info("Entering debt resolution: debtor={}, target={}, amount={}, bankruptcyRisk={}",
@@ -73,7 +73,7 @@ public final class DebtController {
         runtime.popupService().show(buildDebtMessage(result));
     }
 
-    public void openDebtState(PaymentRequest request, CallbackAction onResolved, int missingAmount, boolean bankruptcyRisk) {
+    public void openDebtState(PaymentRequest request, Runnable onResolved, int missingAmount, boolean bankruptcyRisk) {
         debtState = new DebtState(request, onResolved, bankruptcyRisk);
         hidePrimaryTurnControls.run();
         onStateChanged.run();
@@ -95,7 +95,7 @@ public final class DebtController {
             debtState = null;
             onStateChanged.run();
             log.info("Debt resolved for {}", resolvedDebt.paymentRequest().debtor().getName());
-            runtime.popupService().show(text("game.debt.paid", resolvedDebt.paymentRequest().reason()), resolvedDebt.onResolved()::doAction);
+            runtime.popupService().show(text("game.debt.paid", resolvedDebt.paymentRequest().reason()), () -> resolvedDebt.onResolved().run());
             return;
         }
 

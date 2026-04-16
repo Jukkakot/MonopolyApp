@@ -37,15 +37,22 @@ class RentAndDebtOpeningHandlerTest {
         Player debtor = new Player("Debtor", Color.MEDIUMPURPLE, 500, 1, ComputerPlayerProfile.HUMAN);
         AtomicReference<DebtStateModel> debtRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
+        AtomicReference<TurnContinuationState> resumedContinuationRef = new AtomicReference<>();
         AtomicBoolean callbackTriggered = new AtomicBoolean(false);
         FakePaymentGateway paymentGateway = new FakePaymentGateway(new PaymentResolver());
-        RentAndDebtOpeningHandler handler = new RentAndDebtOpeningHandler(debtRef::set, continuationRef::set, paymentGateway);
+        RentAndDebtOpeningHandler handler = new RentAndDebtOpeningHandler(
+                debtRef::set,
+                continuationRef::set,
+                resumedContinuationRef::set,
+                paymentGateway
+        );
 
         handler.handle(new PaymentRequest(debtor, BankTarget.INSTANCE, 100, "Rent"), continuationFor(debtor), () -> callbackTriggered.set(true));
 
-        assertTrue(callbackTriggered.get());
+        assertFalse(callbackTriggered.get());
         assertNull(debtRef.get());
         assertNull(continuationRef.get());
+        assertEquals(continuationFor(debtor), resumedContinuationRef.get());
         assertFalse(paymentGateway.openCalled);
         assertEquals(400, debtor.getMoneyAmount());
     }
@@ -56,8 +63,14 @@ class RentAndDebtOpeningHandlerTest {
         debtor.addOwnedProperty(PropertyFactory.getProperty(SpotType.RR1));
         AtomicReference<DebtStateModel> debtRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
+        AtomicReference<TurnContinuationState> resumedContinuationRef = new AtomicReference<>();
         FakePaymentGateway paymentGateway = new FakePaymentGateway(new PaymentResolver());
-        RentAndDebtOpeningHandler handler = new RentAndDebtOpeningHandler(debtRef::set, continuationRef::set, paymentGateway);
+        RentAndDebtOpeningHandler handler = new RentAndDebtOpeningHandler(
+                debtRef::set,
+                continuationRef::set,
+                resumedContinuationRef::set,
+                paymentGateway
+        );
 
         handler.handle(new PaymentRequest(debtor, BankTarget.INSTANCE, 100, "Rent"), continuationFor(debtor), () -> {
         });
@@ -70,6 +83,7 @@ class RentAndDebtOpeningHandlerTest {
         assertEquals(0, debtRef.get().currentCash());
         assertTrue(paymentGateway.openCalled);
         assertEquals(PaymentStatus.REQUIRES_DEBT_RESOLUTION, paymentGateway.lastStatus);
+        assertNull(resumedContinuationRef.get());
     }
 
     @Test
@@ -77,8 +91,14 @@ class RentAndDebtOpeningHandlerTest {
         Player debtor = new Player("Debtor", Color.MEDIUMPURPLE, 0, 1, ComputerPlayerProfile.HUMAN);
         AtomicReference<DebtStateModel> debtRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
+        AtomicReference<TurnContinuationState> resumedContinuationRef = new AtomicReference<>();
         FakePaymentGateway paymentGateway = new FakePaymentGateway(new PaymentResolver());
-        RentAndDebtOpeningHandler handler = new RentAndDebtOpeningHandler(debtRef::set, continuationRef::set, paymentGateway);
+        RentAndDebtOpeningHandler handler = new RentAndDebtOpeningHandler(
+                debtRef::set,
+                continuationRef::set,
+                resumedContinuationRef::set,
+                paymentGateway
+        );
 
         handler.handle(new PaymentRequest(debtor, BankTarget.INSTANCE, 100, "Rent"), continuationFor(debtor), () -> {
         });
@@ -89,6 +109,7 @@ class RentAndDebtOpeningHandlerTest {
         assertEquals(List.of(DebtAction.PAY_DEBT_NOW, DebtAction.MORTGAGE_PROPERTY, DebtAction.SELL_BUILDING, DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET, DebtAction.DECLARE_BANKRUPTCY), debtRef.get().allowedActions());
         assertTrue(paymentGateway.openCalled);
         assertEquals(PaymentStatus.BANKRUPT, paymentGateway.lastStatus);
+        assertNull(resumedContinuationRef.get());
     }
 
     private TurnContinuationState continuationFor(Player debtor) {
@@ -111,7 +132,7 @@ class RentAndDebtOpeningHandlerTest {
         }
 
         @Override
-        public void openDebtState(PaymentRequest request, fi.monopoly.components.CallbackAction onResolved, PaymentResult result) {
+        public void openDebtState(PaymentRequest request, Runnable onResolved, PaymentResult result) {
             openCalled = true;
             lastStatus = result.status();
         }

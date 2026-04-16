@@ -1,6 +1,5 @@
 package fi.monopoly.presentation.session.debt;
 
-import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PaymentResolver;
@@ -24,7 +23,7 @@ public class LegacyPaymentGateway {
         return paymentResolver.tryPay(request);
     }
 
-    public void openDebtState(PaymentRequest request, CallbackAction onResolved, PaymentResult result) {
+    public void openDebtState(PaymentRequest request, Runnable onResolved, PaymentResult result) {
         debtController.openDebtState(request, onResolved, result.missingAmount(), result.status() == PaymentStatus.BANKRUPT);
     }
 }

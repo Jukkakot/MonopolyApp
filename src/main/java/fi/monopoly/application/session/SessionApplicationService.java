@@ -151,6 +151,7 @@ public final class SessionApplicationService {
         rentAndDebtOpeningHandler = new RentAndDebtOpeningHandler(
                 this::setActiveDebtOverride,
                 this::setTurnContinuationOverride,
+                this::resumeContinuation,
                 new LegacyPaymentGateway(debtController)
         );
         debtRemediationCommandHandler = new DebtRemediationCommandHandler(
