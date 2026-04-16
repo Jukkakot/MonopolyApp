@@ -78,8 +78,7 @@ public class InteractiveTurnEffectExecutor {
                     offerToBuyPropertyEffect.player(),
                     offerToBuyPropertyEffect.property(),
                     offerToBuyPropertyEffect.message(),
-                    propertyPurchaseContinuation(offerToBuyPropertyEffect, index, effects),
-                    next
+                    propertyPurchaseContinuation(offerToBuyPropertyEffect, index, effects)
             );
         } else if (effect instanceof PayRentEffect payRentEffect) {
             popupService.show(payRentEffect.message(), () -> {

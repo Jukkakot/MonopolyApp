@@ -30,6 +30,7 @@ import fi.monopoly.application.session.purchase.PropertyPurchaseCommandHandler;
 import fi.monopoly.application.session.trade.TradeCommandHandler;
 import fi.monopoly.application.session.turn.TurnActionCommandHandler;
 import fi.monopoly.application.session.turn.TurnActionGateway;
+import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.components.CallbackAction;
@@ -70,6 +71,7 @@ public final class SessionApplicationService {
     private DebtRemediationCommandHandler debtRemediationCommandHandler;
     private TradeCommandHandler tradeCommandHandler;
     private TurnActionCommandHandler turnActionCommandHandler;
+    private TurnContinuationGateway turnContinuationGateway;
 
     public SessionApplicationService(String sessionId, Supplier<SessionState> sessionStateSupplier) {
         this.sessionId = sessionId;
@@ -124,6 +126,7 @@ public final class SessionApplicationService {
                 this::currentState,
                 this::setAuctionStateOverride,
                 this::setTurnContinuationOverride,
+                this::resumeContinuation,
                 new LegacyAuctionGateway(popupService, players)
         );
     }
@@ -138,6 +141,7 @@ public final class SessionApplicationService {
                 this::setPendingDecisionOverride,
                 this::setAuctionStateOverride,
                 this::setTurnContinuationOverride,
+                this::resumeContinuation,
                 new LegacyPropertyPurchaseGateway(popupService, players),
                 auctionCommandHandler
         );
@@ -175,17 +179,20 @@ public final class SessionApplicationService {
         );
     }
 
+    public void configureTurnContinuationFlow(TurnContinuationGateway gateway) {
+        this.turnContinuationGateway = gateway;
+    }
+
     public PendingDecision openPropertyPurchaseDecision(
             Player player,
             Property property,
             String message,
-            TurnContinuationState continuationState,
-            CallbackAction onComplete
+            TurnContinuationState continuationState
     ) {
         if (propertyPurchaseCommandHandler == null) {
             throw new IllegalStateException("Property purchase flow has not been configured");
         }
-        return propertyPurchaseCommandHandler.openDecision(player, property, message, continuationState, onComplete);
+        return propertyPurchaseCommandHandler.openDecision(player, property, message, continuationState);
     }
 
     public void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
@@ -237,6 +244,13 @@ public final class SessionApplicationService {
 
     public void setTurnContinuationOverride(TurnContinuationState turnContinuationState) {
         this.turnContinuationOverride = turnContinuationState;
+    }
+
+    private void resumeContinuation(TurnContinuationState continuationState) {
+        if (continuationState == null || turnContinuationGateway == null) {
+            return;
+        }
+        turnContinuationGateway.resume(continuationState);
     }
 
     public CommandResult handleComputerAuctionAction(String actorPlayerId) {

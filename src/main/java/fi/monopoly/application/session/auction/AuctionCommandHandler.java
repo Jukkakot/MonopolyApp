@@ -7,7 +7,6 @@ import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
-import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.turn.PropertyAuctionResolver;
@@ -29,6 +28,7 @@ public final class AuctionCommandHandler {
     private final Supplier<SessionState> currentStateSupplier;
     private final Consumer<AuctionState> auctionStateSetter;
     private final Consumer<TurnContinuationState> turnContinuationSetter;
+    private final Consumer<TurnContinuationState> turnContinuationResolver;
     private final AuctionGateway gateway;
     private ActiveAuctionContext activeContext;
 
@@ -37,20 +37,21 @@ public final class AuctionCommandHandler {
             Supplier<SessionState> currentStateSupplier,
             Consumer<AuctionState> auctionStateSetter,
             Consumer<TurnContinuationState> turnContinuationSetter,
+            Consumer<TurnContinuationState> turnContinuationResolver,
             AuctionGateway gateway
     ) {
         this.sessionId = sessionId;
         this.currentStateSupplier = currentStateSupplier;
         this.auctionStateSetter = auctionStateSetter;
         this.turnContinuationSetter = turnContinuationSetter;
+        this.turnContinuationResolver = turnContinuationResolver;
         this.gateway = gateway;
     }
 
     public AuctionState startAuction(
             Player triggeringPlayer,
             Property property,
-            TurnContinuationState continuationState,
-            CallbackAction onComplete
+            TurnContinuationState continuationState
     ) {
         List<String> eligibleBidderIds = gateway.eligibleBidderIds(triggeringPlayer, property);
         if (eligibleBidderIds.isEmpty()) {
@@ -72,7 +73,7 @@ public final class AuctionCommandHandler {
                 0,
                 null
         );
-        activeContext = new ActiveAuctionContext(state.auctionId(), property, continuationState, onComplete);
+        activeContext = new ActiveAuctionContext(state.auctionId(), property, continuationState);
         turnContinuationSetter.accept(continuationState);
         auctionStateSetter.accept(state);
         return state;
@@ -213,7 +214,7 @@ public final class AuctionCommandHandler {
             activeContext = null;
             auctionStateSetter.accept(null);
             turnContinuationSetter.accept(null);
-            resolvedContext.onComplete().doAction();
+            turnContinuationResolver.accept(resolvedContext.continuationState());
             return new CommandResult(
                     true,
                     currentStateSupplier.get(),
@@ -288,7 +289,7 @@ public final class AuctionCommandHandler {
         activeContext = null;
         auctionStateSetter.accept(null);
         turnContinuationSetter.accept(null);
-        resolvedContext.onComplete().doAction();
+        turnContinuationResolver.accept(resolvedContext.continuationState());
         return new CommandResult(
                 true,
                 currentStateSupplier.get(),
@@ -366,8 +367,7 @@ public final class AuctionCommandHandler {
     private record ActiveAuctionContext(
             String auctionId,
             Property property,
-            TurnContinuationState continuationState,
-            CallbackAction onComplete
+            TurnContinuationState continuationState
     ) {
     }
 }

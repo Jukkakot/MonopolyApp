@@ -35,11 +35,10 @@ class AuctionCommandHandlerTest {
         TestPlayers players = testPlayers();
         AtomicReference<AuctionState> auctionStateRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
-        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef);
+        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property), () -> {
-        });
+        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
 
         var result = handler.handle(new PlaceAuctionBidCommand("local-session", players.secondActorId(), state.auctionId(), 10));
 
@@ -52,11 +51,10 @@ class AuctionCommandHandlerTest {
         TestPlayers players = testPlayers();
         AtomicReference<AuctionState> auctionStateRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
-        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef);
+        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property), () -> {
-        });
+        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
 
         var result = handler.handle(new PlaceAuctionBidCommand("local-session", state.currentActorPlayerId(), state.auctionId(), 5));
 
@@ -69,11 +67,10 @@ class AuctionCommandHandlerTest {
         TestPlayers players = testPlayers();
         AtomicReference<AuctionState> auctionStateRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
-        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef);
+        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property), () -> {
-        });
+        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
 
         var result = handler.handle(new PassAuctionCommand("local-session", state.currentActorPlayerId(), state.auctionId()));
 
@@ -87,11 +84,10 @@ class AuctionCommandHandlerTest {
         TestPlayers players = testPlayers();
         AtomicReference<AuctionState> auctionStateRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
-        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef);
+        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property), () -> {
-        });
+        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
         assertTrue(handler.handle(new PlaceAuctionBidCommand("local-session", state.currentActorPlayerId(), state.auctionId(), 10)).accepted());
         AuctionState afterBid = auctionStateRef.get();
 
@@ -109,10 +105,10 @@ class AuctionCommandHandlerTest {
         AtomicReference<AuctionState> auctionStateRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
         AtomicBoolean completed = new AtomicBoolean(false);
-        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef);
+        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, completed);
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property), () -> completed.set(true));
+        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
         assertTrue(handler.handle(new PassAuctionCommand("local-session", state.currentActorPlayerId(), state.auctionId())).accepted());
         AuctionState afterFirstPass = auctionStateRef.get();
 
@@ -130,10 +126,10 @@ class AuctionCommandHandlerTest {
         AtomicReference<AuctionState> auctionStateRef = new AtomicReference<>();
         AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
         AtomicBoolean completed = new AtomicBoolean(false);
-        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef);
+        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, completed);
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property), () -> completed.set(true));
+        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
         assertTrue(handler.handle(new PlaceAuctionBidCommand("local-session", state.currentActorPlayerId(), state.auctionId(), 10)).accepted());
         AuctionState afterBid = auctionStateRef.get();
         assertTrue(handler.handle(new PassAuctionCommand("local-session", afterBid.currentActorPlayerId(), afterBid.auctionId())).accepted());
@@ -152,7 +148,8 @@ class AuctionCommandHandlerTest {
     private AuctionCommandHandler newHandler(
             TestPlayers players,
             AtomicReference<AuctionState> auctionStateRef,
-            AtomicReference<TurnContinuationState> continuationRef
+            AtomicReference<TurnContinuationState> continuationRef,
+            AtomicBoolean completed
     ) {
         return new AuctionCommandHandler(
                 "local-session",
@@ -181,6 +178,7 @@ class AuctionCommandHandlerTest {
                 ),
                 auctionStateRef::set,
                 continuationRef::set,
+                continuation -> completed.set(true),
                 new FakeAuctionGateway(players)
         );
     }

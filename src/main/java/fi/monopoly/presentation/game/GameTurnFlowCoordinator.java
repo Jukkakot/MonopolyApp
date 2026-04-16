@@ -106,6 +106,28 @@ public final class GameTurnFlowCoordinator {
         prevTurnResult = null;
     }
 
+    public boolean resumeContinuation(TurnContinuationState continuationState) {
+        if (continuationState == null) {
+            return false;
+        }
+        return switch (continuationState.completionAction()) {
+            case NONE -> true;
+            case APPLY_TURN_FOLLOW_UP -> {
+                DiceState diceState = dices.getValue() != null ? dices.getValue().diceState() : DiceState.NOREROLL;
+                doTurnEndEvent(diceState);
+                yield true;
+            }
+            case END_TURN_WITH_SWITCH -> {
+                endRound(true);
+                yield true;
+            }
+            case END_TURN_WITHOUT_SWITCH -> {
+                endRound(false);
+                yield true;
+            }
+        };
+    }
+
     private void playRound(DiceValue diceValue) {
         Player turnPlayer = players.getTurn();
         log.debug("Playing round for player {} with diceState={} value={}",

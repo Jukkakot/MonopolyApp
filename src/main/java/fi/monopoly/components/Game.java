@@ -5,6 +5,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -301,7 +302,12 @@ public class Game implements MonopolyEventListener {
                         (request, continuationState, onResolved) -> handlePaymentRequest(request, continuationState, onResolved)
                 )
         );
+        sessionApplicationService.configureTurnContinuationFlow(createTurnContinuationGateway());
         this.gameBotTurnHooks = createGameBotTurnHooks();
+    }
+
+    private TurnContinuationGateway createTurnContinuationGateway() {
+        return continuationState -> gameTurnFlowCoordinator.resumeContinuation(continuationState);
     }
 
     private GameBotTurnDriver.Hooks createGameBotTurnHooks() {

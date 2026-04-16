@@ -7,7 +7,6 @@ import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
 import fi.monopoly.application.session.auction.AuctionCommandHandler;
-import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.domain.decision.DecisionAction;
@@ -29,6 +28,7 @@ public final class PropertyPurchaseCommandHandler {
     private final Consumer<PendingDecision> pendingDecisionSetter;
     private final Consumer<AuctionState> auctionStateSetter;
     private final Consumer<TurnContinuationState> turnContinuationSetter;
+    private final Consumer<TurnContinuationState> turnContinuationResolver;
     private final PropertyPurchaseGateway gateway;
     private final AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseContext activeContext;
@@ -39,6 +39,7 @@ public final class PropertyPurchaseCommandHandler {
             Consumer<PendingDecision> pendingDecisionSetter,
             Consumer<AuctionState> auctionStateSetter,
             Consumer<TurnContinuationState> turnContinuationSetter,
+            Consumer<TurnContinuationState> turnContinuationResolver,
             PropertyPurchaseGateway gateway,
             AuctionCommandHandler auctionCommandHandler
     ) {
@@ -47,6 +48,7 @@ public final class PropertyPurchaseCommandHandler {
         this.pendingDecisionSetter = pendingDecisionSetter;
         this.auctionStateSetter = auctionStateSetter;
         this.turnContinuationSetter = turnContinuationSetter;
+        this.turnContinuationResolver = turnContinuationResolver;
         this.gateway = gateway;
         this.auctionCommandHandler = auctionCommandHandler;
     }
@@ -55,8 +57,7 @@ public final class PropertyPurchaseCommandHandler {
             Player player,
             Property property,
             String message,
-            TurnContinuationState continuationState,
-            CallbackAction onComplete
+            TurnContinuationState continuationState
     ) {
         String propertyId = property.getSpotType().name();
         PendingDecision decision = new PendingDecision(
@@ -67,7 +68,7 @@ public final class PropertyPurchaseCommandHandler {
                 message,
                 new PropertyPurchaseDecisionPayload(propertyId, property.getDisplayName(), property.getPrice())
         );
-        activeContext = new PropertyPurchaseContext(decision.decisionId(), player, property, continuationState, onComplete);
+        activeContext = new PropertyPurchaseContext(decision.decisionId(), player, property, continuationState);
         auctionStateSetter.accept(null);
         turnContinuationSetter.accept(continuationState);
         pendingDecisionSetter.accept(decision);
@@ -96,12 +97,12 @@ public final class PropertyPurchaseCommandHandler {
         if (!gateway.buyProperty(context.player(), context.property())) {
             return reject("PROPERTY_CANNOT_BE_BOUGHT", "Property can no longer be bought");
         }
+        TurnContinuationState continuationState = context.continuationState();
         pendingDecisionSetter.accept(null);
         auctionStateSetter.accept(null);
         turnContinuationSetter.accept(null);
-        PropertyPurchaseContext resolvedContext = activeContext;
         activeContext = null;
-        resolvedContext.onComplete().doAction();
+        turnContinuationResolver.accept(continuationState);
         return new CommandResult(
                 true,
                 currentStateSupplier.get(),
@@ -117,7 +118,7 @@ public final class PropertyPurchaseCommandHandler {
             return reject("INVALID_PROPERTY_PURCHASE", "Property decline command is not valid in the current state");
         }
         pendingDecisionSetter.accept(null);
-        auctionCommandHandler.startAuction(context.player(), context.property(), context.continuationState(), context.onComplete());
+        auctionCommandHandler.startAuction(context.player(), context.property(), context.continuationState());
         activeContext = null;
         return new CommandResult(
                 true,
@@ -168,8 +169,7 @@ public final class PropertyPurchaseCommandHandler {
             String decisionId,
             Player player,
             Property property,
-            TurnContinuationState continuationState,
-            CallbackAction onComplete
+            TurnContinuationState continuationState
     ) {
     }
 }

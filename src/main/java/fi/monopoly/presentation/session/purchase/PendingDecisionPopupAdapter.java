@@ -5,7 +5,6 @@ import fi.monopoly.application.command.DeclinePropertyCommand;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
-import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.domain.decision.PendingDecision;
@@ -37,10 +36,9 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
             fi.monopoly.components.Player player,
             Property property,
             String message,
-            TurnContinuationState continuationState,
-            CallbackAction onComplete
+            TurnContinuationState continuationState
     ) {
-        PendingDecision pendingDecision = propertyPurchaseDecisionSupport.openDecision(player, property, message, continuationState, onComplete);
+        PendingDecision pendingDecision = propertyPurchaseDecisionSupport.openDecision(player, property, message, continuationState);
         popupService.showPropertyOffer(
                 property,
                 pendingDecision.summaryText(),
@@ -72,8 +70,7 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
                 fi.monopoly.components.Player player,
                 Property property,
                 String message,
-                TurnContinuationState continuationState,
-                CallbackAction onComplete
+                TurnContinuationState continuationState
         );
     }
 }
