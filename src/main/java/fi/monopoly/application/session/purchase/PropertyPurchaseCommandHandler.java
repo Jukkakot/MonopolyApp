@@ -157,12 +157,18 @@ public final class PropertyPurchaseCommandHandler {
     }
 
     private PropertyPurchaseContext validate(String commandSessionId, String actorPlayerId, String decisionId, String propertyId) {
-        if (!Objects.equals(sessionId, commandSessionId) || activeContext == null) {
+        if (!Objects.equals(sessionId, commandSessionId)) {
             return null;
         }
         SessionState currentState = currentStateSupplier.get();
         PendingDecision pendingDecision = currentState.pendingDecision();
         if (pendingDecision == null || pendingDecision.decisionType() != DecisionType.PROPERTY_PURCHASE) {
+            return null;
+        }
+        if (activeContext == null) {
+            activeContext = restoreContextFrom(currentState, pendingDecision);
+        }
+        if (activeContext == null) {
             return null;
         }
         if (!Objects.equals(pendingDecision.actorPlayerId(), actorPlayerId)
@@ -179,6 +185,23 @@ public final class PropertyPurchaseCommandHandler {
             return null;
         }
         return activeContext;
+    }
+
+    private PropertyPurchaseContext restoreContextFrom(SessionState currentState, PendingDecision pendingDecision) {
+        if (!(pendingDecision.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
+            return null;
+        }
+        Player player = gateway.playerById(pendingDecision.actorPlayerId());
+        Property property = gateway.propertyById(payload.propertyId());
+        if (player == null || property == null) {
+            return null;
+        }
+        return new PropertyPurchaseContext(
+                pendingDecision.decisionId(),
+                player,
+                property,
+                currentState.turnContinuationState()
+        );
     }
 
     private CommandResult reject(String code, String message) {

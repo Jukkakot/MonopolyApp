@@ -145,6 +145,36 @@ class AuctionCommandHandlerTest {
         assertTrue(completed.get());
     }
 
+    @Test
+    void bidCanRehydrateRestoreContextFromSessionState() {
+        TestPlayers players = testPlayers();
+        AtomicReference<AuctionState> auctionStateRef = new AtomicReference<>();
+        AtomicReference<TurnContinuationState> continuationRef = new AtomicReference<>();
+        AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
+        StreetProperty property = new StreetProperty(SpotType.B1);
+        AuctionState restoredState = new AuctionState(
+                "auction:" + property.getSpotType().name() + ":" + players.triggeringPlayer().getId(),
+                property.getSpotType().name(),
+                players.triggeringPlayerId(),
+                players.firstBidderId(),
+                null,
+                0,
+                10,
+                Set.of(),
+                List.of(players.firstBidderId(), players.secondActorId()),
+                AuctionStatus.ACTIVE,
+                0,
+                null
+        );
+        auctionStateRef.set(restoredState);
+        continuationRef.set(continuation(players, property));
+
+        var result = handler.handle(new PlaceAuctionBidCommand("local-session", players.firstBidderId(), restoredState.auctionId(), 10));
+
+        assertTrue(result.accepted());
+        assertEquals(players.firstBidderId(), auctionStateRef.get().leadingPlayerId());
+    }
+
     private AuctionCommandHandler newHandler(
             TestPlayers players,
             AtomicReference<AuctionState> auctionStateRef,
@@ -231,50 +261,45 @@ class AuctionCommandHandlerTest {
         }
     }
 
-    private static final class FakeAuctionGateway implements AuctionGateway {
-        private final TestPlayers players;
-
-        private FakeAuctionGateway(TestPlayers players) {
-            this.players = players;
-        }
+    private record FakeAuctionGateway(TestPlayers players) implements AuctionGateway {
 
         @Override
-        public List<String> eligibleBidderIds(Player triggeringPlayer, Property property) {
-            return List.of(players.firstBidderId(), players.secondActorId());
-        }
-
-        @Override
-        public Player playerById(String playerId) {
-            if (players.triggeringPlayerId().equals(playerId)) {
-                return players.triggeringPlayer();
+            public List<String> eligibleBidderIds(Player triggeringPlayer, Property property) {
+                return List.of(players.firstBidderId(), players.secondActorId());
             }
-            if (players.firstBidderId().equals(playerId)) {
-                return players.firstBidder();
+
+            @Override
+            public Player playerById(String playerId) {
+                if (players.triggeringPlayerId().equals(playerId)) {
+                    return players.triggeringPlayer();
+                }
+                if (players.firstBidderId().equals(playerId)) {
+                    return players.firstBidder();
+                }
+                if (players.secondActorId().equals(playerId)) {
+                    return players.secondBidder();
+                }
+                return null;
             }
-            if (players.secondActorId().equals(playerId)) {
-                return players.secondBidder();
+
+            @Override
+            public Property propertyById(String propertyId) {
+                return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
             }
-            return null;
-        }
 
-        @Override
-        public Property propertyById(String propertyId) {
-            return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
-        }
+            @Override
+            public int maxBidFor(Player bidder, Property property) {
+                return 200;
+            }
 
-        @Override
-        public int maxBidFor(Player bidder, Property property) {
-            return 200;
-        }
+            @Override
+            public int nextBidAmount(Player bidder, Property property, int currentBid) {
+                return currentBid == 0 ? 10 : currentBid + 10;
+            }
 
-        @Override
-        public int nextBidAmount(Player bidder, Property property, int currentBid) {
-            return currentBid == 0 ? 10 : currentBid + 10;
+            @Override
+            public boolean transferWinningProperty(Player winner, Property property, int amount) {
+                return winner.buyProperty(property, amount);
+            }
         }
-
-        @Override
-        public boolean transferWinningProperty(Player winner, Property property, int amount) {
-            return winner.buyProperty(property, amount);
-        }
-    }
 }

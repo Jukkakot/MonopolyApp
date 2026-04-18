@@ -111,6 +111,11 @@ public class MonopolyButton extends Button {
         return this;
     }
 
+    public void dispose() {
+        hide();
+        remove();
+    }
+
     private void applyAutoWidth() {
         if (autoMinWidth == null || getHeight() <= 0) {
             return;

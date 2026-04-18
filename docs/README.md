@@ -27,12 +27,14 @@ If starting fresh, read in this order.
 ### 1. High-level direction
 
 - [architecture-separation-and-server-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-separation-and-server-plan.md)
+- [architecture-overview-diagrams.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-overview-diagrams.md)
 
 Read this first to understand:
 
 - why the work starts locally instead of from a server
 - what the target architecture is
 - what the large migration phases are
+- and, if you want the fast visual version, the high-level diagrams
 
 ### 2. Authoritative model
 

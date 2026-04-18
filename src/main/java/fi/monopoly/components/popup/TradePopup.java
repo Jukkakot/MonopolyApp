@@ -4,7 +4,6 @@ import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.spots.Spot;
@@ -13,7 +12,6 @@ import fi.monopoly.types.StreetType;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
 import fi.monopoly.utils.UiTokens;
-import javafx.scene.paint.Color;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.event.MouseEvent;
@@ -22,10 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static fi.monopoly.text.UiTexts.text;
-import static processing.core.PConstants.CENTER;
-import static processing.core.PConstants.CORNER;
-import static processing.core.PConstants.LEFT;
-import static processing.core.PConstants.TOP;
+import static processing.core.PConstants.*;
 import static processing.event.MouseEvent.CLICK;
 import static processing.event.MouseEvent.MOVE;
 
@@ -89,6 +84,11 @@ public class TradePopup extends Popup {
         for (int i = buttonProps.length; i < customButtons.size(); i++) {
             customButtons.get(i).hide();
         }
+    }
+
+    @Override
+    public String getPopupKind() {
+        return "trade";
     }
 
     @Override

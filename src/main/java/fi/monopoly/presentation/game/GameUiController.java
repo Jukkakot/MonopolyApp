@@ -22,6 +22,8 @@ public class GameUiController {
     private final MonopolyButton debugGodModeButton;
     private final MonopolyButton pauseButton;
     private final MonopolyButton tradeButton;
+    private final MonopolyButton saveButton;
+    private final MonopolyButton loadButton;
     private final MonopolyButton botSpeedButton;
     private final MonopolyButton languageButton;
     private final List<Locale> supportedLocales;
@@ -34,6 +36,8 @@ public class GameUiController {
             MonopolyButton debugGodModeButton,
             MonopolyButton pauseButton,
             MonopolyButton tradeButton,
+            MonopolyButton saveButton,
+            MonopolyButton loadButton,
             MonopolyButton botSpeedButton,
             MonopolyButton languageButton,
             List<Locale> supportedLocales,
@@ -45,6 +49,8 @@ public class GameUiController {
         this.debugGodModeButton = debugGodModeButton;
         this.pauseButton = pauseButton;
         this.tradeButton = tradeButton;
+        this.saveButton = saveButton;
+        this.loadButton = loadButton;
         this.botSpeedButton = botSpeedButton;
         this.languageButton = languageButton;
         this.supportedLocales = supportedLocales;
@@ -58,6 +64,8 @@ public class GameUiController {
         debugGodModeButton.addListener(() -> hooks.openGodModeMenu());
         pauseButton.addListener(() -> hooks.togglePause());
         tradeButton.addListener(() -> hooks.openTradeMenu());
+        saveButton.addListener(() -> hooks.saveSession());
+        loadButton.addListener(() -> hooks.loadSession());
         botSpeedButton.addListener(() -> hooks.cycleBotSpeedMode());
         languageButton.addListener(this::cycleLanguage);
     }
@@ -69,6 +77,8 @@ public class GameUiController {
         debugGodModeButton.setLabel(text("game.button.godMode"));
         pauseButton.setLabel(paused ? text("game.button.resume") : text("game.button.pause"));
         tradeButton.setLabel(text("game.button.trade"));
+        saveButton.setLabel(text("game.button.save"));
+        loadButton.setLabel(text("game.button.load"));
         botSpeedButton.setLabel(text("game.button.botSpeed", text(botSpeedMode.labelKey())));
         languageButton.setLabel(text("language.button.current", text("language.name.current")));
     }
@@ -78,12 +88,16 @@ public class GameUiController {
             debugGodModeButton.hide();
             pauseButton.hide();
             tradeButton.hide();
+            saveButton.hide();
+            loadButton.hide();
             botSpeedButton.hide();
             languageButton.show();
             return;
         }
         pauseButton.show();
         tradeButton.show();
+        saveButton.show();
+        loadButton.show();
         languageButton.show();
         if (!MonopolyApp.DEBUG_MODE) {
             debugGodModeButton.hide();
@@ -108,6 +122,14 @@ public class GameUiController {
         char key = Character.toLowerCase(keyEvent.getKey());
         if (hooks.gameOver()) {
             return false;
+        }
+        if (keyEvent.isControlDown() && key == 's') {
+            hooks.saveSession();
+            return true;
+        }
+        if (keyEvent.isControlDown() && key == 'l') {
+            hooks.loadSession();
+            return true;
         }
         if (key == 'p') {
             hooks.togglePause();
@@ -201,5 +223,9 @@ public class GameUiController {
         Locale currentLocale();
 
         void switchLanguage(Locale locale);
+
+        void saveSession();
+
+        void loadSession();
     }
 }

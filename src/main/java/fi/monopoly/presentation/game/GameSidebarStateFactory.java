@@ -13,6 +13,7 @@ public final class GameSidebarStateFactory {
             List<Player> players,
             List<String> recentMessages,
             DebtState debtState,
+            String persistenceNotice,
             boolean gameOver,
             boolean popupVisible,
             boolean animationsRunning,
@@ -28,6 +29,7 @@ public final class GameSidebarStateFactory {
                 players,
                 recentMessages,
                 debtState,
+                persistenceNotice,
                 historyPanelY,
                 historyHeight,
                 reservedTop

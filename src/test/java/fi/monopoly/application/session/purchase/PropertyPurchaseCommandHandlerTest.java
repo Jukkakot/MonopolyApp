@@ -134,6 +134,37 @@ class PropertyPurchaseCommandHandlerTest {
         assertEquals(AuctionStatus.ACTIVE, auctionStateRef.get().status());
     }
 
+    @Test
+    void buyPropertyCommandCanRehydrateRestoreContextFromSessionState() {
+        Player human = new Player("Human", Color.MEDIUMPURPLE, 1500, 1, ComputerPlayerProfile.HUMAN);
+        StreetProperty property = new StreetProperty(SpotType.B1);
+        var pendingDecisionRef = new AtomicReference<PendingDecision>();
+        var auctionStateRef = new AtomicReference<AuctionState>();
+        var continuationRef = new AtomicReference<TurnContinuationState>();
+        var continuationTriggered = new AtomicBoolean(false);
+        FakeGateway gateway = new FakeGateway();
+        gateway.player = human;
+        gateway.property = property;
+        PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, continuationTriggered, gateway);
+
+        PendingDecision restoredDecision = new PendingDecision(
+                "property-purchase:" + human.getId() + ":" + property.getSpotType().name(),
+                fi.monopoly.domain.decision.DecisionType.PROPERTY_PURCHASE,
+                "player-" + human.getId(),
+                List.of(fi.monopoly.domain.decision.DecisionAction.BUY_PROPERTY, fi.monopoly.domain.decision.DecisionAction.DECLINE_PROPERTY),
+                "Buy Brown 1?",
+                new fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload(property.getSpotType().name(), property.getDisplayName(), property.getPrice())
+        );
+        pendingDecisionRef.set(restoredDecision);
+        continuationRef.set(continuationFor(human, property, TurnContinuationType.RESUME_TURN_FOLLOW_UP));
+
+        var result = handler.handle(new BuyPropertyCommand("local-session", "player-" + human.getId(), restoredDecision.decisionId(), property.getSpotType().name()));
+
+        assertTrue(result.accepted());
+        assertEquals(human, property.getOwnerPlayer());
+        assertTrue(continuationTriggered.get());
+    }
+
     private PropertyPurchaseCommandHandler newHandler(
             Player human,
             AtomicReference<PendingDecision> pendingDecisionRef,
@@ -231,9 +262,22 @@ class PropertyPurchaseCommandHandlerTest {
     }
 
     private static final class FakeGateway implements PropertyPurchaseGateway {
+        private Player player;
+        private fi.monopoly.components.properties.Property property;
+
         @Override
         public boolean buyProperty(Player player, fi.monopoly.components.properties.Property property) {
             return player.buyProperty(property);
+        }
+
+        @Override
+        public Player playerById(String playerId) {
+            return playerId != null && player != null && playerId.equals("player-" + player.getId()) ? player : null;
+        }
+
+        @Override
+        public fi.monopoly.components.properties.Property propertyById(String propertyId) {
+            return property != null && property.getSpotType().name().equals(propertyId) ? property : null;
         }
     }
 }

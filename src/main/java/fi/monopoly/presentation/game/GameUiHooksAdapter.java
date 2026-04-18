@@ -2,7 +2,6 @@ package fi.monopoly.presentation.game;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.components.DebugController;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
@@ -34,6 +33,8 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
     private final BooleanSupplier popupVisibleSupplier;
     private final BooleanSupplier canEndTurnSupplier;
     private final Consumer<Locale> languageSwitcher;
+    private final Runnable saveSessionAction;
+    private final Runnable loadSessionAction;
 
     public GameUiHooksAdapter(
             Board board,
@@ -50,7 +51,9 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
             BooleanSupplier gameOverSupplier,
             BooleanSupplier popupVisibleSupplier,
             BooleanSupplier canEndTurnSupplier,
-            Consumer<Locale> switchLanguageAction
+            Consumer<Locale> switchLanguageAction,
+            Runnable saveSessionAction,
+            Runnable loadSessionAction
     ) {
         this.board = board;
         this.dices = dices;
@@ -67,6 +70,8 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
         this.popupVisibleSupplier = popupVisibleSupplier;
         this.canEndTurnSupplier = canEndTurnSupplier;
         this.languageSwitcher = switchLanguageAction;
+        this.saveSessionAction = saveSessionAction;
+        this.loadSessionAction = loadSessionAction;
     }
 
     @Override
@@ -163,5 +168,15 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
     @Override
     public void switchLanguage(Locale locale) {
         languageSwitcher.accept(locale);
+    }
+
+    @Override
+    public void saveSession() {
+        saveSessionAction.run();
+    }
+
+    @Override
+    public void loadSession() {
+        loadSessionAction.run();
     }
 }

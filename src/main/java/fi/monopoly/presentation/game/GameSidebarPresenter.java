@@ -66,6 +66,7 @@ public final class GameSidebarPresenter {
         }
         app.text(state.currentTurnPhase(), sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow2Y());
         app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow3Y());
+        drawPersistenceNotice(app, layoutMetrics, state.persistenceNotice());
         drawPopupHistoryPanel(app, layoutMetrics, state, historyTimingRecorder);
         app.pop();
     }
@@ -113,6 +114,24 @@ public final class GameSidebarPresenter {
         app.textFont(runtime.font10());
         app.textAlign(PConstants.CENTER, PConstants.TOP);
         app.text("BOT", x + 21, y + 4);
+        app.popStyle();
+    }
+
+    private void drawPersistenceNotice(MonopolyApp app, LayoutMetrics layoutMetrics, String persistenceNotice) {
+        if (persistenceNotice == null || persistenceNotice.isBlank()) {
+            return;
+        }
+        app.pushStyle();
+        app.fill(94, 102, 90);
+        app.textFont(runtime.font10());
+        app.textAlign(PConstants.LEFT, PConstants.TOP);
+        app.text(
+                persistenceNotice,
+                layoutMetrics.sidebarX() + UiTokens.spacingMd(),
+                layoutMetrics.sidebarHeaderHeight() + 8,
+                layoutMetrics.sidebarWidth() - UiTokens.spacingMd() * 2,
+                18
+        );
         app.popStyle();
     }
 
@@ -269,6 +288,7 @@ public final class GameSidebarPresenter {
             List<Player> players,
             List<String> recentMessages,
             DebtState debtState,
+            String persistenceNotice,
             float historyPanelY,
             float historyHeight,
             float reservedTop

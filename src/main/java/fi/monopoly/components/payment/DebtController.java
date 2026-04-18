@@ -82,6 +82,19 @@ public final class DebtController {
         runtime.popupService().show(buildDebtMessage(request, missingAmount, bankruptcyRisk));
     }
 
+    public void restoreDebtState(PaymentRequest request, Runnable onResolved, boolean bankruptcyRisk) {
+        if (request == null) {
+            debtState = null;
+            onStateChanged.run();
+            return;
+        }
+        debtState = new DebtState(request, onResolved, bankruptcyRisk);
+        hidePrimaryTurnControls.run();
+        onStateChanged.run();
+        log.info("Restored debt resolution: debtor={}, target={}, amount={}, bankruptcyRisk={}",
+                request.debtor().getName(), request.target().getDisplayName(), request.amount(), bankruptcyRisk);
+    }
+
     public void retryPendingDebtPayment() {
         if (debtState == null) {
             return;

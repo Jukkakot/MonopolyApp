@@ -80,6 +80,10 @@ These keys are available during the game:
   toggle debug mode
 - `P`  
   pause / resume
+- `Ctrl+S`  
+  save the current local session to `saves/local-session.json`
+- `Ctrl+L`  
+  load the saved local session from `saves/local-session.json`
 - `T`  
   open trading on your turn
 - `H`  

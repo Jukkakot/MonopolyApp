@@ -14,8 +14,7 @@ import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
-import fi.monopoly.components.payment.DebtController;
-import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.components.payment.*;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
@@ -93,6 +92,8 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton debugGodModeButton;
     private final MonopolyButton pauseButton;
     private final MonopolyButton tradeButton;
+    private final MonopolyButton saveButton;
+    private final MonopolyButton loadButton;
     private final MonopolyButton botSpeedButton;
     private final MonopolyButton languageButton;
 
@@ -121,6 +122,8 @@ public class Game implements MonopolyEventListener {
     private GamePresentationSupport gamePresentationSupport;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     private GameBotTurnDriver.Hooks gameBotTurnHooks;
+    private String persistenceNotice;
+    private int persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
 
     public Game(MonopolyRuntime runtime) {
         this(runtime, null);
@@ -134,6 +137,8 @@ public class Game implements MonopolyEventListener {
         this.debugGodModeButton = new MonopolyButton(runtime, "debugGodMode");
         this.pauseButton = new MonopolyButton(runtime, "pause");
         this.tradeButton = new MonopolyButton(runtime, "trade");
+        this.saveButton = new MonopolyButton(runtime, "save");
+        this.loadButton = new MonopolyButton(runtime, "load");
         this.botSpeedButton = new MonopolyButton(runtime, "botSpeed");
         this.languageButton = new MonopolyButton(runtime, "language");
         this.gameSidebarPresenter = new GameSidebarPresenter(runtime);
@@ -271,6 +276,8 @@ public class Game implements MonopolyEventListener {
                 debugGodModeButton,
                 pauseButton,
                 tradeButton,
+                saveButton,
+                loadButton,
                 botSpeedButton,
                 languageButton,
                 dices
@@ -336,6 +343,8 @@ public class Game implements MonopolyEventListener {
                 debugGodModeButton,
                 pauseButton,
                 tradeButton,
+                saveButton,
+                loadButton,
                 botSpeedButton,
                 languageButton,
                 SUPPORTED_UI_LOCALES,
@@ -354,7 +363,9 @@ public class Game implements MonopolyEventListener {
                         () -> gameOver,
                         () -> runtime.popupService().isAnyVisible(),
                         endRoundButton::isVisible,
-                        this::switchLanguage
+                        this::switchLanguage,
+                        () -> runtime.app().saveLocalSession(),
+                        () -> runtime.app().loadLocalSession()
                 )
         );
     }
@@ -397,6 +408,16 @@ public class Game implements MonopolyEventListener {
         tradeButton.setSize(140, 36);
         tradeButton.setAutoWidth(120, 28, 220);
 
+        saveButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
+        saveButton.setSize(120, 36);
+        saveButton.setAutoWidth(100, 28, 180);
+        saveButton.setAllowedDuringComputerTurn(true);
+
+        loadButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
+        loadButton.setSize(120, 36);
+        loadButton.setAutoWidth(100, 28, 180);
+        loadButton.setAllowedDuringComputerTurn(true);
+
         botSpeedButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
         botSpeedButton.setSize(140, 36);
         botSpeedButton.setAutoWidth(120, 28, 220);
@@ -413,6 +434,8 @@ public class Game implements MonopolyEventListener {
         debugGodModeButton.hide();
         pauseButton.hide();
         tradeButton.hide();
+        saveButton.hide();
+        loadButton.hide();
         botSpeedButton.hide();
     }
 
@@ -485,9 +508,52 @@ public class Game implements MonopolyEventListener {
             showRollDiceControl();
             return;
         }
+        restoreDebtPresentationState(restoredSessionState);
         updateDebtButtons();
         syncTransientPresentationState();
         restorePresentationStateFromSession();
+    }
+
+    private void restoreDebtPresentationState(SessionState restoredSessionState) {
+        if (debtController == null || restoredSessionState == null || restoredSessionState.activeDebt() == null) {
+            return;
+        }
+        PaymentRequest request = toRestoredPaymentRequest(restoredSessionState);
+        if (request == null) {
+            return;
+        }
+        debtController.restoreDebtState(
+                request,
+                () -> {
+                    if (restoredSessionState.turnContinuationState() != null) {
+                        gameTurnFlowCoordinator.resumeContinuation(restoredSessionState.turnContinuationState());
+                    }
+                },
+                restoredSessionState.activeDebt().bankruptcyRisk()
+        );
+    }
+
+    private PaymentRequest toRestoredPaymentRequest(SessionState restoredSessionState) {
+        var activeDebt = restoredSessionState.activeDebt();
+        if (activeDebt == null) {
+            return null;
+        }
+        Player debtor = playerById(activeDebt.debtorPlayerId());
+        if (debtor == null) {
+            return null;
+        }
+        PaymentTarget target = activeDebt.creditorType() == fi.monopoly.domain.session.DebtCreditorType.PLAYER
+                ? creditorTarget(activeDebt.creditorPlayerId())
+                : BankTarget.INSTANCE;
+        if (target == null) {
+            return null;
+        }
+        return new PaymentRequest(debtor, target, activeDebt.amountRemaining(), activeDebt.reason());
+    }
+
+    private PaymentTarget creditorTarget(String creditorPlayerId) {
+        Player creditor = playerById(creditorPlayerId);
+        return creditor == null ? null : new PlayerTarget(creditor);
     }
 
     private void restorePresentationStateFromSession() {
@@ -520,6 +586,20 @@ public class Game implements MonopolyEventListener {
 
     SessionState projectedSessionState() {
         return sessionApplicationService.currentState();
+    }
+
+    public SessionState sessionStateForPersistence() {
+        return sessionApplicationService.currentState();
+    }
+
+    public void showPersistenceNotice(String notice) {
+        if (notice == null || notice.isBlank()) {
+            persistenceNotice = null;
+            persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
+            return;
+        }
+        persistenceNotice = notice;
+        persistenceNoticeExpiresAtMillis = runtime.app().millis() + 5000;
     }
 
     void refreshProjectedSessionState() {
@@ -702,11 +782,13 @@ public class Game implements MonopolyEventListener {
     }
 
     private GameSidebarPresenter.SidebarState createSidebarState() {
+        clearExpiredPersistenceNoticeIfNeeded();
         return gameSidebarStateFactory.createSidebarState(
                 players.getTurn(),
                 players.getPlayers(),
                 runtime.popupService().recentPopupMessages(),
                 debtController.debtState(),
+                persistenceNotice,
                 gameOver,
                 runtime.popupService().isAnyVisible(),
                 animations.isRunning(),
@@ -716,6 +798,17 @@ public class Game implements MonopolyEventListener {
                 getSidebarHistoryHeight(),
                 getSidebarReservedTop()
         );
+    }
+
+    private void clearExpiredPersistenceNoticeIfNeeded() {
+        if (persistenceNotice == null) {
+            return;
+        }
+        if (runtime.app().millis() < persistenceNoticeExpiresAtMillis) {
+            return;
+        }
+        persistenceNotice = null;
+        persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
     }
 
     private float getSidebarContentTop() {
@@ -925,6 +1018,27 @@ public class Game implements MonopolyEventListener {
         NONE,
         ROLL_DICE,
         END_TURN
+    }
+
+    public void dispose() {
+        runtime.eventBus().removeListener(this);
+        runtime.popupService().hideAll();
+        if (players != null) {
+            players.dispose();
+        }
+        if (dices != null) {
+            dices.dispose();
+        }
+        endRoundButton.dispose();
+        retryDebtButton.dispose();
+        declareBankruptcyButton.dispose();
+        debugGodModeButton.dispose();
+        pauseButton.dispose();
+        tradeButton.dispose();
+        saveButton.dispose();
+        loadButton.dispose();
+        botSpeedButton.dispose();
+        languageButton.dispose();
     }
 
 }

@@ -208,4 +208,9 @@ public class Dices implements MonopolyEventListener {
         }
         return false;
     }
+
+    public void dispose() {
+        runtime.eventBus().removeListener(this);
+        rollDiceButton.dispose();
+    }
 }

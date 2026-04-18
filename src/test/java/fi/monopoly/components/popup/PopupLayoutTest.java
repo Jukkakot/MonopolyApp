@@ -87,6 +87,13 @@ class PopupLayoutTest {
     }
 
     @Test
+    void tradePopupUsesSessionPopupKind() {
+        TradePopup popup = new TradePopup(initHeadlessRuntime(1700, 996));
+
+        assertEquals("trade", popup.getPopupKind());
+    }
+
+    @Test
     void choicePopupKeepsButtonsInsideSmallPopup() throws ReflectiveOperationException {
         ChoicePopup popup = new ChoicePopup(initHeadlessRuntime(360, 260));
         popup.setPopupText("Question");

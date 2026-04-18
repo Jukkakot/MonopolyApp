@@ -33,6 +33,8 @@ public class MonopolyEventObserver extends PApplet {
                     
                     ----HELP-----
                     H = help
+                    Ctrl+S = save local session
+                    Ctrl+L = load local session
                     E = end round
                     A = skip animation
                     D = debug mode

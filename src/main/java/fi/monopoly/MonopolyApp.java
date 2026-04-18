@@ -1,13 +1,14 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
+import fi.monopoly.application.session.persistence.LocalSessionSnapshotPath;
+import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.types.SpotType;
-import fi.monopoly.utils.LayoutMetrics;
-import fi.monopoly.utils.UiTokens;
 import fi.monopoly.utils.MonopolyUtils;
+import fi.monopoly.utils.UiTokens;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
@@ -21,11 +22,12 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -48,7 +50,9 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     };
     private static long coloredImageCopies;
+    private static final DateTimeFormatter PERSISTENCE_TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
     private Game game;
+    private final SessionPersistenceService sessionPersistenceService = new SessionPersistenceService();
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 
@@ -119,14 +123,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     public void setup() {
         frameRate(TARGET_FRAME_RATE);
         initImages();
-        p5 = new ControlP5(this);
         configureWindowSizing();
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
         font30 = createFont("Monopoly Regular.ttf", 30);
-        MonopolyRuntime.initialize(this, p5, font10, font20, font30);
-        textFont(font10);
-        game = new Game(MonopolyRuntime.get());
+        rebuildGame(null);
     }
 
     private void configureWindowSizing() {
@@ -194,6 +195,48 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     }
 
+    public void saveLocalSession() {
+        if (game == null) {
+            return;
+        }
+        Path snapshotPath = LocalSessionSnapshotPath.resolve();
+        try {
+            sessionPersistenceService.save(snapshotPath, game.sessionStateForPersistence());
+            MonopolyRuntime.get().popupService().show("Saved game to " + snapshotPath.toAbsolutePath());
+            game.showPersistenceNotice(fi.monopoly.text.UiTexts.text(
+                    "game.status.savedAt",
+                    LocalTime.now().format(PERSISTENCE_TIME_FORMAT)
+            ));
+            log.info("Saved local session snapshot to {}", snapshotPath.toAbsolutePath());
+        } catch (RuntimeException e) {
+            log.error("Failed to save local session snapshot to {}", snapshotPath.toAbsolutePath(), e);
+            MonopolyRuntime.get().popupService().show("Failed to save game: " + e.getMessage());
+        }
+    }
+
+    public void loadLocalSession() {
+        Path snapshotPath = LocalSessionSnapshotPath.resolve();
+        if (!Files.exists(snapshotPath)) {
+            MonopolyRuntime.get().popupService().show("No saved game found at " + snapshotPath.toAbsolutePath());
+            return;
+        }
+        try {
+            var restoredState = sessionPersistenceService.load(snapshotPath);
+            rebuildGame(restoredState);
+            MonopolyRuntime.get().popupService().show("Loaded game from " + snapshotPath.toAbsolutePath());
+            if (game != null) {
+                game.showPersistenceNotice(fi.monopoly.text.UiTexts.text(
+                        "game.status.loadedAt",
+                        LocalTime.now().format(PERSISTENCE_TIME_FORMAT)
+                ));
+            }
+            log.info("Loaded local session snapshot from {}", snapshotPath.toAbsolutePath());
+        } catch (RuntimeException e) {
+            log.error("Failed to load local session snapshot from {}", snapshotPath.toAbsolutePath(), e);
+            MonopolyRuntime.get().popupService().show("Failed to load game: " + e.getMessage());
+        }
+    }
+
     public void windowResized() {
 //        log.debug("Processing windowResized callback: sketch={}x{}", width, height);
     }
@@ -226,5 +269,37 @@ public class MonopolyApp extends MonopolyEventObserver {
                 .filter(file -> !file.isDirectory())
                 .map(File::getName)
                 .toList();
+    }
+
+    Game currentGame() {
+        return game;
+    }
+
+    void setGameForTest(Game game) {
+        this.game = game;
+    }
+
+    private void rebuildGame(fi.monopoly.domain.session.SessionState restoredState) {
+        if (game != null) {
+            game.dispose();
+        }
+        if (p5 != null) {
+            p5.dispose();
+        }
+        p5 = new ControlP5(this);
+        MonopolyRuntime.initialize(this, p5, font10, font20, font30);
+        applyDefaultTextFont();
+        game = restoredState == null ? new Game(MonopolyRuntime.get()) : new Game(MonopolyRuntime.get(), restoredState);
+    }
+
+    private void applyDefaultTextFont() {
+        if (font10 == null) {
+            return;
+        }
+        try {
+            textFont(font10);
+        } catch (RuntimeException e) {
+            log.debug("Skipping textFont apply during runtime rebuild because graphics context is not ready yet");
+        }
     }
 }

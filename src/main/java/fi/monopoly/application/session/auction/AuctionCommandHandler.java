@@ -15,11 +15,7 @@ import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -300,14 +296,35 @@ public final class AuctionCommandHandler {
     }
 
     private AuctionState validateActiveAuction(String commandSessionId, String auctionId) {
-        if (!Objects.equals(sessionId, commandSessionId) || activeContext == null) {
+        if (!Objects.equals(sessionId, commandSessionId)) {
             return null;
         }
-        AuctionState state = currentStateSupplier.get().auctionState();
-        if (state == null || !Objects.equals(state.auctionId(), auctionId) || !Objects.equals(activeContext.auctionId(), auctionId)) {
+        SessionState currentState = currentStateSupplier.get();
+        AuctionState state = currentState.auctionState();
+        if (state == null) {
+            return null;
+        }
+        if (activeContext == null) {
+            activeContext = restoreContextFrom(currentState, state);
+        }
+        if (activeContext == null
+                || !Objects.equals(state.auctionId(), auctionId)
+                || !Objects.equals(activeContext.auctionId(), auctionId)) {
             return null;
         }
         return state;
+    }
+
+    private ActiveAuctionContext restoreContextFrom(SessionState currentState, AuctionState state) {
+        Property property = gateway.propertyById(state.propertyId());
+        if (property == null) {
+            return null;
+        }
+        return new ActiveAuctionContext(
+                state.auctionId(),
+                property,
+                currentState.turnContinuationState()
+        );
     }
 
     private Property activeProperty(AuctionState state) {

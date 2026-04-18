@@ -522,6 +522,24 @@ public class Players {
         return useCompactSummaryLayout() ? COMPACT_TEXT_INFO_HEIGHT : TEXT_INFO_HEIGHT;
     }
 
+    public void dispose() {
+        if (previousDeedsButton != null) {
+            previousDeedsButton.dispose();
+        }
+        if (nextDeedsButton != null) {
+            nextDeedsButton.dispose();
+        }
+        playerButtons.values().forEach(button -> {
+            if (button instanceof MonopolyButton monopolyButton) {
+                monopolyButton.dispose();
+                return;
+            }
+            button.hide();
+            button.remove();
+        });
+        playerButtons.clear();
+    }
+
     private void translate(Coordinates c) {
         MonopolyApp p = runtime.app();
         p.translate(c.x(), c.y());

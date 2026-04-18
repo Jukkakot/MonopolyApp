@@ -15,6 +15,8 @@ public final class GameControlLayout {
     private final MonopolyButton debugGodModeButton;
     private final MonopolyButton pauseButton;
     private final MonopolyButton tradeButton;
+    private final MonopolyButton saveButton;
+    private final MonopolyButton loadButton;
     private final MonopolyButton botSpeedButton;
     private final MonopolyButton languageButton;
     private final Dices dices;
@@ -32,6 +34,8 @@ public final class GameControlLayout {
             MonopolyButton debugGodModeButton,
             MonopolyButton pauseButton,
             MonopolyButton tradeButton,
+            MonopolyButton saveButton,
+            MonopolyButton loadButton,
             MonopolyButton botSpeedButton,
             MonopolyButton languageButton,
             Dices dices
@@ -43,6 +47,8 @@ public final class GameControlLayout {
         this.debugGodModeButton = debugGodModeButton;
         this.pauseButton = pauseButton;
         this.tradeButton = tradeButton;
+        this.saveButton = saveButton;
+        this.loadButton = loadButton;
         this.botSpeedButton = botSpeedButton;
         this.languageButton = languageButton;
         this.dices = dices;
@@ -69,6 +75,8 @@ public final class GameControlLayout {
                 MonopolyApp.DEBUG_MODE,
                 pauseButton.getWidth(),
                 tradeButton.getWidth(),
+                saveButton.getWidth(),
+                loadButton.getWidth(),
                 botSpeedButton.getWidth(),
                 languageButton.getWidth(),
                 declareBankruptcyButton.getWidth()
@@ -91,7 +99,8 @@ public final class GameControlLayout {
         float controlRow1Y = historyPanelY + historyHeight + UiTokens.spacingSm();
         boolean showBotSpeed = MonopolyApp.DEBUG_MODE;
         float controlRow2Y = controlRow1Y + pauseButton.getHeight() + UiTokens.spacingXs();
-        float lowestControlBottom = (showBotSpeed ? controlRow2Y : controlRow1Y) + languageButton.getHeight();
+        float controlRow3Y = controlRow2Y + languageButton.getHeight() + UiTokens.spacingXs();
+        float lowestControlBottom = (showBotSpeed ? controlRow3Y : controlRow2Y) + languageButton.getHeight();
         if (lowestControlBottom > runtime.app().height - UiTokens.spacingMd()) {
             layoutOverlayControls(layoutMetrics);
             dices.updateLayout(layoutMetrics);
@@ -105,12 +114,16 @@ public final class GameControlLayout {
         if (showBotSpeed) {
             pauseButton.setPosition(sidebarRightAlignedX - pauseButton.getWidth(), controlRow1Y);
             tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
-            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow2Y);
-            botSpeedButton.setPosition(languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs(), controlRow2Y);
+            loadButton.setPosition(sidebarRightAlignedX - loadButton.getWidth(), controlRow2Y);
+            saveButton.setPosition(loadButton.getPosition()[0] - saveButton.getWidth() - UiTokens.spacingXs(), controlRow2Y);
+            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow3Y);
+            botSpeedButton.setPosition(languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs(), controlRow3Y);
         } else {
-            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow1Y);
-            pauseButton.setPosition(languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
+            loadButton.setPosition(sidebarRightAlignedX - loadButton.getWidth(), controlRow1Y);
+            saveButton.setPosition(loadButton.getPosition()[0] - saveButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
+            pauseButton.setPosition(saveButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
             tradeButton.setPosition(pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs(), controlRow1Y);
+            languageButton.setPosition(sidebarRightAlignedX - languageButton.getWidth(), controlRow2Y);
         }
         dices.updateLayout(layoutMetrics);
     }
@@ -142,16 +155,25 @@ public final class GameControlLayout {
                 overlayTopRowY + languageButton.getHeight() + UiTokens.spacingXs(),
                 runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
         );
+        float overlayThirdRowY = Math.min(
+                overlayBottomRowY + languageButton.getHeight() + UiTokens.spacingXs(),
+                runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
+        );
 
         endRoundButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());
         retryDebtButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());
         declareBankruptcyButton.setPosition(rightX - declareBankruptcyButton.getWidth(), UiTokens.overlayPrimaryButtonY());
         debugGodModeButton.setPosition(leftX, UiTokens.overlaySecondaryRow1Y());
         if (showBotSpeed) {
-            languageButton.setPosition(Math.max(leftX, rightX - languageButton.getWidth()), overlayBottomRowY);
+            loadButton.setPosition(Math.max(leftX, rightX - loadButton.getWidth()), overlayBottomRowY);
+            saveButton.setPosition(
+                    Math.max(leftX, loadButton.getPosition()[0] - saveButton.getWidth() - UiTokens.spacingXs()),
+                    overlayBottomRowY
+            );
+            languageButton.setPosition(Math.max(leftX, rightX - languageButton.getWidth()), overlayThirdRowY);
             botSpeedButton.setPosition(
                     Math.max(leftX, languageButton.getPosition()[0] - botSpeedButton.getWidth() - UiTokens.spacingXs()),
-                    overlayBottomRowY
+                    overlayThirdRowY
             );
             pauseButton.setPosition(Math.max(leftX, rightX - pauseButton.getWidth()), overlayTopRowY);
             tradeButton.setPosition(
@@ -159,15 +181,20 @@ public final class GameControlLayout {
                     overlayTopRowY
             );
         } else {
-            languageButton.setPosition(Math.max(leftX, rightX - languageButton.getWidth()), overlayTopRowY);
+            loadButton.setPosition(Math.max(leftX, rightX - loadButton.getWidth()), overlayTopRowY);
+            saveButton.setPosition(
+                    Math.max(leftX, loadButton.getPosition()[0] - saveButton.getWidth() - UiTokens.spacingXs()),
+                    overlayTopRowY
+            );
             pauseButton.setPosition(
-                    Math.max(leftX, languageButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs()),
+                    Math.max(leftX, saveButton.getPosition()[0] - pauseButton.getWidth() - UiTokens.spacingXs()),
                     overlayTopRowY
             );
             tradeButton.setPosition(
                     Math.max(leftX, pauseButton.getPosition()[0] - tradeButton.getWidth() - UiTokens.spacingXs()),
                     overlayTopRowY
             );
+            languageButton.setPosition(Math.max(leftX, rightX - languageButton.getWidth()), overlayBottomRowY);
         }
     }
 }
