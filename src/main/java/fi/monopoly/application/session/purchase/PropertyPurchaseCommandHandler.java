@@ -95,7 +95,31 @@ public final class PropertyPurchaseCommandHandler {
             return reject("INVALID_PROPERTY_PURCHASE", "Property purchase command is not valid in the current state");
         }
         if (!gateway.buyProperty(context.player(), context.property())) {
-            return reject("PROPERTY_CANNOT_BE_BOUGHT", "Property can no longer be bought");
+            pendingDecisionSetter.accept(null);
+            activeContext = null;
+            if (context.property().getOwnerPlayer() == null) {
+                auctionCommandHandler.startAuction(context.player(), context.property(), context.continuationState());
+                return new CommandResult(
+                        true,
+                        currentStateSupplier.get(),
+                        List.of(
+                                new DomainEvent("PropertyPurchaseFailed", playerId(context.player()), context.property().getDisplayName()),
+                                new DomainEvent("AuctionStarted", playerId(context.player()), context.property().getDisplayName())
+                        ),
+                        List.of(),
+                        List.of()
+                );
+            }
+            auctionStateSetter.accept(null);
+            turnContinuationSetter.accept(null);
+            turnContinuationResolver.accept(context.continuationState());
+            return new CommandResult(
+                    true,
+                    currentStateSupplier.get(),
+                    List.of(new DomainEvent("PropertyPurchaseExpired", playerId(context.player()), context.property().getDisplayName())),
+                    List.of(),
+                    List.of()
+            );
         }
         TurnContinuationState continuationState = context.continuationState();
         pendingDecisionSetter.accept(null);

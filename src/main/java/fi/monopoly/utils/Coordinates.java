@@ -30,7 +30,7 @@ public record Coordinates(float x, float y, float r) {
     }
 
     public Coordinates move(float x, float y) {
-        return move(x, y, this.r);
+        return new Coordinates(this.x + x, this.y + y, this.r);
     }
 
     public Coordinates move(Coordinates coords) {

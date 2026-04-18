@@ -4,9 +4,7 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Drawable;
 import fi.monopoly.utils.Coordinates;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class Animation {
     public static final float REFERENCE_FRAME_SECONDS = 1f / 60f;
     @Getter
@@ -16,6 +14,7 @@ public class Animation {
     // Larger value moves farther per reference frame and makes animations faster; smaller value slows them down.
     private final static float ANIMATION_SPEED = 0.3f;
     private final CallbackAction onAnimationEnd;
+    private boolean finished;
 
     public Animation(Drawable drawable, AnimationPath path, CallbackAction onAnimationEnd) {
         this.drawable = drawable;
@@ -24,6 +23,10 @@ public class Animation {
     }
 
     public void finishAnimation() {
+        if (finished) {
+            return;
+        }
+        finished = true;
         if (!path.isEmpty()) {
             drawable.setCoords(path.getLast());
         }
@@ -37,6 +40,9 @@ public class Animation {
     }
 
     public boolean updateAnimation(float deltaSeconds) {
+        if (finished) {
+            return false;
+        }
         if (path.isEmpty()) {
             finishAnimation();
             return false;

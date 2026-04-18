@@ -188,6 +188,17 @@ public class PopupService {
         return activePopup != null && activePopup.triggerSecondaryAction(PopupActionTrigger.COMPUTER);
     }
 
+    public boolean dismissActivePopup(String popupKind) {
+        if (activePopup == null || (popupKind != null && !popupKind.equals(activePopup.getPopupKind()))) {
+            return false;
+        }
+        Popup popupToHide = activePopup;
+        activePopup = null;
+        popupToHide.hide();
+        showNextPending();
+        return true;
+    }
+
     public Property activeOfferedProperty() {
         if (activePopup instanceof PropertyOfferPopup propertyOfferPopup) {
             return propertyOfferPopup.getOfferedProperty();

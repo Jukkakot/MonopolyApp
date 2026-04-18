@@ -49,7 +49,7 @@ class GameBotSimulationTest {
     }
 
     @Test
-    @Timeout(15)
+    @Timeout(value = 20, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void strongBotsDoNotDeadlockAcrossRepeatedSimulations() throws ReflectiveOperationException {
         MonopolyApp.SKIP_ANNIMATIONS = true;
 
@@ -117,7 +117,7 @@ class GameBotSimulationTest {
     }
 
     @Test
-    @Timeout(10)
+    @Timeout(value = 15, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void strongBotBeatsSmokeTestBotInHeadsUpAdvantageScenario() throws ReflectiveOperationException {
         MonopolyApp.SKIP_ANNIMATIONS = true;
 

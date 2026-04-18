@@ -6,6 +6,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.StreetProperty;
+import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.UiTokens;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import fi.monopoly.types.SpotType;
 
 class PopupLayoutTest {
 
@@ -146,6 +146,13 @@ class PopupLayoutTest {
     }
 
     @Test
+    void propertyOfferPopupUsesSessionPopupKind() {
+        PropertyOfferPopup popup = new PropertyOfferPopup(initHeadlessRuntime(1700, 996));
+
+        assertEquals("propertyOffer", popup.getPopupKind());
+    }
+
+    @Test
     void propertyAuctionPopupKeepsButtonsInsidePropertyPopupLayout() throws ReflectiveOperationException {
         MonopolyRuntime runtime = initHeadlessRuntime(1700, 996);
         PropertyAuctionPopup popup = new PropertyAuctionPopup(runtime);
@@ -163,6 +170,13 @@ class PopupLayoutTest {
         assertTrue(declineButton.getPosition()[0] + declineButton.getWidth() <= popup.getPopupRight());
         assertTrue(acceptButton.getPosition()[1] >= popup.getButtonAreaTop());
         assertTrue(declineButton.getPosition()[1] + declineButton.getHeight() <= popup.getPopupBottom());
+    }
+
+    @Test
+    void propertyAuctionPopupUsesSessionPopupKind() {
+        PropertyAuctionPopup popup = new PropertyAuctionPopup(initHeadlessRuntime(1700, 996));
+
+        assertEquals("propertyAuction", popup.getPopupKind());
     }
 
     @Test

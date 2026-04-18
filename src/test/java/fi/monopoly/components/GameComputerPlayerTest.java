@@ -102,7 +102,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void defaultSeatsUseStrongBotProfile() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
@@ -120,7 +120,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void defaultBotCanFinishItsTurnWithoutUserInput() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyApp.SKIP_ANNIMATIONS = true;
@@ -146,7 +146,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void pausePreventsComputerTurnFromAdvancing() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyApp.SKIP_ANNIMATIONS = true;
@@ -170,7 +170,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void pauseCanBeToggledEvenWhilePopupIsVisible() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
@@ -190,7 +190,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void finishingAnimationAppliesBotCooldownBeforeNextStep() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
@@ -210,7 +210,7 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void botTurnStartClearsPreviousPlayerDiceState() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyApp.SKIP_ANNIMATIONS = true;

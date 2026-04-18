@@ -104,6 +104,20 @@ class AnimationTest {
         assertEquals(1, callback.callCount);
     }
 
+    @Test
+    void finishAnimationOnlyCallsCallbackOnce() {
+        TestDrawable drawable = new TestDrawable(new Coordinates(0, 0));
+        TestAnimationPath path = new TestAnimationPath(List.of(new Coordinates(10, 0)), new Coordinates(7, 7));
+        TestCallbackAction callback = new TestCallbackAction();
+        Animation animation = new Animation(drawable, path, callback);
+
+        animation.finishAnimation();
+        animation.finishAnimation();
+
+        assertEquals(1, callback.callCount);
+        assertEquals(new Coordinates(7, 7, 0), drawable.getCoords());
+    }
+
     private static final class TestCallbackAction implements CallbackAction {
         private int callCount = 0;
 

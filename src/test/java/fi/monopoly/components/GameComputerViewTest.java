@@ -90,11 +90,17 @@ class GameComputerViewTest {
         });
         turnPlayer.releaseAssetsToBank();
         turnPlayer.addMoney(40 - turnPlayer.getMoneyAmount());
-        Method handlePaymentRequest = Game.class.getDeclaredMethod("handlePaymentRequest", PaymentRequest.class, CallbackAction.class);
+        Method handlePaymentRequest = Game.class.getDeclaredMethod(
+                "handlePaymentRequest",
+                PaymentRequest.class,
+                fi.monopoly.domain.session.TurnContinuationState.class,
+                CallbackAction.class
+        );
         handlePaymentRequest.setAccessible(true);
         handlePaymentRequest.invoke(
                 game,
                 new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 250, text("game.debug.reason.railDebt")),
+                null,
                 (CallbackAction) () -> {
                 }
         );

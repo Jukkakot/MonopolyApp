@@ -13,9 +13,7 @@ import processing.core.PImage;
 
 import java.util.List;
 
-import static processing.core.PConstants.CENTER;
-import static processing.core.PConstants.CORNER;
-import static processing.core.PConstants.TOP;
+import static processing.core.PConstants.*;
 
 public class PropertyOfferPopup extends ChoicePopup {
     private static final int CARD_BASE_R = 205;
@@ -37,6 +35,11 @@ public class PropertyOfferPopup extends ChoicePopup {
 
     public Property getOfferedProperty() {
         return offeredProperty;
+    }
+
+    @Override
+    public String getPopupKind() {
+        return "propertyOffer";
     }
 
     @Override

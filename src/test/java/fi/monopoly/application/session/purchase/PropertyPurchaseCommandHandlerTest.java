@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -83,7 +82,7 @@ class PropertyPurchaseCommandHandlerTest {
     }
 
     @Test
-    void buyPropertyCommandRejectsWhenPropertyCannotBeBought() {
+    void buyPropertyCommandStartsAuctionWhenPlayerCannotAffordProperty() {
         Player human = new Player("Human", Color.MEDIUMPURPLE, 10, 1, ComputerPlayerProfile.HUMAN);
         StreetProperty property = new StreetProperty(SpotType.B1);
         var pendingDecisionRef = new AtomicReference<PendingDecision>();
@@ -101,10 +100,11 @@ class PropertyPurchaseCommandHandlerTest {
 
         var result = handler.handle(new BuyPropertyCommand("local-session", "player-" + human.getId(), decision.decisionId(), property.getSpotType().name()));
 
-        assertFalse(result.accepted());
-        assertEquals("PROPERTY_CANNOT_BE_BOUGHT", result.rejections().get(0).code());
+        assertTrue(result.accepted());
         assertNull(property.getOwnerPlayer());
-        assertNotNull(pendingDecisionRef.get());
+        assertNull(pendingDecisionRef.get());
+        assertNotNull(auctionStateRef.get());
+        assertEquals(AuctionStatus.ACTIVE, auctionStateRef.get().status());
     }
 
     @Test

@@ -25,9 +25,11 @@ class CoordinatesTest {
         Coordinates base = new Coordinates(10, 20, 30);
         Coordinates moved = base.move(5, -4, 10);
         Coordinates movedByCoordinates = base.move(new Coordinates(1, 2, 3));
+        Coordinates movedWithoutRotation = base.move(5, -4);
 
         assertEquals(new Coordinates(15, 16, 40), moved);
         assertEquals(new Coordinates(11, 22, 33), movedByCoordinates);
+        assertEquals(new Coordinates(15, 16, 30), movedWithoutRotation);
     }
 
     @Test

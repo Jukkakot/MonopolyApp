@@ -59,16 +59,16 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
         SessionState state = sessionApplicationService.currentState();
         PendingDecision pendingDecision = state.pendingDecision();
         if (pendingDecision == null) {
-            renderedDecisionId = null;
+            clearRenderedDecision();
             return;
         }
         if (!(pendingDecision.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
-            renderedDecisionId = null;
+            clearRenderedDecision();
             return;
         }
         Player actor = playerResolver.apply(pendingDecision.actorPlayerId());
         if (actor == null) {
-            renderedDecisionId = null;
+            clearRenderedDecision();
             return;
         }
         if (Objects.equals(renderedDecisionId, pendingDecision.decisionId())
@@ -76,6 +76,10 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
             return;
         }
         Property property = PropertyFactory.getProperty(SpotType.valueOf(payload.propertyId()));
+        if (property == null) {
+            clearRenderedDecision();
+            return;
+        }
         renderedDecisionId = pendingDecision.decisionId();
         showPropertyOffer(pendingDecision, property);
     }
@@ -106,6 +110,11 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
             return;
         }
         popupService.show(result.rejections().get(0).message());
+    }
+
+    private void clearRenderedDecision() {
+        renderedDecisionId = null;
+        popupService.dismissActivePopup("propertyOffer");
     }
 
     public interface LegacyPropertyPurchaseDecisionSupport {

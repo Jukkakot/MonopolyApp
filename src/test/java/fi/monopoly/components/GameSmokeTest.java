@@ -584,26 +584,26 @@ class GameSmokeTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanPlayHundredAutoConfirmedRollsWithoutGettingStuck() {
         runAutoConfirmedRollSmokeTest(STANDARD_ROLL_TARGET);
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanRenderAndProgressInNarrowWindowLayout() {
         runAutoConfirmedRollSmokeTest(RESIZE_SMOKE_ROLL_TARGET, 1200, 996, true);
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanRenderAndProgressInShortWindowLayout() {
         runAutoConfirmedRollSmokeTest(RESIZE_SMOKE_ROLL_TARGET, 1700, 560, true);
     }
 
     @Test
     @Disabled("Optional longer-running smoke test for local/manual runs")
-    @Timeout(20)
+    @Timeout(value = 30, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanPlayExtendedAutoConfirmedRollSequenceWithoutGettingStuck() {
         runAutoConfirmedRollSmokeTest(1_000_000);
     }

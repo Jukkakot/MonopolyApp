@@ -3,11 +3,17 @@ package fi.monopoly.components.cards;
 import fi.monopoly.types.CardType;
 import fi.monopoly.types.StreetType;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CardsDeckTest {
+
+    @BeforeEach
+    void setUp() {
+        Cards.resetDecks();
+    }
 
     @AfterEach
     void resetDecks() {
