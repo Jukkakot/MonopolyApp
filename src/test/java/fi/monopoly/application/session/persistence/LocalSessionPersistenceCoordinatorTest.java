@@ -79,7 +79,7 @@ class LocalSessionPersistenceCoordinatorTest {
 
         coordinator.loadLocalSession();
 
-        assertTrue(hooks.lastPopupMessage.startsWith("No saved game found at "));
+        assertEquals("No saved game found at " + missingPath.toAbsolutePath(), hooks.lastPopupMessage);
     }
 
     private static SessionState sampleSessionState(String sessionId) {

@@ -42,30 +42,30 @@ public final class LocalSessionPersistenceCoordinator {
         Path snapshotPath = snapshotPathSupplier.get();
         try {
             sessionPersistenceService.save(snapshotPath, sessionState);
-            hooks.showPopup("Saved game to " + snapshotPath.toAbsolutePath());
+            hooks.showPopup(text("game.popup.savedTo", snapshotPath.toAbsolutePath()));
             hooks.showPersistenceNotice(text("game.status.savedAt", formattedCurrentTime()));
             log.info("Saved local session snapshot to {}", snapshotPath.toAbsolutePath());
         } catch (RuntimeException e) {
             log.error("Failed to save local session snapshot to {}", snapshotPath.toAbsolutePath(), e);
-            hooks.showPopup("Failed to save game: " + e.getMessage());
+            hooks.showPopup(text("game.popup.saveFailed", e.getMessage()));
         }
     }
 
     public void loadLocalSession() {
         Path snapshotPath = snapshotPathSupplier.get();
         if (!Files.exists(snapshotPath)) {
-            hooks.showPopup("No saved game found at " + snapshotPath.toAbsolutePath());
+            hooks.showPopup(text("game.popup.noSaveFound", snapshotPath.toAbsolutePath()));
             return;
         }
         try {
             SessionState restoredState = sessionPersistenceService.load(snapshotPath);
             hooks.rebuildGame(restoredState);
-            hooks.showPopup("Loaded game from " + snapshotPath.toAbsolutePath());
+            hooks.showPopup(text("game.popup.loadedFrom", snapshotPath.toAbsolutePath()));
             hooks.showPersistenceNotice(text("game.status.loadedAt", formattedCurrentTime()));
             log.info("Loaded local session snapshot from {}", snapshotPath.toAbsolutePath());
         } catch (RuntimeException e) {
             log.error("Failed to load local session snapshot from {}", snapshotPath.toAbsolutePath(), e);
-            hooks.showPopup("Failed to load game: " + e.getMessage());
+            hooks.showPopup(text("game.popup.loadFailed", e.getMessage()));
         }
     }
 
