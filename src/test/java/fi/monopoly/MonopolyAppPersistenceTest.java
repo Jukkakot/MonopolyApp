@@ -3,6 +3,7 @@ package fi.monopoly;
 import controlP5.ControlP5;
 import fi.monopoly.components.Game;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
+import fi.monopoly.presentation.game.LocalSessionActions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -74,7 +75,7 @@ class MonopolyAppPersistenceTest {
         MonopolyApp.font30 = font;
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
-        Game game = new Game(runtime);
+        Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
         app.setGameForTest(game);
         runtime.eventBus().flushPendingChanges();
 

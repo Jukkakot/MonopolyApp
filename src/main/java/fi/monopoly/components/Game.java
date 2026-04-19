@@ -74,6 +74,7 @@ public class Game implements MonopolyEventListener {
 
     // Core services
     private final MonopolyRuntime runtime;
+    private final LocalSessionActions localSessionActions;
     private final TurnEngine turnEngine = new TurnEngine();
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
@@ -126,11 +127,16 @@ public class Game implements MonopolyEventListener {
     private int persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
 
     public Game(MonopolyRuntime runtime) {
-        this(runtime, null);
+        this(runtime, null, LocalSessionActions.NO_OP_ACTIONS);
     }
 
     public Game(MonopolyRuntime runtime, SessionState restoredSessionState) {
+        this(runtime, restoredSessionState, LocalSessionActions.NO_OP_ACTIONS);
+    }
+
+    public Game(MonopolyRuntime runtime, SessionState restoredSessionState, LocalSessionActions localSessionActions) {
         this.runtime = runtime;
+        this.localSessionActions = localSessionActions;
         this.endRoundButton = new MonopolyButton(runtime, "endRound");
         this.retryDebtButton = new MonopolyButton(runtime, "retryDebt");
         this.declareBankruptcyButton = new MonopolyButton(runtime, "declareBankruptcy");
@@ -364,8 +370,8 @@ public class Game implements MonopolyEventListener {
                         () -> runtime.popupService().isAnyVisible(),
                         endRoundButton::isVisible,
                         this::switchLanguage,
-                        () -> runtime.app().saveLocalSession(),
-                        () -> runtime.app().loadLocalSession()
+                        localSessionActions.saveSession(),
+                        localSessionActions.loadSession()
                 )
         );
     }

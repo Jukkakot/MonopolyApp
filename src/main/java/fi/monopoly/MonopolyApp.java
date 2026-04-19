@@ -6,6 +6,7 @@ import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.event.MonopolyEventObserver;
+import fi.monopoly.presentation.game.LocalSessionActions;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.MonopolyUtils;
 import fi.monopoly.utils.UiTokens;
@@ -274,7 +275,8 @@ public class MonopolyApp extends MonopolyEventObserver {
         p5 = new ControlP5(this);
         MonopolyRuntime.initialize(this, p5, font10, font20, font30);
         applyDefaultTextFont();
-        game = restoredState == null ? new Game(MonopolyRuntime.get()) : new Game(MonopolyRuntime.get(), restoredState);
+        LocalSessionActions localSessionActions = new LocalSessionActions(this::saveLocalSession, this::loadLocalSession);
+        game = new Game(MonopolyRuntime.get(), restoredState, localSessionActions);
     }
 
     private void applyDefaultTextFont() {
