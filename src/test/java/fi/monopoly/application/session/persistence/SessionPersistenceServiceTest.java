@@ -16,11 +16,16 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.persistence.session.LegacySessionRuntimeRestorer;
+import fi.monopoly.persistence.session.SessionSnapshot;
+import fi.monopoly.persistence.session.SessionSnapshotMapper;
+import fi.monopoly.persistence.session.SessionSnapshotStore;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -36,32 +41,31 @@ class SessionPersistenceServiceTest {
     void savesAndLoadsSessionSnapshotAsJson() {
         SessionPersistenceService service = new SessionPersistenceService();
         Path snapshotPath = tempDir.resolve("session.json");
-        SessionState original = new SessionState(
-                "session-1",
-                5L,
-                SessionStatus.IN_PROGRESS,
-                List.of(new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB")),
-                List.of(new PlayerSnapshot("player-1", "seat-1", "Eka", 1350, 11, false, false, false, 0, 1, List.of("B1"))),
-                List.of(new PropertyStateSnapshot("B1", "player-1", false, 2, 0)),
-                new TurnState("player-1", TurnPhase.WAITING_FOR_DECISION, false, false),
-                new PendingDecision(
-                        "decision-1",
-                        DecisionType.PROPERTY_PURCHASE,
-                        "player-1",
-                        List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
-                        "Buy B2?",
-                        new PropertyPurchaseDecisionPayload("B2", "BALTIC AVENUE", 60)
-                ),
-                null,
-                null,
-                null,
-                null
-        );
+        SessionState original = sampleSessionState("session-1");
 
         service.save(snapshotPath, original);
         SessionState restored = service.load(snapshotPath);
 
         assertTrue(java.nio.file.Files.exists(snapshotPath));
+        assertEquals(original, restored);
+    }
+
+    @Test
+    void savesAndLoadsSessionSnapshotThroughAbstractStore() {
+        InMemorySnapshotStore store = new InMemorySnapshotStore();
+        SessionPersistenceService service = new SessionPersistenceService(
+                new SessionSnapshotMapper(),
+                store,
+                new LegacySessionRuntimeRestorer()
+        );
+        Path snapshotPath = tempDir.resolve("abstract-store-session.json");
+        SessionState original = sampleSessionState("session-abstract");
+
+        service.save(snapshotPath, original);
+        SessionState restored = service.load(snapshotPath);
+
+        assertEquals(snapshotPath, store.lastWrittenPath);
+        assertNotNull(store.snapshot);
         assertEquals(original, restored);
     }
 
@@ -100,6 +104,48 @@ class SessionPersistenceServiceTest {
         assertEquals(2, restored.players().count());
         assertEquals("Toka", restored.players().getTurn().getName());
         assertEquals(1350, restored.playersById().get("player-1").getMoneyAmount());
+    }
+
+    private static SessionState sampleSessionState(String sessionId) {
+        return new SessionState(
+                sessionId,
+                5L,
+                SessionStatus.IN_PROGRESS,
+                List.of(new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB")),
+                List.of(new PlayerSnapshot("player-1", "seat-1", "Eka", 1350, 11, false, false, false, 0, 1, List.of("B1"))),
+                List.of(new PropertyStateSnapshot("B1", "player-1", false, 2, 0)),
+                new TurnState("player-1", TurnPhase.WAITING_FOR_DECISION, false, false),
+                new PendingDecision(
+                        "decision-1",
+                        DecisionType.PROPERTY_PURCHASE,
+                        "player-1",
+                        List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
+                        "Buy B2?",
+                        new PropertyPurchaseDecisionPayload("B2", "BALTIC AVENUE", 60)
+                ),
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private static final class InMemorySnapshotStore implements SessionSnapshotStore {
+        private SessionSnapshot snapshot;
+        private Path lastWrittenPath;
+
+        @Override
+        public void write(Path path, SessionSnapshot snapshot) {
+            this.lastWrittenPath = path;
+            this.snapshot = snapshot;
+        }
+
+        @Override
+        public SessionSnapshot read(Path path) {
+            assertEquals(lastWrittenPath, path);
+            assertNotNull(snapshot);
+            return snapshot;
+        }
     }
 
     private static MonopolyRuntime initHeadlessRuntime() {

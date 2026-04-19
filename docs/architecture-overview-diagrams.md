@@ -60,6 +60,11 @@ flowchart LR
         PERSIST[SessionPersistenceService]
     end
 
+    subgraph PersistenceInfra[Persistence Infrastructure]
+        STORE[SessionSnapshotStore]
+        JSON[JsonFileSessionSnapshotStore]
+    end
+
     subgraph Domain[Authoritative State]
         SESSION[SessionState]
         TURN[TurnState / TurnContinuationState]
@@ -88,6 +93,8 @@ flowchart LR
     TRADE --> SESSION
     APP --> TURN
     APP --> SUBSYSTEMS
+    PERSIST --> STORE
+    STORE --> JSON
     PROJECTOR --> APP
     RESTORER --> LEGACY
     LEGACY --> PROJECTOR
@@ -99,6 +106,7 @@ What is important here:
 - authority has moved much more clearly into command/state/application types
 - `Game` is no longer the only place that understands gameplay progression
 - persistence now works against `SessionState`, not only live UI/runtime state
+- snapshot storage has a swap-ready store seam, so local JSON is no longer the only assumed persistence backend
 - there is still a legacy bridge because the Processing client still runs against runtime objects
 
 ## 3. Current Practical Runtime Shape

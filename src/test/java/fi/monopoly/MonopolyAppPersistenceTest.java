@@ -54,6 +54,7 @@ class MonopolyAppPersistenceTest {
     void ctrlSaveAndCtrlLoadRoundTripCurrentLocalSession() {
         Path snapshotPath = tempDir.resolve("local-session.json");
         System.setProperty("monopoly.localSavePath", snapshotPath.toString());
+        fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
 
         MonopolyApp app = new MonopolyApp();
         app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;

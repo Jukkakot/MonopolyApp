@@ -7,13 +7,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public final class JsonSessionStore {
+public final class JsonFileSessionSnapshotStore implements SessionSnapshotStore {
     private final ObjectMapper objectMapper;
 
-    public JsonSessionStore() {
+    public JsonFileSessionSnapshotStore() {
         this.objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     }
 
+    @Override
     public void write(Path path, SessionSnapshot snapshot) {
         try {
             Files.createDirectories(path.toAbsolutePath().getParent());
@@ -23,6 +24,7 @@ public final class JsonSessionStore {
         }
     }
 
+    @Override
     public SessionSnapshot read(Path path) {
         try {
             return objectMapper.readValue(path.toFile(), SessionSnapshot.class);
