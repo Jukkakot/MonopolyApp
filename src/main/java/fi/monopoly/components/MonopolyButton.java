@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.Button;
+import controlP5.CColor;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.popup.ButtonAction;
@@ -8,9 +9,6 @@ import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.MonopolyUtils;
 
 public class MonopolyButton extends Button {
-    private static final int DEFAULT_ENABLED_BACKGROUND = 0xffb4b4b4;
-    private static final int DEFAULT_ENABLED_FOREGROUND = 0xffc8c8c8;
-    private static final int DEFAULT_ENABLED_ACTIVE = 0xffd8d8d8;
     private static final int DISABLED_BACKGROUND = 0xff9f9f9f;
     private static final int DISABLED_FOREGROUND = 0xff9f9f9f;
     private static final int DISABLED_ACTIVE = 0xff9f9f9f;
@@ -31,9 +29,10 @@ public class MonopolyButton extends Button {
         super(runtime.controlP5(), id);
         this.runtime = runtime;
         setFont(runtime.font20());
-        enabledBackgroundColor = DEFAULT_ENABLED_BACKGROUND;
-        enabledForegroundColor = DEFAULT_ENABLED_FOREGROUND;
-        enabledActiveColor = DEFAULT_ENABLED_ACTIVE;
+        CColor defaultColors = getColor();
+        enabledBackgroundColor = defaultColors.getBackground();
+        enabledForegroundColor = defaultColors.getForeground();
+        enabledActiveColor = defaultColors.getActive();
         currentBackgroundColor = enabledBackgroundColor;
         currentForegroundColor = enabledForegroundColor;
         currentActiveColor = enabledActiveColor;

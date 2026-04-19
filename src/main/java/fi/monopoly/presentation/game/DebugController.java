@@ -68,7 +68,7 @@ public final class DebugController {
         if (turnPlayer == null) {
             return;
         }
-        runtime.popupService().show(
+        showDebugMenu(
                 text("game.debug.godMode.title", turnPlayer.getName()),
                 new ButtonProps(text("game.debug.button.controller"), this::openControllerModeMenu),
                 new ButtonProps(text("game.debug.button.money"), this::openMoneyMenu),
@@ -84,7 +84,7 @@ public final class DebugController {
         if (turnPlayer == null) {
             return;
         }
-        runtime.popupService().show(
+        showDebugMenu(
                 text("game.debug.controller.title", turnPlayer.getName(), text(turnPlayer.getComputerProfile().textKey())),
                 new ButtonProps(text("game.debug.controller.human"), () -> setCurrentPlayerController(ComputerPlayerProfile.HUMAN)),
                 new ButtonProps(text("game.debug.controller.smokeTest"), () -> setCurrentPlayerController(ComputerPlayerProfile.SMOKE_TEST)),
@@ -93,7 +93,7 @@ public final class DebugController {
     }
 
     private void openMoneyMenu() {
-        runtime.popupService().show(
+        showDebugMenu(
                 text("game.debug.money.title"),
                 new ButtonProps(text("game.debug.money.add500"), () -> adjustCurrentPlayerMoney(500)),
                 new ButtonProps(text("game.debug.money.minus100"), () -> adjustCurrentPlayerMoney(-100)),
@@ -107,11 +107,11 @@ public final class DebugController {
         ButtonProps[] spotButtons = SpotType.SPOT_TYPES.stream()
                 .map(spotType -> new ButtonProps(spotType.name(), () -> moveCurrentPlayerTo(spotType)))
                 .toArray(ButtonProps[]::new);
-        runtime.popupService().show(text("game.debug.move.title"), spotButtons);
+        showDebugMenu(text("game.debug.move.title"), spotButtons);
     }
 
     private void openDebtMenu() {
-        runtime.popupService().show(
+        showDebugMenu(
                 text("game.debug.debt.title"),
                 new ButtonProps(text("game.debug.debt.50"), () -> startDebtScenario(50)),
                 new ButtonProps(text("game.debug.debt.100"), () -> startDebtScenario(100)),
@@ -122,7 +122,7 @@ public final class DebugController {
     }
 
     private void openJailMenu() {
-        runtime.popupService().show(
+        showDebugMenu(
                 text("game.debug.jail.title"),
                 new ButtonProps(text("game.debug.jail.send"), this::sendCurrentPlayerToJail),
                 new ButtonProps(text("game.debug.jail.oneRound"), () -> setCurrentPlayerJailRounds(1)),
@@ -132,7 +132,7 @@ public final class DebugController {
     }
 
     private void openScenarioMenu() {
-        runtime.popupService().show(
+        showDebugMenu(
                 text("game.debug.scenario.title"),
                 new ButtonProps(text("game.debug.scenario.brownMonopoly"), this::giveBrownMonopoly),
                 new ButtonProps(text("game.debug.scenario.brownDebt"), this::setupBrownDebtScenario),
@@ -156,7 +156,7 @@ public final class DebugController {
             return;
         }
         turnPlayer.addMoney(targetMoney - turnPlayer.getMoneyAmount());
-        runtime.popupService().show(text("game.debug.money.nowHas", turnPlayer.getName(), turnPlayer.getMoneyAmount()));
+        showDebugInfo(text("game.debug.money.nowHas", turnPlayer.getName(), turnPlayer.getMoneyAmount()));
     }
 
     private void setCurrentPlayerController(ComputerPlayerProfile profile) {
@@ -165,7 +165,7 @@ public final class DebugController {
             return;
         }
         turnPlayer.setComputerProfile(profile);
-        runtime.popupService().show(
+        showDebugInfo(
                 text("game.debug.controller.changed", turnPlayer.getName(), text(profile.textKey()))
         );
     }
@@ -181,7 +181,7 @@ public final class DebugController {
         }
         turnPlayer.setSpot(targetSpot);
         turnPlayer.setCoords(targetSpot.getTokenCoords(turnPlayer));
-        runtime.popupService().show(text("game.debug.move.moved", turnPlayer.getName(), spotType.name()));
+        showDebugInfo(text("game.debug.move.moved", turnPlayer.getName(), spotType.name()));
     }
 
     private void startDebtScenario(int amount) {
@@ -205,7 +205,7 @@ public final class DebugController {
         JailSpot.jailTimeLeftMap.put(turnPlayer, roundsLeft);
         turnPlayer.setSpot(jailSpot);
         turnPlayer.setCoords(jailSpot.getTokenCoords(turnPlayer));
-        runtime.popupService().show(text("game.debug.jail.rounds", turnPlayer.getName(), roundsLeft));
+        showDebugInfo(text("game.debug.jail.rounds", turnPlayer.getName(), roundsLeft));
     }
 
     private void releaseCurrentPlayerFromJail() {
@@ -214,7 +214,7 @@ public final class DebugController {
             return;
         }
         JailSpot.jailTimeLeftMap.remove(turnPlayer);
-        runtime.popupService().show(text("game.debug.jail.released", turnPlayer.getName()));
+        showDebugInfo(text("game.debug.jail.released", turnPlayer.getName()));
     }
 
     private void giveBrownMonopoly() {
@@ -224,7 +224,7 @@ public final class DebugController {
         }
         assignProperty(turnPlayer, SpotType.B1);
         assignProperty(turnPlayer, SpotType.B2);
-        runtime.popupService().show(text("game.debug.scenario.brownOwned", turnPlayer.getName()));
+        showDebugInfo(text("game.debug.scenario.brownOwned", turnPlayer.getName()));
     }
 
     private void setupBrownDebtScenario() {
@@ -278,6 +278,14 @@ public final class DebugController {
         JailSpot.jailTimeLeftMap.put(turnPlayer, JailSpot.JAIL_ROUND_NUMBER);
         turnPlayer.setSpot(jailSpot);
         turnPlayer.setCoords(jailSpot.getTokenCoords(turnPlayer));
-        runtime.popupService().show(text("game.debug.sentToJail", turnPlayer.getName()));
+        showDebugInfo(text("game.debug.sentToJail", turnPlayer.getName()));
+    }
+
+    private void showDebugMenu(String title, ButtonProps... buttons) {
+        runtime.popupService().showManualDecision(title, buttons);
+    }
+
+    private void showDebugInfo(String message) {
+        runtime.popupService().showManualDecision(message);
     }
 }

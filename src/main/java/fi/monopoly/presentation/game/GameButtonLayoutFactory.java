@@ -27,6 +27,7 @@ public final class GameButtonLayoutFactory {
         buttons.debugGodModeButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), defaultLayout.sidebarDebugButtonRow1Y());
         buttons.debugGodModeButton().setSize(300, 36);
         buttons.debugGodModeButton().setAutoWidth(180, 28, 300);
+        buttons.debugGodModeButton().setAllowedDuringComputerTurn(true);
 
         buttons.pauseButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 96);
         buttons.pauseButton().setSize(140, 36);

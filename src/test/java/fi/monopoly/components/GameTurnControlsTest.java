@@ -689,6 +689,44 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void enabledButtonKeepsNormalColorsWhenInteractionIsAllowed() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        refreshButtonInteractivityState(game);
+
+        MonopolyButton pauseButton = getPauseButton(game);
+        assertNotEquals(0xff9f9f9f, pauseButton.currentBackgroundColor());
+        assertNotEquals(0xff9f9f9f, pauseButton.currentForegroundColor());
+        assertNotEquals(0xff9f9f9f, pauseButton.currentActiveColor());
+    }
+
+    @Test
+    void godModeMenusRemainUsableDuringBotTurnWithoutGlobalDebugOverride() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Player bot = game.players().switchTurn();
+        assertTrue(bot.isComputerControlled());
+
+        openGodModeMenu(game);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        runtime.eventBus().flushPendingChanges();
+        dispatchKey(runtime, '2');
+        runtime.eventBus().flushPendingChanges();
+
+        assertEquals(ComputerPlayerProfile.SMOKE_TEST, bot.getComputerProfile());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Smoke"));
+    }
+
+    @Test
     void botTurnPopupTextUsesPlayerNameInsteadOfSecondPerson() throws ReflectiveOperationException {
         resetNextPlayerId();
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
