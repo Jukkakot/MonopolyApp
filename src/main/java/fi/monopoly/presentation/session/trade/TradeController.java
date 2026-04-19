@@ -1,4 +1,4 @@
-package fi.monopoly.components.trade;
+package fi.monopoly.presentation.session.trade;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.command.*;
@@ -9,12 +9,16 @@ import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.ButtonAction;
+import fi.monopoly.components.trade.BotTradeProfile;
+import fi.monopoly.components.trade.StrongTradePlanner;
+import fi.monopoly.components.trade.TradeDecision;
+import fi.monopoly.components.trade.TradeOfferEvaluator;
+import fi.monopoly.components.trade.TradeUiBuilder;
 import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeSelectionState;
 import fi.monopoly.domain.session.TradeState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
-import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -25,6 +29,13 @@ import java.util.function.Supplier;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+/**
+ * Desktop-side trade interaction coordinator for the authoritative session model.
+ *
+ * <p>The controller translates menu opens, popup actions, and bot trade responses into
+ * session commands while reusing legacy trade evaluation helpers until that logic is
+ * migrated behind pure application/domain ports.</p>
+ */
 public final class TradeController {
     private static final StrongBotConfig STRONG_CONFIG = StrongBotConfig.defaults();
 

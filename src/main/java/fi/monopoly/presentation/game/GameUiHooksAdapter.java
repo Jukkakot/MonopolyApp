@@ -7,7 +7,7 @@ import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.spots.Spot;
-import fi.monopoly.components.trade.TradeController;
+import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.DiceState;
 import lombok.extern.slf4j.Slf4j;

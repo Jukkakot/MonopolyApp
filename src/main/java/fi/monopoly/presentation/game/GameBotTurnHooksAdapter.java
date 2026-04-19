@@ -7,7 +7,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
-import fi.monopoly.components.trade.TradeController;
+import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.utils.DebugPerformanceStats;
 
