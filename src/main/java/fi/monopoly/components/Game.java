@@ -18,17 +18,12 @@ import fi.monopoly.components.payment.*;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
-import fi.monopoly.components.trade.TradeOfferEvaluator;
-import fi.monopoly.components.trade.TradeUiBuilder;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.*;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
-import fi.monopoly.presentation.legacy.session.LegacySessionApplicationFactory;
-import fi.monopoly.presentation.legacy.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
-import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import fi.monopoly.text.UiTexts;
@@ -161,19 +156,20 @@ public class Game implements MonopolyEventListener {
         setupButtons();
         setupRuntimeDependencies(restoredSessionState);
         setupControllers();
-        this.sessionApplicationService = createSessionApplicationFactory().create(
-                runtime.popupService(),
-                debtController,
+        GameSessionBridgeFactory.GameSessionBridge sessionBridge = new GameSessionBridgeFactory(runtime).create(
+                LOCAL_SESSION_ID,
+                players,
                 dices,
-                () -> endRound(true)
+                debtController,
+                createGameSessionBridgeHooks()
         );
-        this.debtActionDispatcher = createDebtActionDispatcher();
-        this.auctionViewAdapter = createAuctionViewAdapter();
-        LegacyTradeGateway legacyTradeGateway = createLegacyTradeGateway();
-        this.tradeViewAdapter = createTradeViewAdapter(legacyTradeGateway);
-        this.pendingDecisionPopupAdapter = createPropertyPurchaseFlow();
+        this.sessionApplicationService = sessionBridge.sessionApplicationService();
+        this.debtActionDispatcher = sessionBridge.debtActionDispatcher();
+        this.auctionViewAdapter = sessionBridge.auctionViewAdapter();
+        this.tradeViewAdapter = sessionBridge.tradeViewAdapter();
+        this.pendingDecisionPopupAdapter = sessionBridge.pendingDecisionPopupAdapter();
         this.propertyPurchaseFlow = pendingDecisionPopupAdapter;
-        this.tradeController = createTradeController(legacyTradeGateway);
+        this.tradeController = sessionBridge.tradeController();
         this.sessionViewFacade = createSessionViewFacade();
         applyRestoredSessionState(restoredSessionState);
         registerGameSession();
@@ -188,75 +184,63 @@ public class Game implements MonopolyEventListener {
         }
     }
 
-    private LegacySessionApplicationFactory createSessionApplicationFactory() {
-        return new LegacySessionApplicationFactory(
-                LOCAL_SESSION_ID,
-                () -> players,
-                () -> LegacyPopupSnapshot.fromPopupService(runtime.popupService()),
-                () -> debtController != null ? debtController.debtState() : null,
-                () -> paused,
-                () -> gameOver,
-                () -> winner,
-                this::isProjectedRollDiceActionAvailable,
-                this::isProjectedEndTurnActionAvailable
-        );
-    }
+    private GameSessionBridgeFactory.Hooks createGameSessionBridgeHooks() {
+        return new GameSessionBridgeFactory.Hooks() {
+            @Override
+            public boolean paused() {
+                return paused;
+            }
 
-    private DebtActionDispatcher createDebtActionDispatcher() {
-        return new DebtActionDispatcher(
-                LOCAL_SESSION_ID,
-                sessionApplicationService,
-                runtime.popupService(),
-                () -> players != null ? players.getTurn() : null
-        );
-    }
+            @Override
+            public boolean gameOver() {
+                return gameOver;
+            }
 
-    private AuctionViewAdapter createAuctionViewAdapter() {
-        return new AuctionViewAdapter(
-                LOCAL_SESSION_ID,
-                sessionApplicationService,
-                runtime.popupService(),
-                players
-        );
-    }
+            @Override
+            public Player winner() {
+                return winner;
+            }
 
-    private LegacyTradeGateway createLegacyTradeGateway() {
-        return new LegacyTradeGateway(() -> players != null ? players.getPlayers() : List.of());
-    }
+            @Override
+            public boolean projectedRollDiceActionAvailable() {
+                return Game.this.isProjectedRollDiceActionAvailable();
+            }
 
-    private TradeViewAdapter createTradeViewAdapter(LegacyTradeGateway legacyTradeGateway) {
-        return new TradeViewAdapter(
-                LOCAL_SESSION_ID,
-                sessionApplicationService,
-                runtime.popupService(),
-                legacyTradeGateway,
-                new TradeUiBuilder(new TradeOfferEvaluator()),
-                () -> players != null && players.getTurn() != null && players.getTurn().isComputerControlled()
-        );
-    }
+            @Override
+            public boolean projectedEndTurnActionAvailable() {
+                return Game.this.isProjectedEndTurnActionAvailable();
+            }
 
-    private PendingDecisionPopupAdapter createPropertyPurchaseFlow() {
-        return new PendingDecisionPopupAdapter(
-                LOCAL_SESSION_ID,
-                sessionApplicationService,
-                runtime.popupService(),
-                sessionApplicationService::openPropertyPurchaseDecision,
-                auctionViewAdapter::sync,
-                this::playerById
-        );
-    }
+            @Override
+            public void endTurn() {
+                Game.this.endRound(true);
+            }
 
-    private TradeController createTradeController(LegacyTradeGateway legacyTradeGateway) {
-        return new TradeController(
-                runtime,
-                LOCAL_SESSION_ID,
-                sessionApplicationService,
-                tradeViewAdapter,
-                legacyTradeGateway,
-                () -> !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null,
-                () -> players != null ? players.getTurn() : null,
-                () -> players != null ? players.getPlayers() : List.of()
-        );
+            @Override
+            public Player playerById(String playerId) {
+                return Game.this.playerById(playerId);
+            }
+
+            @Override
+            public boolean computerTurn() {
+                return players != null && players.getTurn() != null && players.getTurn().isComputerControlled();
+            }
+
+            @Override
+            public boolean canOpenTrade() {
+                return !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null;
+            }
+
+            @Override
+            public Player currentTurnPlayer() {
+                return players != null ? players.getTurn() : null;
+            }
+
+            @Override
+            public List<Player> players() {
+                return players != null ? players.getPlayers() : List.of();
+            }
+        };
     }
 
     private SessionViewFacade createSessionViewFacade() {
