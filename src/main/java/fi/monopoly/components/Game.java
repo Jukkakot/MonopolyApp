@@ -26,6 +26,7 @@ import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.*;
+import fi.monopoly.presentation.game.DebugController;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;

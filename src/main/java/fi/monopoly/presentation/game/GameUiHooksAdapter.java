@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game;
 
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.components.DebugController;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;

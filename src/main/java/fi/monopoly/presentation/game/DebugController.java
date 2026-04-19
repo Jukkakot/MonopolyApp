@@ -1,6 +1,8 @@
-package fi.monopoly.components;
+package fi.monopoly.presentation.game;
 
 import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.components.CallbackAction;
+import fi.monopoly.components.Player;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.PaymentRequest;

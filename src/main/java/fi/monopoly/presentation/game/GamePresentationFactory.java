@@ -171,7 +171,7 @@ public final class GamePresentationFactory {
             fi.monopoly.application.session.purchase.PropertyPurchaseFlow propertyPurchaseFlow,
             DebtActionDispatcher debtActionDispatcher,
             DebtController debtController,
-            fi.monopoly.components.DebugController debugController,
+            DebugController debugController,
             AuctionViewAdapter auctionViewAdapter,
             TradeViewAdapter tradeViewAdapter,
             TradeController tradeController,
