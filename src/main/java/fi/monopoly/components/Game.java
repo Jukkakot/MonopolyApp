@@ -86,6 +86,7 @@ public class Game implements MonopolyEventListener {
     private final TurnEngine turnEngine = new TurnEngine();
     private final GameSessionStateCoordinator gameSessionStateCoordinator = new GameSessionStateCoordinator();
     private final GameBotTurnControlCoordinator gameBotTurnControlCoordinator = new GameBotTurnControlCoordinator();
+    private final GameDesktopAssemblyFactory gameDesktopAssemblyFactory = new GameDesktopAssemblyFactory();
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
     private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
@@ -167,37 +168,11 @@ public class Game implements MonopolyEventListener {
                         languageButton
                 )
         );
-        GameRuntimeAssemblyFactory.GameRuntimeAssembly runtimeAssembly = new GameRuntimeAssemblyFactory().create(
+        GameDesktopAssemblyFactory.GameDesktopAssembly desktopAssembly = gameDesktopAssemblyFactory.create(
                 runtime,
                 restoredSessionState,
-                createGameRuntimeAssemblyHooks()
-        );
-        this.board = runtimeAssembly.board();
-        this.players = runtimeAssembly.players();
-        this.dices = runtimeAssembly.dices();
-        this.animations = runtimeAssembly.animations();
-        this.debtController = runtimeAssembly.debtController();
-        this.debugController = runtimeAssembly.debugController();
-        GameSessionBridgeFactory.GameSessionBridge sessionBridge = new GameSessionBridgeFactory(runtime).create(
                 LOCAL_SESSION_ID,
-                players,
-                dices,
-                debtController,
-                createGameSessionBridgeHooks()
-        );
-        this.sessionApplicationService = sessionBridge.sessionApplicationService();
-        this.debtActionDispatcher = sessionBridge.debtActionDispatcher();
-        this.auctionViewAdapter = sessionBridge.auctionViewAdapter();
-        this.tradeViewAdapter = sessionBridge.tradeViewAdapter();
-        this.pendingDecisionPopupAdapter = sessionBridge.pendingDecisionPopupAdapter();
-        this.propertyPurchaseFlow = pendingDecisionPopupAdapter;
-        this.tradeController = sessionBridge.tradeController();
-        this.sessionViewFacade = createSessionViewFacade();
-        applyRestoredSessionState(restoredSessionState);
-        new GameRuntimeAssemblyFactory().registerGameSession(runtime, runtimeAssembly, debtActionDispatcher, createGameRuntimeAssemblyHooks());
-        GamePresentationFactory.GamePresentationBundle presentationBundle = new GamePresentationFactory().create(
-                runtime,
-                new GamePresentationFactory.Buttons(
+                new GameButtonLayoutFactory.Buttons(
                         endRoundButton,
                         retryDebtButton,
                         declareBankruptcyButton,
@@ -209,32 +184,34 @@ public class Game implements MonopolyEventListener {
                         botSpeedButton,
                         languageButton
                 ),
-                new GamePresentationFactory.Dependencies(
-                        players,
-                        dices,
-                        board,
-                        animations,
-                        turnEngine,
-                        sessionApplicationService,
-                        pendingDecisionPopupAdapter,
-                        propertyPurchaseFlow,
-                        debtActionDispatcher,
-                        debtController,
-                        debugController,
-                        auctionViewAdapter,
-                        tradeViewAdapter,
-                        tradeController,
-                        debugPerformanceStats
-                ),
-                createGamePresentationHooks()
+                turnEngine,
+                createGameRuntimeAssemblyHooks(),
+                createGameSessionBridgeHooks(),
+                createGamePresentationHooks(),
+                debugPerformanceStats
         );
-        this.gameControlLayout = presentationBundle.gameControlLayout();
-        this.gamePrimaryTurnControls = presentationBundle.gamePrimaryTurnControls();
-        this.gameSessionQueries = presentationBundle.gameSessionQueries();
-        this.gameTurnFlowCoordinator = presentationBundle.gameTurnFlowCoordinator();
-        this.gameUiController = presentationBundle.gameUiController();
-        this.gamePresentationSupport = presentationBundle.gamePresentationSupport();
-        this.gameBotTurnHooks = presentationBundle.gameBotTurnHooks();
+        this.board = desktopAssembly.board();
+        this.players = desktopAssembly.players();
+        this.dices = desktopAssembly.dices();
+        this.animations = desktopAssembly.animations();
+        this.debtController = desktopAssembly.debtController();
+        this.debugController = desktopAssembly.debugController();
+        this.sessionApplicationService = desktopAssembly.sessionApplicationService();
+        this.debtActionDispatcher = desktopAssembly.debtActionDispatcher();
+        this.auctionViewAdapter = desktopAssembly.auctionViewAdapter();
+        this.tradeViewAdapter = desktopAssembly.tradeViewAdapter();
+        this.pendingDecisionPopupAdapter = desktopAssembly.pendingDecisionPopupAdapter();
+        this.propertyPurchaseFlow = desktopAssembly.propertyPurchaseFlow();
+        this.tradeController = desktopAssembly.tradeController();
+        this.sessionViewFacade = createSessionViewFacade();
+        applyRestoredSessionState(restoredSessionState);
+        this.gameControlLayout = desktopAssembly.gameControlLayout();
+        this.gamePrimaryTurnControls = desktopAssembly.gamePrimaryTurnControls();
+        this.gameSessionQueries = desktopAssembly.gameSessionQueries();
+        this.gameTurnFlowCoordinator = desktopAssembly.gameTurnFlowCoordinator();
+        this.gameUiController = desktopAssembly.gameUiController();
+        this.gamePresentationSupport = desktopAssembly.gamePresentationSupport();
+        this.gameBotTurnHooks = desktopAssembly.gameBotTurnHooks();
         initializeSessionPresentation(restoredSessionState);
         setupButtonActions();
 
