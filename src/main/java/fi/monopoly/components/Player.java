@@ -13,7 +13,6 @@ import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.MonopolyUtils;
 import javafx.scene.paint.Color;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +38,7 @@ public class Player extends PlayerToken {
     @Getter
     private int turnNumber;
     @Getter
-    private final ComputerPlayerProfile computerProfile;
+    private ComputerPlayerProfile computerProfile;
     @Getter
     private int getOutOfJailCardCount = 0;
     private final Deque<StreetType> getOutOfJailCardSources = new LinkedList<>();
@@ -359,6 +358,15 @@ public class Player extends PlayerToken {
 
     public boolean isComputerControlled() {
         return computerProfile.isComputerControlled();
+    }
+
+    public void setComputerProfile(ComputerPlayerProfile computerProfile) {
+        if (computerProfile == null || this.computerProfile == computerProfile) {
+            return;
+        }
+        log.info("Player controller profile changed: player={}, from={}, to={}",
+                getName(), this.computerProfile, computerProfile);
+        this.computerProfile = computerProfile;
     }
 
     private static void syncNextId(int candidateNextId) {

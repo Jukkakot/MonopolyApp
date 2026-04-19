@@ -117,6 +117,16 @@ class GameTurnControlsTest {
         return getButton(game, "debugGodModeButton");
     }
 
+    private static fi.monopoly.presentation.game.DebugController getDebugController(Game game) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField("debugController");
+        field.setAccessible(true);
+        return (fi.monopoly.presentation.game.DebugController) field.get(game);
+    }
+
+    private static void openGodModeMenu(Game game) throws ReflectiveOperationException {
+        getDebugController(game).openGodModeMenu();
+    }
+
     @SuppressWarnings("unchecked")
     private static Pair<Dice, Dice> getDicePair(Dices dices) throws ReflectiveOperationException {
         Field field = Dices.class.getDeclaredField("dices");
@@ -228,6 +238,33 @@ class GameTurnControlsTest {
         assertEquals(2, runtime.popupService().recentPopupMessages().size());
         assertTrue(runtime.popupService().recentPopupMessages().get(0).endsWith("Second popup"));
         assertTrue(runtime.popupService().recentPopupMessages().get(1).endsWith("First popup"));
+    }
+
+    @Test
+    void godModeControllerMenuCanSwitchCurrentPlayerBetweenHumanSmokeTestAndStrong() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Player turnPlayer = game.players().getTurn();
+        assertNotNull(turnPlayer);
+        assertEquals(ComputerPlayerProfile.STRONG, turnPlayer.getComputerProfile());
+
+        openGodModeMenu(game);
+        assertTrue(runtime.popupService().triggerPrimaryComputerAction());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Strong"));
+        assertTrue(runtime.popupService().triggerPrimaryComputerAction());
+        assertEquals(ComputerPlayerProfile.HUMAN, turnPlayer.getComputerProfile());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Human"));
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+
+        openGodModeMenu(game);
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        dispatchKey(runtime, '2');
+        runtime.eventBus().flushPendingChanges();
+        assertEquals(ComputerPlayerProfile.SMOKE_TEST, turnPlayer.getComputerProfile());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Smoke"));
     }
 
     @Test

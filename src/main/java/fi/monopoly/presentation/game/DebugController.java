@@ -4,6 +4,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.board.Board;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.components.ButtonProps;
@@ -69,11 +70,25 @@ public final class DebugController {
         }
         runtime.popupService().show(
                 text("game.debug.godMode.title", turnPlayer.getName()),
+                new ButtonProps(text("game.debug.button.controller"), this::openControllerModeMenu),
                 new ButtonProps(text("game.debug.button.money"), this::openMoneyMenu),
                 new ButtonProps(text("game.debug.button.move"), this::openMoveMenu),
                 new ButtonProps(text("game.debug.button.debt"), this::openDebtMenu),
                 new ButtonProps(text("game.debug.button.jail"), this::openJailMenu),
                 new ButtonProps(text("game.debug.button.scenarios"), this::openScenarioMenu)
+        );
+    }
+
+    private void openControllerModeMenu() {
+        Player turnPlayer = currentPlayerSupplier.get();
+        if (turnPlayer == null) {
+            return;
+        }
+        runtime.popupService().show(
+                text("game.debug.controller.title", turnPlayer.getName(), text(turnPlayer.getComputerProfile().textKey())),
+                new ButtonProps(text("game.debug.controller.human"), () -> setCurrentPlayerController(ComputerPlayerProfile.HUMAN)),
+                new ButtonProps(text("game.debug.controller.smokeTest"), () -> setCurrentPlayerController(ComputerPlayerProfile.SMOKE_TEST)),
+                new ButtonProps(text("game.debug.controller.strong"), () -> setCurrentPlayerController(ComputerPlayerProfile.STRONG))
         );
     }
 
@@ -142,6 +157,17 @@ public final class DebugController {
         }
         turnPlayer.addMoney(targetMoney - turnPlayer.getMoneyAmount());
         runtime.popupService().show(text("game.debug.money.nowHas", turnPlayer.getName(), turnPlayer.getMoneyAmount()));
+    }
+
+    private void setCurrentPlayerController(ComputerPlayerProfile profile) {
+        Player turnPlayer = currentPlayerSupplier.get();
+        if (turnPlayer == null) {
+            return;
+        }
+        turnPlayer.setComputerProfile(profile);
+        runtime.popupService().show(
+                text("game.debug.controller.changed", turnPlayer.getName(), text(profile.textKey()))
+        );
     }
 
     private void moveCurrentPlayerTo(SpotType spotType) {
