@@ -1,5 +1,6 @@
 package fi.monopoly.application.session.persistence;
 
+import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.domain.session.SessionState;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,70 +16,73 @@ public final class LocalSessionPersistenceCoordinator {
     private final SessionPersistenceService sessionPersistenceService;
     private final LocalSessionPathProvider localSessionPathProvider;
     private final Supplier<LocalTime> nowSupplier;
-    private final Hooks hooks;
+    private final SessionHost sessionHost;
+    private final LocalSessionPersistenceUiHooks uiHooks;
 
-    public LocalSessionPersistenceCoordinator(SessionPersistenceService sessionPersistenceService, Hooks hooks) {
-        this(sessionPersistenceService, new SystemPropertyLocalSessionPathProvider(), LocalTime::now, hooks);
+    public LocalSessionPersistenceCoordinator(
+            SessionPersistenceService sessionPersistenceService,
+            SessionHost sessionHost,
+            LocalSessionPersistenceUiHooks uiHooks
+    ) {
+        this(
+                sessionPersistenceService,
+                new SystemPropertyLocalSessionPathProvider(),
+                LocalTime::now,
+                sessionHost,
+                uiHooks
+        );
     }
 
     LocalSessionPersistenceCoordinator(
             SessionPersistenceService sessionPersistenceService,
             LocalSessionPathProvider localSessionPathProvider,
             Supplier<LocalTime> nowSupplier,
-            Hooks hooks
+            SessionHost sessionHost,
+            LocalSessionPersistenceUiHooks uiHooks
     ) {
         this.sessionPersistenceService = sessionPersistenceService;
         this.localSessionPathProvider = localSessionPathProvider;
         this.nowSupplier = nowSupplier;
-        this.hooks = hooks;
+        this.sessionHost = sessionHost;
+        this.uiHooks = uiHooks;
     }
 
     public void saveLocalSession() {
-        SessionState sessionState = hooks.currentSessionState();
+        SessionState sessionState = sessionHost.currentState();
         if (sessionState == null) {
             return;
         }
         Path snapshotPath = localSessionPathProvider.resolvePath();
         try {
             sessionPersistenceService.save(snapshotPath, sessionState);
-            hooks.showPopup(text("game.popup.savedTo", snapshotPath.toAbsolutePath()));
-            hooks.showPersistenceNotice(text("game.status.savedAt", formattedCurrentTime()));
+            uiHooks.showPopup(text("game.popup.savedTo", snapshotPath.toAbsolutePath()));
+            uiHooks.showPersistenceNotice(text("game.status.savedAt", formattedCurrentTime()));
             log.info("Saved local session snapshot to {}", snapshotPath.toAbsolutePath());
         } catch (RuntimeException e) {
             log.error("Failed to save local session snapshot to {}", snapshotPath.toAbsolutePath(), e);
-            hooks.showPopup(text("game.popup.saveFailed", e.getMessage()));
+            uiHooks.showPopup(text("game.popup.saveFailed", e.getMessage()));
         }
     }
 
     public void loadLocalSession() {
         Path snapshotPath = localSessionPathProvider.resolvePath();
         if (!sessionPersistenceService.exists(snapshotPath)) {
-            hooks.showPopup(text("game.popup.noSaveFound", snapshotPath.toAbsolutePath()));
+            uiHooks.showPopup(text("game.popup.noSaveFound", snapshotPath.toAbsolutePath()));
             return;
         }
         try {
             SessionState restoredState = sessionPersistenceService.load(snapshotPath);
-            hooks.rebuildGame(restoredState);
-            hooks.showPopup(text("game.popup.loadedFrom", snapshotPath.toAbsolutePath()));
-            hooks.showPersistenceNotice(text("game.status.loadedAt", formattedCurrentTime()));
+            sessionHost.replaceState(restoredState);
+            uiHooks.showPopup(text("game.popup.loadedFrom", snapshotPath.toAbsolutePath()));
+            uiHooks.showPersistenceNotice(text("game.status.loadedAt", formattedCurrentTime()));
             log.info("Loaded local session snapshot from {}", snapshotPath.toAbsolutePath());
         } catch (RuntimeException e) {
             log.error("Failed to load local session snapshot from {}", snapshotPath.toAbsolutePath(), e);
-            hooks.showPopup(text("game.popup.loadFailed", e.getMessage()));
+            uiHooks.showPopup(text("game.popup.loadFailed", e.getMessage()));
         }
     }
 
     private String formattedCurrentTime() {
         return nowSupplier.get().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-    }
-
-    public interface Hooks {
-        SessionState currentSessionState();
-
-        void rebuildGame(SessionState restoredState);
-
-        void showPopup(String message);
-
-        void showPersistenceNotice(String message);
     }
 }

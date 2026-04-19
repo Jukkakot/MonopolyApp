@@ -1,5 +1,6 @@
 package fi.monopoly.application.session.persistence;
 
+import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
@@ -38,7 +39,8 @@ class LocalSessionPersistenceCoordinatorTest {
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
         Path snapshotPath = tempDir.resolve("local-session.json");
         SessionState original = sampleSessionState("session-local");
-        RecordingHooks hooks = new RecordingHooks(original);
+        RecordingSessionHost sessionHost = new RecordingSessionHost(original);
+        RecordingUiHooks uiHooks = new RecordingUiHooks();
         LocalSessionPersistenceCoordinator coordinator = new LocalSessionPersistenceCoordinator(
                 new SessionPersistenceService(
                         new SessionSnapshotMapper(),
@@ -47,37 +49,40 @@ class LocalSessionPersistenceCoordinatorTest {
                 ),
                 () -> snapshotPath,
                 () -> LocalTime.of(9, 30, 15),
-                hooks
+                sessionHost,
+                uiHooks
         );
 
         coordinator.saveLocalSession();
-        assertEquals("Saved game to " + snapshotPath.toAbsolutePath(), hooks.lastPopupMessage);
-        assertEquals("Saved 09:30:15", hooks.lastPersistenceNotice);
+        assertEquals("Saved game to " + snapshotPath.toAbsolutePath(), uiHooks.lastPopupMessage);
+        assertEquals("Saved 09:30:15", uiHooks.lastPersistenceNotice);
 
-        hooks.currentSessionState = sampleSessionState("mutated");
+        sessionHost.currentSessionState = sampleSessionState("mutated");
         coordinator.loadLocalSession();
 
-        assertNotNull(hooks.rebuiltSessionState);
-        assertEquals(original, hooks.rebuiltSessionState);
-        assertEquals("Loaded game from " + snapshotPath.toAbsolutePath(), hooks.lastPopupMessage);
-        assertEquals("Loaded 09:30:15", hooks.lastPersistenceNotice);
+        assertNotNull(sessionHost.rebuiltSessionState);
+        assertEquals(original, sessionHost.rebuiltSessionState);
+        assertEquals("Loaded game from " + snapshotPath.toAbsolutePath(), uiHooks.lastPopupMessage);
+        assertEquals("Loaded 09:30:15", uiHooks.lastPersistenceNotice);
     }
 
     @Test
     void loadWithoutExistingSnapshotShowsInformationalPopup() {
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
         Path missingPath = tempDir.resolve("missing-session.json");
-        RecordingHooks hooks = new RecordingHooks(sampleSessionState("session-local"));
+        RecordingSessionHost sessionHost = new RecordingSessionHost(sampleSessionState("session-local"));
+        RecordingUiHooks uiHooks = new RecordingUiHooks();
         LocalSessionPersistenceCoordinator coordinator = new LocalSessionPersistenceCoordinator(
                 new SessionPersistenceService(),
                 () -> missingPath,
                 () -> LocalTime.of(9, 30, 15),
-                hooks
+                sessionHost,
+                uiHooks
         );
 
         coordinator.loadLocalSession();
 
-        assertEquals("No saved game found at " + missingPath.toAbsolutePath(), hooks.lastPopupMessage);
+        assertEquals("No saved game found at " + missingPath.toAbsolutePath(), uiHooks.lastPopupMessage);
     }
 
     private static SessionState sampleSessionState(String sessionId) {
@@ -104,25 +109,28 @@ class LocalSessionPersistenceCoordinatorTest {
         );
     }
 
-    private static final class RecordingHooks implements LocalSessionPersistenceCoordinator.Hooks {
+    private static final class RecordingSessionHost implements SessionHost {
         private SessionState currentSessionState;
         private SessionState rebuiltSessionState;
-        private String lastPopupMessage;
-        private String lastPersistenceNotice;
 
-        private RecordingHooks(SessionState currentSessionState) {
+        private RecordingSessionHost(SessionState currentSessionState) {
             this.currentSessionState = currentSessionState;
         }
 
         @Override
-        public SessionState currentSessionState() {
+        public SessionState currentState() {
             return currentSessionState;
         }
 
         @Override
-        public void rebuildGame(SessionState restoredState) {
+        public void replaceState(SessionState restoredState) {
             this.rebuiltSessionState = restoredState;
         }
+    }
+
+    private static final class RecordingUiHooks implements LocalSessionPersistenceUiHooks {
+        private String lastPopupMessage;
+        private String lastPersistenceNotice;
 
         @Override
         public void showPopup(String message) {

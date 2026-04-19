@@ -1,7 +1,9 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
+import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceCoordinator;
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceUiHooks;
 import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
@@ -49,30 +51,32 @@ public class MonopolyApp extends MonopolyEventObserver {
     private static long coloredImageCopies;
     private Game game;
     private final SessionPersistenceService sessionPersistenceService = new SessionPersistenceService();
+    private final SessionHost sessionHost = new SessionHost() {
+        @Override
+        public fi.monopoly.domain.session.SessionState currentState() {
+            return game != null ? game.sessionStateForPersistence() : null;
+        }
+
+        @Override
+        public void replaceState(fi.monopoly.domain.session.SessionState restoredState) {
+            MonopolyApp.this.rebuildGame(restoredState);
+        }
+    };
+    private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new LocalSessionPersistenceUiHooks() {
+        @Override
+        public void showPopup(String message) {
+            MonopolyRuntime.get().popupService().show(message);
+        }
+
+        @Override
+        public void showPersistenceNotice(String message) {
+            if (game != null) {
+                game.showPersistenceNotice(message);
+            }
+        }
+    };
     private final LocalSessionPersistenceCoordinator localSessionPersistenceCoordinator =
-            new LocalSessionPersistenceCoordinator(sessionPersistenceService, new LocalSessionPersistenceCoordinator.Hooks() {
-                @Override
-                public fi.monopoly.domain.session.SessionState currentSessionState() {
-                    return game != null ? game.sessionStateForPersistence() : null;
-                }
-
-                @Override
-                public void rebuildGame(fi.monopoly.domain.session.SessionState restoredState) {
-                    MonopolyApp.this.rebuildGame(restoredState);
-                }
-
-                @Override
-                public void showPopup(String message) {
-                    MonopolyRuntime.get().popupService().show(message);
-                }
-
-                @Override
-                public void showPersistenceNotice(String message) {
-                    if (game != null) {
-                        game.showPersistenceNotice(message);
-                    }
-                }
-            });
+            new LocalSessionPersistenceCoordinator(sessionPersistenceService, sessionHost, localSessionPersistenceUiHooks);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 
