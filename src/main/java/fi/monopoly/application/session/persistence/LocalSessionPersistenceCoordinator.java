@@ -14,22 +14,22 @@ import static fi.monopoly.text.UiTexts.text;
 @Slf4j
 public final class LocalSessionPersistenceCoordinator {
     private final SessionPersistenceService sessionPersistenceService;
-    private final Supplier<Path> snapshotPathSupplier;
+    private final LocalSessionPathProvider localSessionPathProvider;
     private final Supplier<LocalTime> nowSupplier;
     private final Hooks hooks;
 
     public LocalSessionPersistenceCoordinator(SessionPersistenceService sessionPersistenceService, Hooks hooks) {
-        this(sessionPersistenceService, LocalSessionSnapshotPath::resolve, LocalTime::now, hooks);
+        this(sessionPersistenceService, new SystemPropertyLocalSessionPathProvider(), LocalTime::now, hooks);
     }
 
     LocalSessionPersistenceCoordinator(
             SessionPersistenceService sessionPersistenceService,
-            Supplier<Path> snapshotPathSupplier,
+            LocalSessionPathProvider localSessionPathProvider,
             Supplier<LocalTime> nowSupplier,
             Hooks hooks
     ) {
         this.sessionPersistenceService = sessionPersistenceService;
-        this.snapshotPathSupplier = snapshotPathSupplier;
+        this.localSessionPathProvider = localSessionPathProvider;
         this.nowSupplier = nowSupplier;
         this.hooks = hooks;
     }
@@ -39,7 +39,7 @@ public final class LocalSessionPersistenceCoordinator {
         if (sessionState == null) {
             return;
         }
-        Path snapshotPath = snapshotPathSupplier.get();
+        Path snapshotPath = localSessionPathProvider.resolvePath();
         try {
             sessionPersistenceService.save(snapshotPath, sessionState);
             hooks.showPopup(text("game.popup.savedTo", snapshotPath.toAbsolutePath()));
@@ -52,7 +52,7 @@ public final class LocalSessionPersistenceCoordinator {
     }
 
     public void loadLocalSession() {
-        Path snapshotPath = snapshotPathSupplier.get();
+        Path snapshotPath = localSessionPathProvider.resolvePath();
         if (!Files.exists(snapshotPath)) {
             hooks.showPopup(text("game.popup.noSaveFound", snapshotPath.toAbsolutePath()));
             return;
