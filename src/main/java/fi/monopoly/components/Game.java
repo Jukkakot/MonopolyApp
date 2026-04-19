@@ -85,6 +85,7 @@ public class Game implements MonopolyEventListener {
     private final LocalSessionActions localSessionActions;
     private final TurnEngine turnEngine = new TurnEngine();
     private final GameSessionStateCoordinator gameSessionStateCoordinator = new GameSessionStateCoordinator();
+    private final GameBotTurnControlCoordinator gameBotTurnControlCoordinator = new GameBotTurnControlCoordinator();
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
     private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
@@ -1038,7 +1039,8 @@ public class Game implements MonopolyEventListener {
         )) {
             return true;
         }
-        return deriveBotTurnActionAvailability(currentPlayer) == GamePrimaryAction.ROLL_DICE;
+        return gameBotTurnControlCoordinator.projectedAction(createBotTurnControlHooks(), currentPlayer)
+                == GameBotTurnControlCoordinator.BotPrimaryAction.ROLL_DICE;
     }
 
     private boolean isEndTurnActionAvailable(Player currentPlayer) {
@@ -1049,7 +1051,8 @@ public class Game implements MonopolyEventListener {
         )) {
             return true;
         }
-        return deriveBotTurnActionAvailability(currentPlayer) == GamePrimaryAction.END_TURN;
+        return gameBotTurnControlCoordinator.projectedAction(createBotTurnControlHooks(), currentPlayer)
+                == GameBotTurnControlCoordinator.BotPrimaryAction.END_TURN;
     }
 
     private boolean isProjectedRollDiceActionAvailable() {
@@ -1062,52 +1065,89 @@ public class Game implements MonopolyEventListener {
 
     private boolean restoreBotTurnControlsIfNeeded() {
         Player currentPlayer = players != null ? players.getTurn() : null;
-        if (currentPlayer == null || !currentPlayer.isComputerControlled()) {
-            return false;
-        }
-        if (sessionState.gameOver()
-                || runtime.popupService().isAnyVisible()
-                || debtController.debtState() != null
-                || animations.isRunning()
-                || sessionApplicationService.hasActiveAuction()
-                || sessionApplicationService.hasActiveTrade()) {
-            return false;
-        }
-        if (isRollDiceActionAvailable(currentPlayer) || isEndTurnActionAvailable(currentPlayer)) {
-            return false;
-        }
-        GamePrimaryAction derivedAction = deriveBotTurnActionAvailability(currentPlayer);
-        if (derivedAction == GamePrimaryAction.ROLL_DICE) {
-            showRollDiceControl();
-            return true;
-        }
-        if (derivedAction == GamePrimaryAction.END_TURN) {
-            showEndTurnControl();
-            return true;
-        }
-        return false;
+        return gameBotTurnControlCoordinator.restoreControlsIfNeeded(createBotTurnControlHooks(), currentPlayer);
     }
 
-    private GamePrimaryAction deriveBotTurnActionAvailability(Player currentPlayer) {
-        if (currentPlayer == null
-                || !currentPlayer.isComputerControlled()
-                || runtime.popupService().isAnyVisible()
-                || debtController.debtState() != null
-                || sessionApplicationService.hasAuctionOverride()
-                || sessionApplicationService.hasTradeOverride()
-                || sessionApplicationService.hasPendingDecisionOverride()) {
-            return GamePrimaryAction.NONE;
-        }
-        if (dices.getValue() == null || dices.getValue().diceState() == fi.monopoly.types.DiceState.DOUBLES) {
-            return GamePrimaryAction.ROLL_DICE;
-        }
-        return GamePrimaryAction.END_TURN;
-    }
+    private GameBotTurnControlCoordinator.Hooks createBotTurnControlHooks() {
+        return new GameBotTurnControlCoordinator.Hooks() {
+            @Override
+            public boolean gameOver() {
+                return sessionState.gameOver();
+            }
 
-    private enum GamePrimaryAction {
-        NONE,
-        ROLL_DICE,
-        END_TURN
+            @Override
+            public boolean popupVisible() {
+                return runtime.popupService().isAnyVisible();
+            }
+
+            @Override
+            public boolean debtActive() {
+                return debtController.debtState() != null;
+            }
+
+            @Override
+            public boolean animationsRunning() {
+                return animations.isRunning();
+            }
+
+            @Override
+            public boolean activeAuctionOpen() {
+                return sessionApplicationService.hasActiveAuction();
+            }
+
+            @Override
+            public boolean activeTradeOpen() {
+                return sessionApplicationService.hasActiveTrade();
+            }
+
+            @Override
+            public boolean auctionOverrideActive() {
+                return sessionApplicationService.hasAuctionOverride();
+            }
+
+            @Override
+            public boolean tradeOverrideActive() {
+                return sessionApplicationService.hasTradeOverride();
+            }
+
+            @Override
+            public boolean pendingDecisionOverrideActive() {
+                return sessionApplicationService.hasPendingDecisionOverride();
+            }
+
+            @Override
+            public fi.monopoly.types.DiceState currentDiceState() {
+                return dices.getValue() != null ? dices.getValue().diceState() : null;
+            }
+
+            @Override
+            public boolean rollDiceActionAlreadyAvailable() {
+                return gamePrimaryTurnControls.isRollDiceActionAvailable(
+                        runtime.popupService().isAnyVisible(),
+                        debtController.debtState() != null,
+                        players != null ? players.getTurn() : null
+                );
+            }
+
+            @Override
+            public boolean endTurnActionAlreadyAvailable() {
+                return gamePrimaryTurnControls.isEndTurnActionAvailable(
+                        runtime.popupService().isAnyVisible(),
+                        debtController.debtState() != null,
+                        players != null ? players.getTurn() : null
+                );
+            }
+
+            @Override
+            public void showRollDiceControl() {
+                Game.this.showRollDiceControl();
+            }
+
+            @Override
+            public void showEndTurnControl() {
+                Game.this.showEndTurnControl();
+            }
+        };
     }
 
     public void dispose() {
