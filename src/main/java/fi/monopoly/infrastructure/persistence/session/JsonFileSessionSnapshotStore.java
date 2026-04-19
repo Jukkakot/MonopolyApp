@@ -1,4 +1,4 @@
-package fi.monopoly.persistence.session;
+package fi.monopoly.infrastructure.persistence.session;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

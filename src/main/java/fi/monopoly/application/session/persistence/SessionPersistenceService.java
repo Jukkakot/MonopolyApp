@@ -2,12 +2,12 @@ package fi.monopoly.application.session.persistence;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.persistence.session.JsonFileSessionSnapshotStore;
-import fi.monopoly.persistence.session.LegacySessionRuntimeRestorer;
-import fi.monopoly.persistence.session.RestoredLegacySessionRuntime;
-import fi.monopoly.persistence.session.SessionSnapshot;
-import fi.monopoly.persistence.session.SessionSnapshotMapper;
-import fi.monopoly.persistence.session.SessionSnapshotStore;
+import fi.monopoly.infrastructure.persistence.session.JsonFileSessionSnapshotStore;
+import fi.monopoly.infrastructure.persistence.session.LegacySessionRuntimeRestorer;
+import fi.monopoly.infrastructure.persistence.session.RestoredLegacySessionRuntime;
+import fi.monopoly.infrastructure.persistence.session.SessionSnapshot;
+import fi.monopoly.infrastructure.persistence.session.SessionSnapshotMapper;
+import fi.monopoly.infrastructure.persistence.session.SessionSnapshotStore;
 
 import java.nio.file.Path;
 

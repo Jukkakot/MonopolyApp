@@ -63,6 +63,7 @@ flowchart LR
     end
 
     subgraph PersistenceInfra[Persistence Infrastructure]
+        INFRA[fi.monopoly.infrastructure.*]
         STORE[SessionSnapshotStore]
         JSON[JsonFileSessionSnapshotStore]
     end
@@ -100,6 +101,7 @@ flowchart LR
     APP --> TURN
     APP --> SUBSYSTEMS
     PERSIST --> STORE
+    INFRA --> STORE
     STORE --> JSON
     FACTORY --> APP
     FACTORY --> PROJECTOR
@@ -115,7 +117,7 @@ What is important here:
 - `Game` is no longer the only place that understands gameplay progression
 - persistence now works against `SessionState`, not only live UI/runtime state
 - local save/load now depends on a small `SessionHost` seam instead of directly owning rebuild/state callbacks
-- snapshot storage has a swap-ready store seam, so local JSON is no longer the only assumed persistence backend
+- snapshot storage now lives under an explicit infrastructure package boundary, so local JSON is no longer the only assumed persistence backend
 - the legacy `SessionApplicationService` wiring has been centralized behind `LegacySessionApplicationFactory`, which makes the remaining runtime bridge more explicit
 - there is still a legacy bridge because the Processing client still runs against runtime objects
 

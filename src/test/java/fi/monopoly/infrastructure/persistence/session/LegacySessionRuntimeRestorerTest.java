@@ -1,4 +1,4 @@
-package fi.monopoly.persistence.session;
+package fi.monopoly.infrastructure.persistence.session;
 
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;

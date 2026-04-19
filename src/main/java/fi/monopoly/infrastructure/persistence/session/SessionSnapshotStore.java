@@ -1,4 +1,4 @@
-package fi.monopoly.persistence.session;
+package fi.monopoly.infrastructure.persistence.session;
 
 import java.nio.file.Path;
 

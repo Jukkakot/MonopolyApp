@@ -1,4 +1,4 @@
-package fi.monopoly.persistence.session;
+package fi.monopoly.infrastructure.persistence.session;
 
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
