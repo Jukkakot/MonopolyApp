@@ -53,6 +53,7 @@ flowchart LR
 
     subgraph Application[Application Layer]
         APP[SessionApplicationService]
+        HOST[SessionHost]
         PURCHASE[Property purchase handlers]
         DEBT[Debt handlers]
         AUCTION[Auction handlers]
@@ -73,6 +74,7 @@ flowchart LR
     end
 
     subgraph LegacyBridge[Legacy Runtime Bridge]
+        FACTORY[LegacySessionApplicationFactory]
         PROJECTOR[LegacySessionProjector]
         RESTORER[LegacySessionRuntimeRestorer]
         LEGACY[Players / Property objects / board runtime]
@@ -83,6 +85,7 @@ flowchart LR
     GAME --> VIEW
     GAME --> APP
     GAME --> LOCALPERSIST
+    LOCALPERSIST --> HOST
     POPUPS --> APP
     APP --> PURCHASE
     APP --> DEBT
@@ -98,6 +101,8 @@ flowchart LR
     APP --> SUBSYSTEMS
     PERSIST --> STORE
     STORE --> JSON
+    FACTORY --> APP
+    FACTORY --> PROJECTOR
     PROJECTOR --> APP
     RESTORER --> LEGACY
     LEGACY --> PROJECTOR
@@ -109,7 +114,9 @@ What is important here:
 - authority has moved much more clearly into command/state/application types
 - `Game` is no longer the only place that understands gameplay progression
 - persistence now works against `SessionState`, not only live UI/runtime state
+- local save/load now depends on a small `SessionHost` seam instead of directly owning rebuild/state callbacks
 - snapshot storage has a swap-ready store seam, so local JSON is no longer the only assumed persistence backend
+- the legacy `SessionApplicationService` wiring has been centralized behind `LegacySessionApplicationFactory`, which makes the remaining runtime bridge more explicit
 - there is still a legacy bridge because the Processing client still runs against runtime objects
 
 ## 3. Current Practical Runtime Shape

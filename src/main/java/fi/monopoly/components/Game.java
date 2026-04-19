@@ -28,8 +28,8 @@ import fi.monopoly.persistence.session.RestoredLegacySessionRuntime;
 import fi.monopoly.presentation.game.*;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
+import fi.monopoly.presentation.session.LegacySessionApplicationFactory;
 import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
-import fi.monopoly.presentation.session.projection.LegacySessionProjector;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
@@ -151,8 +151,12 @@ public class Game implements MonopolyEventListener {
         setupButtons();
         setupRuntimeDependencies(restoredSessionState);
         setupControllers();
-        this.sessionApplicationService = createSessionApplicationService();
-        configureSessionApplicationService();
+        this.sessionApplicationService = createSessionApplicationFactory().create(
+                runtime.popupService(),
+                debtController,
+                dices,
+                () -> endRound(true)
+        );
         this.debtActionDispatcher = createDebtActionDispatcher();
         this.auctionViewAdapter = createAuctionViewAdapter();
         LegacyTradeGateway legacyTradeGateway = createLegacyTradeGateway();
@@ -174,30 +178,17 @@ public class Game implements MonopolyEventListener {
         }
     }
 
-    private SessionApplicationService createSessionApplicationService() {
-        return new SessionApplicationService(
+    private LegacySessionApplicationFactory createSessionApplicationFactory() {
+        return new LegacySessionApplicationFactory(
                 LOCAL_SESSION_ID,
-                new LegacySessionProjector(
-                        LOCAL_SESSION_ID,
-                        () -> players,
-                        () -> LegacyPopupSnapshot.fromPopupService(runtime.popupService()),
-                        () -> debtController != null ? debtController.debtState() : null,
-                        () -> paused,
-                        () -> gameOver,
-                        () -> winner,
-                        this::isProjectedRollDiceActionAvailable,
-                        this::isProjectedEndTurnActionAvailable
-                )::project
-        );
-    }
-
-    private void configureSessionApplicationService() {
-        sessionApplicationService.configureRentAndDebtFlow(debtController);
-        sessionApplicationService.configureAuctionFlow(runtime.popupService(), players);
-        sessionApplicationService.configurePropertyPurchaseFlow(runtime.popupService(), players);
-        sessionApplicationService.configureTradeFlow(() -> players != null ? players.getPlayers() : List.of());
-        sessionApplicationService.configureTurnActionFlow(
-                new LegacyTurnActionGatewayAdapter(dices, () -> players != null ? players.getTurn() : null, () -> endRound(true))
+                () -> players,
+                () -> LegacyPopupSnapshot.fromPopupService(runtime.popupService()),
+                () -> debtController != null ? debtController.debtState() : null,
+                () -> paused,
+                () -> gameOver,
+                () -> winner,
+                this::isProjectedRollDiceActionAvailable,
+                this::isProjectedEndTurnActionAvailable
         );
     }
 
