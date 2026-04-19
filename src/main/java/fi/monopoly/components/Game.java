@@ -62,7 +62,7 @@ public class Game implements MonopolyEventListener {
             Locale.ENGLISH
     );
     private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
-    private void setupDebugGameConfigs(MonopolyRuntime runtime) {
+    private void setupDebugGameConfigs(MonopolyRuntime runtime, Board board, Players players) {
         Spot spot = board.getSpots().get(0);
         players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
         players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
@@ -83,7 +83,6 @@ public class Game implements MonopolyEventListener {
     private final MonopolyRuntime runtime;
     private final LocalSessionActions localSessionActions;
     private final TurnEngine turnEngine = new TurnEngine();
-    private final LegacyGameRuntimeBootstrapper legacyGameRuntimeBootstrapper = new LegacyGameRuntimeBootstrapper();
     private final RestoredSessionReattachmentCoordinator restoredSessionReattachmentCoordinator =
             new RestoredSessionReattachmentCoordinator();
     private final SessionApplicationService sessionApplicationService;
@@ -173,8 +172,17 @@ public class Game implements MonopolyEventListener {
                         languageButton
                 )
         );
-        setupRuntimeDependencies(restoredSessionState);
-        setupControllers();
+        GameRuntimeAssemblyFactory.GameRuntimeAssembly runtimeAssembly = new GameRuntimeAssemblyFactory().create(
+                runtime,
+                restoredSessionState,
+                createGameRuntimeAssemblyHooks()
+        );
+        this.board = runtimeAssembly.board();
+        this.players = runtimeAssembly.players();
+        this.dices = runtimeAssembly.dices();
+        this.animations = runtimeAssembly.animations();
+        this.debtController = runtimeAssembly.debtController();
+        this.debugController = runtimeAssembly.debugController();
         GameSessionBridgeFactory.GameSessionBridge sessionBridge = new GameSessionBridgeFactory(runtime).create(
                 LOCAL_SESSION_ID,
                 players,
@@ -191,7 +199,7 @@ public class Game implements MonopolyEventListener {
         this.tradeController = sessionBridge.tradeController();
         this.sessionViewFacade = createSessionViewFacade();
         applyRestoredSessionState(restoredSessionState);
-        registerGameSession();
+        new GameRuntimeAssemblyFactory().registerGameSession(runtime, runtimeAssembly, debtActionDispatcher, createGameRuntimeAssemblyHooks());
         GamePresentationFactory.GamePresentationBundle presentationBundle = new GamePresentationFactory().create(
                 runtime,
                 new GamePresentationFactory.Buttons(
@@ -295,6 +303,85 @@ public class Game implements MonopolyEventListener {
             @Override
             public List<Player> players() {
                 return players != null ? players.getPlayers() : List.of();
+            }
+        };
+    }
+
+    private GameRuntimeAssemblyFactory.Hooks createGameRuntimeAssemblyHooks() {
+        return new GameRuntimeAssemblyFactory.Hooks() {
+            @Override
+            public void refreshLabels() {
+                Game.this.refreshLabels();
+            }
+
+            @Override
+            public fi.monopoly.components.event.MonopolyEventListener eventListener() {
+                return Game.this;
+            }
+
+            @Override
+            public void rollDice() {
+                Game.this.rollDice();
+            }
+
+            @Override
+            public void setupDefaultGameState(Board board, Players players) {
+                Game.this.setupDebugGameConfigs(runtime, board, players);
+            }
+
+            @Override
+            public void hidePrimaryTurnControls() {
+                Game.this.hidePrimaryTurnControls();
+            }
+
+            @Override
+            public void showRollDiceControl() {
+                Game.this.showRollDiceControl();
+            }
+
+            @Override
+            public void onDebtStateChanged() {
+                Game.this.onDebtStateChanged();
+            }
+
+            @Override
+            public void declareWinner(Player winner) {
+                Game.this.declareWinner(winner);
+            }
+
+            @Override
+            public void debugResetTurnState() {
+                Game.this.debugResetTurnState();
+            }
+
+            @Override
+            public void restoreNormalTurnControls() {
+                Game.this.restoreNormalTurnControls();
+            }
+
+            @Override
+            public void retryPendingDebtPaymentAction() {
+                Game.this.retryPendingDebtPaymentAction();
+            }
+
+            @Override
+            public void handlePaymentRequest(PaymentRequest request, CallbackAction onResolved) {
+                Game.this.handlePaymentRequest(request, null, onResolved);
+            }
+
+            @Override
+            public boolean debtActive() {
+                return debtController != null && debtController.debtState() != null;
+            }
+
+            @Override
+            public boolean gameOver() {
+                return gameOver;
+            }
+
+            @Override
+            public int goMoneyAmount() {
+                return goMoneyAmount;
             }
         };
     }
@@ -446,54 +533,6 @@ public class Game implements MonopolyEventListener {
                 return localSessionActions.loadSession();
             }
         };
-    }
-
-    private void setupRuntimeDependencies(SessionState restoredSessionState) {
-        UiTexts.addChangeListener(this::refreshLabels);
-        runtime.eventBus().addListener(this);
-        dices = Dices.setRollDice(runtime, this::rollDice);
-        animations = new Animations();
-        LegacyGameRuntimeBootstrapper.LegacyGameRuntimeState runtimeState =
-                legacyGameRuntimeBootstrapper.bootstrap(runtime, restoredSessionState);
-        board = runtimeState.board();
-        players = runtimeState.players();
-        if (!runtimeState.restoredSession()) {
-            setupDefaultGameState();
-        }
-    }
-
-    private void setupControllers() {
-        debtController = new DebtController(
-                runtime,
-                players,
-                this::hidePrimaryTurnControls,
-                this::showRollDiceControl,
-                this::onDebtStateChanged,
-                this::declareWinner
-        );
-        debugController = new DebugController(
-                runtime,
-                board,
-                () -> players != null ? players.getTurn() : null,
-                this::debugResetTurnState,
-                this::restoreNormalTurnControls,
-                this::retryPendingDebtPaymentAction,
-                (request, onResolved) -> handlePaymentRequest(request, null, onResolved)
-        );
-    }
-
-    private void registerGameSession() {
-        runtime.setGameSession(new GameSession(players, dices, animations)
-                .withStateSuppliers(
-                        () -> debtController != null && debtController.debtState() != null,
-                        () -> gameOver,
-                        () -> goMoneyAmount
-                )
-                .withDebtActionDispatcher(debtActionDispatcher));
-    }
-
-    private void setupDefaultGameState() {
-        setupDebugGameConfigs(runtime);
     }
 
     private void applyRestoredSessionState(SessionState restoredSessionState) {
@@ -804,6 +843,9 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebtButtons() {
+        if (gamePresentationSupport == null) {
+            return;
+        }
         gamePresentationSupport.updateDebtButtons(
                 debtController.debtState(),
                 sessionApplicationService != null ? sessionApplicationService.currentState() : null
@@ -811,10 +853,16 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebugButtons() {
+        if (gamePresentationSupport == null) {
+            return;
+        }
         gamePresentationSupport.updatePersistentButtons(gameOver);
     }
 
     private void refreshLabels() {
+        if (gamePresentationSupport == null) {
+            return;
+        }
         gamePresentationSupport.refreshLabels(paused, botSpeedMode);
     }
 
