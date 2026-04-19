@@ -35,7 +35,6 @@ import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.utils.DebugPerformanceStats;
 import fi.monopoly.utils.LayoutMetrics;
-import fi.monopoly.utils.UiTokens;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
 import processing.event.Event;
@@ -159,7 +158,21 @@ public class Game implements MonopolyEventListener {
         this.botSpeedButton = new MonopolyButton(runtime, "botSpeed");
         this.languageButton = new MonopolyButton(runtime, "language");
         this.gameSidebarPresenter = new GameSidebarPresenter(runtime);
-        setupButtons();
+        new GameButtonLayoutFactory().apply(
+                runtime,
+                new GameButtonLayoutFactory.Buttons(
+                        endRoundButton,
+                        retryDebtButton,
+                        declareBankruptcyButton,
+                        debugGodModeButton,
+                        pauseButton,
+                        tradeButton,
+                        saveButton,
+                        loadButton,
+                        botSpeedButton,
+                        languageButton
+                )
+        );
         setupRuntimeDependencies(restoredSessionState);
         setupControllers();
         GameSessionBridgeFactory.GameSessionBridge sessionBridge = new GameSessionBridgeFactory(runtime).create(
@@ -433,64 +446,6 @@ public class Game implements MonopolyEventListener {
                 return localSessionActions.loadSession();
             }
         };
-    }
-
-    private void setupButtons() {
-        LayoutMetrics defaultLayout = LayoutMetrics.defaultWindow();
-        endRoundButton.setPosition(defaultLayout.sidebarX() + UiTokens.sidebarValueX(), defaultLayout.sidebarPrimaryButtonY());
-        endRoundButton.setSize(150, 44);
-        endRoundButton.setAutoWidth(100, 28, 180);
-
-        retryDebtButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), defaultLayout.sidebarPrimaryButtonY());
-        retryDebtButton.setSize(140, 40);
-        retryDebtButton.setAutoWidth(140, 28, 220);
-
-        declareBankruptcyButton.setPosition(defaultLayout.sidebarX() + UiTokens.sidebarValueX(), defaultLayout.sidebarPrimaryButtonY());
-        declareBankruptcyButton.setSize(140, 40);
-        declareBankruptcyButton.setAutoWidth(140, 28, 220);
-
-        debugGodModeButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), defaultLayout.sidebarDebugButtonRow1Y());
-        debugGodModeButton.setSize(300, 36);
-        debugGodModeButton.setAutoWidth(180, 28, 300);
-
-        pauseButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 96);
-        pauseButton.setSize(140, 36);
-        pauseButton.setAutoWidth(120, 28, 180);
-        pauseButton.setAllowedDuringComputerTurn(true);
-
-        tradeButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 96);
-        tradeButton.setSize(140, 36);
-        tradeButton.setAutoWidth(120, 28, 220);
-
-        saveButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
-        saveButton.setSize(120, 36);
-        saveButton.setAutoWidth(100, 28, 180);
-        saveButton.setAllowedDuringComputerTurn(true);
-
-        loadButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
-        loadButton.setSize(120, 36);
-        loadButton.setAutoWidth(100, 28, 180);
-        loadButton.setAllowedDuringComputerTurn(true);
-
-        botSpeedButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
-        botSpeedButton.setSize(140, 36);
-        botSpeedButton.setAutoWidth(120, 28, 220);
-        botSpeedButton.setAllowedDuringComputerTurn(true);
-
-        languageButton.setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
-        languageButton.setSize(220, 36);
-        languageButton.setAutoWidth(180, 28, 280);
-        languageButton.setAllowedDuringComputerTurn(true);
-
-        endRoundButton.hide();
-        retryDebtButton.hide();
-        declareBankruptcyButton.hide();
-        debugGodModeButton.hide();
-        pauseButton.hide();
-        tradeButton.hide();
-        saveButton.hide();
-        loadButton.hide();
-        botSpeedButton.hide();
     }
 
     private void setupRuntimeDependencies(SessionState restoredSessionState) {
