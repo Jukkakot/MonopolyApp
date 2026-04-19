@@ -170,6 +170,12 @@ class GameTurnControlsTest {
         method.invoke(game);
     }
 
+    private static void refreshButtonInteractivityState(Game game) throws ReflectiveOperationException {
+        var method = Game.class.getDeclaredMethod("refreshButtonInteractivityState");
+        method.setAccessible(true);
+        method.invoke(game);
+    }
+
     private static void dispatchKey(MonopolyRuntime runtime, char key) {
         runtime.eventBus().sendConsumableEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
@@ -643,6 +649,43 @@ class GameTurnControlsTest {
         Field pausedField = Game.class.getDeclaredField("paused");
         pausedField.setAccessible(true);
         assertTrue((boolean) pausedField.get(game), "Pause button should still work during a bot turn");
+    }
+
+    @Test
+    void debugModeAllowsTradeButtonDuringBotTurn() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyApp.DEBUG_MODE = true;
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        game.players().switchTurn();
+        updateDebugButtons(game);
+
+        getTradeButton(game).pressButton();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertEquals("trade", runtime.popupService().activePopupKind());
+    }
+
+    @Test
+    void disabledButtonTurnsGrayAndDoesNotOpenActionOutsideDebugMode() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        game.players().switchTurn();
+        updateDebugButtons(game);
+        refreshButtonInteractivityState(game);
+
+        MonopolyButton tradeButton = getTradeButton(game);
+        assertEquals(0xff9f9f9f, tradeButton.currentBackgroundColor());
+        assertEquals(0xff9f9f9f, tradeButton.currentForegroundColor());
+        assertEquals(0xff9f9f9f, tradeButton.currentActiveColor());
+
+        tradeButton.pressButton();
+        assertFalse(runtime.popupService().isAnyVisible());
     }
 
     @Test

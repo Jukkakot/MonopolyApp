@@ -693,6 +693,7 @@ public class Game implements MonopolyEventListener {
         } else {
             players.drawTokens();
         }
+        refreshButtonInteractivityState();
         updateDebugButtons();
         enforcePrimaryTurnControlInvariant();
         if (hasSidebarSpace) {
@@ -858,6 +859,19 @@ public class Game implements MonopolyEventListener {
             return;
         }
         gamePresentationSupport.updatePersistentButtons(gameOver);
+    }
+
+    private void refreshButtonInteractivityState() {
+        endRoundButton.refreshInteractivityStyle();
+        retryDebtButton.refreshInteractivityStyle();
+        declareBankruptcyButton.refreshInteractivityStyle();
+        debugGodModeButton.refreshInteractivityStyle();
+        pauseButton.refreshInteractivityStyle();
+        tradeButton.refreshInteractivityStyle();
+        saveButton.refreshInteractivityStyle();
+        loadButton.refreshInteractivityStyle();
+        botSpeedButton.refreshInteractivityStyle();
+        languageButton.refreshInteractivityStyle();
     }
 
     private void refreshLabels() {
