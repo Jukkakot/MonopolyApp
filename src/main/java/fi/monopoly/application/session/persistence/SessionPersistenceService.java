@@ -36,6 +36,10 @@ public final class SessionPersistenceService {
         return snapshot;
     }
 
+    public boolean exists(Path path) {
+        return sessionSnapshotStore.exists(path);
+    }
+
     public SessionState load(Path path) {
         SessionSnapshot snapshot = sessionSnapshotStore.read(path);
         return sessionSnapshotMapper.fromSnapshot(snapshot);

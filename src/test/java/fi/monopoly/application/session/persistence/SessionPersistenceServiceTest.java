@@ -135,6 +135,11 @@ class SessionPersistenceServiceTest {
         private Path lastWrittenPath;
 
         @Override
+        public boolean exists(Path path) {
+            return snapshot != null && path.equals(lastWrittenPath);
+        }
+
+        @Override
         public void write(Path path, SessionSnapshot snapshot) {
             this.lastWrittenPath = path;
             this.snapshot = snapshot;

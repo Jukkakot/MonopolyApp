@@ -15,6 +15,11 @@ public final class JsonFileSessionSnapshotStore implements SessionSnapshotStore 
     }
 
     @Override
+    public boolean exists(Path path) {
+        return Files.exists(path);
+    }
+
+    @Override
     public void write(Path path, SessionSnapshot snapshot) {
         try {
             Files.createDirectories(path.toAbsolutePath().getParent());

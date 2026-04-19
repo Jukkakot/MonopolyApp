@@ -3,7 +3,6 @@ package fi.monopoly.application.session.persistence;
 import fi.monopoly.domain.session.SessionState;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -53,7 +52,7 @@ public final class LocalSessionPersistenceCoordinator {
 
     public void loadLocalSession() {
         Path snapshotPath = localSessionPathProvider.resolvePath();
-        if (!Files.exists(snapshotPath)) {
+        if (!sessionPersistenceService.exists(snapshotPath)) {
             hooks.showPopup(text("game.popup.noSaveFound", snapshotPath.toAbsolutePath()));
             return;
         }

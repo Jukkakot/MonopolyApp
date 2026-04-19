@@ -20,8 +20,6 @@ import fi.monopoly.persistence.session.SessionSnapshotStore;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.util.List;
@@ -139,16 +137,17 @@ class LocalSessionPersistenceCoordinatorTest {
 
     private static final class InMemorySnapshotStore implements SessionSnapshotStore {
         private SessionSnapshot snapshot;
+        private Path writtenPath;
+
+        @Override
+        public boolean exists(Path path) {
+            return snapshot != null && path.equals(writtenPath);
+        }
 
         @Override
         public void write(Path path, SessionSnapshot snapshot) {
+            this.writtenPath = path;
             this.snapshot = snapshot;
-            try {
-                Files.createDirectories(path.toAbsolutePath().getParent());
-                Files.writeString(path, "test");
-            } catch (IOException e) {
-                throw new AssertionError("Failed to create backing test file", e);
-            }
         }
 
         @Override
