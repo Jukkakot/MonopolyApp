@@ -270,9 +270,12 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     private void rebuildGame(fi.monopoly.domain.session.SessionState restoredState) {
+        fi.monopoly.domain.session.SessionState preparedRestoredState = prepareRestoredStateForRebuild(restoredState);
+        shutdownCurrentSessionRuntime();
         if (game != null) {
             game.dispose();
         }
+        shutdownCurrentSessionRuntime();
         if (p5 != null) {
             p5.dispose();
         }
@@ -280,7 +283,43 @@ public class MonopolyApp extends MonopolyEventObserver {
         MonopolyRuntime.initialize(this, p5, font10, font20, font30);
         applyDefaultTextFont();
         LocalSessionActions localSessionActions = new LocalSessionActions(this::saveLocalSession, this::loadLocalSession);
-        game = new Game(MonopolyRuntime.get(), restoredState, localSessionActions);
+        game = new Game(MonopolyRuntime.get(), preparedRestoredState, localSessionActions);
+        MonopolyRuntime.get().eventBus().flushPendingChanges();
+    }
+
+    private void shutdownCurrentSessionRuntime() {
+        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        if (runtime == null) {
+            return;
+        }
+        runtime.popupService().hideAll();
+        runtime.setGameSession(null);
+        runtime.eventBus().flushPendingChanges();
+        runtime.popupService().hideAll();
+    }
+
+    private fi.monopoly.domain.session.SessionState prepareRestoredStateForRebuild(
+            fi.monopoly.domain.session.SessionState restoredState
+    ) {
+        if (restoredState == null
+                || restoredState.status() != fi.monopoly.domain.session.SessionStatus.IN_PROGRESS) {
+            return restoredState;
+        }
+        return new fi.monopoly.domain.session.SessionState(
+                restoredState.sessionId(),
+                restoredState.version(),
+                fi.monopoly.domain.session.SessionStatus.PAUSED,
+                restoredState.seats(),
+                restoredState.players(),
+                restoredState.properties(),
+                restoredState.turn(),
+                restoredState.pendingDecision(),
+                restoredState.auctionState(),
+                restoredState.activeDebt(),
+                restoredState.tradeState(),
+                restoredState.turnContinuationState(),
+                restoredState.winnerPlayerId()
+        );
     }
 
     private void applyDefaultTextFont() {
