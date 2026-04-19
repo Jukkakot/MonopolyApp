@@ -6,7 +6,6 @@ import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
-import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -120,7 +119,6 @@ public class Game implements MonopolyEventListener {
     private final GameBotTurnDriver botTurnDriver = new GameBotTurnDriver(botTurnScheduler);
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private LayoutMetrics frameLayoutMetrics;
-    private long lastAnimationUpdateNanos = -1L;
     private final SessionViewFacade sessionViewFacade;
     private GameControlLayout gameControlLayout;
     private GamePrimaryTurnControls gamePrimaryTurnControls;
@@ -131,6 +129,7 @@ public class Game implements MonopolyEventListener {
     private GamePresentationSupport gamePresentationSupport;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     private GameBotTurnDriver.Hooks gameBotTurnHooks;
+    private GameFrameCoordinator gameFrameCoordinator;
     public Game(MonopolyRuntime runtime) {
         this(runtime, null, LocalSessionActions.NO_OP_ACTIONS);
     }
@@ -212,6 +211,30 @@ public class Game implements MonopolyEventListener {
         this.gameUiController = desktopAssembly.gameUiController();
         this.gamePresentationSupport = desktopAssembly.gamePresentationSupport();
         this.gameBotTurnHooks = desktopAssembly.gameBotTurnHooks();
+        this.gameFrameCoordinator = new GameFrameCoordinator(
+                runtime,
+                gameControlLayout,
+                gameSidebarPresenter,
+                gamePresentationSupport,
+                gamePrimaryTurnControls,
+                gameSidebarStateFactory,
+                gameSessionStateCoordinator,
+                botTurnDriver,
+                botTurnScheduler,
+                debugPerformanceStats,
+                List.of(
+                        endRoundButton,
+                        retryDebtButton,
+                        declareBankruptcyButton,
+                        debugGodModeButton,
+                        pauseButton,
+                        tradeButton,
+                        saveButton,
+                        loadButton,
+                        botSpeedButton,
+                        languageButton
+                )
+        );
         initializeSessionPresentation(restoredSessionState);
         setupButtonActions();
 
@@ -625,80 +648,12 @@ public class Game implements MonopolyEventListener {
     }
 
     public void draw() {
-        long frameStart = System.nanoTime();
-        updateLogTurnContext();
-        LayoutMetrics layoutMetrics = updateFrameLayoutMetrics();
-        boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
-        GameSidebarPresenter.SidebarState sidebarState = createSidebarState();
-        boolean animationWasRunning = animations.isRunning();
-        float animationDeltaSeconds = resolveAnimationDeltaSeconds(frameStart);
-        if (MonopolyApp.SKIP_ANNIMATIONS) {
-            animations.finishAllAnimations();
-        }
-        if (!runtime.popupService().isAnyVisible()) {
-            animations.updateAnimations(animationDeltaSeconds);
-        }
-        applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
-        updateSidebarControlPositions(layoutMetrics);
-        board.draw(null);
-        if (hasSidebarSpace) {
-            drawSidebarPanel(layoutMetrics, sidebarState);
-        }
-        if (!isDebtSidebarMode()) {
-            dices.draw(null);
-        }
-        if (hasSidebarSpace && isDebtSidebarMode()) {
-            players.focusPlayer(debtController.debtState().paymentRequest().debtor());
-        }
-        if (hasSidebarSpace) {
-            players.draw(gameSidebarPresenter.contentTop(layoutMetrics, sidebarState), !isDebtSidebarMode(), !isDebtSidebarMode());
-        } else {
-            players.drawTokens();
-        }
-        refreshButtonInteractivityState();
-        updateDebugButtons();
-        enforcePrimaryTurnControlInvariant();
-        if (hasSidebarSpace) {
-            drawDebtState(layoutMetrics, sidebarState);
-        }
-        syncTransientPresentationState();
-        runComputerPlayerStep();
-        debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
-    }
-
-    private float resolveAnimationDeltaSeconds(long nowNanos) {
-        if (lastAnimationUpdateNanos < 0L) {
-            lastAnimationUpdateNanos = nowNanos;
-            return Animation.REFERENCE_FRAME_SECONDS;
-        }
-        float deltaSeconds = (nowNanos - lastAnimationUpdateNanos) / 1_000_000_000f;
-        lastAnimationUpdateNanos = nowNanos;
-        return deltaSeconds;
+        gameFrameCoordinator.drawFrame(createFrameHooks());
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {
-        frameLayoutMetrics = gameControlLayout.updateFrameLayoutMetrics();
+        frameLayoutMetrics = gameFrameCoordinator.updateFrameLayoutMetrics();
         return frameLayoutMetrics;
-    }
-
-    private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
-        Player turnPlayer = players.getTurn();
-        botTurnScheduler.applyAnimationFinishCooldownIfNeeded(
-                animationWasRunning,
-                animations.isRunning(),
-                turnPlayer != null && turnPlayer.isComputerControlled(),
-                runtime.app().millis(),
-                sessionState.botSpeedMode(),
-                players.getPlayers().stream().allMatch(Player::isComputerControlled)
-        );
-    }
-
-    /**
-     * Draws the persistent right-side information panel so turn state, player
-     * overview and controls stay in one predictable area.
-     */
-    private void drawSidebarPanel(LayoutMetrics layoutMetrics, GameSidebarPresenter.SidebarState sidebarState) {
-        gameSidebarPresenter.drawSidebarPanel(layoutMetrics, sidebarState, debugPerformanceStats::recordHistoryLayout);
     }
 
     private boolean isDebtSidebarMode() {
@@ -710,7 +665,11 @@ public class Game implements MonopolyEventListener {
     }
 
     private void runComputerPlayerStep() {
-        botTurnDriver.step(gameBotTurnHooks);
+        gameFrameCoordinator.runComputerPlayerStep(gameBotTurnHooks);
+    }
+
+    private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
+        gameFrameCoordinator.applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning, createFrameHooks());
     }
 
     private void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
@@ -744,66 +703,46 @@ public class Game implements MonopolyEventListener {
         debtController.retryPendingDebtPayment();
     }
 
-    private void drawDebtState(LayoutMetrics layoutMetrics, GameSidebarPresenter.SidebarState sidebarState) {
-        gameSidebarPresenter.drawDebtState(layoutMetrics, sidebarState.debtState());
-    }
-
     private LayoutMetrics getLayoutMetrics() {
-        return frameLayoutMetrics != null ? frameLayoutMetrics : LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        frameLayoutMetrics = gameFrameCoordinator.getLayoutMetrics();
+        return frameLayoutMetrics;
     }
 
     private void updateSidebarControlPositions() {
-        updateSidebarControlPositions(updateFrameLayoutMetrics());
+        gameFrameCoordinator.updateSidebarControlPositions();
+        frameLayoutMetrics = gameFrameCoordinator.getLayoutMetrics();
     }
 
     private void updateSidebarControlPositions(LayoutMetrics layoutMetrics) {
-        gameControlLayout.updateSidebarControlPositions(layoutMetrics);
+        gameFrameCoordinator.updateSidebarControlPositions(layoutMetrics);
+        frameLayoutMetrics = gameFrameCoordinator.getLayoutMetrics();
     }
 
     private float getSidebarHistoryHeight() {
-        return gameControlLayout.historyHeight(getLayoutMetrics());
+        return gameFrameCoordinator.getSidebarHistoryHeight();
     }
 
     private float getSidebarHistoryPanelY() {
-        return gameControlLayout.historyPanelY(getLayoutMetrics());
+        return gameFrameCoordinator.getSidebarHistoryPanelY();
     }
 
     private float getSidebarReservedTop() {
-        return gameControlLayout.reservedTop(getLayoutMetrics());
+        return gameFrameCoordinator.getSidebarReservedTop();
     }
 
     private GameSidebarPresenter.SidebarState createSidebarState() {
-        clearExpiredPersistenceNoticeIfNeeded();
-        return gameSidebarStateFactory.createSidebarState(
-                players.getTurn(),
-                players.getPlayers(),
-                runtime.popupService().recentPopupMessages(),
-                debtController.debtState(),
-                sessionState.persistenceNotice(),
-                sessionState.gameOver(),
-                runtime.popupService().isAnyVisible(),
-                animations.isRunning(),
-                endRoundButton.isVisible(),
-                dices.isVisible(),
-                getSidebarHistoryPanelY(),
-                getSidebarHistoryHeight(),
-                getSidebarReservedTop()
-        );
-    }
-
-    private void clearExpiredPersistenceNoticeIfNeeded() {
-        gameSessionStateCoordinator.clearExpiredPersistenceNoticeIfNeeded(sessionState, runtime.app().millis());
+        return gameFrameCoordinator.createSidebarState(createFrameHooks());
     }
 
     private float getSidebarContentTop() {
-        return gameSidebarPresenter.contentTop(getLayoutMetrics(), createSidebarState());
+        return gameFrameCoordinator.getSidebarContentTop(createFrameHooks());
     }
 
     private void updateDebtButtons() {
         if (gamePresentationSupport == null) {
             return;
         }
-        gamePresentationSupport.updateDebtButtons(
+        gameFrameCoordinator.updateDebtButtons(
                 debtController.debtState(),
                 sessionApplicationService != null ? sessionApplicationService.currentState() : null
         );
@@ -813,27 +752,18 @@ public class Game implements MonopolyEventListener {
         if (gamePresentationSupport == null) {
             return;
         }
-        gamePresentationSupport.updatePersistentButtons(sessionState.gameOver());
+        gameFrameCoordinator.updatePersistentButtons(sessionState.gameOver());
     }
 
     private void refreshButtonInteractivityState() {
-        endRoundButton.refreshInteractivityStyle();
-        retryDebtButton.refreshInteractivityStyle();
-        declareBankruptcyButton.refreshInteractivityStyle();
-        debugGodModeButton.refreshInteractivityStyle();
-        pauseButton.refreshInteractivityStyle();
-        tradeButton.refreshInteractivityStyle();
-        saveButton.refreshInteractivityStyle();
-        loadButton.refreshInteractivityStyle();
-        botSpeedButton.refreshInteractivityStyle();
-        languageButton.refreshInteractivityStyle();
+        gameFrameCoordinator.refreshButtonInteractivityState();
     }
 
     private void refreshLabels() {
         if (gamePresentationSupport == null) {
             return;
         }
-        gamePresentationSupport.refreshLabels(sessionState.paused(), sessionState.botSpeedMode());
+        gameFrameCoordinator.refreshLabels(sessionState.paused(), sessionState.botSpeedMode());
     }
 
     private void togglePause() {
@@ -968,12 +898,11 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateLogTurnContext() {
-        gamePresentationSupport.updateLogTurnContext(sessionState.gameOver(), sessionState.winner(), players != null ? players.getTurn() : null);
+        gameFrameCoordinator.updateLogTurnContext(sessionState.gameOver(), sessionState.winner(), players != null ? players.getTurn() : null);
     }
 
     private void syncTransientPresentationState() {
-        gamePresentationSupport.syncTransientPresentationState();
-        restoreBotTurnControlsIfNeeded();
+        gameFrameCoordinator.syncTransientPresentationState(this::restoreBotTurnControlsIfNeeded);
     }
 
     private Player playerById(String playerId) {
@@ -987,10 +916,91 @@ public class Game implements MonopolyEventListener {
     }
 
     private void enforcePrimaryTurnControlInvariant() {
-        gamePrimaryTurnControls.enforceInvariant(
-                debtController.debtState() != null,
-                () -> log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.")
-        );
+        gameFrameCoordinator.enforcePrimaryTurnControlInvariant(debtController.debtState() != null);
+    }
+
+    private GameFrameCoordinator.FrameHooks createFrameHooks() {
+        return new GameFrameCoordinator.FrameHooks() {
+            @Override
+            public GameSessionState sessionState() {
+                return sessionState;
+            }
+
+            @Override
+            public Board board() {
+                return board;
+            }
+
+            @Override
+            public Players players() {
+                return players;
+            }
+
+            @Override
+            public Dices dices() {
+                return dices;
+            }
+
+            @Override
+            public Animations animations() {
+                return animations;
+            }
+
+            @Override
+            public Player turnPlayer() {
+                return players != null ? players.getTurn() : null;
+            }
+
+            @Override
+            public List<String> recentPopupMessages() {
+                return runtime.popupService().recentPopupMessages();
+            }
+
+            @Override
+            public DebtState debtState() {
+                return debtController.debtState();
+            }
+
+            @Override
+            public Player debtDebtor() {
+                return debtController.debtState() != null ? debtController.debtState().paymentRequest().debtor() : null;
+            }
+
+            @Override
+            public boolean popupVisible() {
+                return runtime.popupService().isAnyVisible();
+            }
+
+            @Override
+            public boolean debtSidebarMode() {
+                return isDebtSidebarMode();
+            }
+
+            @Override
+            public boolean endRoundVisible() {
+                return endRoundButton.isVisible();
+            }
+
+            @Override
+            public boolean rollDiceVisible() {
+                return dices.isVisible();
+            }
+
+            @Override
+            public void focusPlayer(Player player) {
+                players.focusPlayer(player);
+            }
+
+            @Override
+            public void restoreBotTurnControlsIfNeeded() {
+                Game.this.restoreBotTurnControlsIfNeeded();
+            }
+
+            @Override
+            public GameBotTurnDriver.Hooks botTurnHooks() {
+                return gameBotTurnHooks;
+            }
+        };
     }
 
     GameView createGameView(Player currentPlayer) {
