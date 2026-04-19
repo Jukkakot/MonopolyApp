@@ -1,11 +1,11 @@
 package fi.monopoly.presentation.legacy.session.debt;
 
 import fi.monopoly.application.session.debt.DebtRemediationGateway;
-import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
+import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.types.SpotType;
 
 public class LegacyDebtRemediationGateway implements DebtRemediationGateway {

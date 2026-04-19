@@ -1,9 +1,15 @@
-package fi.monopoly.components.payment;
+package fi.monopoly.presentation.session.debt;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
+import fi.monopoly.components.payment.DebtState;
+import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.components.payment.PaymentResolver;
+import fi.monopoly.components.payment.PaymentResult;
+import fi.monopoly.components.payment.PaymentStatus;
+import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.turn.PropertyAuctionResolver;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +20,12 @@ import java.util.function.Consumer;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+/**
+ * Handles desktop debt-resolution flow around the legacy player runtime.
+ *
+ * <p>This controller owns popup messaging, asset liquidation, and bankruptcy progression while the
+ * payment state itself is gradually moved behind application/session ports.</p>
+ */
 public final class DebtController {
     private final MonopolyRuntime runtime;
     private final Players players;

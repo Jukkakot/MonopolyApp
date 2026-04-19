@@ -4,7 +4,6 @@ import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
-import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
@@ -15,6 +14,7 @@ import fi.monopoly.presentation.legacy.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.legacy.session.projection.LegacySessionProjector;
 import fi.monopoly.presentation.legacy.session.purchase.LegacyPropertyPurchaseGateway;
 import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
+import fi.monopoly.presentation.session.debt.DebtController;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;

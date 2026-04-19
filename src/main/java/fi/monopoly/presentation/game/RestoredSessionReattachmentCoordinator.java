@@ -3,13 +3,13 @@ package fi.monopoly.presentation.game;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.BankTarget;
-import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PaymentTarget;
 import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
+import fi.monopoly.presentation.session.debt.DebtController;
 
 import java.util.function.Function;
 
