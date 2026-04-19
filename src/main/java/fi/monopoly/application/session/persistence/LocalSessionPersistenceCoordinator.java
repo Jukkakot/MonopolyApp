@@ -1,0 +1,85 @@
+package fi.monopoly.application.session.persistence;
+
+import fi.monopoly.domain.session.SessionState;
+import lombok.extern.slf4j.Slf4j;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.function.Supplier;
+
+import static fi.monopoly.text.UiTexts.text;
+
+@Slf4j
+public final class LocalSessionPersistenceCoordinator {
+    private final SessionPersistenceService sessionPersistenceService;
+    private final Supplier<Path> snapshotPathSupplier;
+    private final Supplier<LocalTime> nowSupplier;
+    private final Hooks hooks;
+
+    public LocalSessionPersistenceCoordinator(SessionPersistenceService sessionPersistenceService, Hooks hooks) {
+        this(sessionPersistenceService, LocalSessionSnapshotPath::resolve, LocalTime::now, hooks);
+    }
+
+    LocalSessionPersistenceCoordinator(
+            SessionPersistenceService sessionPersistenceService,
+            Supplier<Path> snapshotPathSupplier,
+            Supplier<LocalTime> nowSupplier,
+            Hooks hooks
+    ) {
+        this.sessionPersistenceService = sessionPersistenceService;
+        this.snapshotPathSupplier = snapshotPathSupplier;
+        this.nowSupplier = nowSupplier;
+        this.hooks = hooks;
+    }
+
+    public void saveLocalSession() {
+        SessionState sessionState = hooks.currentSessionState();
+        if (sessionState == null) {
+            return;
+        }
+        Path snapshotPath = snapshotPathSupplier.get();
+        try {
+            sessionPersistenceService.save(snapshotPath, sessionState);
+            hooks.showPopup("Saved game to " + snapshotPath.toAbsolutePath());
+            hooks.showPersistenceNotice(text("game.status.savedAt", formattedCurrentTime()));
+            log.info("Saved local session snapshot to {}", snapshotPath.toAbsolutePath());
+        } catch (RuntimeException e) {
+            log.error("Failed to save local session snapshot to {}", snapshotPath.toAbsolutePath(), e);
+            hooks.showPopup("Failed to save game: " + e.getMessage());
+        }
+    }
+
+    public void loadLocalSession() {
+        Path snapshotPath = snapshotPathSupplier.get();
+        if (!Files.exists(snapshotPath)) {
+            hooks.showPopup("No saved game found at " + snapshotPath.toAbsolutePath());
+            return;
+        }
+        try {
+            SessionState restoredState = sessionPersistenceService.load(snapshotPath);
+            hooks.rebuildGame(restoredState);
+            hooks.showPopup("Loaded game from " + snapshotPath.toAbsolutePath());
+            hooks.showPersistenceNotice(text("game.status.loadedAt", formattedCurrentTime()));
+            log.info("Loaded local session snapshot from {}", snapshotPath.toAbsolutePath());
+        } catch (RuntimeException e) {
+            log.error("Failed to load local session snapshot from {}", snapshotPath.toAbsolutePath(), e);
+            hooks.showPopup("Failed to load game: " + e.getMessage());
+        }
+    }
+
+    private String formattedCurrentTime() {
+        return nowSupplier.get().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+    }
+
+    public interface Hooks {
+        SessionState currentSessionState();
+
+        void rebuildGame(SessionState restoredState);
+
+        void showPopup(String message);
+
+        void showPersistenceNotice(String message);
+    }
+}

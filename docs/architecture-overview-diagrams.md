@@ -58,6 +58,7 @@ flowchart LR
         AUCTION[Auction handlers]
         TRADE[Trade handlers]
         PERSIST[SessionPersistenceService]
+        LOCALPERSIST[LocalSessionPersistenceCoordinator]
     end
 
     subgraph PersistenceInfra[Persistence Infrastructure]
@@ -81,12 +82,14 @@ flowchart LR
     GAME --> POPUPS
     GAME --> VIEW
     GAME --> APP
+    GAME --> LOCALPERSIST
     POPUPS --> APP
     APP --> PURCHASE
     APP --> DEBT
     APP --> AUCTION
     APP --> TRADE
     APP --> PERSIST
+    LOCALPERSIST --> PERSIST
     PURCHASE --> SESSION
     DEBT --> SESSION
     AUCTION --> SESSION
