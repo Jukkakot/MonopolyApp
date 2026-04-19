@@ -7,6 +7,7 @@ import fi.monopoly.application.session.persistence.LocalSessionPersistenceUiHook
 import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
+import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.presentation.game.LocalSessionActions;
 import fi.monopoly.types.SpotType;
@@ -65,7 +66,10 @@ public class MonopolyApp extends MonopolyEventObserver {
     private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new LocalSessionPersistenceUiHooks() {
         @Override
         public void showPopup(String message) {
-            MonopolyRuntime.get().popupService().show(message);
+            MonopolyRuntime.get().popupService().showManualDecision(
+                    message,
+                    new ButtonProps(fi.monopoly.text.UiTexts.text("popup.ok.label"), null)
+            );
         }
 
         @Override

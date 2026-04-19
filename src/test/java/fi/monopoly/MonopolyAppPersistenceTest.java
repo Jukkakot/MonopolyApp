@@ -109,6 +109,44 @@ class MonopolyAppPersistenceTest {
     }
 
     @Test
+    void savePopupCanBeClosedDuringComputerTurn() {
+        Path snapshotPath = tempDir.resolve("local-session.json");
+        System.setProperty("monopoly.localSavePath", snapshotPath.toString());
+        fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
+
+        MonopolyApp app = new MonopolyApp();
+        app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;
+        app.height = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
+
+        PGraphicsJava2D graphics = new PGraphicsJava2D();
+        graphics.setParent(app);
+        graphics.setPrimary(true);
+        graphics.setSize(app.width, app.height);
+        app.g = graphics;
+
+        ControlP5 controlP5 = new ControlP5(app);
+        PFont font = app.createFont("Arial", 20);
+        MonopolyApp.p5 = controlP5;
+        MonopolyApp.font10 = font;
+        MonopolyApp.font20 = font;
+        MonopolyApp.font30 = font;
+
+        MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
+        app.setGameForTest(game);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.gameSession().players().getTurn().isComputerControlled());
+
+        app.saveLocalSession();
+
+        assertNotNull(runtime.popupService().activePopupMessage());
+        assertTrue(runtime.popupService().activePopupMessage().startsWith("Saved "));
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        assertFalse(runtime.popupService().isAnyVisible());
+    }
+
+    @Test
     void loadRebuildClearsOldPopupStateAndStartsLoadedGamePaused() {
         Path snapshotPath = tempDir.resolve("local-session.json");
         System.setProperty("monopoly.localSavePath", snapshotPath.toString());
