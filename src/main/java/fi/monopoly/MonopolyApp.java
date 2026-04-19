@@ -9,6 +9,7 @@ import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.event.MonopolyEventObserver;
+import fi.monopoly.presentation.game.DesktopSessionHostCoordinator;
 import fi.monopoly.presentation.game.LocalSessionActions;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.MonopolyUtils;
@@ -50,19 +51,53 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     };
     private static long coloredImageCopies;
-    private Game game;
     private final SessionPersistenceService sessionPersistenceService = new SessionPersistenceService();
-    private final SessionHost sessionHost = new SessionHost() {
-        @Override
-        public fi.monopoly.domain.session.SessionState currentState() {
-            return game != null ? game.sessionStateForPersistence() : null;
-        }
+    private final DesktopSessionHostCoordinator desktopSessionHostCoordinator = new DesktopSessionHostCoordinator(
+            new DesktopSessionHostCoordinator.Hooks() {
+                @Override
+                public void shutdownSessionRuntime() {
+                    MonopolyApp.this.shutdownCurrentSessionRuntime();
+                }
 
-        @Override
-        public void replaceState(fi.monopoly.domain.session.SessionState restoredState) {
-            MonopolyApp.this.rebuildGame(restoredState);
-        }
-    };
+                @Override
+                public void disposeGame(Game game) {
+                    game.dispose();
+                }
+
+                @Override
+                public void disposeControlLayer() {
+                    if (p5 != null) {
+                        p5.dispose();
+                    }
+                }
+
+                @Override
+                public void initializeControlLayer() {
+                    p5 = new ControlP5(MonopolyApp.this);
+                    MonopolyRuntime.initialize(MonopolyApp.this, p5, font10, font20, font30);
+                }
+
+                @Override
+                public void applyDefaultTextFont() {
+                    MonopolyApp.this.applyDefaultTextFont();
+                }
+
+                @Override
+                public Game createGame(fi.monopoly.domain.session.SessionState restoredState) {
+                    LocalSessionActions localSessionActions = new LocalSessionActions(
+                            MonopolyApp.this::saveLocalSession,
+                            MonopolyApp.this::loadLocalSession
+                    );
+                    return new Game(MonopolyRuntime.get(), restoredState, localSessionActions);
+                }
+
+                @Override
+                public void flushPendingChanges() {
+                    MonopolyRuntime.get().eventBus().flushPendingChanges();
+                }
+            }
+    );
+    private final SessionHost sessionHost = desktopSessionHostCoordinator;
     private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new LocalSessionPersistenceUiHooks() {
         @Override
         public void showPopup(String message) {
@@ -74,9 +109,7 @@ public class MonopolyApp extends MonopolyEventObserver {
 
         @Override
         public void showPersistenceNotice(String message) {
-            if (game != null) {
-                game.showPersistenceNotice(message);
-            }
+            desktopSessionHostCoordinator.showPersistenceNotice(message);
         }
     };
     private final LocalSessionPersistenceCoordinator localSessionPersistenceCoordinator =
@@ -155,7 +188,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
         font30 = createFont("Monopoly Regular.ttf", 30);
-        rebuildGame(null);
+        desktopSessionHostCoordinator.rebuildFreshGame();
     }
 
     private void configureWindowSizing() {
@@ -200,7 +233,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     public void draw() {
         logWindowSizeChangeFromDraw();
         background(205, 230, 209);
-        game.draw();
+        desktopSessionHostCoordinator.currentGame().draw();
         if (DEBUG_MODE) {
             push();
             fill(22, 36, 31, 190);
@@ -210,7 +243,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             textAlign(LEFT, TOP);
             textFont(font20);
             float debugTextY = 22;
-            for (String line : game.debugPerformanceLines(frameRate)) {
+            for (String line : desktopSessionHostCoordinator.currentGame().debugPerformanceLines(frameRate)) {
                 text(line, 24, debugTextY);
                 debugTextY += 20;
             }
@@ -266,29 +299,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     Game currentGame() {
-        return game;
+        return desktopSessionHostCoordinator.currentGame();
     }
 
     void setGameForTest(Game game) {
-        this.game = game;
-    }
-
-    private void rebuildGame(fi.monopoly.domain.session.SessionState restoredState) {
-        fi.monopoly.domain.session.SessionState preparedRestoredState = prepareRestoredStateForRebuild(restoredState);
-        shutdownCurrentSessionRuntime();
-        if (game != null) {
-            game.dispose();
-        }
-        shutdownCurrentSessionRuntime();
-        if (p5 != null) {
-            p5.dispose();
-        }
-        p5 = new ControlP5(this);
-        MonopolyRuntime.initialize(this, p5, font10, font20, font30);
-        applyDefaultTextFont();
-        LocalSessionActions localSessionActions = new LocalSessionActions(this::saveLocalSession, this::loadLocalSession);
-        game = new Game(MonopolyRuntime.get(), preparedRestoredState, localSessionActions);
-        MonopolyRuntime.get().eventBus().flushPendingChanges();
+        desktopSessionHostCoordinator.setGameForTest(game);
     }
 
     private void shutdownCurrentSessionRuntime() {
@@ -300,30 +315,6 @@ public class MonopolyApp extends MonopolyEventObserver {
         runtime.setGameSession(null);
         runtime.eventBus().flushPendingChanges();
         runtime.popupService().hideAll();
-    }
-
-    private fi.monopoly.domain.session.SessionState prepareRestoredStateForRebuild(
-            fi.monopoly.domain.session.SessionState restoredState
-    ) {
-        if (restoredState == null
-                || restoredState.status() != fi.monopoly.domain.session.SessionStatus.IN_PROGRESS) {
-            return restoredState;
-        }
-        return new fi.monopoly.domain.session.SessionState(
-                restoredState.sessionId(),
-                restoredState.version(),
-                fi.monopoly.domain.session.SessionStatus.PAUSED,
-                restoredState.seats(),
-                restoredState.players(),
-                restoredState.properties(),
-                restoredState.turn(),
-                restoredState.pendingDecision(),
-                restoredState.auctionState(),
-                restoredState.activeDebt(),
-                restoredState.tradeState(),
-                restoredState.turnContinuationState(),
-                restoredState.winnerPlayerId()
-        );
     }
 
     private void applyDefaultTextFont() {
