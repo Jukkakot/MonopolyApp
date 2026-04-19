@@ -23,8 +23,6 @@ import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeUiBuilder;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.infrastructure.persistence.session.LegacySessionRuntimeRestorer;
-import fi.monopoly.infrastructure.persistence.session.RestoredLegacySessionRuntime;
 import fi.monopoly.presentation.game.*;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
@@ -85,6 +83,9 @@ public class Game implements MonopolyEventListener {
     private final MonopolyRuntime runtime;
     private final LocalSessionActions localSessionActions;
     private final TurnEngine turnEngine = new TurnEngine();
+    private final LegacyGameRuntimeBootstrapper legacyGameRuntimeBootstrapper = new LegacyGameRuntimeBootstrapper();
+    private final RestoredSessionReattachmentCoordinator restoredSessionReattachmentCoordinator =
+            new RestoredSessionReattachmentCoordinator();
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
     private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
@@ -174,7 +175,7 @@ public class Game implements MonopolyEventListener {
         this.propertyPurchaseFlow = pendingDecisionPopupAdapter;
         this.tradeController = createTradeController(legacyTradeGateway);
         this.sessionViewFacade = createSessionViewFacade();
-        seedRestoredSession(restoredSessionState);
+        applyRestoredSessionState(restoredSessionState);
         registerGameSession();
         setupPresentationCoordinators();
         this.gameUiController = createGameUiController();
@@ -450,17 +451,13 @@ public class Game implements MonopolyEventListener {
         runtime.eventBus().addListener(this);
         dices = Dices.setRollDice(runtime, this::rollDice);
         animations = new Animations();
-        if (restoredSessionState == null) {
-            PropertyFactory.resetState();
-            JailSpot.jailTimeLeftMap.clear();
-            board = new Board(runtime);
-            players = new Players(runtime);
+        LegacyGameRuntimeBootstrapper.LegacyGameRuntimeState runtimeState =
+                legacyGameRuntimeBootstrapper.bootstrap(runtime, restoredSessionState);
+        board = runtimeState.board();
+        players = runtimeState.players();
+        if (!runtimeState.restoredSession()) {
             setupDefaultGameState();
-            return;
         }
-        RestoredLegacySessionRuntime restoredRuntime = new LegacySessionRuntimeRestorer().restore(runtime, restoredSessionState);
-        board = restoredRuntime.board();
-        players = restoredRuntime.players();
     }
 
     private void setupControllers() {
@@ -497,93 +494,76 @@ public class Game implements MonopolyEventListener {
         setupDebugGameConfigs(runtime);
     }
 
-    private void seedRestoredSession(SessionState restoredSessionState) {
-        if (restoredSessionState == null) {
-            return;
-        }
-        sessionApplicationService.restoreFrom(restoredSessionState);
-        paused = restoredSessionState.status() == fi.monopoly.domain.session.SessionStatus.PAUSED;
-        gameOver = restoredSessionState.status() == fi.monopoly.domain.session.SessionStatus.GAME_OVER
-                || restoredSessionState.winnerPlayerId() != null;
-        winner = restoredSessionState.winnerPlayerId() == null ? null : playerById(restoredSessionState.winnerPlayerId());
+    private void applyRestoredSessionState(SessionState restoredSessionState) {
+        RestoredSessionReattachmentCoordinator.RestoredGameState restoredGameState =
+                restoredSessionReattachmentCoordinator.restoreAuthoritativeState(
+                        restoredSessionState,
+                        sessionApplicationService,
+                        this::playerById
+                );
+        paused = restoredGameState.paused();
+        gameOver = restoredGameState.gameOver();
+        winner = restoredGameState.winner();
     }
 
     private void initializeSessionPresentation(SessionState restoredSessionState) {
-        refreshLabels();
-        if (restoredSessionState == null) {
-            showRollDiceControl();
-            return;
-        }
-        restoreDebtPresentationState(restoredSessionState);
-        updateDebtButtons();
-        syncTransientPresentationState();
-        restorePresentationStateFromSession();
-    }
-
-    private void restoreDebtPresentationState(SessionState restoredSessionState) {
-        if (debtController == null || restoredSessionState == null || restoredSessionState.activeDebt() == null) {
-            return;
-        }
-        PaymentRequest request = toRestoredPaymentRequest(restoredSessionState);
-        if (request == null) {
-            return;
-        }
-        debtController.restoreDebtState(
-                request,
-                () -> {
-                    if (restoredSessionState.turnContinuationState() != null) {
-                        gameTurnFlowCoordinator.resumeContinuation(restoredSessionState.turnContinuationState());
-                    }
-                },
-                restoredSessionState.activeDebt().bankruptcyRisk()
+        restoredSessionReattachmentCoordinator.restorePresentation(
+                restoredSessionState,
+                sessionApplicationService,
+                debtController,
+                createRestoredSessionReattachmentHooks()
         );
     }
 
-    private PaymentRequest toRestoredPaymentRequest(SessionState restoredSessionState) {
-        var activeDebt = restoredSessionState.activeDebt();
-        if (activeDebt == null) {
-            return null;
-        }
-        Player debtor = playerById(activeDebt.debtorPlayerId());
-        if (debtor == null) {
-            return null;
-        }
-        PaymentTarget target = activeDebt.creditorType() == fi.monopoly.domain.session.DebtCreditorType.PLAYER
-                ? creditorTarget(activeDebt.creditorPlayerId())
-                : BankTarget.INSTANCE;
-        if (target == null) {
-            return null;
-        }
-        return new PaymentRequest(debtor, target, activeDebt.amountRemaining(), activeDebt.reason());
-    }
+    private RestoredSessionReattachmentCoordinator.Hooks createRestoredSessionReattachmentHooks() {
+        return new RestoredSessionReattachmentCoordinator.Hooks() {
+            @Override
+            public Player playerById(String playerId) {
+                return Game.this.playerById(playerId);
+            }
 
-    private PaymentTarget creditorTarget(String creditorPlayerId) {
-        Player creditor = playerById(creditorPlayerId);
-        return creditor == null ? null : new PlayerTarget(creditor);
-    }
+            @Override
+            public boolean gameOver() {
+                return gameOver;
+            }
 
-    private void restorePresentationStateFromSession() {
-        SessionState state = sessionApplicationService.currentState();
-        if (gameOver || state == null) {
-            hidePrimaryTurnControls();
-            return;
-        }
-        if (state.activeDebt() != null
-                || state.pendingDecision() != null
-                || state.auctionState() != null
-                || state.tradeState() != null) {
-            hidePrimaryTurnControls();
-            return;
-        }
-        if (state.turn() != null && state.turn().canEndTurn()) {
-            showEndTurnControl();
-            return;
-        }
-        if (state.turn() != null && state.turn().canRoll()) {
-            showRollDiceControl();
-            return;
-        }
-        hidePrimaryTurnControls();
+            @Override
+            public void refreshLabels() {
+                Game.this.refreshLabels();
+            }
+
+            @Override
+            public void showRollDiceControl() {
+                Game.this.showRollDiceControl();
+            }
+
+            @Override
+            public void showEndTurnControl() {
+                Game.this.showEndTurnControl();
+            }
+
+            @Override
+            public void hidePrimaryTurnControls() {
+                Game.this.hidePrimaryTurnControls();
+            }
+
+            @Override
+            public void updateDebtButtons() {
+                Game.this.updateDebtButtons();
+            }
+
+            @Override
+            public void syncTransientPresentationState() {
+                Game.this.syncTransientPresentationState();
+            }
+
+            @Override
+            public void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
+                if (continuationState != null && gameTurnFlowCoordinator != null) {
+                    gameTurnFlowCoordinator.resumeContinuation(continuationState);
+                }
+            }
+        };
     }
 
     Board getBoard() {
