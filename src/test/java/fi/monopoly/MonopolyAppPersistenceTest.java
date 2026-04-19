@@ -2,6 +2,7 @@ package fi.monopoly;
 
 import controlP5.ControlP5;
 import fi.monopoly.components.Game;
+import fi.monopoly.presentation.game.GameSessionState;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
 import fi.monopoly.presentation.game.LocalSessionActions;
 import org.junit.jupiter.api.AfterEach;
@@ -47,9 +48,9 @@ class MonopolyAppPersistenceTest {
 
     private static boolean paused(Game game) {
         try {
-            var field = Game.class.getDeclaredField("paused");
+            var field = Game.class.getDeclaredField("sessionState");
             field.setAccessible(true);
-            return field.getBoolean(game);
+            return ((GameSessionState) field.get(game)).paused();
         } catch (ReflectiveOperationException e) {
             throw new AssertionError("Failed to inspect paused state", e);
         }

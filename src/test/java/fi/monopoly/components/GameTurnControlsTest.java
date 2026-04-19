@@ -7,6 +7,7 @@ import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.dices.Dice;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.presentation.game.GameSessionState;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
@@ -115,6 +116,12 @@ class GameTurnControlsTest {
 
     private static MonopolyButton getDebugGodModeButton(Game game) throws ReflectiveOperationException {
         return getButton(game, "debugGodModeButton");
+    }
+
+    private static GameSessionState getSessionState(Game game) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField("sessionState");
+        field.setAccessible(true);
+        return (GameSessionState) field.get(game);
     }
 
     private static fi.monopoly.presentation.game.DebugController getDebugController(Game game) throws ReflectiveOperationException {
@@ -646,9 +653,7 @@ class GameTurnControlsTest {
 
         getPauseButton(game).pressButton();
 
-        Field pausedField = Game.class.getDeclaredField("paused");
-        pausedField.setAccessible(true);
-        assertTrue((boolean) pausedField.get(game), "Pause button should still work during a bot turn");
+        assertTrue(getSessionState(game).paused(), "Pause button should still work during a bot turn");
     }
 
     @Test

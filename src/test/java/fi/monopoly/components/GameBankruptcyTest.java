@@ -8,6 +8,7 @@ import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.properties.StreetProperty;
+import fi.monopoly.presentation.game.GameSessionState;
 import fi.monopoly.support.TestLogLevels;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
@@ -209,7 +210,7 @@ class GameBankruptcyTest {
 
         assertEquals(1, game.players().count());
         assertEquals(winner, game.players().getPlayers().get(0));
-        assertTrue(getBooleanField(game, "gameOver"));
+        assertTrue(gameSessionState(game).gameOver());
         assertEquals(winner.getSpot().getTokenCoords(winner), winner.getCoords());
         assertTrue(runtime.popupService().isAnyVisible());
         assertNotNull(runtime.popupService().activePopupMessage());
@@ -232,10 +233,10 @@ class GameBankruptcyTest {
         game.debtController().setDebtStateForTest(debtState);
     }
 
-    private static boolean getBooleanField(Game game, String fieldName) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField(fieldName);
+    private static GameSessionState gameSessionState(Game game) throws ReflectiveOperationException {
+        Field field = Game.class.getDeclaredField("sessionState");
         field.setAccessible(true);
-        return field.getBoolean(game);
+        return (GameSessionState) field.get(game);
     }
 
     private static MonopolyButton getEndRoundButton(Game game) throws ReflectiveOperationException {

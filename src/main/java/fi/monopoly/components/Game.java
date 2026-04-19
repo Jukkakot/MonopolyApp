@@ -84,8 +84,7 @@ public class Game implements MonopolyEventListener {
     private final MonopolyRuntime runtime;
     private final LocalSessionActions localSessionActions;
     private final TurnEngine turnEngine = new TurnEngine();
-    private final RestoredSessionReattachmentCoordinator restoredSessionReattachmentCoordinator =
-            new RestoredSessionReattachmentCoordinator();
+    private final GameSessionStateCoordinator gameSessionStateCoordinator = new GameSessionStateCoordinator();
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
     private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
@@ -114,12 +113,9 @@ public class Game implements MonopolyEventListener {
     private Animations animations;
     private int goMoneyAmount = 200;
     private Board board;
-    private boolean paused;
-    private boolean gameOver;
-    private Player winner;
+    private final GameSessionState sessionState = new GameSessionState();
     private final BotTurnScheduler botTurnScheduler = new BotTurnScheduler();
     private final GameBotTurnDriver botTurnDriver = new GameBotTurnDriver(botTurnScheduler);
-    private BotTurnScheduler.SpeedMode botSpeedMode = BotTurnScheduler.SpeedMode.NORMAL;
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private LayoutMetrics frameLayoutMetrics;
     private long lastAnimationUpdateNanos = -1L;
@@ -133,9 +129,6 @@ public class Game implements MonopolyEventListener {
     private GamePresentationSupport gamePresentationSupport;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     private GameBotTurnDriver.Hooks gameBotTurnHooks;
-    private String persistenceNotice;
-    private int persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
-
     public Game(MonopolyRuntime runtime) {
         this(runtime, null, LocalSessionActions.NO_OP_ACTIONS);
     }
@@ -253,17 +246,17 @@ public class Game implements MonopolyEventListener {
         return new GameSessionBridgeFactory.Hooks() {
             @Override
             public boolean paused() {
-                return paused;
+                return sessionState.paused();
             }
 
             @Override
             public boolean gameOver() {
-                return gameOver;
+                return sessionState.gameOver();
             }
 
             @Override
             public Player winner() {
-                return winner;
+                return sessionState.winner();
             }
 
             @Override
@@ -293,7 +286,7 @@ public class Game implements MonopolyEventListener {
 
             @Override
             public boolean canOpenTrade() {
-                return !gameOver && !runtime.popupService().isAnyVisible() && debtController.debtState() == null;
+                return !sessionState.gameOver() && !runtime.popupService().isAnyVisible() && debtController.debtState() == null;
             }
 
             @Override
@@ -377,7 +370,7 @@ public class Game implements MonopolyEventListener {
 
             @Override
             public boolean gameOver() {
-                return gameOver;
+                return sessionState.gameOver();
             }
 
             @Override
@@ -406,7 +399,7 @@ public class Game implements MonopolyEventListener {
         return new GamePresentationFactory.Hooks() {
             @Override
             public boolean gameOver() {
-                return gameOver;
+                return sessionState.gameOver();
             }
 
             @Override
@@ -421,7 +414,7 @@ public class Game implements MonopolyEventListener {
 
             @Override
             public boolean paused() {
-                return paused;
+                return sessionState.paused();
             }
 
             @Override
@@ -537,19 +530,16 @@ public class Game implements MonopolyEventListener {
     }
 
     private void applyRestoredSessionState(SessionState restoredSessionState) {
-        RestoredSessionReattachmentCoordinator.RestoredGameState restoredGameState =
-                restoredSessionReattachmentCoordinator.restoreAuthoritativeState(
-                        restoredSessionState,
-                        sessionApplicationService,
-                        this::playerById
-                );
-        paused = restoredGameState.paused();
-        gameOver = restoredGameState.gameOver();
-        winner = restoredGameState.winner();
+        gameSessionStateCoordinator.restoreSessionState(
+                sessionState,
+                restoredSessionState,
+                sessionApplicationService,
+                this::playerById
+        );
     }
 
     private void initializeSessionPresentation(SessionState restoredSessionState) {
-        restoredSessionReattachmentCoordinator.restorePresentation(
+        gameSessionStateCoordinator.initializePresentation(
                 restoredSessionState,
                 sessionApplicationService,
                 debtController,
@@ -566,7 +556,7 @@ public class Game implements MonopolyEventListener {
 
             @Override
             public boolean gameOver() {
-                return gameOver;
+                return sessionState.gameOver();
             }
 
             @Override
@@ -621,13 +611,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public void showPersistenceNotice(String notice) {
-        if (notice == null || notice.isBlank()) {
-            persistenceNotice = null;
-            persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
-            return;
-        }
-        persistenceNotice = notice;
-        persistenceNoticeExpiresAtMillis = runtime.app().millis() + 5000;
+        gameSessionStateCoordinator.showPersistenceNotice(sessionState, notice, runtime.app().millis());
     }
 
     void refreshProjectedSessionState() {
@@ -639,11 +623,11 @@ public class Game implements MonopolyEventListener {
     }
 
     private void onDebtStateChanged() {
-        updateDebtButtons();
-        if (sessionApplicationService != null) {
-            sessionApplicationService.clearActiveDebtOverride();
-        }
-        restoreBotTurnControlsIfNeeded();
+        gameSessionStateCoordinator.onDebtStateChanged(
+                sessionApplicationService,
+                this::updateDebtButtons,
+                () -> restoreBotTurnControlsIfNeeded()
+        );
     }
 
     private void setupButtonActions() {
@@ -726,7 +710,7 @@ public class Game implements MonopolyEventListener {
                 animations.isRunning(),
                 turnPlayer != null && turnPlayer.isComputerControlled(),
                 runtime.app().millis(),
-                botSpeedMode,
+                sessionState.botSpeedMode(),
                 players.getPlayers().stream().allMatch(Player::isComputerControlled)
         );
     }
@@ -755,7 +739,7 @@ public class Game implements MonopolyEventListener {
         botTurnScheduler.schedule(
                 delayKind,
                 now,
-                botSpeedMode,
+                sessionState.botSpeedMode(),
                 players.getPlayers().stream().allMatch(Player::isComputerControlled)
         );
     }
@@ -817,8 +801,8 @@ public class Game implements MonopolyEventListener {
                 players.getPlayers(),
                 runtime.popupService().recentPopupMessages(),
                 debtController.debtState(),
-                persistenceNotice,
-                gameOver,
+                sessionState.persistenceNotice(),
+                sessionState.gameOver(),
                 runtime.popupService().isAnyVisible(),
                 animations.isRunning(),
                 endRoundButton.isVisible(),
@@ -830,14 +814,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void clearExpiredPersistenceNoticeIfNeeded() {
-        if (persistenceNotice == null) {
-            return;
-        }
-        if (runtime.app().millis() < persistenceNoticeExpiresAtMillis) {
-            return;
-        }
-        persistenceNotice = null;
-        persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
+        gameSessionStateCoordinator.clearExpiredPersistenceNoticeIfNeeded(sessionState, runtime.app().millis());
     }
 
     private float getSidebarContentTop() {
@@ -858,7 +835,7 @@ public class Game implements MonopolyEventListener {
         if (gamePresentationSupport == null) {
             return;
         }
-        gamePresentationSupport.updatePersistentButtons(gameOver);
+        gamePresentationSupport.updatePersistentButtons(sessionState.gameOver());
     }
 
     private void refreshButtonInteractivityState() {
@@ -878,23 +855,24 @@ public class Game implements MonopolyEventListener {
         if (gamePresentationSupport == null) {
             return;
         }
-        gamePresentationSupport.refreshLabels(paused, botSpeedMode);
+        gamePresentationSupport.refreshLabels(sessionState.paused(), sessionState.botSpeedMode());
     }
 
     private void togglePause() {
-        if (gameOver) {
+        if (!gameSessionStateCoordinator.togglePause(sessionState, this::refreshLabels)) {
             return;
         }
-        paused = !paused;
-        refreshLabels();
-        log.info("Game paused={}", paused);
+        log.info("Game paused={}", sessionState.paused());
     }
 
     private void cycleBotSpeedMode() {
-        botSpeedMode = botSpeedMode.next();
-        botTurnScheduler.markReadyNow(runtime.app().millis());
-        refreshLabels();
-        log.info("Bot speed mode={}", botSpeedMode);
+        BotTurnScheduler.SpeedMode nextMode = gameSessionStateCoordinator.cycleBotSpeedMode(
+                sessionState,
+                botTurnScheduler::markReadyNow,
+                runtime.app().millis(),
+                this::refreshLabels
+        );
+        log.info("Bot speed mode={}", nextMode);
     }
 
     private void switchLanguage(Locale locale) {
@@ -903,19 +881,50 @@ public class Game implements MonopolyEventListener {
 
     private void debugResetTurnState() {
         log.debug("Debug action: reset turn state");
-        animations.finishAllAnimations();
-        gameTurnFlowCoordinator.resetTransientTurnState();
-        debtController.clearDebtState();
-        updateDebtButtons();
-        runtime.popupService().hideAll();
-        showRollDiceControl();
-        runtime.popupService().show(text("game.debug.reset"));
+        gameSessionStateCoordinator.debugResetTurnState(new GameSessionStateCoordinator.DebugResetHooks() {
+            @Override
+            public void finishAllAnimations() {
+                animations.finishAllAnimations();
+            }
+
+            @Override
+            public void resetTransientTurnState() {
+                gameTurnFlowCoordinator.resetTransientTurnState();
+            }
+
+            @Override
+            public void clearDebtState() {
+                debtController.clearDebtState();
+            }
+
+            @Override
+            public void updateDebtButtons() {
+                Game.this.updateDebtButtons();
+            }
+
+            @Override
+            public void hideAllPopups() {
+                runtime.popupService().hideAll();
+            }
+
+            @Override
+            public void showRollDiceControl() {
+                Game.this.showRollDiceControl();
+            }
+
+            @Override
+            public void showDebugResetMessage() {
+                runtime.popupService().show(text("game.debug.reset"));
+            }
+        });
     }
 
     private void restoreNormalTurnControls() {
         log.trace("Restoring normal turn controls");
-        debtController.clearDebtState();
-        showRollDiceControl();
+        gameSessionStateCoordinator.restoreNormalTurnControls(
+                debtController::clearDebtState,
+                this::showRollDiceControl
+        );
     }
 
     private void showRollDiceControl() {
@@ -931,27 +940,57 @@ public class Game implements MonopolyEventListener {
     }
 
     private void declareWinner(Player winningPlayer) {
-        gameOver = true;
-        winner = winningPlayer;
-        paused = false;
-        gameTurnFlowCoordinator.resetTransientTurnState();
-        debtController.clearDebtState();
-        updateDebtButtons();
-        hidePrimaryTurnControls();
-        refreshLabels();
-        if (winner != null && winner.getSpot() != null) {
-            winner.setCoords(winner.getSpot().getTokenCoords(winner));
-            players.focusPlayer(winner);
-        }
-        String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
-        updateLogTurnContext();
-        log.info("Game over. winner={}", winnerName);
-        runtime.popupService().show(text("game.victory.popup", winnerName), () -> {
+        gameSessionStateCoordinator.declareWinner(sessionState, winningPlayer, new GameSessionStateCoordinator.WinnerHooks() {
+            @Override
+            public void resetTransientTurnState() {
+                gameTurnFlowCoordinator.resetTransientTurnState();
+            }
+
+            @Override
+            public void clearDebtState() {
+                debtController.clearDebtState();
+            }
+
+            @Override
+            public void updateDebtButtons() {
+                Game.this.updateDebtButtons();
+            }
+
+            @Override
+            public void hidePrimaryTurnControls() {
+                Game.this.hidePrimaryTurnControls();
+            }
+
+            @Override
+            public void refreshLabels() {
+                Game.this.refreshLabels();
+            }
+
+            @Override
+            public void focusWinner(Player winner) {
+                if (winner.getSpot() != null) {
+                    winner.setCoords(winner.getSpot().getTokenCoords(winner));
+                    players.focusPlayer(winner);
+                }
+            }
+
+            @Override
+            public void updateLogTurnContext() {
+                Game.this.updateLogTurnContext();
+            }
+
+            @Override
+            public void showVictoryPopup(Player winner) {
+                String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
+                log.info("Game over. winner={}", winnerName);
+                runtime.popupService().show(text("game.victory.popup", winnerName), () -> {
+                });
+            }
         });
     }
 
     private void updateLogTurnContext() {
-        gamePresentationSupport.updateLogTurnContext(gameOver, winner, players != null ? players.getTurn() : null);
+        gamePresentationSupport.updateLogTurnContext(sessionState.gameOver(), sessionState.winner(), players != null ? players.getTurn() : null);
     }
 
     private void syncTransientPresentationState() {
@@ -1026,7 +1065,7 @@ public class Game implements MonopolyEventListener {
         if (currentPlayer == null || !currentPlayer.isComputerControlled()) {
             return false;
         }
-        if (gameOver
+        if (sessionState.gameOver()
                 || runtime.popupService().isAnyVisible()
                 || debtController.debtState() != null
                 || animations.isRunning()
