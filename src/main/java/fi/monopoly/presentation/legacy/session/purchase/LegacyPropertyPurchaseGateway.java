@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.session.purchase;
+package fi.monopoly.presentation.legacy.session.purchase;
 
 import fi.monopoly.application.session.purchase.PropertyPurchaseGateway;
 import fi.monopoly.components.Player;

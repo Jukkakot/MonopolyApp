@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.session;
+package fi.monopoly.presentation.legacy.session;
 
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
@@ -8,13 +8,13 @@ import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
-import fi.monopoly.presentation.session.auction.LegacyAuctionGateway;
-import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
-import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
-import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
-import fi.monopoly.presentation.session.projection.LegacySessionProjector;
-import fi.monopoly.presentation.session.purchase.LegacyPropertyPurchaseGateway;
-import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
+import fi.monopoly.presentation.legacy.session.auction.LegacyAuctionGateway;
+import fi.monopoly.presentation.legacy.session.debt.LegacyDebtRemediationGateway;
+import fi.monopoly.presentation.legacy.session.debt.LegacyPaymentGateway;
+import fi.monopoly.presentation.legacy.session.projection.LegacyPopupSnapshot;
+import fi.monopoly.presentation.legacy.session.projection.LegacySessionProjector;
+import fi.monopoly.presentation.legacy.session.purchase.LegacyPropertyPurchaseGateway;
+import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;

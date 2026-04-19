@@ -13,7 +13,7 @@ import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeSelectionState;
 import fi.monopoly.domain.session.TradeState;
 import fi.monopoly.domain.session.TradeStatus;
-import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
+import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import lombok.extern.slf4j.Slf4j;
 

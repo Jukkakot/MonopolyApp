@@ -15,6 +15,7 @@ import fi.monopoly.domain.session.TradeEditPatch;
 import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeState;
 import fi.monopoly.domain.session.TradeStatus;
+import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
 
 import java.util.List;
 import java.util.Objects;

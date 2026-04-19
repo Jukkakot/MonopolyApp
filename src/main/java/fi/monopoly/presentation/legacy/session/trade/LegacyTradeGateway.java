@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.session.trade;
+package fi.monopoly.presentation.legacy.session.trade;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.StrongBotConfig;

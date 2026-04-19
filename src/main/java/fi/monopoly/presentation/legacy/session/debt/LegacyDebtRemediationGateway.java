@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.session.debt;
+package fi.monopoly.presentation.legacy.session.debt;
 
 import fi.monopoly.application.session.debt.DebtRemediationGateway;
 import fi.monopoly.components.payment.DebtController;
