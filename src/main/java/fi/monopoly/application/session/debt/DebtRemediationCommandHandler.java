@@ -4,7 +4,6 @@ import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
-import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
 import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;
@@ -25,7 +24,7 @@ import java.util.function.Supplier;
 public final class DebtRemediationCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> sessionStateSupplier;
-    private final LegacyDebtRemediationGateway gateway;
+    private final DebtRemediationGateway gateway;
     private final Consumer<DebtStateModel> activeDebtUpdater;
     private final Consumer<TurnContinuationState> turnContinuationUpdater;
 
@@ -34,7 +33,7 @@ public final class DebtRemediationCommandHandler {
             Supplier<SessionState> sessionStateSupplier,
             Consumer<DebtStateModel> activeDebtUpdater,
             Consumer<TurnContinuationState> turnContinuationUpdater,
-            LegacyDebtRemediationGateway gateway
+            DebtRemediationGateway gateway
     ) {
         this.sessionId = sessionId;
         this.sessionStateSupplier = sessionStateSupplier;

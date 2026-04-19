@@ -15,7 +15,6 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
-import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
 import fi.monopoly.types.SpotType;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.BeforeEach;
@@ -223,15 +222,11 @@ class DebtRemediationCommandHandlerTest {
         }
     }
 
-    private static final class FakeGateway extends LegacyDebtRemediationGateway {
+    private static final class FakeGateway implements DebtRemediationGateway {
         private AtomicBoolean payDebtCalled = new AtomicBoolean(false);
         private Runnable onPayDebt = () -> {
         };
         private ActiveDebtSupplier debtSupplier;
-
-        private FakeGateway() {
-            super(null);
-        }
 
         @Override
         public Property propertyById(String propertyId) {
@@ -264,9 +259,19 @@ class DebtRemediationCommandHandlerTest {
         }
 
         @Override
+        public boolean sellBuildingRoundsAcrossSet(String propertyId, int rounds) {
+            return propertyById(propertyId) instanceof StreetProperty streetProperty
+                    && streetProperty.sellBuildingRoundsAcrossSet(rounds);
+        }
+
+        @Override
         public void payDebtNow() {
             payDebtCalled.set(true);
             onPayDebt.run();
+        }
+
+        @Override
+        public void declareBankruptcy() {
         }
     }
 }

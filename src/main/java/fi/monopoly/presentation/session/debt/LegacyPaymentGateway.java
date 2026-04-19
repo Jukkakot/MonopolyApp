@@ -1,12 +1,13 @@
 package fi.monopoly.presentation.session.debt;
 
+import fi.monopoly.application.session.debt.DebtOpeningGateway;
 import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PaymentResolver;
 import fi.monopoly.components.payment.PaymentResult;
 import fi.monopoly.components.payment.PaymentStatus;
 
-public class LegacyPaymentGateway {
+public class LegacyPaymentGateway implements DebtOpeningGateway {
     private final PaymentResolver paymentResolver;
     private final DebtController debtController;
 

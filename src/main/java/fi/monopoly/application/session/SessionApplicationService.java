@@ -24,9 +24,14 @@ import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.command.SubmitTradeOfferCommand;
 import fi.monopoly.application.command.ToggleMortgageCommand;
 import fi.monopoly.application.session.auction.AuctionCommandHandler;
+import fi.monopoly.application.session.auction.AuctionGateway;
+import fi.monopoly.application.session.debt.DebtOpeningGateway;
+import fi.monopoly.application.session.debt.DebtRemediationGateway;
 import fi.monopoly.application.session.debt.DebtRemediationCommandHandler;
 import fi.monopoly.application.session.debt.RentAndDebtOpeningHandler;
 import fi.monopoly.application.session.purchase.PropertyPurchaseCommandHandler;
+import fi.monopoly.application.session.purchase.PropertyPurchaseGateway;
+import fi.monopoly.application.session.trade.TradeGateway;
 import fi.monopoly.application.session.trade.TradeCommandHandler;
 import fi.monopoly.application.session.turn.TurnActionCommandHandler;
 import fi.monopoly.application.session.turn.TurnActionGateway;
@@ -35,10 +40,7 @@ import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.Players;
-import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
@@ -50,11 +52,6 @@ import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.TradeState;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
-import fi.monopoly.presentation.session.auction.LegacyAuctionGateway;
-import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
-import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
-import fi.monopoly.presentation.session.purchase.LegacyPropertyPurchaseGateway;
-import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
 import fi.monopoly.types.SpotType;
 
 import java.util.List;
@@ -127,20 +124,20 @@ public final class SessionApplicationService {
         );
     }
 
-    public void configureAuctionFlow(PopupService popupService, Players players) {
+    public void configureAuctionFlow(AuctionGateway gateway) {
         auctionCommandHandler = new AuctionCommandHandler(
                 sessionId,
                 this::currentState,
                 this::setAuctionStateOverride,
                 this::setTurnContinuationOverride,
                 this::resumeContinuation,
-                new LegacyAuctionGateway(popupService, players)
+                gateway
         );
     }
 
-    public void configurePropertyPurchaseFlow(PopupService popupService, Players players) {
+    public void configurePropertyPurchaseFlow(PropertyPurchaseGateway gateway) {
         if (auctionCommandHandler == null) {
-            configureAuctionFlow(popupService, players);
+            throw new IllegalStateException("Auction flow must be configured before property purchase flow");
         }
         propertyPurchaseCommandHandler = new PropertyPurchaseCommandHandler(
                 sessionId,
@@ -149,33 +146,36 @@ public final class SessionApplicationService {
                 this::setAuctionStateOverride,
                 this::setTurnContinuationOverride,
                 this::resumeContinuation,
-                new LegacyPropertyPurchaseGateway(popupService, players),
+                gateway,
                 auctionCommandHandler
         );
     }
 
-    public void configureRentAndDebtFlow(DebtController debtController) {
+    public void configureRentAndDebtFlow(
+            DebtOpeningGateway debtOpeningGateway,
+            DebtRemediationGateway debtRemediationGateway
+    ) {
         rentAndDebtOpeningHandler = new RentAndDebtOpeningHandler(
                 this::setActiveDebtOverride,
                 this::setTurnContinuationOverride,
                 this::resumeContinuation,
-                new LegacyPaymentGateway(debtController)
+                debtOpeningGateway
         );
         debtRemediationCommandHandler = new DebtRemediationCommandHandler(
                 sessionId,
                 this::currentState,
                 this::setActiveDebtOverride,
                 this::setTurnContinuationOverride,
-                new LegacyDebtRemediationGateway(debtController)
+                debtRemediationGateway
         );
     }
 
-    public void configureTradeFlow(Supplier<List<Player>> playersSupplier) {
+    public void configureTradeFlow(TradeGateway gateway) {
         tradeCommandHandler = new TradeCommandHandler(
                 sessionId,
                 this::currentState,
                 this::setTradeStateOverride,
-                new LegacyTradeGateway(playersSupplier)
+                gateway
         );
     }
 

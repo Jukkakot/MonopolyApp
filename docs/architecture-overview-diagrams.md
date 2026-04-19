@@ -123,6 +123,7 @@ What is important here:
 - local save/load now depends on a small `SessionHost` seam instead of directly owning rebuild/state callbacks
 - snapshot storage now lives under an explicit infrastructure package boundary, so local JSON is no longer the only assumed persistence backend
 - the legacy `SessionApplicationService` wiring has been centralized behind `LegacySessionApplicationFactory`, which makes the remaining runtime bridge more explicit
+- the application layer is now configured through its own gateway interfaces instead of directly constructing `Legacy*` presentation adapters
 - restored-session bootstrap and reattachment are now explicit bridge steps instead of being buried directly inside `Game`
 - there is still a legacy bridge because the Processing client still runs against runtime objects
 

@@ -13,7 +13,6 @@ import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.TurnContinuationAction;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.TurnContinuationType;
-import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
 import fi.monopoly.types.SpotType;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.BeforeEach;
@@ -123,12 +122,18 @@ class RentAndDebtOpeningHandlerTest {
         );
     }
 
-    private static final class FakePaymentGateway extends LegacyPaymentGateway {
+    private static final class FakePaymentGateway implements DebtOpeningGateway {
         private boolean openCalled;
         private PaymentStatus lastStatus;
+        private final PaymentResolver paymentResolver;
 
         private FakePaymentGateway(PaymentResolver paymentResolver) {
-            super(paymentResolver, null);
+            this.paymentResolver = paymentResolver;
+        }
+
+        @Override
+        public PaymentResult tryResolve(PaymentRequest request) {
+            return paymentResolver.tryPay(request);
         }
 
         @Override

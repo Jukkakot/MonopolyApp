@@ -11,8 +11,6 @@ import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.PaymentObligation;
 import fi.monopoly.domain.session.TurnContinuationState;
-import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,13 +20,13 @@ public final class RentAndDebtOpeningHandler {
     private final Consumer<DebtStateModel> activeDebtUpdater;
     private final Consumer<TurnContinuationState> turnContinuationUpdater;
     private final Consumer<TurnContinuationState> turnContinuationResolver;
-    private final LegacyPaymentGateway paymentGateway;
+    private final DebtOpeningGateway paymentGateway;
 
     public RentAndDebtOpeningHandler(
             Consumer<DebtStateModel> activeDebtUpdater,
             Consumer<TurnContinuationState> turnContinuationUpdater,
             Consumer<TurnContinuationState> turnContinuationResolver,
-            LegacyPaymentGateway paymentGateway
+            DebtOpeningGateway paymentGateway
     ) {
         this.activeDebtUpdater = Objects.requireNonNull(activeDebtUpdater);
         this.turnContinuationUpdater = Objects.requireNonNull(turnContinuationUpdater);

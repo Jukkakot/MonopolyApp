@@ -8,8 +8,13 @@ import fi.monopoly.components.payment.DebtController;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
+import fi.monopoly.presentation.session.auction.LegacyAuctionGateway;
+import fi.monopoly.presentation.session.debt.LegacyDebtRemediationGateway;
+import fi.monopoly.presentation.session.debt.LegacyPaymentGateway;
 import fi.monopoly.presentation.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.session.projection.LegacySessionProjector;
+import fi.monopoly.presentation.session.purchase.LegacyPropertyPurchaseGateway;
+import fi.monopoly.presentation.session.trade.LegacyTradeGateway;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -76,19 +81,23 @@ public final class LegacySessionApplicationFactory {
                         canEndTurnSupplier
                 )::project
         );
-        sessionApplicationService.configureRentAndDebtFlow(debtController);
-        sessionApplicationService.configureAuctionFlow(popupService, playersSupplier.get());
-        sessionApplicationService.configurePropertyPurchaseFlow(popupService, playersSupplier.get());
-        sessionApplicationService.configureTradeFlow(() -> {
-            Players players = playersSupplier.get();
-            return players != null ? players.getPlayers() : List.of();
-        });
+        Players players = playersSupplier.get();
+        sessionApplicationService.configureRentAndDebtFlow(
+                new LegacyPaymentGateway(debtController),
+                new LegacyDebtRemediationGateway(debtController)
+        );
+        sessionApplicationService.configureAuctionFlow(new LegacyAuctionGateway(popupService, players));
+        sessionApplicationService.configurePropertyPurchaseFlow(new LegacyPropertyPurchaseGateway(popupService, players));
+        sessionApplicationService.configureTradeFlow(new LegacyTradeGateway(() -> {
+            Players currentPlayers = playersSupplier.get();
+            return currentPlayers != null ? currentPlayers.getPlayers() : List.of();
+        }));
         sessionApplicationService.configureTurnActionFlow(
                 new LegacyTurnActionGatewayAdapter(
                         dices,
                         () -> {
-                            Players players = playersSupplier.get();
-                            return players != null ? players.getTurn() : null;
+                            Players currentPlayers = playersSupplier.get();
+                            return currentPlayers != null ? currentPlayers.getTurn() : null;
                         },
                         endTurnAction
                 )
