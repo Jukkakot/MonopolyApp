@@ -23,6 +23,13 @@ import java.util.function.Supplier;
 
 import static fi.monopoly.text.UiTexts.text;
 
+/**
+ * Projects the current legacy runtime into an authoritative {@link SessionState} snapshot.
+ *
+ * <p>This adapter exists because the desktop game still runs many behaviors through mutable
+ * runtime objects. The projector lets the newer application layer observe that runtime through a
+ * stable session model while the remaining legacy responsibilities are being peeled away.</p>
+ */
 public final class LegacySessionProjector {
     private final String sessionId;
     private final Supplier<Players> playersSupplier;

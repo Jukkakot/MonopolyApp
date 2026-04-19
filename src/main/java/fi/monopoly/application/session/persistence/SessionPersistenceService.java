@@ -11,6 +11,13 @@ import fi.monopoly.persistence.session.SessionSnapshotStore;
 
 import java.nio.file.Path;
 
+/**
+ * Converts between authoritative {@link SessionState} instances and persisted snapshots.
+ *
+ * <p>This service owns the mapping between domain session state and storage format and hides the
+ * concrete snapshot store behind {@link SessionSnapshotStore}. It also provides the bridge for
+ * rebuilding legacy runtime objects from a restored session when the desktop client needs them.</p>
+ */
 public final class SessionPersistenceService {
     private final SessionSnapshotMapper sessionSnapshotMapper;
     private final SessionSnapshotStore sessionSnapshotStore;

@@ -15,6 +15,14 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+/**
+ * Builds a {@link SessionApplicationService} wired against the current legacy desktop runtime.
+ *
+ * <p>This centralizes the temporary bridge code that still connects separated application flows
+ * to Processing-era objects such as popups, players, debt controllers, and direct turn actions.
+ * Keeping that wiring in one place makes the remaining backend extraction work easier to see and
+ * replace incrementally.</p>
+ */
 public final class LegacySessionApplicationFactory {
     private final String sessionId;
     private final Supplier<Players> playersSupplier;

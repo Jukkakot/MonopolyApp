@@ -47,6 +47,15 @@ import java.util.Locale;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+/**
+ * Main desktop gameplay composition root.
+ *
+ * <p>{@code Game} still owns the live Processing-era runtime objects, rendering loop, and many UI
+ * controls, but it now delegates an increasing share of turn, decision, debt, trade, and
+ * persistence behavior into separated application and presentation adapters. In practice this is
+ * the local shell around the older client runtime while the project moves toward a backend-ready
+ * session architecture.</p>
+ */
 public class Game implements MonopolyEventListener {
     private static final String LOCAL_SESSION_ID = "local-session";
     // UI and layout constants

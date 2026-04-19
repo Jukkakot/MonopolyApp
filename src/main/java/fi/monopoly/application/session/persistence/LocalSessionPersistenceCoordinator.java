@@ -12,6 +12,14 @@ import java.util.function.Supplier;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+/**
+ * Orchestrates local save/load against the current session host.
+ *
+ * <p>The coordinator is intentionally thin: it resolves the local snapshot path, delegates
+ * serialization to {@link SessionPersistenceService}, asks the {@link SessionHost} for the
+ * current state or to replace the active one, and forwards user-facing feedback through UI hooks.
+ * This keeps local persistence separate from both concrete file storage and concrete game UI.</p>
+ */
 public final class LocalSessionPersistenceCoordinator {
     private final SessionPersistenceService sessionPersistenceService;
     private final LocalSessionPathProvider localSessionPathProvider;

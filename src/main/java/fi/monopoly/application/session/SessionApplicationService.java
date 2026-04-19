@@ -60,6 +60,14 @@ import fi.monopoly.types.SpotType;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Application-layer entry point for command handling around a single Monopoly session.
+ *
+ * <p>This service exposes the projected authoritative {@link SessionState}, routes incoming
+ * session commands to the relevant subsystem handlers, and keeps temporary overrides for flows
+ * that are already represented in the separated session model but still need to coordinate with
+ * legacy runtime objects.</p>
+ */
 public final class SessionApplicationService {
     private final String sessionId;
     private final Supplier<SessionState> sessionStateSupplier;
