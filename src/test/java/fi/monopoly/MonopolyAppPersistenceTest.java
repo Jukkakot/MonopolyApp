@@ -4,7 +4,7 @@ import controlP5.ControlP5;
 import fi.monopoly.components.Game;
 import fi.monopoly.presentation.game.GameSessionState;
 import fi.monopoly.presentation.game.GameSidebarPresenter;
-import fi.monopoly.presentation.game.LocalSessionActions;
+import fi.monopoly.presentation.game.desktop.LocalSessionActions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

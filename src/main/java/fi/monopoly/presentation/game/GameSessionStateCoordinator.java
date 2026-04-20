@@ -2,6 +2,7 @@ package fi.monopoly.presentation.game;
 
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
+import fi.monopoly.presentation.game.desktop.RestoredSessionReattachmentCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
 
 import java.util.function.Consumer;

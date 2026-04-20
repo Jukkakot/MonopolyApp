@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop;
 
 public record LocalSessionActions(
         Runnable saveSession,

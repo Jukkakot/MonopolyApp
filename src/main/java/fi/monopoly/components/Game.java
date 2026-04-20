@@ -30,6 +30,7 @@ import fi.monopoly.presentation.game.desktop.GameDesktopControlsFactory;
 import fi.monopoly.presentation.game.desktop.GameDesktopLifecycleCoordinator;
 import fi.monopoly.presentation.game.desktop.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.GameDesktopShellDependencies;
+import fi.monopoly.presentation.game.desktop.LocalSessionActions;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.text.UiTexts;

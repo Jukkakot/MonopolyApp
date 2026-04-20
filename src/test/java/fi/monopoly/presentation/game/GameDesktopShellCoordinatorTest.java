@@ -17,6 +17,7 @@ import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.presentation.game.desktop.GameDesktopShellCoordinator;
+import fi.monopoly.presentation.game.desktop.LocalSessionActions;
 import fi.monopoly.presentation.session.debt.DebtController;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.AfterEach;

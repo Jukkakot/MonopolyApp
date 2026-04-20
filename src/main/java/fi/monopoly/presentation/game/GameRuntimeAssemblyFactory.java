@@ -12,6 +12,7 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.game.desktop.LegacyGameRuntimeBootstrapper;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.text.UiTexts;
