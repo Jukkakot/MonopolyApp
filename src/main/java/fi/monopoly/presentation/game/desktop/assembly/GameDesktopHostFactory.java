@@ -18,7 +18,6 @@ import fi.monopoly.presentation.game.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
-import fi.monopoly.presentation.game.desktop.session.SessionViewFacade;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.ui.GameDesktopControlsFactory;
@@ -152,7 +151,6 @@ public final class GameDesktopHostFactory {
                 desktopAssembly.debugController(),
                 desktopAssembly.sessionApplicationService(),
                 desktopAssembly.debtActionDispatcher(),
-                null,
                 desktopAssembly.gameControlLayout(),
                 desktopAssembly.gamePrimaryTurnControls(),
                 desktopAssembly.gameSessionQueries(),
@@ -190,7 +188,6 @@ public final class GameDesktopHostFactory {
             DebugController debugController,
             SessionApplicationService sessionApplicationService,
             DebtActionDispatcher debtActionDispatcher,
-            SessionViewFacade sessionViewFacade,
             fi.monopoly.presentation.game.desktop.ui.GameControlLayout gameControlLayout,
             GamePrimaryTurnControls gamePrimaryTurnControls,
             GameSessionQueries gameSessionQueries,

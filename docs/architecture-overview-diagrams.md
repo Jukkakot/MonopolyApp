@@ -176,6 +176,7 @@ flowchart LR
     HOSTFACTORY[GameDesktopHostFactory]
     SHELL[GameDesktopShellCoordinator]
     ASSEMBLY[GameDesktopAssemblyFactory]
+    PRESENTATION[GameDesktopPresentationHost]
     SESSIONBRIDGE[GameSessionBridgeFactory]
     RUNTIME[GameRuntimeAssemblyFactory]
     FRAME[GameFrameCoordinator]
@@ -186,6 +187,9 @@ flowchart LR
     GAME --> HOSTFACTORY
     HOSTFACTORY --> SHELL
     HOSTFACTORY --> ASSEMBLY
+    GAME --> PRESENTATION
+    PRESENTATION --> SHELL
+    PRESENTATION --> FRAME
     ASSEMBLY --> SESSIONBRIDGE
     ASSEMBLY --> RUNTIME
     HOSTFACTORY --> FRAME
@@ -201,7 +205,7 @@ This is already much closer to backend-safe behavior than the original project s
 
 - the desktop client still owns the authoritative application service instance locally
 - the bridge still mutates legacy runtime objects in-process
-- `Game` still exposes a broad compatibility surface for tests and local desktop orchestration
+- `Game` still exposes a broad compatibility surface for tests and local desktop orchestration, even though frame and session-view work now sits behind `GameDesktopPresentationHost`
 
 ## 4. Current Package View
 
@@ -231,7 +235,7 @@ Useful mental model:
 - `desktop.shell`: orchestration between host and extracted coordinators
 - `desktop.runtime`: legacy runtime bootstrap and lifecycle
 - `desktop.session`: session bridge and restored-session reattachment
-- `desktop.ui`: controls, layout, frame rendering, and input binding
+- `desktop.ui`: controls, layout, frame rendering, input binding, and the extracted desktop presentation host
 
 ## 5. Target Backend-Ready Architecture
 
