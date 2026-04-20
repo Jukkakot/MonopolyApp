@@ -22,7 +22,7 @@ import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
-import fi.monopoly.presentation.game.desktop.GameDesktopShellCoordinator;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;

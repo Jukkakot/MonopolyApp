@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game.desktop;
+package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.session.SessionApplicationService;
