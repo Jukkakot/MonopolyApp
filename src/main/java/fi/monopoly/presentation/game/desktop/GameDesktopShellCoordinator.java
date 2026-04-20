@@ -16,7 +16,6 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.game.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.GameBotTurnDriver;
-import fi.monopoly.presentation.game.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.GameSessionBridgeFactory;
 import fi.monopoly.presentation.game.GameSessionQueries;
 import fi.monopoly.presentation.game.GameSessionState;
@@ -24,6 +23,7 @@ import fi.monopoly.presentation.game.GameSessionStateCoordinator;
 import fi.monopoly.presentation.game.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.game.SessionViewFacade;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
+import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.session.debt.DebtController;
 import lombok.extern.slf4j.Slf4j;
 

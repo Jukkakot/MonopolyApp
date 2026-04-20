@@ -13,7 +13,6 @@ import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.BotTurnScheduler;
 import fi.monopoly.presentation.game.GameBotTurnDriver;
-import fi.monopoly.presentation.game.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.GameSessionState;
 import fi.monopoly.presentation.game.GameSessionStateCoordinator;
 import fi.monopoly.utils.DebugPerformanceStats;

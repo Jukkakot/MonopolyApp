@@ -13,6 +13,7 @@ import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
+import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarStateFactory;
