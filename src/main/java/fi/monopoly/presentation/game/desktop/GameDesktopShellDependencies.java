@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop;
 
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.CallbackAction;
@@ -13,6 +13,11 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.PopupService;
+import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.GamePrimaryTurnControls;
+import fi.monopoly.presentation.game.GameSessionQueries;
+import fi.monopoly.presentation.game.GameSessionState;
+import fi.monopoly.presentation.game.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
 
 import java.util.function.BiConsumer;

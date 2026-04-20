@@ -6,6 +6,7 @@ import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
+import fi.monopoly.presentation.game.desktop.GameDesktopLifecycleCoordinator;
 import org.junit.jupiter.api.Test;
 import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
