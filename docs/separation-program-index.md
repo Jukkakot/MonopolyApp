@@ -100,7 +100,7 @@ Use this when deciding where code should move and what not to grow anymore.
 
 ### 5. PR1 design note
 
-- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
+- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr1-design-note-session-state-seam.md)
 
 Purpose:
 
@@ -115,7 +115,7 @@ Status:
 
 ### 6. PR2 design note
 
-- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr2-design-note-property-purchase-slice.md)
+- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr2-design-note-property-purchase-slice.md)
 
 Purpose:
 
@@ -131,7 +131,7 @@ Status:
 
 ### 7. PR3 design note
 
-- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr3-design-note-rent-and-debt-opening.md)
+- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr3-design-note-rent-and-debt-opening.md)
 
 Purpose:
 
@@ -146,7 +146,7 @@ Status:
 
 ### 8. PR4 design note
 
-- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr4-design-note-debt-remediation.md)
+- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr4-design-note-debt-remediation.md)
 
 Purpose:
 
@@ -162,7 +162,7 @@ Status:
 
 ### 9. PR5 design note
 
-- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr5-design-note-auction-flow.md)
+- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr5-design-note-auction-flow.md)
 
 Purpose:
 
@@ -178,7 +178,7 @@ Status:
 
 ### 10. PR6 design note
 
-- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr6-design-note-trade-flow.md)
+- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr6-design-note-trade-flow.md)
 
 Purpose:
 
@@ -193,7 +193,7 @@ Status:
 
 ### 11. PR7 design note
 
-- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr7-design-note-bot-command-unification.md)
+- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr7-design-note-bot-command-unification.md)
 
 Purpose:
 
@@ -205,7 +205,7 @@ Status:
 
 ### 12. PR8 design note
 
-- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr8-design-note-game-presentation-shell-cleanup.md)
 
 Purpose:
 
@@ -262,7 +262,7 @@ PR1:
 
 Primary document:
 
-- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
+- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr1-design-note-session-state-seam.md)
 
 ### Phase 2: Migrate property purchase
 
@@ -274,7 +274,7 @@ PR2:
 
 Primary document:
 
-- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr2-design-note-property-purchase-slice.md)
+- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr2-design-note-property-purchase-slice.md)
 
 ### Phase 3: Migrate rent and debt opening
 
@@ -285,7 +285,7 @@ PR3:
 
 Primary document:
 
-- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr3-design-note-rent-and-debt-opening.md)
+- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr3-design-note-rent-and-debt-opening.md)
 
 ### Phase 4: Migrate debt remediation
 
@@ -299,7 +299,7 @@ PR4:
 
 Primary document:
 
-- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr4-design-note-debt-remediation.md)
+- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr4-design-note-debt-remediation.md)
 
 ### Phase 5: Migrate auction flow
 
@@ -311,7 +311,7 @@ PR5:
 
 Primary document:
 
-- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr5-design-note-auction-flow.md)
+- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr5-design-note-auction-flow.md)
 
 ### Phase 6: Migrate trade flow
 
@@ -324,7 +324,7 @@ PR6:
 
 Primary document:
 
-- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr6-design-note-trade-flow.md)
+- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr6-design-note-trade-flow.md)
 
 ### Phase 7: Unify bots behind commands
 
@@ -335,7 +335,7 @@ PR7:
 
 Primary document:
 
-- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr7-design-note-bot-command-unification.md)
+- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr7-design-note-bot-command-unification.md)
 
 ### Phase 8: Shrink `Game` to presentation shell
 
@@ -347,7 +347,7 @@ PR8:
 
 Primary document:
 
-- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr8-design-note-game-presentation-shell-cleanup.md)
 
 ### Phase 9: Persistence-ready authoritative session
 

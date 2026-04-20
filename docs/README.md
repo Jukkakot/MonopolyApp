@@ -28,6 +28,12 @@ Current implementation reality:
   - [architecture-overview-diagrams.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-overview-diagrams.md)
   - [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
 
+Folder convention:
+
+- implemented historical plan slices now live under
+  [completed-plans](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans)
+- still-active forward-looking plan docs remain in the top-level `docs` folder
+
 ## Read Order
 
 If starting fresh, read in this order.
@@ -94,14 +100,14 @@ Use this as the original migration-program index:
 
 Then read the PR notes in order:
 
-- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
-- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr2-design-note-property-purchase-slice.md)
-- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr3-design-note-rent-and-debt-opening.md)
-- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr4-design-note-debt-remediation.md)
-- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr5-design-note-auction-flow.md)
-- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr6-design-note-trade-flow.md)
-- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr7-design-note-bot-command-unification.md)
-- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr1-design-note-session-state-seam.md)
+- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr2-design-note-property-purchase-slice.md)
+- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr3-design-note-rent-and-debt-opening.md)
+- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr4-design-note-debt-remediation.md)
+- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr5-design-note-auction-flow.md)
+- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr6-design-note-trade-flow.md)
+- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr7-design-note-bot-command-unification.md)
+- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr8-design-note-game-presentation-shell-cleanup.md)
 - [pr9-design-note-persistence-ready-session.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr9-design-note-persistence-ready-session.md)
 - [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
 - [pr11-design-note-turn-continuation-state.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr11-design-note-turn-continuation-state.md)
