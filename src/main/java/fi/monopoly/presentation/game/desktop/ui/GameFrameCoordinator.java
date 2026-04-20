@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
@@ -11,6 +11,11 @@ import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.GameBotTurnDriver;
+import fi.monopoly.presentation.game.GamePrimaryTurnControls;
+import fi.monopoly.presentation.game.GameSessionState;
+import fi.monopoly.presentation.game.GameSessionStateCoordinator;
 import fi.monopoly.utils.DebugPerformanceStats;
 import fi.monopoly.utils.LayoutMetrics;
 

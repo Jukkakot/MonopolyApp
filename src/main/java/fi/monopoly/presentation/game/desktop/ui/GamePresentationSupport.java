@@ -1,9 +1,11 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.GameUiController;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;

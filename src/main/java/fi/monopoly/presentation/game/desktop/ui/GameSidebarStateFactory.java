@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;

@@ -10,6 +10,8 @@ import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.turn.TurnEngine;
+import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;
+import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
