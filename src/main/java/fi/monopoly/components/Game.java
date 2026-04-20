@@ -88,6 +88,7 @@ public class Game implements MonopolyEventListener {
     private final GameDesktopAssemblyFactory gameDesktopAssemblyFactory = new GameDesktopAssemblyFactory();
     private final GameDesktopShellCoordinator gameDesktopShellCoordinator;
     private final GameDesktopLifecycleCoordinator gameDesktopLifecycleCoordinator = new GameDesktopLifecycleCoordinator();
+    private final GameDesktopControlsFactory gameDesktopControlsFactory = new GameDesktopControlsFactory();
     private final GameDesktopShellDependencies shellDependencies;
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
@@ -110,6 +111,7 @@ public class Game implements MonopolyEventListener {
     private final MonopolyButton loadButton;
     private final MonopolyButton botSpeedButton;
     private final MonopolyButton languageButton;
+    private final List<MonopolyButton> desktopButtons;
 
     // Mutable game state
     private Players players;
@@ -152,16 +154,18 @@ public class Game implements MonopolyEventListener {
                 gameSessionStateCoordinator,
                 gameBotTurnControlCoordinator
         );
-        this.endRoundButton = new MonopolyButton(runtime, "endRound");
-        this.retryDebtButton = new MonopolyButton(runtime, "retryDebt");
-        this.declareBankruptcyButton = new MonopolyButton(runtime, "declareBankruptcy");
-        this.debugGodModeButton = new MonopolyButton(runtime, "debugGodMode");
-        this.pauseButton = new MonopolyButton(runtime, "pause");
-        this.tradeButton = new MonopolyButton(runtime, "trade");
-        this.saveButton = new MonopolyButton(runtime, "save");
-        this.loadButton = new MonopolyButton(runtime, "load");
-        this.botSpeedButton = new MonopolyButton(runtime, "botSpeed");
-        this.languageButton = new MonopolyButton(runtime, "language");
+        GameDesktopControlsFactory.GameDesktopControls desktopControls = gameDesktopControlsFactory.create(runtime);
+        this.endRoundButton = desktopControls.buttons().endRoundButton();
+        this.retryDebtButton = desktopControls.buttons().retryDebtButton();
+        this.declareBankruptcyButton = desktopControls.buttons().declareBankruptcyButton();
+        this.debugGodModeButton = desktopControls.buttons().debugGodModeButton();
+        this.pauseButton = desktopControls.buttons().pauseButton();
+        this.tradeButton = desktopControls.buttons().tradeButton();
+        this.saveButton = desktopControls.buttons().saveButton();
+        this.loadButton = desktopControls.buttons().loadButton();
+        this.botSpeedButton = desktopControls.buttons().botSpeedButton();
+        this.languageButton = desktopControls.buttons().languageButton();
+        this.desktopButtons = desktopControls.allButtons();
         this.shellDependencies = new GameDesktopShellDependencies(
                 () -> sessionState,
                 this::players,
@@ -203,37 +207,11 @@ public class Game implements MonopolyEventListener {
                 () -> this
         );
         this.gameSidebarPresenter = new GameSidebarPresenter(runtime);
-        new GameButtonLayoutFactory().apply(
-                runtime,
-                new GameButtonLayoutFactory.Buttons(
-                        endRoundButton,
-                        retryDebtButton,
-                        declareBankruptcyButton,
-                        debugGodModeButton,
-                        pauseButton,
-                        tradeButton,
-                        saveButton,
-                        loadButton,
-                        botSpeedButton,
-                        languageButton
-                )
-        );
         GameDesktopAssemblyFactory.GameDesktopAssembly desktopAssembly = gameDesktopAssemblyFactory.create(
                 runtime,
                 restoredSessionState,
                 LOCAL_SESSION_ID,
-                new GameButtonLayoutFactory.Buttons(
-                        endRoundButton,
-                        retryDebtButton,
-                        declareBankruptcyButton,
-                        debugGodModeButton,
-                        pauseButton,
-                        tradeButton,
-                        saveButton,
-                        loadButton,
-                        botSpeedButton,
-                        languageButton
-                ),
+                desktopControls.buttons(),
                 turnEngine,
                 gameDesktopShellCoordinator.createRuntimeAssemblyHooks(shellDependencies),
                 gameDesktopShellCoordinator.createSessionBridgeHooks(shellDependencies),
@@ -273,18 +251,7 @@ public class Game implements MonopolyEventListener {
                 botTurnDriver,
                 botTurnScheduler,
                 debugPerformanceStats,
-                List.of(
-                        endRoundButton,
-                        retryDebtButton,
-                        declareBankruptcyButton,
-                        debugGodModeButton,
-                        pauseButton,
-                        tradeButton,
-                        saveButton,
-                        loadButton,
-                        botSpeedButton,
-                        languageButton
-                )
+                desktopButtons
         );
         gameDesktopShellCoordinator.initializeSessionPresentation(shellDependencies, restoredSessionState);
         setupButtonActions();
@@ -624,18 +591,7 @@ public class Game implements MonopolyEventListener {
                 this,
                 players,
                 dices,
-                List.of(
-                        endRoundButton,
-                        retryDebtButton,
-                        declareBankruptcyButton,
-                        debugGodModeButton,
-                        pauseButton,
-                        tradeButton,
-                        saveButton,
-                        loadButton,
-                        botSpeedButton,
-                        languageButton
-                )
+                desktopButtons
         );
     }
 
