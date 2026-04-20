@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.session.SessionApplicationService;
@@ -10,6 +10,16 @@ import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.turn.TurnEngine;
+import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.DebugController;
+import fi.monopoly.presentation.game.GameBotTurnDriver;
+import fi.monopoly.presentation.game.GameBotTurnHooksAdapter;
+import fi.monopoly.presentation.game.GamePrimaryTurnControls;
+import fi.monopoly.presentation.game.GameSessionQueries;
+import fi.monopoly.presentation.game.GameTurnFlowCoordinator;
+import fi.monopoly.presentation.game.GameTurnFlowHooksAdapter;
+import fi.monopoly.presentation.game.GameUiController;
+import fi.monopoly.presentation.game.GameUiHooksAdapter;
 import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;
 import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
