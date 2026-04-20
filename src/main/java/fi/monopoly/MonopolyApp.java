@@ -1,10 +1,8 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
-import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.client.session.desktop.DesktopClientSessionController;
-import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
+import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.event.MonopolyEventObserver;
@@ -49,14 +47,10 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     };
     private static long coloredImageCopies;
-    private final EmbeddedDesktopSessionHost embeddedSessionHost = new EmbeddedDesktopSessionHost(
-            new MonopolyDesktopSessionHostHooks(this)
+    private final DesktopEmbeddedClientShell desktopClientShell = new DesktopEmbeddedClientShell(
+            new MonopolyDesktopSessionHostHooks(this),
+            MonopolyLocalSessionPersistenceUiHooks::new
     );
-    private final ClientSession clientSession = embeddedSessionHost.clientSession();
-    private final MonopolyLocalSessionPersistenceUiHooks localSessionPersistenceUiHooks =
-            new MonopolyLocalSessionPersistenceUiHooks(clientSession);
-    private final DesktopClientSessionController clientSessionController =
-            new DesktopClientSessionController(clientSession, localSessionPersistenceUiHooks);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 
@@ -131,7 +125,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
         font30 = createFont("Monopoly Regular.ttf", 30);
-        clientSessionController.startFreshSession();
+        desktopClientShell.startFreshSession();
     }
 
     private void configureWindowSizing() {
@@ -176,8 +170,8 @@ public class MonopolyApp extends MonopolyEventObserver {
     public void draw() {
         logWindowSizeChangeFromDraw();
         background(205, 230, 209);
-        clientSessionController.advanceFrame();
-        ClientSessionView currentView = clientSessionController.currentView();
+        desktopClientShell.advanceFrame();
+        ClientSessionView currentView = desktopClientShell.currentView();
         if (currentView == null) {
             return;
         }
@@ -205,11 +199,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     public void saveLocalSession() {
-        clientSessionController.saveLocalSession();
+        desktopClientShell.saveLocalSession();
     }
 
     public void loadLocalSession() {
-        clientSessionController.loadLocalSession();
+        desktopClientShell.loadLocalSession();
     }
 
     public void windowResized() {
@@ -247,11 +241,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     Game currentGame() {
-        return embeddedSessionHost.currentGameForTest();
+        return desktopClientShell.currentGameForTest();
     }
 
     void setGameForTest(Game game) {
-        embeddedSessionHost.setGameForTest(game);
+        desktopClientShell.setGameForTest(game);
     }
 
     void shutdownCurrentSessionRuntimeRef() {
@@ -276,7 +270,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     }
 
-    ClientSession clientSessionRef() {
-        return clientSession;
+    fi.monopoly.client.session.ClientSession clientSessionRef() {
+        return desktopClientShell.clientSession();
     }
 }
