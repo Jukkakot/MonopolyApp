@@ -4,7 +4,6 @@ import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.session.SessionApplicationService;
-import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -26,12 +25,8 @@ import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.*;
 import fi.monopoly.presentation.game.DebugController;
-import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
-import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
-import fi.monopoly.presentation.session.trade.TradeController;
-import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.utils.DebugPerformanceStats;
 import fi.monopoly.utils.LayoutMetrics;
@@ -81,7 +76,6 @@ public class Game implements MonopolyEventListener {
 
     // Core services
     private final MonopolyRuntime runtime;
-    private final LocalSessionActions localSessionActions;
     private final TurnEngine turnEngine = new TurnEngine();
     private final GameSessionStateCoordinator gameSessionStateCoordinator = new GameSessionStateCoordinator();
     private final GameBotTurnControlCoordinator gameBotTurnControlCoordinator = new GameBotTurnControlCoordinator();
@@ -91,12 +85,7 @@ public class Game implements MonopolyEventListener {
     private final GameDesktopControlsFactory gameDesktopControlsFactory = new GameDesktopControlsFactory();
     private final GameDesktopShellDependencies shellDependencies;
     private final SessionApplicationService sessionApplicationService;
-    private final PropertyPurchaseFlow propertyPurchaseFlow;
-    private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
     private final DebtActionDispatcher debtActionDispatcher;
-    private final AuctionViewAdapter auctionViewAdapter;
-    private final TradeViewAdapter tradeViewAdapter;
-    private TradeController tradeController;
     private DebtController debtController;
     private DebugController debugController;
 
@@ -123,15 +112,11 @@ public class Game implements MonopolyEventListener {
     private final BotTurnScheduler botTurnScheduler = new BotTurnScheduler();
     private final GameBotTurnDriver botTurnDriver = new GameBotTurnDriver(botTurnScheduler);
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
-    private LayoutMetrics frameLayoutMetrics;
     private final SessionViewFacade sessionViewFacade;
     private GameControlLayout gameControlLayout;
     private GamePrimaryTurnControls gamePrimaryTurnControls;
     private GameSessionQueries gameSessionQueries;
-    private final GameSidebarStateFactory gameSidebarStateFactory = new GameSidebarStateFactory();
-    private final GameSidebarPresenter gameSidebarPresenter;
     private final GameUiController gameUiController;
-    private GamePresentationSupport gamePresentationSupport;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     private GameBotTurnDriver.Hooks gameBotTurnHooks;
     private GameFrameCoordinator gameFrameCoordinator;
@@ -145,7 +130,6 @@ public class Game implements MonopolyEventListener {
 
     public Game(MonopolyRuntime runtime, SessionState restoredSessionState, LocalSessionActions localSessionActions) {
         this.runtime = runtime;
-        this.localSessionActions = localSessionActions;
         this.gameDesktopShellCoordinator = new GameDesktopShellCoordinator(
                 runtime,
                 LOCAL_SESSION_ID,
@@ -206,7 +190,6 @@ public class Game implements MonopolyEventListener {
                 this::rollDiceVisible,
                 () -> this
         );
-        this.gameSidebarPresenter = new GameSidebarPresenter(runtime);
         GameDesktopAssemblyFactory.GameDesktopAssembly desktopAssembly = gameDesktopAssemblyFactory.create(
                 runtime,
                 restoredSessionState,
@@ -226,11 +209,6 @@ public class Game implements MonopolyEventListener {
         this.debugController = desktopAssembly.debugController();
         this.sessionApplicationService = desktopAssembly.sessionApplicationService();
         this.debtActionDispatcher = desktopAssembly.debtActionDispatcher();
-        this.auctionViewAdapter = desktopAssembly.auctionViewAdapter();
-        this.tradeViewAdapter = desktopAssembly.tradeViewAdapter();
-        this.pendingDecisionPopupAdapter = desktopAssembly.pendingDecisionPopupAdapter();
-        this.propertyPurchaseFlow = desktopAssembly.propertyPurchaseFlow();
-        this.tradeController = desktopAssembly.tradeController();
         this.sessionViewFacade = gameDesktopShellCoordinator.createSessionViewFacade(shellDependencies);
         gameDesktopShellCoordinator.applyRestoredSessionState(shellDependencies, restoredSessionState);
         this.gameControlLayout = desktopAssembly.gameControlLayout();
@@ -238,15 +216,14 @@ public class Game implements MonopolyEventListener {
         this.gameSessionQueries = desktopAssembly.gameSessionQueries();
         this.gameTurnFlowCoordinator = desktopAssembly.gameTurnFlowCoordinator();
         this.gameUiController = desktopAssembly.gameUiController();
-        this.gamePresentationSupport = desktopAssembly.gamePresentationSupport();
         this.gameBotTurnHooks = desktopAssembly.gameBotTurnHooks();
         this.gameFrameCoordinator = new GameFrameCoordinator(
                 runtime,
                 gameControlLayout,
-                gameSidebarPresenter,
-                gamePresentationSupport,
+                new GameSidebarPresenter(runtime),
+                desktopAssembly.gamePresentationSupport(),
                 gamePrimaryTurnControls,
-                gameSidebarStateFactory,
+                new GameSidebarStateFactory(),
                 gameSessionStateCoordinator,
                 botTurnDriver,
                 botTurnScheduler,
@@ -370,8 +347,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {
-        frameLayoutMetrics = gameFrameCoordinator.updateFrameLayoutMetrics();
-        return frameLayoutMetrics;
+        return gameFrameCoordinator.updateFrameLayoutMetrics();
     }
 
     private boolean isDebtSidebarMode() {
@@ -422,18 +398,15 @@ public class Game implements MonopolyEventListener {
     }
 
     private LayoutMetrics getLayoutMetrics() {
-        frameLayoutMetrics = gameFrameCoordinator.getLayoutMetrics();
-        return frameLayoutMetrics;
+        return gameFrameCoordinator.getLayoutMetrics();
     }
 
     private void updateSidebarControlPositions() {
         gameFrameCoordinator.updateSidebarControlPositions();
-        frameLayoutMetrics = gameFrameCoordinator.getLayoutMetrics();
     }
 
     private void updateSidebarControlPositions(LayoutMetrics layoutMetrics) {
         gameFrameCoordinator.updateSidebarControlPositions(layoutMetrics);
-        frameLayoutMetrics = gameFrameCoordinator.getLayoutMetrics();
     }
 
     private float getSidebarHistoryHeight() {
@@ -457,9 +430,6 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebtButtons() {
-        if (gamePresentationSupport == null) {
-            return;
-        }
         gameFrameCoordinator.updateDebtButtons(
                 debtController.debtState(),
                 sessionApplicationService != null ? sessionApplicationService.currentState() : null
@@ -467,9 +437,6 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebugButtons() {
-        if (gamePresentationSupport == null) {
-            return;
-        }
         gameFrameCoordinator.updatePersistentButtons(sessionState.gameOver());
     }
 
@@ -478,9 +445,6 @@ public class Game implements MonopolyEventListener {
     }
 
     private void refreshLabels() {
-        if (gamePresentationSupport == null) {
-            return;
-        }
         gameFrameCoordinator.refreshLabels(sessionState.paused(), sessionState.botSpeedMode());
     }
 
