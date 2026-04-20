@@ -38,26 +38,48 @@ What this means:
 - popup flow was often effectively gameplay flow
 - bot execution depended too much on client/runtime assumptions
 
-## 2. Current Direction In This Repo
+## 2. Current Structure In This Repo
 
-This is the rough shape now after the local separation work already implemented.
+This is the rough shape now after the local separation work currently implemented.
 
 ```mermaid
 flowchart LR
-    subgraph Presentation[Presentation Layer]
-        GAME[Game]
-        POPUPS[Popup adapters / UI renderers]
-        VIEW[Session view helpers]
-        LOCALINPUT[Keyboard / buttons / local player input]
+    subgraph DesktopHost[Desktop Host]
+        GAME[Game host]
+        HOSTFACTORY[GameDesktopHostFactory]
+        HOST[DesktopSessionHostCoordinator]
+        LOCALACTIONS[LocalSessionActions]
+    end
+
+    subgraph DesktopPresentation[Desktop Presentation]
+        ASSEMBLY[desktop.assembly]
+        SHELL[desktop.shell]
+        UI[desktop.ui]
+        VIEW[desktop.session.SessionViewFacade]
+        REATTACH[RestoredSessionReattachmentCoordinator]
+    end
+
+    subgraph DesktopRuntime[Legacy Runtime Shell]
+        RUNTIMEFACTORY[GameRuntimeAssemblyFactory]
+        BOOTSTRAP[LegacyGameRuntimeBootstrapper]
+        LEGACY[Players / board / property runtime]
+        DEBUG[DebugController]
+    end
+
+    subgraph TurnBotSession[Presentation Game Coordination]
+        TURN[turn.GameTurnFlowCoordinator]
+        BOT[bot.*]
+        SESSIONPRESENT[session.GameSessionStateCoordinator]
+        QUERIES[session.GameSessionQueries]
     end
 
     subgraph Application[Application Layer]
         APP[SessionApplicationService]
-        HOST[SessionHost]
-        PURCHASE[Property purchase handlers]
-        DEBT[Debt handlers]
-        AUCTION[Auction handlers]
-        TRADE[Trade handlers]
+        APPFACTORY[LegacySessionApplicationFactory]
+        PURCHASE[Property purchase flow]
+        DEBT[Debt / debt dispatch]
+        AUCTION[Auction adapters]
+        TRADE[Trade adapters]
         PERSIST[SessionPersistenceService]
         LOCALPERSIST[LocalSessionPersistenceCoordinator]
     end
@@ -75,21 +97,41 @@ flowchart LR
     end
 
     subgraph LegacyBridge[Legacy Runtime Bridge]
-        FACTORY[LegacySessionApplicationFactory]
-        BOOTSTRAP[LegacyGameRuntimeBootstrapper]
+        SESSIONBRIDGE[GameSessionBridgeFactory]
         PROJECTOR[LegacySessionProjector]
         RESTORER[LegacySessionRuntimeRestorer]
-        REATTACH[RestoredSessionReattachmentCoordinator]
-        LEGACY[Players / Property objects / board runtime]
     end
 
-    LOCALINPUT --> GAME
-    GAME --> POPUPS
-    GAME --> VIEW
-    GAME --> APP
-    GAME --> LOCALPERSIST
+    GAME --> HOSTFACTORY
+    HOST --> GAME
+    LOCALACTIONS --> GAME
+    HOSTFACTORY --> ASSEMBLY
+    HOSTFACTORY --> SHELL
+    HOSTFACTORY --> UI
+    HOSTFACTORY --> RUNTIMEFACTORY
+    HOSTFACTORY --> VIEW
+    HOSTFACTORY --> SESSIONPRESENT
+    SHELL --> TURN
+    SHELL --> BOT
+    SHELL --> QUERIES
+    SHELL --> REATTACH
+    UI --> TURN
+    UI --> BOT
+    UI --> VIEW
+    RUNTIMEFACTORY --> BOOTSTRAP
+    RUNTIMEFACTORY --> DEBUG
+    BOOTSTRAP --> RESTORER
+    RESTORER --> LEGACY
+    SESSIONBRIDGE --> APPFACTORY
+    SESSIONBRIDGE --> AUCTION
+    SESSIONBRIDGE --> TRADE
+    SESSIONBRIDGE --> DEBT
+    SESSIONBRIDGE --> APP
+    ASSEMBLY --> SESSIONBRIDGE
+    ASSEMBLY --> RUNTIMEFACTORY
+    ASSEMBLY --> UI
     LOCALPERSIST --> HOST
-    POPUPS --> APP
+    GAME --> LOCALPERSIST
     APP --> PURCHASE
     APP --> DEBT
     APP --> AUCTION
@@ -105,9 +147,8 @@ flowchart LR
     PERSIST --> STORE
     INFRA --> STORE
     STORE --> JSON
-    FACTORY --> APP
-    FACTORY --> PROJECTOR
-    BOOTSTRAP --> RESTORER
+    APPFACTORY --> APP
+    APPFACTORY --> PROJECTOR
     REATTACH --> APP
     PROJECTOR --> APP
     RESTORER --> LEGACY
@@ -117,38 +158,82 @@ flowchart LR
 
 What is important here:
 
-- authority has moved much more clearly into command/state/application types
-- `Game` is no longer the only place that understands gameplay progression
-- persistence now works against `SessionState`, not only live UI/runtime state
-- local save/load now depends on a small `SessionHost` seam instead of directly owning rebuild/state callbacks
-- snapshot storage now lives under an explicit infrastructure package boundary, so local JSON is no longer the only assumed persistence backend
-- the legacy `SessionApplicationService` wiring has been centralized behind `LegacySessionApplicationFactory`, which makes the remaining runtime bridge more explicit
-- the application layer is now configured through its own gateway interfaces instead of directly constructing `Legacy*` presentation adapters
-- restored-session bootstrap and reattachment are now explicit bridge steps instead of being buried directly inside `Game`
-- there is still a legacy bridge because the Processing client still runs against runtime objects
+- `Game` is now more clearly a desktop host/compatibility surface, not the only place where wiring lives
+- desktop code is explicitly split into `assembly`, `shell`, `runtime`, `session`, and `ui`
+- turn flow, bot flow, and desktop session state are now separated into `turn`, `bot`, and `session` packages
+- local save/load still works through a narrow `SessionHost` seam instead of direct rebuild callbacks
+- authoritative state still lives in `SessionState` and related domain records, not only in live UI/runtime objects
+- the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
+- the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 
 ## 3. Current Practical Runtime Shape
 
-This is the short “how the running app behaves today” view.
+This is the short “how the running app is assembled today” view.
 
 ```mermaid
-sequenceDiagram
-    participant User as Human or Bot
-    participant UI as Game / Popup UI
-    participant App as SessionApplicationService
-    participant State as SessionState
-    participant Legacy as Legacy runtime objects
-    User ->> UI: input / decision
-    UI ->> App: command
-    App ->> State: validate + mutate authoritative state
-    App ->> Legacy: call bridge where legacy runtime mutation is still needed
-    App -->> UI: current state / result
-    UI -->> User: render updated state
+flowchart LR
+    GAME[Game]
+    HOSTFACTORY[GameDesktopHostFactory]
+    SHELL[GameDesktopShellCoordinator]
+    ASSEMBLY[GameDesktopAssemblyFactory]
+    SESSIONBRIDGE[GameSessionBridgeFactory]
+    RUNTIME[GameRuntimeAssemblyFactory]
+    FRAME[GameFrameCoordinator]
+    APP[SessionApplicationService]
+    STATE[SessionState]
+    LEGACY[Legacy runtime objects]
+
+    GAME --> HOSTFACTORY
+    HOSTFACTORY --> SHELL
+    HOSTFACTORY --> ASSEMBLY
+    ASSEMBLY --> SESSIONBRIDGE
+    ASSEMBLY --> RUNTIME
+    HOSTFACTORY --> FRAME
+    SESSIONBRIDGE --> APP
+    SHELL --> APP
+    APP --> STATE
+    RUNTIME --> LEGACY
+    APP --> LEGACY
+    FRAME --> GAME
 ```
 
-This is already much closer to backend-safe behavior than the original project shape, but not fully backend-clean yet.
+This is already much closer to backend-safe behavior than the original project shape, but not fully backend-clean yet because:
 
-## 4. Target Backend-Ready Architecture
+- the desktop client still owns the authoritative application service instance locally
+- the bridge still mutates legacy runtime objects in-process
+- `Game` still exposes a broad compatibility surface for tests and local desktop orchestration
+
+## 4. Current Package View
+
+This is the shortest package-oriented map of the current gameplay presentation structure.
+
+```mermaid
+flowchart TD
+    ROOT[presentation.game]
+    ROOT --> BOT[bot]
+    ROOT --> SESSION[session]
+    ROOT --> TURN[turn]
+    ROOT --> DESKTOP[desktop]
+
+    DESKTOP --> ASSEMBLY[assembly]
+    DESKTOP --> SHELL[shell]
+    DESKTOP --> RUNTIME[runtime]
+    DESKTOP --> DESKTOPSESSION[session]
+    DESKTOP --> UI[ui]
+```
+
+Useful mental model:
+
+- `bot`: bot scheduling and bot turn stepping
+- `session`: desktop session state/presentation coordination
+- `turn`: actual turn flow orchestration
+- `desktop.assembly`: object graph construction
+- `desktop.shell`: orchestration between host and extracted coordinators
+- `desktop.runtime`: legacy runtime bootstrap and lifecycle
+- `desktop.session`: session bridge and restored-session reattachment
+- `desktop.ui`: controls, layout, frame rendering, and input binding
+
+## 5. Target Backend-Ready Architecture
 
 This is the intended future shape after the remaining local cleanup and server extraction.
 
@@ -196,7 +281,7 @@ What changes at that point:
 - the client only sends commands and renders approved state
 - save/load and reconnect semantics are the same system, not separate systems
 
-## 5. Migration Summary
+## 6. Migration Summary
 
 ```mermaid
 flowchart TD
@@ -211,4 +296,5 @@ Current practical status:
 
 - `A -> B` is largely done
 - `C`, `D`, and `E` are now substantially in place
-- `F` is the next major architecture milestone, but there is still some local cleanup value before starting it fully
+- the remaining local cleanup now mostly means shrinking `Game` further and reducing remaining desktop-host compatibility glue
+- `F` is still the next major architecture milestone after that
