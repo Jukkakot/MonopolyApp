@@ -23,6 +23,6 @@ final class MonopolyLocalSessionPersistenceUiHooks implements LocalSessionPersis
 
     @Override
     public void showPersistenceNotice(String message) {
-        app.desktopSessionHostCoordinatorRef().showPersistenceNotice(message);
+        app.clientSessionRef().showPersistenceNotice(message);
     }
 }

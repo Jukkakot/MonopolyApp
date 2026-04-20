@@ -1,6 +1,9 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.session.ClientSession;
+import fi.monopoly.client.session.ClientSessionView;
+import fi.monopoly.client.session.local.LocalDesktopClientSession;
 import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceCoordinator;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceUiHooks;
@@ -55,7 +58,9 @@ public class MonopolyApp extends MonopolyEventObserver {
     private final DesktopSessionHostCoordinator desktopSessionHostCoordinator = new DesktopSessionHostCoordinator(
             new MonopolyDesktopSessionHostHooks(this)
     );
-    private final SessionHost sessionHost = desktopSessionHostCoordinator;
+    private final LocalDesktopClientSession localClientSession = new LocalDesktopClientSession(desktopSessionHostCoordinator);
+    private final ClientSession clientSession = localClientSession;
+    private final SessionHost sessionHost = clientSession;
     private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new MonopolyLocalSessionPersistenceUiHooks(this);
     private final LocalSessionPersistenceCoordinator localSessionPersistenceCoordinator =
             new LocalSessionPersistenceCoordinator(sessionPersistenceService, sessionHost, localSessionPersistenceUiHooks);
@@ -133,7 +138,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
         font30 = createFont("Monopoly Regular.ttf", 30);
-        desktopSessionHostCoordinator.rebuildFreshGame();
+        clientSession.startFreshSession();
     }
 
     private void configureWindowSizing() {
@@ -178,7 +183,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     public void draw() {
         logWindowSizeChangeFromDraw();
         background(205, 230, 209);
-        desktopSessionHostCoordinator.currentGame().draw();
+        ClientSessionView currentView = clientSession.currentView();
+        if (currentView == null) {
+            return;
+        }
+        currentView.draw();
         if (DEBUG_MODE) {
             push();
             fill(22, 36, 31, 190);
@@ -188,7 +197,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             textAlign(LEFT, TOP);
             textFont(font20);
             float debugTextY = 22;
-            for (String line : desktopSessionHostCoordinator.currentGame().debugPerformanceLines(frameRate)) {
+            for (String line : currentView.debugPerformanceLines(frameRate)) {
                 text(line, 24, debugTextY);
                 debugTextY += 20;
             }
@@ -244,11 +253,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     Game currentGame() {
-        return desktopSessionHostCoordinator.currentGame();
+        return localClientSession.currentGameForTest();
     }
 
     void setGameForTest(Game game) {
-        desktopSessionHostCoordinator.setGameForTest(game);
+        localClientSession.setGameForTest(game);
     }
 
     void shutdownCurrentSessionRuntimeRef() {
@@ -273,7 +282,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     }
 
-    DesktopSessionHostCoordinator desktopSessionHostCoordinatorRef() {
-        return desktopSessionHostCoordinator;
+    ClientSession clientSessionRef() {
+        return clientSession;
     }
 }
