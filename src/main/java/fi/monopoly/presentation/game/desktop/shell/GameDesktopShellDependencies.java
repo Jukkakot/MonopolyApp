@@ -36,46 +36,218 @@ import java.util.function.Supplier;
  * runtime objects.</p>
  */
 public final class GameDesktopShellDependencies implements GameDesktopShellCoordinator.Dependencies {
-    private final Supplier<GameSessionState> sessionStateSupplier;
-    private final Supplier<Players> playersSupplier;
-    private final Supplier<Player> currentTurnPlayerSupplier;
-    private final java.util.function.Function<String, Player> playerByIdResolver;
-    private final Supplier<Board> boardSupplier;
-    private final Supplier<Dices> dicesSupplier;
-    private final Supplier<Animations> animationsSupplier;
-    private final Supplier<DebtController> debtControllerSupplier;
-    private final Supplier<DebtState> debtStateSupplier;
-    private final Supplier<GameTurnFlowCoordinator> gameTurnFlowCoordinatorSupplier;
-    private final Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier;
-    private final Supplier<GameSessionQueries> gameSessionQueriesSupplier;
-    private final Supplier<SessionApplicationService> sessionApplicationServiceSupplier;
-    private final Supplier<PopupService> popupServiceSupplier;
-    private final Supplier<BotTurnScheduler> botTurnSchedulerSupplier;
-    private final Supplier<GameView> currentGameViewSupplier;
-    private final Supplier<PlayerView> currentPlayerViewSupplier;
-    private final Runnable refreshLabelsAction;
-    private final Runnable rollDiceAction;
-    private final BiConsumer<Board, Players> setupDefaultGameStateAction;
-    private final Runnable hidePrimaryTurnControlsAction;
-    private final Runnable showRollDiceControlAction;
-    private final Runnable showEndTurnControlAction;
-    private final Runnable updateDebtButtonsAction;
-    private final Runnable syncTransientPresentationStateAction;
-    private final Runnable updateLogTurnContextAction;
-    private final Runnable retryPendingDebtPaymentAction;
-    private final PaymentRequestHandler paymentRequestHandler;
-    private final Consumer<Boolean> endRoundAction;
-    private final ScheduleNextComputerAction scheduleNextComputerAction;
-    private final Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction;
-    private final Consumer<Player> focusPlayerAction;
-    private final IntSupplier goMoneyAmountSupplier;
-    private final BooleanSupplier retryDebtVisibleSupplier;
-    private final BooleanSupplier declareBankruptcyVisibleSupplier;
-    private final BooleanSupplier endRoundVisibleSupplier;
-    private final BooleanSupplier rollDiceVisibleSupplier;
-    private final Supplier<MonopolyEventListener> eventListenerSupplier;
+    private final StateAccess stateAccess;
+    private final ProjectionAccess projectionAccess;
+    private final ActionAccess actionAccess;
+    private final VisibilityAccess visibilityAccess;
 
     public GameDesktopShellDependencies(
+            StateAccess stateAccess,
+            ProjectionAccess projectionAccess,
+            ActionAccess actionAccess,
+            VisibilityAccess visibilityAccess
+    ) {
+        this.stateAccess = stateAccess;
+        this.projectionAccess = projectionAccess;
+        this.actionAccess = actionAccess;
+        this.visibilityAccess = visibilityAccess;
+    }
+
+    @Override
+    public GameSessionState sessionState() {
+        return stateAccess.sessionStateSupplier().get();
+    }
+
+    @Override
+    public Players players() {
+        return stateAccess.playersSupplier().get();
+    }
+
+    @Override
+    public Player currentTurnPlayer() {
+        return stateAccess.currentTurnPlayerSupplier().get();
+    }
+
+    @Override
+    public Player playerById(String playerId) {
+        return stateAccess.playerByIdResolver().apply(playerId);
+    }
+
+    @Override
+    public Board board() {
+        return stateAccess.boardSupplier().get();
+    }
+
+    @Override
+    public Dices dices() {
+        return stateAccess.dicesSupplier().get();
+    }
+
+    @Override
+    public Animations animations() {
+        return stateAccess.animationsSupplier().get();
+    }
+
+    @Override
+    public DebtController debtController() {
+        return stateAccess.debtControllerSupplier().get();
+    }
+
+    @Override
+    public DebtState debtState() {
+        return stateAccess.debtStateSupplier().get();
+    }
+
+    @Override
+    public GameTurnFlowCoordinator gameTurnFlowCoordinator() {
+        return stateAccess.gameTurnFlowCoordinatorSupplier().get();
+    }
+
+    @Override
+    public GamePrimaryTurnControls gamePrimaryTurnControls() {
+        return stateAccess.gamePrimaryTurnControlsSupplier().get();
+    }
+
+    @Override
+    public GameSessionQueries gameSessionQueries() {
+        return stateAccess.gameSessionQueriesSupplier().get();
+    }
+
+    @Override
+    public SessionApplicationService sessionApplicationService() {
+        return stateAccess.sessionApplicationServiceSupplier().get();
+    }
+
+    @Override
+    public PopupService popupService() {
+        return stateAccess.popupServiceSupplier().get();
+    }
+
+    @Override
+    public BotTurnScheduler botTurnScheduler() {
+        return stateAccess.botTurnSchedulerSupplier().get();
+    }
+
+    @Override
+    public GameView createCurrentGameView() {
+        return projectionAccess.currentGameViewSupplier().get();
+    }
+
+    @Override
+    public PlayerView createCurrentPlayerView() {
+        return projectionAccess.currentPlayerViewSupplier().get();
+    }
+
+    @Override
+    public void refreshLabels() {
+        actionAccess.refreshLabelsAction().run();
+    }
+
+    @Override
+    public void rollDice() {
+        actionAccess.rollDiceAction().run();
+    }
+
+    @Override
+    public void setupDefaultGameState(Board board, Players players) {
+        actionAccess.setupDefaultGameStateAction().accept(board, players);
+    }
+
+    @Override
+    public void hidePrimaryTurnControls() {
+        actionAccess.hidePrimaryTurnControlsAction().run();
+    }
+
+    @Override
+    public void showRollDiceControl() {
+        actionAccess.showRollDiceControlAction().run();
+    }
+
+    @Override
+    public void showEndTurnControl() {
+        actionAccess.showEndTurnControlAction().run();
+    }
+
+    @Override
+    public void updateDebtButtons() {
+        actionAccess.updateDebtButtonsAction().run();
+    }
+
+    @Override
+    public void syncTransientPresentationState() {
+        actionAccess.syncTransientPresentationStateAction().run();
+    }
+
+    @Override
+    public void updateLogTurnContext() {
+        actionAccess.updateLogTurnContextAction().run();
+    }
+
+    @Override
+    public void retryPendingDebtPaymentAction() {
+        actionAccess.retryPendingDebtPaymentAction().run();
+    }
+
+    @Override
+    public void handlePaymentRequest(
+            PaymentRequest request,
+            fi.monopoly.domain.session.TurnContinuationState continuationState,
+            CallbackAction onResolved
+    ) {
+        actionAccess.paymentRequestHandler().handle(request, continuationState, onResolved);
+    }
+
+    @Override
+    public void endRound(boolean switchTurns) {
+        actionAccess.endRoundAction().accept(switchTurns);
+    }
+
+    @Override
+    public void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
+        actionAccess.scheduleNextComputerAction().schedule(delayKind, now);
+    }
+
+    @Override
+    public void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
+        actionAccess.resumeContinuationAction().accept(continuationState);
+    }
+
+    @Override
+    public void focusPlayer(Player player) {
+        actionAccess.focusPlayerAction().accept(player);
+    }
+
+    @Override
+    public int goMoneyAmount() {
+        return visibilityAccess.goMoneyAmountSupplier().getAsInt();
+    }
+
+    @Override
+    public boolean retryDebtVisible() {
+        return visibilityAccess.retryDebtVisibleSupplier().getAsBoolean();
+    }
+
+    @Override
+    public boolean declareBankruptcyVisible() {
+        return visibilityAccess.declareBankruptcyVisibleSupplier().getAsBoolean();
+    }
+
+    @Override
+    public boolean endRoundVisible() {
+        return visibilityAccess.endRoundVisibleSupplier().getAsBoolean();
+    }
+
+    @Override
+    public boolean rollDiceVisible() {
+        return visibilityAccess.rollDiceVisibleSupplier().getAsBoolean();
+    }
+
+    @Override
+    public MonopolyEventListener eventListener() {
+        return visibilityAccess.eventListenerSupplier().get();
+    }
+
+    public record StateAccess(
             Supplier<GameSessionState> sessionStateSupplier,
             Supplier<Players> playersSupplier,
             Supplier<Player> currentTurnPlayerSupplier,
@@ -90,9 +262,17 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
             Supplier<GameSessionQueries> gameSessionQueriesSupplier,
             Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
             Supplier<PopupService> popupServiceSupplier,
-            Supplier<BotTurnScheduler> botTurnSchedulerSupplier,
+            Supplier<BotTurnScheduler> botTurnSchedulerSupplier
+    ) {
+    }
+
+    public record ProjectionAccess(
             Supplier<GameView> currentGameViewSupplier,
-            Supplier<PlayerView> currentPlayerViewSupplier,
+            Supplier<PlayerView> currentPlayerViewSupplier
+    ) {
+    }
+
+    public record ActionAccess(
             Runnable refreshLabelsAction,
             Runnable rollDiceAction,
             BiConsumer<Board, Players> setupDefaultGameStateAction,
@@ -107,7 +287,11 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
             Consumer<Boolean> endRoundAction,
             ScheduleNextComputerAction scheduleNextComputerAction,
             Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction,
-            Consumer<Player> focusPlayerAction,
+            Consumer<Player> focusPlayerAction
+    ) {
+    }
+
+    public record VisibilityAccess(
             IntSupplier goMoneyAmountSupplier,
             BooleanSupplier retryDebtVisibleSupplier,
             BooleanSupplier declareBankruptcyVisibleSupplier,
@@ -115,238 +299,6 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
             BooleanSupplier rollDiceVisibleSupplier,
             Supplier<MonopolyEventListener> eventListenerSupplier
     ) {
-        this.sessionStateSupplier = sessionStateSupplier;
-        this.playersSupplier = playersSupplier;
-        this.currentTurnPlayerSupplier = currentTurnPlayerSupplier;
-        this.playerByIdResolver = playerByIdResolver;
-        this.boardSupplier = boardSupplier;
-        this.dicesSupplier = dicesSupplier;
-        this.animationsSupplier = animationsSupplier;
-        this.debtControllerSupplier = debtControllerSupplier;
-        this.debtStateSupplier = debtStateSupplier;
-        this.gameTurnFlowCoordinatorSupplier = gameTurnFlowCoordinatorSupplier;
-        this.gamePrimaryTurnControlsSupplier = gamePrimaryTurnControlsSupplier;
-        this.gameSessionQueriesSupplier = gameSessionQueriesSupplier;
-        this.sessionApplicationServiceSupplier = sessionApplicationServiceSupplier;
-        this.popupServiceSupplier = popupServiceSupplier;
-        this.botTurnSchedulerSupplier = botTurnSchedulerSupplier;
-        this.currentGameViewSupplier = currentGameViewSupplier;
-        this.currentPlayerViewSupplier = currentPlayerViewSupplier;
-        this.refreshLabelsAction = refreshLabelsAction;
-        this.rollDiceAction = rollDiceAction;
-        this.setupDefaultGameStateAction = setupDefaultGameStateAction;
-        this.hidePrimaryTurnControlsAction = hidePrimaryTurnControlsAction;
-        this.showRollDiceControlAction = showRollDiceControlAction;
-        this.showEndTurnControlAction = showEndTurnControlAction;
-        this.updateDebtButtonsAction = updateDebtButtonsAction;
-        this.syncTransientPresentationStateAction = syncTransientPresentationStateAction;
-        this.updateLogTurnContextAction = updateLogTurnContextAction;
-        this.retryPendingDebtPaymentAction = retryPendingDebtPaymentAction;
-        this.paymentRequestHandler = paymentRequestHandler;
-        this.endRoundAction = endRoundAction;
-        this.scheduleNextComputerAction = scheduleNextComputerAction;
-        this.resumeContinuationAction = resumeContinuationAction;
-        this.focusPlayerAction = focusPlayerAction;
-        this.goMoneyAmountSupplier = goMoneyAmountSupplier;
-        this.retryDebtVisibleSupplier = retryDebtVisibleSupplier;
-        this.declareBankruptcyVisibleSupplier = declareBankruptcyVisibleSupplier;
-        this.endRoundVisibleSupplier = endRoundVisibleSupplier;
-        this.rollDiceVisibleSupplier = rollDiceVisibleSupplier;
-        this.eventListenerSupplier = eventListenerSupplier;
-    }
-
-    @Override
-    public GameSessionState sessionState() {
-        return sessionStateSupplier.get();
-    }
-
-    @Override
-    public Players players() {
-        return playersSupplier.get();
-    }
-
-    @Override
-    public Player currentTurnPlayer() {
-        return currentTurnPlayerSupplier.get();
-    }
-
-    @Override
-    public Player playerById(String playerId) {
-        return playerByIdResolver.apply(playerId);
-    }
-
-    @Override
-    public Board board() {
-        return boardSupplier.get();
-    }
-
-    @Override
-    public Dices dices() {
-        return dicesSupplier.get();
-    }
-
-    @Override
-    public Animations animations() {
-        return animationsSupplier.get();
-    }
-
-    @Override
-    public DebtController debtController() {
-        return debtControllerSupplier.get();
-    }
-
-    @Override
-    public DebtState debtState() {
-        return debtStateSupplier.get();
-    }
-
-    @Override
-    public GameTurnFlowCoordinator gameTurnFlowCoordinator() {
-        return gameTurnFlowCoordinatorSupplier.get();
-    }
-
-    @Override
-    public GamePrimaryTurnControls gamePrimaryTurnControls() {
-        return gamePrimaryTurnControlsSupplier.get();
-    }
-
-    @Override
-    public GameSessionQueries gameSessionQueries() {
-        return gameSessionQueriesSupplier.get();
-    }
-
-    @Override
-    public SessionApplicationService sessionApplicationService() {
-        return sessionApplicationServiceSupplier.get();
-    }
-
-    @Override
-    public PopupService popupService() {
-        return popupServiceSupplier.get();
-    }
-
-    @Override
-    public BotTurnScheduler botTurnScheduler() {
-        return botTurnSchedulerSupplier.get();
-    }
-
-    @Override
-    public GameView createCurrentGameView() {
-        return currentGameViewSupplier.get();
-    }
-
-    @Override
-    public PlayerView createCurrentPlayerView() {
-        return currentPlayerViewSupplier.get();
-    }
-
-    @Override
-    public void refreshLabels() {
-        refreshLabelsAction.run();
-    }
-
-    @Override
-    public void rollDice() {
-        rollDiceAction.run();
-    }
-
-    @Override
-    public void setupDefaultGameState(Board board, Players players) {
-        setupDefaultGameStateAction.accept(board, players);
-    }
-
-    @Override
-    public void hidePrimaryTurnControls() {
-        hidePrimaryTurnControlsAction.run();
-    }
-
-    @Override
-    public void showRollDiceControl() {
-        showRollDiceControlAction.run();
-    }
-
-    @Override
-    public void showEndTurnControl() {
-        showEndTurnControlAction.run();
-    }
-
-    @Override
-    public void updateDebtButtons() {
-        updateDebtButtonsAction.run();
-    }
-
-    @Override
-    public void syncTransientPresentationState() {
-        syncTransientPresentationStateAction.run();
-    }
-
-    @Override
-    public void updateLogTurnContext() {
-        updateLogTurnContextAction.run();
-    }
-
-    @Override
-    public void retryPendingDebtPaymentAction() {
-        retryPendingDebtPaymentAction.run();
-    }
-
-    @Override
-    public void handlePaymentRequest(
-            PaymentRequest request,
-            fi.monopoly.domain.session.TurnContinuationState continuationState,
-            CallbackAction onResolved
-    ) {
-        paymentRequestHandler.handle(request, continuationState, onResolved);
-    }
-
-    @Override
-    public void endRound(boolean switchTurns) {
-        endRoundAction.accept(switchTurns);
-    }
-
-    @Override
-    public void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
-        scheduleNextComputerAction.schedule(delayKind, now);
-    }
-
-    @Override
-    public void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
-        resumeContinuationAction.accept(continuationState);
-    }
-
-    @Override
-    public void focusPlayer(Player player) {
-        focusPlayerAction.accept(player);
-    }
-
-    @Override
-    public int goMoneyAmount() {
-        return goMoneyAmountSupplier.getAsInt();
-    }
-
-    @Override
-    public boolean retryDebtVisible() {
-        return retryDebtVisibleSupplier.getAsBoolean();
-    }
-
-    @Override
-    public boolean declareBankruptcyVisible() {
-        return declareBankruptcyVisibleSupplier.getAsBoolean();
-    }
-
-    @Override
-    public boolean endRoundVisible() {
-        return endRoundVisibleSupplier.getAsBoolean();
-    }
-
-    @Override
-    public boolean rollDiceVisible() {
-        return rollDiceVisibleSupplier.getAsBoolean();
-    }
-
-    @Override
-    public MonopolyEventListener eventListener() {
-        return eventListenerSupplier.get();
     }
 
     @FunctionalInterface
