@@ -24,6 +24,7 @@ import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopAssemblyFactory;
+import fi.monopoly.presentation.game.desktop.assembly.GameDesktopHostFactory;
 import fi.monopoly.presentation.game.desktop.runtime.GameDesktopLifecycleCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
@@ -98,7 +99,7 @@ public class Game implements MonopolyEventListener {
     private final TurnEngine turnEngine = new TurnEngine();
     private final GameSessionStateCoordinator gameSessionStateCoordinator = new GameSessionStateCoordinator();
     private final GameBotTurnControlCoordinator gameBotTurnControlCoordinator = new GameBotTurnControlCoordinator();
-    private final GameDesktopAssemblyFactory gameDesktopAssemblyFactory = new GameDesktopAssemblyFactory();
+    private final GameDesktopHostFactory gameDesktopHostFactory = new GameDesktopHostFactory();
     private final GameDesktopShellCoordinator gameDesktopShellCoordinator;
     private final GameDesktopLifecycleCoordinator gameDesktopLifecycleCoordinator = new GameDesktopLifecycleCoordinator();
     private final GameDesktopControlsFactory gameDesktopControlsFactory = new GameDesktopControlsFactory();
@@ -149,14 +150,6 @@ public class Game implements MonopolyEventListener {
 
     public Game(MonopolyRuntime runtime, SessionState restoredSessionState, LocalSessionActions localSessionActions) {
         this.runtime = runtime;
-        this.gameDesktopShellCoordinator = new GameDesktopShellCoordinator(
-                runtime,
-                LOCAL_SESSION_ID,
-                SUPPORTED_UI_LOCALES,
-                localSessionActions,
-                gameSessionStateCoordinator,
-                gameBotTurnControlCoordinator
-        );
         GameDesktopControlsFactory.GameDesktopControls desktopControls = gameDesktopControlsFactory.create(runtime);
         this.endRoundButton = desktopControls.buttons().endRoundButton();
         this.retryDebtButton = desktopControls.buttons().retryDebtButton();
@@ -169,86 +162,222 @@ public class Game implements MonopolyEventListener {
         this.botSpeedButton = desktopControls.buttons().botSpeedButton();
         this.languageButton = desktopControls.buttons().languageButton();
         this.desktopButtons = desktopControls.allButtons();
-        this.shellDependencies = new GameDesktopShellDependencies(
-                () -> sessionState,
-                this::players,
-                this::currentTurnPlayer,
-                this::playerById,
-                this::getBoard,
-                this::dices,
-                this::animations,
-                this::debtController,
-                this::currentDebtState,
-                this::gameTurnFlowCoordinatorRef,
-                this::gamePrimaryTurnControlsRef,
-                this::gameSessionQueriesRef,
-                this::sessionApplicationServiceRef,
-                () -> runtime.popupService(),
-                () -> botTurnScheduler,
-                this::currentGameView,
-                this::currentPlayerView,
-                this::refreshLabels,
-                this::rollDice,
-                (board, players) -> setupDebugGameConfigs(runtime, board, players),
-                this::hidePrimaryTurnControls,
-                this::showRollDiceControl,
-                this::showEndTurnControl,
-                this::updateDebtButtons,
-                this::syncTransientPresentationState,
-                this::updateLogTurnContext,
-                this::retryPendingDebtPaymentAction,
-                this::handlePaymentRequest,
-                this::endRound,
-                this::scheduleNextComputerAction,
-                this::resumeContinuation,
-                this::focusPlayer,
-                () -> goMoneyAmount,
-                this::retryDebtVisible,
-                this::declareBankruptcyVisible,
-                this::endRoundVisible,
-                this::rollDiceVisible,
-                () -> this
+        GameDesktopHostFactory.GameDesktopHostContext hostContext = gameDesktopHostFactory.create(
+                new GameDesktopHostFactory.Config(
+                        runtime,
+                        restoredSessionState,
+                        localSessionActions,
+                        LOCAL_SESSION_ID,
+                        SUPPORTED_UI_LOCALES,
+                        turnEngine,
+                        gameSessionStateCoordinator,
+                        gameBotTurnControlCoordinator,
+                        botTurnDriver,
+                        botTurnScheduler,
+                        debugPerformanceStats,
+                        desktopControls
+                ),
+                new GameDesktopHostFactory.Hooks() {
+                    @Override
+                    public java.util.function.Supplier<GameSessionState> sessionStateSupplier() {
+                        return () -> sessionState;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<Players> playersSupplier() {
+                        return Game.this::players;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<Player> currentTurnPlayerSupplier() {
+                        return Game.this::currentTurnPlayer;
+                    }
+
+                    @Override
+                    public java.util.function.Function<String, Player> playerByIdResolver() {
+                        return Game.this::playerById;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<Board> boardSupplier() {
+                        return Game.this::getBoard;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<Dices> dicesSupplier() {
+                        return Game.this::dices;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<Animations> animationsSupplier() {
+                        return Game.this::animations;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<DebtController> debtControllerSupplier() {
+                        return Game.this::debtController;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<DebtState> debtStateSupplier() {
+                        return Game.this::currentDebtState;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<GameTurnFlowCoordinator> gameTurnFlowCoordinatorSupplier() {
+                        return Game.this::gameTurnFlowCoordinatorRef;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier() {
+                        return Game.this::gamePrimaryTurnControlsRef;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<GameSessionQueries> gameSessionQueriesSupplier() {
+                        return Game.this::gameSessionQueriesRef;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<SessionApplicationService> sessionApplicationServiceSupplier() {
+                        return Game.this::sessionApplicationServiceRef;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<GameView> currentGameViewSupplier() {
+                        return Game.this::currentGameView;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<PlayerView> currentPlayerViewSupplier() {
+                        return Game.this::currentPlayerView;
+                    }
+
+                    @Override
+                    public Runnable refreshLabelsAction() {
+                        return Game.this::refreshLabels;
+                    }
+
+                    @Override
+                    public Runnable rollDiceAction() {
+                        return Game.this::rollDice;
+                    }
+
+                    @Override
+                    public java.util.function.BiConsumer<Board, Players> setupDefaultGameStateAction() {
+                        return (board, players) -> setupDebugGameConfigs(runtime, board, players);
+                    }
+
+                    @Override
+                    public Runnable hidePrimaryTurnControlsAction() {
+                        return Game.this::hidePrimaryTurnControls;
+                    }
+
+                    @Override
+                    public Runnable showRollDiceControlAction() {
+                        return Game.this::showRollDiceControl;
+                    }
+
+                    @Override
+                    public Runnable showEndTurnControlAction() {
+                        return Game.this::showEndTurnControl;
+                    }
+
+                    @Override
+                    public Runnable updateDebtButtonsAction() {
+                        return Game.this::updateDebtButtons;
+                    }
+
+                    @Override
+                    public Runnable syncTransientPresentationStateAction() {
+                        return Game.this::syncTransientPresentationState;
+                    }
+
+                    @Override
+                    public Runnable updateLogTurnContextAction() {
+                        return Game.this::updateLogTurnContext;
+                    }
+
+                    @Override
+                    public Runnable retryPendingDebtPaymentAction() {
+                        return Game.this::retryPendingDebtPaymentAction;
+                    }
+
+                    @Override
+                    public GameDesktopShellDependencies.PaymentRequestHandler paymentRequestHandler() {
+                        return Game.this::handlePaymentRequest;
+                    }
+
+                    @Override
+                    public java.util.function.Consumer<Boolean> endRoundAction() {
+                        return Game.this::endRound;
+                    }
+
+                    @Override
+                    public GameDesktopShellDependencies.ScheduleNextComputerAction scheduleNextComputerAction() {
+                        return Game.this::scheduleNextComputerAction;
+                    }
+
+                    @Override
+                    public java.util.function.Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction() {
+                        return Game.this::resumeContinuation;
+                    }
+
+                    @Override
+                    public java.util.function.Consumer<Player> focusPlayerAction() {
+                        return Game.this::focusPlayer;
+                    }
+
+                    @Override
+                    public java.util.function.IntSupplier goMoneyAmountSupplier() {
+                        return () -> goMoneyAmount;
+                    }
+
+                    @Override
+                    public java.util.function.BooleanSupplier retryDebtVisibleSupplier() {
+                        return Game.this::retryDebtVisible;
+                    }
+
+                    @Override
+                    public java.util.function.BooleanSupplier declareBankruptcyVisibleSupplier() {
+                        return Game.this::declareBankruptcyVisible;
+                    }
+
+                    @Override
+                    public java.util.function.BooleanSupplier endRoundVisibleSupplier() {
+                        return Game.this::endRoundVisible;
+                    }
+
+                    @Override
+                    public java.util.function.BooleanSupplier rollDiceVisibleSupplier() {
+                        return Game.this::rollDiceVisible;
+                    }
+
+                    @Override
+                    public java.util.function.Supplier<MonopolyEventListener> eventListenerSupplier() {
+                        return () -> Game.this;
+                    }
+                }
         );
-        GameDesktopAssemblyFactory.GameDesktopAssembly desktopAssembly = gameDesktopAssemblyFactory.create(
-                runtime,
-                restoredSessionState,
-                LOCAL_SESSION_ID,
-                desktopControls.buttons(),
-                turnEngine,
-                gameDesktopShellCoordinator.createRuntimeAssemblyHooks(shellDependencies),
-                gameDesktopShellCoordinator.createSessionBridgeHooks(shellDependencies),
-                gameDesktopShellCoordinator.createPresentationHooks(shellDependencies),
-                debugPerformanceStats
-        );
-        this.board = desktopAssembly.board();
-        this.players = desktopAssembly.players();
-        this.dices = desktopAssembly.dices();
-        this.animations = desktopAssembly.animations();
-        this.debtController = desktopAssembly.debtController();
-        this.debugController = desktopAssembly.debugController();
-        this.sessionApplicationService = desktopAssembly.sessionApplicationService();
-        this.debtActionDispatcher = desktopAssembly.debtActionDispatcher();
+        this.gameDesktopShellCoordinator = hostContext.shellCoordinator();
+        this.shellDependencies = hostContext.shellDependencies();
+        this.board = hostContext.board();
+        this.players = hostContext.players();
+        this.dices = hostContext.dices();
+        this.animations = hostContext.animations();
+        this.debtController = hostContext.debtController();
+        this.debugController = hostContext.debugController();
+        this.sessionApplicationService = hostContext.sessionApplicationService();
+        this.debtActionDispatcher = hostContext.debtActionDispatcher();
         this.sessionViewFacade = gameDesktopShellCoordinator.createSessionViewFacade(shellDependencies);
+        this.gameControlLayout = hostContext.gameControlLayout();
+        this.gamePrimaryTurnControls = hostContext.gamePrimaryTurnControls();
+        this.gameSessionQueries = hostContext.gameSessionQueries();
+        this.gameTurnFlowCoordinator = hostContext.gameTurnFlowCoordinator();
+        this.gameUiController = hostContext.gameUiController();
+        this.gameBotTurnHooks = hostContext.gameBotTurnHooks();
+        this.gameFrameCoordinator = hostContext.gameFrameCoordinator();
         gameDesktopShellCoordinator.applyRestoredSessionState(shellDependencies, restoredSessionState);
-        this.gameControlLayout = desktopAssembly.gameControlLayout();
-        this.gamePrimaryTurnControls = desktopAssembly.gamePrimaryTurnControls();
-        this.gameSessionQueries = desktopAssembly.gameSessionQueries();
-        this.gameTurnFlowCoordinator = desktopAssembly.gameTurnFlowCoordinator();
-        this.gameUiController = desktopAssembly.gameUiController();
-        this.gameBotTurnHooks = desktopAssembly.gameBotTurnHooks();
-        this.gameFrameCoordinator = new GameFrameCoordinator(
-                runtime,
-                gameControlLayout,
-                new GameSidebarPresenter(runtime),
-                desktopAssembly.gamePresentationSupport(),
-                gamePrimaryTurnControls,
-                new GameSidebarStateFactory(),
-                gameSessionStateCoordinator,
-                botTurnDriver,
-                botTurnScheduler,
-                debugPerformanceStats,
-                desktopButtons
-        );
         gameDesktopShellCoordinator.initializeSessionPresentation(shellDependencies, restoredSessionState);
         setupButtonActions();
 
