@@ -87,6 +87,7 @@ public class Game implements MonopolyEventListener {
     private final GameBotTurnControlCoordinator gameBotTurnControlCoordinator = new GameBotTurnControlCoordinator();
     private final GameDesktopAssemblyFactory gameDesktopAssemblyFactory = new GameDesktopAssemblyFactory();
     private final GameDesktopShellCoordinator gameDesktopShellCoordinator;
+    private final GameDesktopLifecycleCoordinator gameDesktopLifecycleCoordinator = new GameDesktopLifecycleCoordinator();
     private final GameDesktopShellDependencies shellDependencies;
     private final SessionApplicationService sessionApplicationService;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
@@ -618,24 +619,24 @@ public class Game implements MonopolyEventListener {
     }
 
     public void dispose() {
-        runtime.eventBus().removeListener(this);
-        runtime.popupService().hideAll();
-        if (players != null) {
-            players.dispose();
-        }
-        if (dices != null) {
-            dices.dispose();
-        }
-        endRoundButton.dispose();
-        retryDebtButton.dispose();
-        declareBankruptcyButton.dispose();
-        debugGodModeButton.dispose();
-        pauseButton.dispose();
-        tradeButton.dispose();
-        saveButton.dispose();
-        loadButton.dispose();
-        botSpeedButton.dispose();
-        languageButton.dispose();
+        gameDesktopLifecycleCoordinator.dispose(
+                runtime,
+                this,
+                players,
+                dices,
+                List.of(
+                        endRoundButton,
+                        retryDebtButton,
+                        declareBankruptcyButton,
+                        debugGodModeButton,
+                        pauseButton,
+                        tradeButton,
+                        saveButton,
+                        loadButton,
+                        botSpeedButton,
+                        languageButton
+                )
+        );
     }
 
 }
