@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.runtime;
 
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;

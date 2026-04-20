@@ -1,6 +1,5 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.bot;
 
-import fi.monopoly.presentation.game.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.components.Player;
 import fi.monopoly.types.DiceState;
 import javafx.scene.paint.Color;

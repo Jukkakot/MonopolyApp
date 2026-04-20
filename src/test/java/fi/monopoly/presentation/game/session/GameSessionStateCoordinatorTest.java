@@ -1,8 +1,6 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.session;
 
 import fi.monopoly.presentation.game.bot.BotTurnScheduler;
-import fi.monopoly.presentation.game.session.GameSessionState;
-import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.components.Player;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
