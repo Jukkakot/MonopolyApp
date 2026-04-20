@@ -1,16 +1,18 @@
 package fi.monopoly;
 
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
+import fi.monopoly.client.session.ClientSession;
+import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.components.popup.components.ButtonProps;
 
 /**
  * Renders local persistence feedback into the current desktop runtime.
  */
-final class MonopolyLocalSessionPersistenceUiHooks {
-    private final MonopolyApp app;
+final class MonopolyLocalSessionPersistenceUiHooks implements ClientSessionFeedbackSink {
+    private final ClientSession clientSession;
 
-    MonopolyLocalSessionPersistenceUiHooks(MonopolyApp app) {
-        this.app = app;
+    MonopolyLocalSessionPersistenceUiHooks(ClientSession clientSession) {
+        this.clientSession = clientSession;
     }
 
     public void showPopup(String message) {
@@ -21,7 +23,7 @@ final class MonopolyLocalSessionPersistenceUiHooks {
     }
 
     public void showPersistenceNotice(String message) {
-        app.clientSessionRef().showPersistenceNotice(message);
+        clientSession.showPersistenceNotice(message);
     }
 
     public void showResult(LocalSessionPersistenceResult result) {
@@ -34,5 +36,10 @@ final class MonopolyLocalSessionPersistenceUiHooks {
         if (result.persistenceNotice() != null) {
             showPersistenceNotice(result.persistenceNotice());
         }
+    }
+
+    @Override
+    public void showPersistenceResult(LocalSessionPersistenceResult result) {
+        showResult(result);
     }
 }
