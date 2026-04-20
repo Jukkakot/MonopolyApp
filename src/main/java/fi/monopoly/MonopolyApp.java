@@ -3,7 +3,7 @@ package fi.monopoly;
 import controlP5.ControlP5;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.client.session.local.LocalDesktopClientSession;
+import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
 import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceCoordinator;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceUiHooks;
@@ -12,7 +12,6 @@ import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.event.MonopolyEventObserver;
-import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.MonopolyUtils;
@@ -55,11 +54,10 @@ public class MonopolyApp extends MonopolyEventObserver {
     };
     private static long coloredImageCopies;
     private final SessionPersistenceService sessionPersistenceService = new SessionPersistenceService();
-    private final DesktopSessionHostCoordinator desktopSessionHostCoordinator = new DesktopSessionHostCoordinator(
+    private final EmbeddedDesktopSessionHost embeddedSessionHost = new EmbeddedDesktopSessionHost(
             new MonopolyDesktopSessionHostHooks(this)
     );
-    private final LocalDesktopClientSession localClientSession = new LocalDesktopClientSession(desktopSessionHostCoordinator);
-    private final ClientSession clientSession = localClientSession;
+    private final ClientSession clientSession = embeddedSessionHost.clientSession();
     private final SessionHost sessionHost = clientSession;
     private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new MonopolyLocalSessionPersistenceUiHooks(this);
     private final LocalSessionPersistenceCoordinator localSessionPersistenceCoordinator =
@@ -253,11 +251,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     Game currentGame() {
-        return localClientSession.currentGameForTest();
+        return embeddedSessionHost.currentGameForTest();
     }
 
     void setGameForTest(Game game) {
-        localClientSession.setGameForTest(game);
+        embeddedSessionHost.setGameForTest(game);
     }
 
     void shutdownCurrentSessionRuntimeRef() {

@@ -1,0 +1,36 @@
+package fi.monopoly.host.session.local;
+
+import fi.monopoly.client.session.ClientSession;
+import fi.monopoly.client.session.local.LocalDesktopClientSession;
+import fi.monopoly.components.Game;
+import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
+
+/**
+ * Embedded local session host for the current single-process desktop client.
+ *
+ * <p>This is the first explicit host object in the codebase. It still runs in the same process as
+ * the Processing client, but it groups local session ownership behind one host abstraction instead
+ * of letting {@code MonopolyApp} coordinate host concerns directly. That makes the later jump to a
+ * real remote host much narrower.</p>
+ */
+public final class EmbeddedDesktopSessionHost {
+    private final DesktopSessionHostCoordinator desktopSessionHostCoordinator;
+    private final LocalDesktopClientSession clientSession;
+
+    public EmbeddedDesktopSessionHost(DesktopSessionHostCoordinator.Hooks hooks) {
+        this.desktopSessionHostCoordinator = new DesktopSessionHostCoordinator(hooks);
+        this.clientSession = new LocalDesktopClientSession(desktopSessionHostCoordinator);
+    }
+
+    public ClientSession clientSession() {
+        return clientSession;
+    }
+
+    public Game currentGameForTest() {
+        return clientSession.currentGameForTest();
+    }
+
+    public void setGameForTest(Game game) {
+        clientSession.setGameForTest(game);
+    }
+}
