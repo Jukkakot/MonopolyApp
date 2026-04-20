@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.turn;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;

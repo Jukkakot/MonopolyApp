@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.bot;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
@@ -7,6 +7,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
+import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.utils.DebugPerformanceStats;

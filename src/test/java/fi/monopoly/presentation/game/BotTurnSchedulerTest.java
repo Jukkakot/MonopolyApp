@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game;
 
+import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

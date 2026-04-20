@@ -4,7 +4,7 @@ import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
-import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import fi.monopoly.support.TestLogLevels;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

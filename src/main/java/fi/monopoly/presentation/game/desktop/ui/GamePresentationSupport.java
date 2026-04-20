@@ -4,7 +4,7 @@ import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.presentation.game.BotTurnScheduler;
+import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;

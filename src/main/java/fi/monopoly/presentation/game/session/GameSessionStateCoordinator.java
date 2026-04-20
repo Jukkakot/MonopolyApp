@@ -1,7 +1,8 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.session;
 
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
+import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.desktop.RestoredSessionReattachmentCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
 

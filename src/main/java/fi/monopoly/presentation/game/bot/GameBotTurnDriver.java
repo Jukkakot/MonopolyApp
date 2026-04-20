@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.bot;
 
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.components.Player;

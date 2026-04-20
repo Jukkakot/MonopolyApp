@@ -8,7 +8,7 @@ import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.properties.StreetProperty;
-import fi.monopoly.presentation.game.GameSessionState;
+import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.support.TestLogLevels;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
