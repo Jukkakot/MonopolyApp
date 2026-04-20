@@ -157,7 +157,44 @@ public class Game implements MonopolyEventListener {
                         debugPerformanceStats,
                         desktopControls
                 ),
-                new GameDesktopHostHooksAdapter(runtime, this)
+                GameDesktopHostFactory.Hooks.of(
+                        this::sessionStateRef,
+                        this::players,
+                        this::currentTurnPlayer,
+                        this::playerById,
+                        this::getBoard,
+                        this::dices,
+                        this::animations,
+                        this::debtController,
+                        this::currentDebtState,
+                        this::gameTurnFlowCoordinatorRef,
+                        this::gamePrimaryTurnControlsRef,
+                        this::gameSessionQueriesRef,
+                        this::sessionApplicationServiceRef,
+                        this::currentGameView,
+                        this::currentPlayerView,
+                        this::refreshLabels,
+                        this::rollDice,
+                        (board, players) -> setupDefaultGameState(runtime, board, players),
+                        this::hidePrimaryTurnControls,
+                        this::showRollDiceControl,
+                        this::showEndTurnControl,
+                        this::updateDebtButtons,
+                        this::syncTransientPresentationState,
+                        this::updateLogTurnContext,
+                        this::retryPendingDebtPaymentAction,
+                        this::handlePaymentRequest,
+                        this::endRound,
+                        this::scheduleNextComputerAction,
+                        this::resumeContinuation,
+                        this::focusPlayer,
+                        this::goMoneyAmountRef,
+                        this::retryDebtVisible,
+                        this::declareBankruptcyVisible,
+                        this::endRoundVisible,
+                        this::rollDiceVisible,
+                        () -> this
+                )
         );
         this.gameDesktopShellCoordinator = hostContext.shellCoordinator();
         this.shellDependencies = hostContext.shellDependencies();
@@ -200,7 +237,7 @@ public class Game implements MonopolyEventListener {
         return sessionApplicationService.currentState();
     }
 
-    GameSessionState sessionStateRef() {
+    private GameSessionState sessionStateRef() {
         return sessionState;
     }
 
@@ -232,7 +269,7 @@ public class Game implements MonopolyEventListener {
         return players;
     }
 
-    Player currentTurnPlayer() {
+    private Player currentTurnPlayer() {
         return players != null ? players.getTurn() : null;
     }
 
@@ -248,59 +285,59 @@ public class Game implements MonopolyEventListener {
         return debtController != null ? debtController.debtState() : null;
     }
 
-    GameTurnFlowCoordinator gameTurnFlowCoordinatorRef() {
+    private GameTurnFlowCoordinator gameTurnFlowCoordinatorRef() {
         return gameTurnFlowCoordinator;
     }
 
-    GamePrimaryTurnControls gamePrimaryTurnControlsRef() {
+    private GamePrimaryTurnControls gamePrimaryTurnControlsRef() {
         return presentationHost.primaryTurnControls();
     }
 
-    GameSessionQueries gameSessionQueriesRef() {
+    private GameSessionQueries gameSessionQueriesRef() {
         return presentationHost.gameSessionQueries();
     }
 
-    SessionApplicationService sessionApplicationServiceRef() {
+    private SessionApplicationService sessionApplicationServiceRef() {
         return sessionApplicationService;
     }
 
-    GameView currentGameView() {
+    private GameView currentGameView() {
         return createGameView(currentTurnPlayer());
     }
 
-    PlayerView currentPlayerView() {
+    private PlayerView currentPlayerView() {
         return createPlayerView(currentTurnPlayer());
     }
 
-    void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
+    private void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
         if (continuationState != null && gameTurnFlowCoordinator != null) {
             gameTurnFlowCoordinator.resumeContinuation(continuationState);
         }
     }
 
-    void focusPlayer(Player player) {
+    private void focusPlayer(Player player) {
         if (players != null && player != null) {
             players.focusPlayer(player);
         }
     }
 
-    boolean retryDebtVisible() {
+    private boolean retryDebtVisible() {
         return retryDebtButton.isVisible();
     }
 
-    boolean declareBankruptcyVisible() {
+    private boolean declareBankruptcyVisible() {
         return declareBankruptcyButton.isVisible();
     }
 
-    boolean endRoundVisible() {
+    private boolean endRoundVisible() {
         return endRoundButton.isVisible();
     }
 
-    boolean rollDiceVisible() {
+    private boolean rollDiceVisible() {
         return dices != null && dices.isVisible();
     }
 
-    int goMoneyAmountRef() {
+    private int goMoneyAmountRef() {
         return goMoneyAmount;
     }
 
@@ -312,11 +349,11 @@ public class Game implements MonopolyEventListener {
         return presentationHost.updateFrameLayoutMetrics();
     }
 
-    void rollDice() {
+    private void rollDice() {
         gameTurnFlowCoordinator.rollDice();
     }
 
-    void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
+    private void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
         botTurnScheduler.schedule(
                 delayKind,
                 now,
@@ -325,7 +362,7 @@ public class Game implements MonopolyEventListener {
         );
     }
 
-    void endRound(boolean switchTurns) {
+    private void endRound(boolean switchTurns) {
         gameTurnFlowCoordinator.endRound(switchTurns);
     }
 
@@ -333,7 +370,7 @@ public class Game implements MonopolyEventListener {
         return presentationHost.handleEvent(event);
     }
 
-    void handlePaymentRequest(PaymentRequest request, fi.monopoly.domain.session.TurnContinuationState continuationState, CallbackAction onResolved) {
+    private void handlePaymentRequest(PaymentRequest request, fi.monopoly.domain.session.TurnContinuationState continuationState, CallbackAction onResolved) {
         updateLogTurnContext();
         sessionApplicationService.handlePaymentRequest(request, continuationState, onResolved);
     }
@@ -370,7 +407,7 @@ public class Game implements MonopolyEventListener {
         return presentationHost.getSidebarContentTop();
     }
 
-    void retryPendingDebtPaymentAction() {
+    private void retryPendingDebtPaymentAction() {
         if (debtActionDispatcher != null) {
             debtActionDispatcher.payDebt();
             return;
@@ -378,7 +415,7 @@ public class Game implements MonopolyEventListener {
         debtController.retryPendingDebtPayment();
     }
 
-    void updateDebtButtons() {
+    private void updateDebtButtons() {
         presentationHost.updateDebtButtons(sessionApplicationService != null ? sessionApplicationService.currentState() : null);
     }
 
@@ -390,7 +427,7 @@ public class Game implements MonopolyEventListener {
         presentationHost.refreshButtonInteractivityState();
     }
 
-    void refreshLabels() {
+    private void refreshLabels() {
         presentationHost.refreshLabels();
     }
 
@@ -414,15 +451,15 @@ public class Game implements MonopolyEventListener {
         gameDesktopShellCoordinator.restoreNormalTurnControls(shellDependencies);
     }
 
-    void showRollDiceControl() {
+    private void showRollDiceControl() {
         presentationHost.showRollDiceControl();
     }
 
-    void showEndTurnControl() {
+    private void showEndTurnControl() {
         presentationHost.showEndTurnControl();
     }
 
-    void hidePrimaryTurnControls() {
+    private void hidePrimaryTurnControls() {
         presentationHost.hidePrimaryTurnControls();
     }
 
@@ -430,11 +467,11 @@ public class Game implements MonopolyEventListener {
         gameDesktopShellCoordinator.declareWinner(shellDependencies, winningPlayer);
     }
 
-    void updateLogTurnContext() {
+    private void updateLogTurnContext() {
         presentationHost.updateLogTurnContext();
     }
 
-    void syncTransientPresentationState() {
+    private void syncTransientPresentationState() {
         presentationHost.syncTransientPresentationState();
     }
 
@@ -446,7 +483,7 @@ public class Game implements MonopolyEventListener {
         presentationHost.applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
     }
 
-    Player playerById(String playerId) {
+    private Player playerById(String playerId) {
         if (playerId == null || players == null) {
             return null;
         }

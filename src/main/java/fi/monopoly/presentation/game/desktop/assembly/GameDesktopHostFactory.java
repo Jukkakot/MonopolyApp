@@ -199,6 +199,84 @@ public final class GameDesktopHostFactory {
     }
 
     public interface Hooks {
+        static Hooks of(
+                Supplier<GameSessionState> sessionStateSupplier,
+                Supplier<Players> playersSupplier,
+                Supplier<Player> currentTurnPlayerSupplier,
+                Function<String, Player> playerByIdResolver,
+                Supplier<Board> boardSupplier,
+                Supplier<Dices> dicesSupplier,
+                Supplier<Animations> animationsSupplier,
+                Supplier<DebtController> debtControllerSupplier,
+                Supplier<DebtState> debtStateSupplier,
+                Supplier<GameTurnFlowCoordinator> gameTurnFlowCoordinatorSupplier,
+                Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier,
+                Supplier<GameSessionQueries> gameSessionQueriesSupplier,
+                Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
+                Supplier<GameView> currentGameViewSupplier,
+                Supplier<PlayerView> currentPlayerViewSupplier,
+                Runnable refreshLabelsAction,
+                Runnable rollDiceAction,
+                BiConsumer<Board, Players> setupDefaultGameStateAction,
+                Runnable hidePrimaryTurnControlsAction,
+                Runnable showRollDiceControlAction,
+                Runnable showEndTurnControlAction,
+                Runnable updateDebtButtonsAction,
+                Runnable syncTransientPresentationStateAction,
+                Runnable updateLogTurnContextAction,
+                Runnable retryPendingDebtPaymentAction,
+                GameDesktopShellDependencies.PaymentRequestHandler paymentRequestHandler,
+                Consumer<Boolean> endRoundAction,
+                GameDesktopShellDependencies.ScheduleNextComputerAction scheduleNextComputerAction,
+                Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction,
+                Consumer<Player> focusPlayerAction,
+                IntSupplier goMoneyAmountSupplier,
+                BooleanSupplier retryDebtVisibleSupplier,
+                BooleanSupplier declareBankruptcyVisibleSupplier,
+                BooleanSupplier endRoundVisibleSupplier,
+                BooleanSupplier rollDiceVisibleSupplier,
+                Supplier<MonopolyEventListener> eventListenerSupplier
+        ) {
+            return new DefaultHooks(
+                    sessionStateSupplier,
+                    playersSupplier,
+                    currentTurnPlayerSupplier,
+                    playerByIdResolver,
+                    boardSupplier,
+                    dicesSupplier,
+                    animationsSupplier,
+                    debtControllerSupplier,
+                    debtStateSupplier,
+                    gameTurnFlowCoordinatorSupplier,
+                    gamePrimaryTurnControlsSupplier,
+                    gameSessionQueriesSupplier,
+                    sessionApplicationServiceSupplier,
+                    currentGameViewSupplier,
+                    currentPlayerViewSupplier,
+                    refreshLabelsAction,
+                    rollDiceAction,
+                    setupDefaultGameStateAction,
+                    hidePrimaryTurnControlsAction,
+                    showRollDiceControlAction,
+                    showEndTurnControlAction,
+                    updateDebtButtonsAction,
+                    syncTransientPresentationStateAction,
+                    updateLogTurnContextAction,
+                    retryPendingDebtPaymentAction,
+                    paymentRequestHandler,
+                    endRoundAction,
+                    scheduleNextComputerAction,
+                    resumeContinuationAction,
+                    focusPlayerAction,
+                    goMoneyAmountSupplier,
+                    retryDebtVisibleSupplier,
+                    declareBankruptcyVisibleSupplier,
+                    endRoundVisibleSupplier,
+                    rollDiceVisibleSupplier,
+                    eventListenerSupplier
+            );
+        }
+
         Supplier<GameSessionState> sessionStateSupplier();
 
         Supplier<Players> playersSupplier();
@@ -270,5 +348,45 @@ public final class GameDesktopHostFactory {
         BooleanSupplier rollDiceVisibleSupplier();
 
         Supplier<MonopolyEventListener> eventListenerSupplier();
+    }
+
+    private record DefaultHooks(
+            Supplier<GameSessionState> sessionStateSupplier,
+            Supplier<Players> playersSupplier,
+            Supplier<Player> currentTurnPlayerSupplier,
+            Function<String, Player> playerByIdResolver,
+            Supplier<Board> boardSupplier,
+            Supplier<Dices> dicesSupplier,
+            Supplier<Animations> animationsSupplier,
+            Supplier<DebtController> debtControllerSupplier,
+            Supplier<DebtState> debtStateSupplier,
+            Supplier<GameTurnFlowCoordinator> gameTurnFlowCoordinatorSupplier,
+            Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier,
+            Supplier<GameSessionQueries> gameSessionQueriesSupplier,
+            Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
+            Supplier<GameView> currentGameViewSupplier,
+            Supplier<PlayerView> currentPlayerViewSupplier,
+            Runnable refreshLabelsAction,
+            Runnable rollDiceAction,
+            BiConsumer<Board, Players> setupDefaultGameStateAction,
+            Runnable hidePrimaryTurnControlsAction,
+            Runnable showRollDiceControlAction,
+            Runnable showEndTurnControlAction,
+            Runnable updateDebtButtonsAction,
+            Runnable syncTransientPresentationStateAction,
+            Runnable updateLogTurnContextAction,
+            Runnable retryPendingDebtPaymentAction,
+            GameDesktopShellDependencies.PaymentRequestHandler paymentRequestHandler,
+            Consumer<Boolean> endRoundAction,
+            GameDesktopShellDependencies.ScheduleNextComputerAction scheduleNextComputerAction,
+            Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction,
+            Consumer<Player> focusPlayerAction,
+            IntSupplier goMoneyAmountSupplier,
+            BooleanSupplier retryDebtVisibleSupplier,
+            BooleanSupplier declareBankruptcyVisibleSupplier,
+            BooleanSupplier endRoundVisibleSupplier,
+            BooleanSupplier rollDiceVisibleSupplier,
+            Supplier<MonopolyEventListener> eventListenerSupplier
+    ) implements Hooks {
     }
 }
