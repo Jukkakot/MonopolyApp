@@ -79,8 +79,12 @@ public final class GameDesktopPresentationHost {
         return gameSessionQueries;
     }
 
-    public void draw() {
-        gameFrameCoordinator.drawFrame(createFrameHooks());
+    public void advanceFrame() {
+        gameFrameCoordinator.advanceFrame(createFrameHooks());
+    }
+
+    public void render() {
+        gameFrameCoordinator.renderFrame(createFrameHooks());
     }
 
     public boolean handleEvent(Event event) {

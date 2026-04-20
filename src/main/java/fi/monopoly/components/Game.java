@@ -342,7 +342,11 @@ public class Game implements MonopolyEventListener {
     }
 
     public void draw() {
-        presentationHost.draw();
+        presentationHost.render();
+    }
+
+    public void advanceFrame() {
+        presentationHost.advanceFrame();
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {

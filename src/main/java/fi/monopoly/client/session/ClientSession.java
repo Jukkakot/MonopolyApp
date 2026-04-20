@@ -14,6 +14,8 @@ import fi.monopoly.application.session.SessionHost;
 public interface ClientSession extends SessionHost {
     void startFreshSession();
 
+    void advanceFrame();
+
     ClientSessionView currentView();
 
     ClientSessionSnapshot snapshot();

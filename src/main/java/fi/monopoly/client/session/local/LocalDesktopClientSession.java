@@ -45,6 +45,14 @@ public final class LocalDesktopClientSession implements ClientSession {
     }
 
     @Override
+    public void advanceFrame() {
+        Game game = desktopSessionHostCoordinator.currentGame();
+        if (game != null) {
+            game.advanceFrame();
+        }
+    }
+
+    @Override
     public ClientSessionView currentView() {
         Game game = desktopSessionHostCoordinator.currentGame();
         return game != null ? new GameClientSessionView(game) : null;

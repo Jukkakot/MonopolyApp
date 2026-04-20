@@ -181,6 +181,7 @@ public class MonopolyApp extends MonopolyEventObserver {
     public void draw() {
         logWindowSizeChangeFromDraw();
         background(205, 230, 209);
+        clientSession.advanceFrame();
         ClientSessionView currentView = clientSession.currentView();
         if (currentView == null) {
             return;

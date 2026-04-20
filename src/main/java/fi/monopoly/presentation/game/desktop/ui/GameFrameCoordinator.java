@@ -61,12 +61,9 @@ public final class GameFrameCoordinator {
         this.buttons = buttons;
     }
 
-    public void drawFrame(FrameHooks hooks) {
+    public void advanceFrame(FrameHooks hooks) {
         long frameStart = System.nanoTime();
         updateLogTurnContext(hooks.sessionState().gameOver(), hooks.sessionState().winner(), hooks.turnPlayer());
-        LayoutMetrics layoutMetrics = updateFrameLayoutMetrics();
-        boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
-        GameSidebarPresenter.SidebarState sidebarState = createSidebarState(hooks);
         boolean animationWasRunning = hooks.animations().isRunning();
         float animationDeltaSeconds = resolveAnimationDeltaSeconds(frameStart);
         if (MonopolyApp.SKIP_ANNIMATIONS) {
@@ -76,7 +73,20 @@ public final class GameFrameCoordinator {
             hooks.animations().updateAnimations(animationDeltaSeconds);
         }
         applyComputerActionCooldownIfAnimationJustFinishedInternal(animationWasRunning, hooks);
+        LayoutMetrics layoutMetrics = updateFrameLayoutMetrics();
         updateSidebarControlPositions(layoutMetrics);
+        refreshButtonInteractivityState();
+        updatePersistentButtons(hooks.sessionState().gameOver());
+        enforcePrimaryTurnControlInvariant(hooks.debtState() != null);
+        syncTransientPresentationState(hooks::restoreBotTurnControlsIfNeeded);
+        runComputerPlayerStep(hooks.botTurnHooks());
+        debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
+    }
+
+    public void renderFrame(FrameHooks hooks) {
+        LayoutMetrics layoutMetrics = getLayoutMetrics();
+        boolean hasSidebarSpace = layoutMetrics.hasSidebarSpace();
+        GameSidebarPresenter.SidebarState sidebarState = createSidebarState(hooks);
         hooks.board().draw(null);
         if (hasSidebarSpace) {
             gameSidebarPresenter.drawSidebarPanel(layoutMetrics, sidebarState, debugPerformanceStats::recordHistoryLayout);
@@ -93,18 +103,10 @@ public final class GameFrameCoordinator {
                     !hooks.debtSidebarMode(),
                     !hooks.debtSidebarMode()
             );
-        } else {
-            hooks.players().drawTokens();
-        }
-        refreshButtonInteractivityState();
-        updatePersistentButtons(hooks.sessionState().gameOver());
-        enforcePrimaryTurnControlInvariant(hooks.debtState() != null);
-        if (hasSidebarSpace) {
             gameSidebarPresenter.drawDebtState(layoutMetrics, sidebarState.debtState());
+            return;
         }
-        syncTransientPresentationState(hooks::restoreBotTurnControlsIfNeeded);
-        runComputerPlayerStep(hooks.botTurnHooks());
-        debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
+        hooks.players().drawTokens();
     }
 
     public LayoutMetrics updateFrameLayoutMetrics() {
