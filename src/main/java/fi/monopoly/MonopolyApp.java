@@ -53,65 +53,10 @@ public class MonopolyApp extends MonopolyEventObserver {
     private static long coloredImageCopies;
     private final SessionPersistenceService sessionPersistenceService = new SessionPersistenceService();
     private final DesktopSessionHostCoordinator desktopSessionHostCoordinator = new DesktopSessionHostCoordinator(
-            new DesktopSessionHostCoordinator.Hooks() {
-                @Override
-                public void shutdownSessionRuntime() {
-                    MonopolyApp.this.shutdownCurrentSessionRuntime();
-                }
-
-                @Override
-                public void disposeGame(Game game) {
-                    game.dispose();
-                }
-
-                @Override
-                public void disposeControlLayer() {
-                    if (p5 != null) {
-                        p5.dispose();
-                    }
-                }
-
-                @Override
-                public void initializeControlLayer() {
-                    p5 = new ControlP5(MonopolyApp.this);
-                    MonopolyRuntime.initialize(MonopolyApp.this, p5, font10, font20, font30);
-                }
-
-                @Override
-                public void applyDefaultTextFont() {
-                    MonopolyApp.this.applyDefaultTextFont();
-                }
-
-                @Override
-                public Game createGame(fi.monopoly.domain.session.SessionState restoredState) {
-                    LocalSessionActions localSessionActions = new LocalSessionActions(
-                            MonopolyApp.this::saveLocalSession,
-                            MonopolyApp.this::loadLocalSession
-                    );
-                    return new Game(MonopolyRuntime.get(), restoredState, localSessionActions);
-                }
-
-                @Override
-                public void flushPendingChanges() {
-                    MonopolyRuntime.get().eventBus().flushPendingChanges();
-                }
-            }
+            new MonopolyDesktopSessionHostHooks(this)
     );
     private final SessionHost sessionHost = desktopSessionHostCoordinator;
-    private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new LocalSessionPersistenceUiHooks() {
-        @Override
-        public void showPopup(String message) {
-            MonopolyRuntime.get().popupService().showManualDecision(
-                    message,
-                    new ButtonProps(fi.monopoly.text.UiTexts.text("popup.ok.label"), null)
-            );
-        }
-
-        @Override
-        public void showPersistenceNotice(String message) {
-            desktopSessionHostCoordinator.showPersistenceNotice(message);
-        }
-    };
+    private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new MonopolyLocalSessionPersistenceUiHooks(this);
     private final LocalSessionPersistenceCoordinator localSessionPersistenceCoordinator =
             new LocalSessionPersistenceCoordinator(sessionPersistenceService, sessionHost, localSessionPersistenceUiHooks);
     private int lastDrawWidth = -1;
@@ -306,7 +251,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         desktopSessionHostCoordinator.setGameForTest(game);
     }
 
-    private void shutdownCurrentSessionRuntime() {
+    void shutdownCurrentSessionRuntimeRef() {
         MonopolyRuntime runtime = MonopolyRuntime.peek();
         if (runtime == null) {
             return;
@@ -317,7 +262,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         runtime.popupService().hideAll();
     }
 
-    private void applyDefaultTextFont() {
+    void applyDefaultTextFontRef() {
         if (font10 == null) {
             return;
         }
@@ -326,5 +271,9 @@ public class MonopolyApp extends MonopolyEventObserver {
         } catch (RuntimeException e) {
             log.debug("Skipping textFont apply during runtime rebuild because graphics context is not ready yet");
         }
+    }
+
+    DesktopSessionHostCoordinator desktopSessionHostCoordinatorRef() {
+        return desktopSessionHostCoordinator;
     }
 }
