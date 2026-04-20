@@ -1,16 +1,12 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
-import fi.monopoly.application.session.SessionHost;
-import fi.monopoly.application.session.persistence.LocalSessionPersistenceCoordinator;
-import fi.monopoly.application.session.persistence.LocalSessionPersistenceUiHooks;
-import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
-import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.types.SpotType;
@@ -53,15 +49,12 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     };
     private static long coloredImageCopies;
-    private final SessionPersistenceService sessionPersistenceService = new SessionPersistenceService();
     private final EmbeddedDesktopSessionHost embeddedSessionHost = new EmbeddedDesktopSessionHost(
             new MonopolyDesktopSessionHostHooks(this)
     );
     private final ClientSession clientSession = embeddedSessionHost.clientSession();
-    private final SessionHost sessionHost = clientSession;
-    private final LocalSessionPersistenceUiHooks localSessionPersistenceUiHooks = new MonopolyLocalSessionPersistenceUiHooks(this);
-    private final LocalSessionPersistenceCoordinator localSessionPersistenceCoordinator =
-            new LocalSessionPersistenceCoordinator(sessionPersistenceService, sessionHost, localSessionPersistenceUiHooks);
+    private final MonopolyLocalSessionPersistenceUiHooks localSessionPersistenceUiHooks =
+            new MonopolyLocalSessionPersistenceUiHooks(this);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 
@@ -210,11 +203,11 @@ public class MonopolyApp extends MonopolyEventObserver {
     }
 
     public void saveLocalSession() {
-        localSessionPersistenceCoordinator.saveLocalSession();
+        showPersistenceResult(clientSession.saveLocalSession());
     }
 
     public void loadLocalSession() {
-        localSessionPersistenceCoordinator.loadLocalSession();
+        showPersistenceResult(clientSession.loadLocalSession());
     }
 
     public void windowResized() {
@@ -283,5 +276,9 @@ public class MonopolyApp extends MonopolyEventObserver {
 
     ClientSession clientSessionRef() {
         return clientSession;
+    }
+
+    private void showPersistenceResult(LocalSessionPersistenceResult result) {
+        localSessionPersistenceUiHooks.showResult(result);
     }
 }

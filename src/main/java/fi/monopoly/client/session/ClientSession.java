@@ -1,6 +1,7 @@
 package fi.monopoly.client.session;
 
 import fi.monopoly.application.session.SessionHost;
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
 
 /**
  * Transitional client-facing session seam for whichever host currently owns Monopoly session
@@ -15,6 +16,10 @@ public interface ClientSession extends SessionHost {
     void startFreshSession();
 
     void advanceFrame();
+
+    LocalSessionPersistenceResult saveLocalSession();
+
+    LocalSessionPersistenceResult loadLocalSession();
 
     ClientSessionView currentView();
 

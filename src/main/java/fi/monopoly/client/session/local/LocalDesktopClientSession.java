@@ -1,5 +1,8 @@
 package fi.monopoly.client.session.local;
 
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCase;
+import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
@@ -8,6 +11,7 @@ import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
+import java.time.LocalTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,10 +25,25 @@ import java.util.Set;
  */
 public final class LocalDesktopClientSession implements ClientSession {
     private final DesktopSessionHostCoordinator desktopSessionHostCoordinator;
+    private final LocalSessionPersistenceUseCase persistenceUseCase;
     private final Set<ClientSessionListener> listeners = new LinkedHashSet<>();
 
     public LocalDesktopClientSession(DesktopSessionHostCoordinator desktopSessionHostCoordinator) {
+        this(
+                desktopSessionHostCoordinator,
+                new LocalSessionPersistenceUseCase(
+                        new SessionPersistenceService(),
+                        desktopSessionHostCoordinator
+                )
+        );
+    }
+
+    public LocalDesktopClientSession(
+            DesktopSessionHostCoordinator desktopSessionHostCoordinator,
+            LocalSessionPersistenceUseCase persistenceUseCase
+    ) {
         this.desktopSessionHostCoordinator = desktopSessionHostCoordinator;
+        this.persistenceUseCase = persistenceUseCase;
     }
 
     @Override
@@ -50,6 +69,18 @@ public final class LocalDesktopClientSession implements ClientSession {
         if (game != null) {
             game.advanceFrame();
         }
+    }
+
+    @Override
+    public LocalSessionPersistenceResult saveLocalSession() {
+        return persistenceUseCase.saveLocalSession();
+    }
+
+    @Override
+    public LocalSessionPersistenceResult loadLocalSession() {
+        LocalSessionPersistenceResult result = persistenceUseCase.loadLocalSession();
+        publishSnapshot();
+        return result;
     }
 
     @Override

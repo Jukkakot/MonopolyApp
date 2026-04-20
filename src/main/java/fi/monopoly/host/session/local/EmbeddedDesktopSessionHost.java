@@ -1,5 +1,7 @@
 package fi.monopoly.host.session.local;
 
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCase;
+import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.local.LocalDesktopClientSession;
 import fi.monopoly.components.Game;
@@ -19,7 +21,13 @@ public final class EmbeddedDesktopSessionHost {
 
     public EmbeddedDesktopSessionHost(DesktopSessionHostCoordinator.Hooks hooks) {
         this.desktopSessionHostCoordinator = new DesktopSessionHostCoordinator(hooks);
-        this.clientSession = new LocalDesktopClientSession(desktopSessionHostCoordinator);
+        this.clientSession = new LocalDesktopClientSession(
+                desktopSessionHostCoordinator,
+                new LocalSessionPersistenceUseCase(
+                        new SessionPersistenceService(),
+                        desktopSessionHostCoordinator
+                )
+        );
     }
 
     public ClientSession clientSession() {
