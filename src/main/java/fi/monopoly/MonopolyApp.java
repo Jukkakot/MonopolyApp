@@ -47,8 +47,13 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     };
     private static long coloredImageCopies;
+    private final MonopolyDesktopRuntimeBridge desktopRuntimeBridge = new MonopolyDesktopRuntimeBridge(
+            this,
+            this::saveLocalSession,
+            this::loadLocalSession
+    );
     private final DesktopEmbeddedClientShell desktopClientShell = new DesktopEmbeddedClientShell(
-            new MonopolyDesktopSessionHostHooks(this),
+            new MonopolyDesktopSessionHostHooks(desktopRuntimeBridge),
             MonopolyLocalSessionPersistenceUiHooks::new
     );
     private int lastDrawWidth = -1;
@@ -246,28 +251,6 @@ public class MonopolyApp extends MonopolyEventObserver {
 
     void setGameForTest(Game game) {
         desktopClientShell.setGameForTest(game);
-    }
-
-    void shutdownCurrentSessionRuntimeRef() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
-        if (runtime == null) {
-            return;
-        }
-        runtime.popupService().hideAll();
-        runtime.setGameSession(null);
-        runtime.eventBus().flushPendingChanges();
-        runtime.popupService().hideAll();
-    }
-
-    void applyDefaultTextFontRef() {
-        if (font10 == null) {
-            return;
-        }
-        try {
-            textFont(font10);
-        } catch (RuntimeException e) {
-            log.debug("Skipping textFont apply during runtime rebuild because graphics context is not ready yet");
-        }
     }
 
     fi.monopoly.client.session.ClientSession clientSessionRef() {
