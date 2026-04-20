@@ -3,7 +3,7 @@ package fi.monopoly.presentation.game;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
-import fi.monopoly.presentation.game.desktop.DesktopSessionHostCoordinator;
+import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

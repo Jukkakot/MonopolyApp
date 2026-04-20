@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game.desktop;
+package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;

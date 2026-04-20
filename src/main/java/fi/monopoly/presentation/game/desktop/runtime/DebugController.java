@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game.desktop;
+package fi.monopoly.presentation.game.desktop.runtime;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;

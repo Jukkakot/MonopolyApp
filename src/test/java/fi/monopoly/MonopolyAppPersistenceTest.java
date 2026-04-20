@@ -3,7 +3,7 @@ package fi.monopoly;
 import controlP5.ControlP5;
 import fi.monopoly.components.Game;
 import fi.monopoly.presentation.game.session.GameSessionState;
-import fi.monopoly.presentation.game.desktop.LocalSessionActions;
+import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

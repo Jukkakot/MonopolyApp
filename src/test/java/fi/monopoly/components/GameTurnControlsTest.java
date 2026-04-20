@@ -124,10 +124,10 @@ class GameTurnControlsTest {
         return (GameSessionState) field.get(game);
     }
 
-    private static fi.monopoly.presentation.game.desktop.DebugController getDebugController(Game game) throws ReflectiveOperationException {
+    private static fi.monopoly.presentation.game.desktop.runtime.DebugController getDebugController(Game game) throws ReflectiveOperationException {
         Field field = Game.class.getDeclaredField("debugController");
         field.setAccessible(true);
-        return (fi.monopoly.presentation.game.desktop.DebugController) field.get(game);
+        return (fi.monopoly.presentation.game.desktop.runtime.DebugController) field.get(game);
     }
 
     private static void openGodModeMenu(Game game) throws ReflectiveOperationException {
