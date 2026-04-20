@@ -1,12 +1,16 @@
 package fi.monopoly.client.session.local;
 
 import fi.monopoly.client.session.ClientSession;
+import fi.monopoly.client.session.ClientSessionListener;
+import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Client-session adapter backed by the current embedded desktop host.
@@ -17,6 +21,7 @@ import java.util.List;
  */
 public final class LocalDesktopClientSession implements ClientSession {
     private final DesktopSessionHostCoordinator desktopSessionHostCoordinator;
+    private final Set<ClientSessionListener> listeners = new LinkedHashSet<>();
 
     public LocalDesktopClientSession(DesktopSessionHostCoordinator desktopSessionHostCoordinator) {
         this.desktopSessionHostCoordinator = desktopSessionHostCoordinator;
@@ -30,11 +35,13 @@ public final class LocalDesktopClientSession implements ClientSession {
     @Override
     public void replaceState(SessionState restoredState) {
         desktopSessionHostCoordinator.replaceState(restoredState);
+        publishSnapshot();
     }
 
     @Override
     public void startFreshSession() {
         desktopSessionHostCoordinator.rebuildFreshGame();
+        publishSnapshot();
     }
 
     @Override
@@ -44,8 +51,28 @@ public final class LocalDesktopClientSession implements ClientSession {
     }
 
     @Override
+    public ClientSessionSnapshot snapshot() {
+        return ClientSessionSnapshot.from(currentState(), currentView() != null);
+    }
+
+    @Override
+    public void addListener(ClientSessionListener listener) {
+        if (listener == null) {
+            return;
+        }
+        listeners.add(listener);
+        listener.onSnapshotChanged(snapshot());
+    }
+
+    @Override
+    public void removeListener(ClientSessionListener listener) {
+        listeners.remove(listener);
+    }
+
+    @Override
     public void showPersistenceNotice(String message) {
         desktopSessionHostCoordinator.showPersistenceNotice(message);
+        publishSnapshot();
     }
 
     public Game currentGameForTest() {
@@ -54,6 +81,14 @@ public final class LocalDesktopClientSession implements ClientSession {
 
     public void setGameForTest(Game game) {
         desktopSessionHostCoordinator.setGameForTest(game);
+        publishSnapshot();
+    }
+
+    private void publishSnapshot() {
+        ClientSessionSnapshot snapshot = snapshot();
+        for (ClientSessionListener listener : List.copyOf(listeners)) {
+            listener.onSnapshotChanged(snapshot);
+        }
     }
 
     private record GameClientSessionView(Game game) implements ClientSessionView {

@@ -16,5 +16,11 @@ public interface ClientSession extends SessionHost {
 
     ClientSessionView currentView();
 
+    ClientSessionSnapshot snapshot();
+
+    void addListener(ClientSessionListener listener);
+
+    void removeListener(ClientSessionListener listener);
+
     void showPersistenceNotice(String message);
 }

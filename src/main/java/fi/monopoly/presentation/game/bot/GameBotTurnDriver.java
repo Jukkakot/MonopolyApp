@@ -38,21 +38,31 @@ public final class GameBotTurnDriver {
             return;
         }
 
-        Player turnPlayer = hooks.currentTurnPlayer();
-        if (turnPlayer == null || !turnPlayer.isComputerControlled()) {
+        Player actingPlayer = resolveActingPlayer(hooks, sessionState);
+        if (actingPlayer == null || !actingPlayer.isComputerControlled()) {
             return;
         }
 
-        ComputerTurnContext context = hooks.createTurnContext(turnPlayer);
-        boolean acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile()).takeStep(context);
-        if (!acted && hooks.recoverPrimaryTurnControlsForCurrentComputerTurn()) {
+        ComputerTurnContext context = hooks.createTurnContext(actingPlayer);
+        boolean acted = ComputerStrategies.forProfile(actingPlayer.getComputerProfile()).takeStep(context);
+        if (!acted && sessionState.activeDebt() == null && hooks.recoverPrimaryTurnControlsForCurrentComputerTurn()) {
             hooks.syncPresentationState();
-            acted = ComputerStrategies.forProfile(turnPlayer.getComputerProfile()).takeStep(context);
+            acted = ComputerStrategies.forProfile(actingPlayer.getComputerProfile()).takeStep(context);
         }
         if (acted) {
             hooks.scheduleNextAction(hooks.delayKindFor(context), now);
         }
         hooks.recordStep(System.nanoTime() - stepStart);
+    }
+
+    private Player resolveActingPlayer(Hooks hooks, SessionState sessionState) {
+        if (sessionState.activeDebt() != null) {
+            Player debtor = hooks.findPlayerById(sessionState.activeDebt().debtorPlayerId());
+            if (debtor != null) {
+                return debtor;
+            }
+        }
+        return hooks.currentTurnPlayer();
     }
 
     private void handleTradeStep(Hooks hooks, SessionState sessionState, int now, long stepStart) {
