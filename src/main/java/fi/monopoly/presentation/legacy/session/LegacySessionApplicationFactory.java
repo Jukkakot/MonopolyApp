@@ -6,7 +6,7 @@ import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.popup.PopupService;
-import fi.monopoly.presentation.game.LegacyTurnActionGatewayAdapter;
+import fi.monopoly.presentation.game.desktop.LegacyTurnActionGatewayAdapter;
 import fi.monopoly.presentation.legacy.session.auction.LegacyAuctionGateway;
 import fi.monopoly.presentation.legacy.session.debt.LegacyDebtRemediationGateway;
 import fi.monopoly.presentation.legacy.session.debt.LegacyPaymentGateway;

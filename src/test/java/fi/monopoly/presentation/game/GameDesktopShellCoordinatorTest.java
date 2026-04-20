@@ -16,6 +16,7 @@ import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.turn.TurnEngine;
+import fi.monopoly.presentation.game.desktop.GameSessionBridgeFactory;
 import fi.monopoly.presentation.game.desktop.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;

@@ -31,6 +31,7 @@ import fi.monopoly.presentation.game.desktop.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.DebugController;
 import fi.monopoly.presentation.game.desktop.LocalSessionActions;
+import fi.monopoly.presentation.game.desktop.SessionViewFacade;
 import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
