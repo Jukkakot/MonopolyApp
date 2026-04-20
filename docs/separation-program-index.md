@@ -14,6 +14,15 @@ It collects the current design documents into one implementation-oriented progra
 The goal is that implementation can later proceed in controlled slices without reopening architecture from scratch every
 time.
 
+Important note:
+
+- this document is the original roadmap/program index
+- it is not the most up-to-date implementation status tracker anymore
+- for current truth, read:
+  - [current-architecture-status.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/current-architecture-status.md)
+  - [architecture-overview-diagrams.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-overview-diagrams.md)
+  - [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
+
 ## Program Goal
 
 Move the current Monopoly Processing app toward this target:
@@ -411,9 +420,41 @@ These are specified well enough that implementation could start without reopenin
 On branch `separation-program`:
 
 - PR1 through PR8 are already substantially implemented
-- the next planned implementation wave is PR9
-- PR10 remains design-ready but should follow PR9
-- PR11 and PR12 now define the remaining local-authority cleanup before backend work
+- PR9, PR11, and PR12 have also been substantially advanced in implementation spirit through local persistence, restoration, continuation, and desktop reattachment work
+- the codebase is now past the original “start PR9 next” framing
+- the main remaining architectural milestone is no longer basic local separation, but reaching a real client/host boundary
+- PR10 remains the next major architecture milestone in substance, even if some remaining local cleanup still continues in parallel
+
+## Current Interpretation Of The Original PR Plan
+
+This is the practical reading of the original PR-wave today.
+
+### Largely realized in code already
+
+- PR1: session-state seam
+- PR2: property purchase command-oriented flow
+- PR3: rent and debt opening
+- PR4: debt remediation
+- PR5: auction flow
+- PR6: trade flow
+- PR7: bot command unification
+- PR8: game presentation shell cleanup
+
+### Substantially advanced, but still carrying transitional legacy seams
+
+- PR9: persistence-ready authoritative session
+- PR11: authoritative continuation / callback elimination
+- PR12: local load reattachment
+
+### Still the next real architecture jump
+
+- PR10: server extraction / host-client split
+
+In other words:
+
+- the original plan is still directionally right
+- but the repo is now closer to “finish host/client seam and start backend extraction”
+  than to “begin persistence planning from scratch”
 
 ## Suggested Task Breakdown
 
@@ -505,10 +546,13 @@ These are not blockers yet, but they will need explicit decisions before their d
 
 The next best implementation move is:
 
-- finish validating PR8 cleanup boundaries in code
-- then begin PR9 persistence boundary implementation
+- stop treating PR9 as untouched future work
+- use the current implementation status as the starting point
+- move next toward the client/host seam described in
+  [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
 
 Reason:
 
-- local separation is already specified and largely executable
-- the next architectural risk sits at the persistence boundary, not in more local UI cleanup
+- local separation is already far along
+- the next architectural risk now sits at the host/client boundary
+- continued local cleanup only matters if it helps create that boundary
