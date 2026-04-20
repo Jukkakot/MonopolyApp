@@ -1,8 +1,9 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.presentation.game.BotTurnScheduler;
 import lombok.extern.slf4j.Slf4j;
 import processing.event.Event;
 import processing.event.KeyEvent;

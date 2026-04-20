@@ -35,6 +35,7 @@ import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarStateFactory;
+import fi.monopoly.presentation.game.desktop.ui.GameUiController;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.text.UiTexts;

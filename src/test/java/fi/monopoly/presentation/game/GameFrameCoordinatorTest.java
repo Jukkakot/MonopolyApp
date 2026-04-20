@@ -16,6 +16,7 @@ import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarStateFactory;
+import fi.monopoly.presentation.game.desktop.ui.GameUiController;
 import fi.monopoly.utils.DebugPerformanceStats;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.AfterEach;

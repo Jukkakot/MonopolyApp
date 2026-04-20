@@ -2,7 +2,7 @@ package fi.monopoly.presentation.game.desktop;
 
 import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
-import fi.monopoly.presentation.game.GameButtonLayoutFactory;
+import fi.monopoly.presentation.game.desktop.ui.GameButtonLayoutFactory;
 
 import java.util.List;
 

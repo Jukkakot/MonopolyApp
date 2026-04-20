@@ -1,10 +1,12 @@
-package fi.monopoly.presentation.game;
+package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.MonopolyApp;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.presentation.game.DebugController;
+import fi.monopoly.presentation.game.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.text.UiTexts;
