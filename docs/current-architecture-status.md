@@ -45,7 +45,7 @@ The project does not yet have full backend-ready architecture because:
 - `presentation.game.desktop.session`
   - session bridge and restored-session reattachment adapters around the embedded host
 - `client.session.desktop`
-  - desktop client-session shell/controller glue and client-owned local session control callbacks such as save/load triggers
+  - desktop client-session shell/runtime glue, client-owned local session control callbacks such as save/load triggers, and the app-facing desktop session runtime port
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`

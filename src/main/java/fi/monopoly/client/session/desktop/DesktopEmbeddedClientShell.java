@@ -21,7 +21,7 @@ import java.util.function.Function;
 public final class DesktopEmbeddedClientShell {
     private final EmbeddedDesktopSessionHost embeddedSessionHost;
     private final ClientSession clientSession;
-    private final DesktopClientSessionController clientSessionController;
+    private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
     public DesktopEmbeddedClientShell(
@@ -32,31 +32,15 @@ public final class DesktopEmbeddedClientShell {
         this.clientSession = new LocalDesktopClientSession(embeddedSessionHost);
         this.testAccess = embeddedSessionHost.testAccess();
         ClientSessionFeedbackSink feedbackSink = Objects.requireNonNull(feedbackSinkFactory).apply(clientSession);
-        this.clientSessionController = new DesktopClientSessionController(clientSession, feedbackSink);
-    }
-
-    public void startFreshSession() {
-        clientSessionController.startFreshSession();
-    }
-
-    public void advanceFrame() {
-        clientSessionController.advanceFrame();
-    }
-
-    public ClientSessionView currentView() {
-        return clientSessionController.currentView();
-    }
-
-    public void saveLocalSession() {
-        clientSessionController.saveLocalSession();
-    }
-
-    public void loadLocalSession() {
-        clientSessionController.loadLocalSession();
+        this.sessionRuntime = new DesktopClientSessionController(clientSession, feedbackSink);
     }
 
     public ClientSession clientSession() {
         return clientSession;
+    }
+
+    public DesktopClientSessionRuntime runtime() {
+        return sessionRuntime;
     }
 
     public DesktopHostedGameTestAccess testAccess() {

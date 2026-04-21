@@ -1,7 +1,9 @@
 package fi.monopoly.client.desktop;
 
 import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
+import fi.monopoly.client.session.desktop.DesktopClientSessionRuntime;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
@@ -14,7 +16,7 @@ import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFa
  * but it centralizes the remaining desktop-host wiring behind one app-facing adapter.</p>
  */
 public final class DesktopAppShell {
-    private final DesktopEmbeddedClientShell desktopClientShell;
+    private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
     public DesktopAppShell(MonopolyApp app) {
@@ -24,31 +26,36 @@ public final class DesktopAppShell {
                 this::loadLocalSession,
                 new DefaultDesktopHostedGameFactory()
         );
-        this.desktopClientShell = new DesktopEmbeddedClientShell(
+        DesktopEmbeddedClientShell desktopClientShell = new DesktopEmbeddedClientShell(
                 runtimeBridge,
                 LocalSessionPersistenceUiHooks::new
         );
+        this.sessionRuntime = desktopClientShell.runtime();
         this.testAccess = desktopClientShell.testAccess();
     }
 
     public void startFreshSession() {
-        desktopClientShell.startFreshSession();
+        sessionRuntime.startFreshSession();
     }
 
     public void advanceFrame() {
-        desktopClientShell.advanceFrame();
+        sessionRuntime.advanceFrame();
     }
 
     public ClientSessionView currentView() {
-        return desktopClientShell.currentView();
+        return sessionRuntime.currentView();
+    }
+
+    public ClientSessionSnapshot currentSnapshot() {
+        return sessionRuntime.currentSnapshot();
     }
 
     public void saveLocalSession() {
-        desktopClientShell.saveLocalSession();
+        sessionRuntime.saveLocalSession();
     }
 
     public void loadLocalSession() {
-        desktopClientShell.loadLocalSession();
+        sessionRuntime.loadLocalSession();
     }
 
     public DesktopHostedGameTestAccess testAccess() {
