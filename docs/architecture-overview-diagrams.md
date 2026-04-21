@@ -174,6 +174,7 @@ What is important here:
 - the current Processing app instance is now accessed through an explicit `client.desktop` context seam instead of `MonopolyApp.self`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type
 - frame/layout/session orchestration code now reads time and viewport state through `MonopolyRuntime` helpers instead of reaching directly into Processing app fields
+- projected desktop session views now read popup state through explicit collaborators instead of depending on the full runtime shell
 - the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 

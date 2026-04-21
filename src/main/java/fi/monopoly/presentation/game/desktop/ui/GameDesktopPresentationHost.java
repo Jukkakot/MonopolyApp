@@ -1,8 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.client.desktop.DesktopImageCatalog;
-import fi.monopoly.client.desktop.MonopolyApp;
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
@@ -43,7 +41,6 @@ public final class GameDesktopPresentationHost {
     private final SessionViewFacade sessionViewFacade;
 
     public GameDesktopPresentationHost(
-            MonopolyRuntime runtime,
             GameDesktopShellCoordinator shellCoordinator,
             GameDesktopShellDependencies shellDependencies,
             DebugPerformanceStats debugPerformanceStats,

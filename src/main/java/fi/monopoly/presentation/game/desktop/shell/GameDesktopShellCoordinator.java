@@ -756,7 +756,7 @@ public final class GameDesktopShellCoordinator {
 
     public SessionViewFacade createSessionViewFacade(Dependencies dependencies) {
         return new SessionViewFacade(
-                runtime,
+                dependencies.popupService(),
                 dependencies.players(),
                 dependencies.board(),
                 dependencies::debtState,

@@ -1,11 +1,11 @@
 package fi.monopoly.presentation.game.desktop.session;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.computer.*;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
@@ -26,7 +26,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public final class SessionViewFacade {
-    private final MonopolyRuntime runtime;
+    private final PopupService popupService;
     private final Players players;
     private final Board board;
     private final Supplier<DebtState> debtStateSupplier;
@@ -41,7 +41,7 @@ public final class SessionViewFacade {
     private CachedGameView cachedGameView;
 
     public SessionViewFacade(
-            MonopolyRuntime runtime,
+            PopupService popupService,
             Players players,
             Board board,
             Supplier<DebtState> debtStateSupplier,
@@ -52,7 +52,7 @@ public final class SessionViewFacade {
             IntSupplier unownedPropertyCountSupplier,
             Function<Player, Integer> boardDangerScoreSupplier
     ) {
-        this.runtime = runtime;
+        this.popupService = popupService;
         this.players = players;
         this.board = board;
         this.debtStateSupplier = debtStateSupplier;
@@ -69,11 +69,11 @@ public final class SessionViewFacade {
         if (cachedGameView != null && cachedGameView.signature() == gameViewSignature) {
             return cachedGameView.view();
         }
-        PopupView popupView = runtime.popupService().isAnyVisible()
+        PopupView popupView = popupService.isAnyVisible()
                 ? new PopupView(
-                runtime.popupService().activePopupKind(),
-                runtime.popupService().activePopupMessage(),
-                runtime.popupService().activePopupActions(),
+                popupService.activePopupKind(),
+                popupService.activePopupMessage(),
+                popupService.activePopupActions(),
                 createPopupPropertyView(currentPlayer)
         )
                 : null;
@@ -93,7 +93,7 @@ public final class SessionViewFacade {
                 currentPlayer.getId(),
                 playerViews,
                 new VisibleActionsView(
-                        runtime.popupService().isAnyVisible(),
+                        popupService.isAnyVisible(),
                         retryDebtVisibleSupplier.getAsBoolean(),
                         declareBankruptcyVisibleSupplier.getAsBoolean(),
                         rollDiceAvailable.apply(currentPlayer),
@@ -150,11 +150,11 @@ public final class SessionViewFacade {
 
     private long buildGameViewSignature(Player currentPlayer) {
         long signature = currentPlayer == null ? 0 : currentPlayer.getId();
-        signature = signature * 31 + Boolean.hashCode(runtime.popupService().isAnyVisible());
-        if (runtime.popupService().isAnyVisible()) {
-            signature = signature * 31 + String.valueOf(runtime.popupService().activePopupKind()).hashCode();
-            signature = signature * 31 + String.valueOf(runtime.popupService().activePopupMessage()).hashCode();
-            signature = signature * 31 + runtime.popupService().activePopupActions().hashCode();
+        signature = signature * 31 + Boolean.hashCode(popupService.isAnyVisible());
+        if (popupService.isAnyVisible()) {
+            signature = signature * 31 + String.valueOf(popupService.activePopupKind()).hashCode();
+            signature = signature * 31 + String.valueOf(popupService.activePopupMessage()).hashCode();
+            signature = signature * 31 + popupService.activePopupActions().hashCode();
         }
         signature = signature * 31 + Boolean.hashCode(retryDebtVisibleSupplier.getAsBoolean());
         signature = signature * 31 + Boolean.hashCode(declareBankruptcyVisibleSupplier.getAsBoolean());
@@ -169,7 +169,7 @@ public final class SessionViewFacade {
             signature = signature * 31 + debtState.paymentRequest().reason().hashCode();
             signature = signature * 31 + Boolean.hashCode(debtState.bankruptcyRisk());
         }
-        Property offeredProperty = runtime.popupService().activeOfferedProperty();
+        Property offeredProperty = popupService.activeOfferedProperty();
         if (offeredProperty != null) {
             signature = signature * 31 + offeredProperty.getSpotType().ordinal();
         }
@@ -236,7 +236,7 @@ public final class SessionViewFacade {
     }
 
     private PropertyView createPopupPropertyView(Player currentPlayer) {
-        Property offeredProperty = runtime.popupService().activeOfferedProperty();
+        Property offeredProperty = popupService.activeOfferedProperty();
         if (offeredProperty == null) {
             return null;
         }

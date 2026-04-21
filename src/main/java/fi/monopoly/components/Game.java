@@ -208,7 +208,6 @@ public class Game implements MonopolyEventListener {
         this.debtActionDispatcher = hostContext.debtActionDispatcher();
         this.gameTurnFlowCoordinator = hostContext.gameTurnFlowCoordinator();
         this.presentationHost = new GameDesktopPresentationHost(
-                runtime,
                 gameDesktopShellCoordinator,
                 shellDependencies,
                 debugPerformanceStats,
