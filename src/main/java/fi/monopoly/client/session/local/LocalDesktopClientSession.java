@@ -8,6 +8,7 @@ import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 
@@ -27,6 +28,7 @@ public final class LocalDesktopClientSession implements ClientSession {
     private final DesktopSessionHostCoordinator desktopSessionHostCoordinator;
     private final LocalSessionPersistenceUseCase persistenceUseCase;
     private final Set<ClientSessionListener> listeners = new LinkedHashSet<>();
+    private final DesktopHostedGameTestAccess testAccess;
 
     public LocalDesktopClientSession(DesktopSessionHostCoordinator desktopSessionHostCoordinator) {
         this(
@@ -44,6 +46,7 @@ public final class LocalDesktopClientSession implements ClientSession {
     ) {
         this.desktopSessionHostCoordinator = desktopSessionHostCoordinator;
         this.persistenceUseCase = persistenceUseCase;
+        this.testAccess = new DesktopHostedGameTestAccess(new TestHostedGameAccess());
     }
 
     @Override
@@ -114,13 +117,8 @@ public final class LocalDesktopClientSession implements ClientSession {
         publishSnapshot();
     }
 
-    public DesktopHostedGame currentGameForTest() {
-        return desktopSessionHostCoordinator.currentGame();
-    }
-
-    public void setGameForTest(DesktopHostedGame game) {
-        desktopSessionHostCoordinator.setGameForTest(game);
-        publishSnapshot();
+    public DesktopHostedGameTestAccess testAccess() {
+        return testAccess;
     }
 
     private void publishSnapshot() {
@@ -139,6 +137,19 @@ public final class LocalDesktopClientSession implements ClientSession {
         @Override
         public List<String> debugPerformanceLines(float fps) {
             return game.debugPerformanceLines(fps);
+        }
+    }
+
+    private final class TestHostedGameAccess implements DesktopHostedGameTestAccess.HostedGameAccess {
+        @Override
+        public DesktopHostedGame currentHostedGame() {
+            return desktopSessionHostCoordinator.currentGame();
+        }
+
+        @Override
+        public void setHostedGame(DesktopHostedGame game) {
+            desktopSessionHostCoordinator.testAccess().setHostedGame(game);
+            publishSnapshot();
         }
     }
 }

@@ -15,6 +15,7 @@ import fi.monopoly.domain.session.SessionStatus;
 public final class DesktopSessionHostCoordinator implements SessionHost {
     private DesktopHostedGame game;
     private final Hooks hooks;
+    private final DesktopHostedGameTestAccess testAccess = new DesktopHostedGameTestAccess(new HostedGameAccess());
 
     public DesktopSessionHostCoordinator(Hooks hooks) {
         this.hooks = hooks;
@@ -38,12 +39,8 @@ public final class DesktopSessionHostCoordinator implements SessionHost {
         return game;
     }
 
-    public void setGameForTest(DesktopHostedGame game) {
-        this.game = game;
-    }
-
-    public fi.monopoly.components.Game currentGameForTest() {
-        return game instanceof fi.monopoly.components.Game concreteGame ? concreteGame : null;
+    public DesktopHostedGameTestAccess testAccess() {
+        return testAccess;
     }
 
     public void showPersistenceNotice(String message) {
@@ -101,5 +98,17 @@ public final class DesktopSessionHostCoordinator implements SessionHost {
         DesktopHostedGame createGame(SessionState restoredState);
 
         void flushPendingChanges();
+    }
+
+    private final class HostedGameAccess implements DesktopHostedGameTestAccess.HostedGameAccess {
+        @Override
+        public DesktopHostedGame currentHostedGame() {
+            return game;
+        }
+
+        @Override
+        public void setHostedGame(DesktopHostedGame game) {
+            DesktopSessionHostCoordinator.this.game = game;
+        }
     }
 }

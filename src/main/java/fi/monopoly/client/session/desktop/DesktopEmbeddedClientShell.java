@@ -4,7 +4,7 @@ import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
 import java.util.Objects;
@@ -21,6 +21,7 @@ public final class DesktopEmbeddedClientShell {
     private final EmbeddedDesktopSessionHost embeddedSessionHost;
     private final ClientSession clientSession;
     private final DesktopClientSessionController clientSessionController;
+    private final DesktopHostedGameTestAccess testAccess;
 
     public DesktopEmbeddedClientShell(
             DesktopSessionHostCoordinator.Hooks hostHooks,
@@ -28,6 +29,7 @@ public final class DesktopEmbeddedClientShell {
     ) {
         this.embeddedSessionHost = new EmbeddedDesktopSessionHost(Objects.requireNonNull(hostHooks));
         this.clientSession = embeddedSessionHost.clientSession();
+        this.testAccess = embeddedSessionHost.testAccess();
         ClientSessionFeedbackSink feedbackSink = Objects.requireNonNull(feedbackSinkFactory).apply(clientSession);
         this.clientSessionController = new DesktopClientSessionController(clientSession, feedbackSink);
     }
@@ -56,11 +58,7 @@ public final class DesktopEmbeddedClientShell {
         return clientSession;
     }
 
-    public DesktopHostedGame currentGameForTest() {
-        return embeddedSessionHost.currentGameForTest();
-    }
-
-    public void setGameForTest(DesktopHostedGame game) {
-        embeddedSessionHost.setGameForTest(game);
+    public DesktopHostedGameTestAccess testAccess() {
+        return testAccess;
     }
 }

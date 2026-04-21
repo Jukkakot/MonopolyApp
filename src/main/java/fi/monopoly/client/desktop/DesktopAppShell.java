@@ -4,7 +4,7 @@ import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 
 /**
  * Desktop app-side shell around the embedded local client session.
@@ -15,6 +15,7 @@ import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
  */
 public final class DesktopAppShell {
     private final DesktopEmbeddedClientShell desktopClientShell;
+    private final DesktopHostedGameTestAccess testAccess;
 
     public DesktopAppShell(MonopolyApp app) {
         DesktopRuntimeBridge runtimeBridge = new DesktopRuntimeBridge(
@@ -27,6 +28,7 @@ public final class DesktopAppShell {
                 runtimeBridge,
                 LocalSessionPersistenceUiHooks::new
         );
+        this.testAccess = desktopClientShell.testAccess();
     }
 
     public void startFreshSession() {
@@ -49,11 +51,7 @@ public final class DesktopAppShell {
         desktopClientShell.loadLocalSession();
     }
 
-    public DesktopHostedGame currentGameForTest() {
-        return desktopClientShell.currentGameForTest();
-    }
-
-    public void setGameForTest(DesktopHostedGame game) {
-        desktopClientShell.setGameForTest(game);
+    public DesktopHostedGameTestAccess testAccess() {
+        return testAccess;
     }
 }
