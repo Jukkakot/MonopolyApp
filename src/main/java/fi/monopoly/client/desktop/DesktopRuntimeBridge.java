@@ -46,24 +46,30 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
 
     @Override
     public void disposeControlLayer() {
-        if (MonopolyApp.p5 != null) {
-            MonopolyApp.p5.dispose();
+        if (DesktopRuntimeResources.controlLayer() != null) {
+            DesktopRuntimeResources.controlLayer().dispose();
         }
     }
 
     @Override
     public void initializeControlLayer() {
-        MonopolyApp.p5 = new ControlP5(app);
-        MonopolyRuntime.initialize(app, MonopolyApp.p5, MonopolyApp.font10, MonopolyApp.font20, MonopolyApp.font30);
+        DesktopRuntimeResources.setControlLayer(new ControlP5(app));
+        MonopolyRuntime.initialize(
+                app,
+                DesktopRuntimeResources.controlLayer(),
+                DesktopRuntimeResources.font10(),
+                DesktopRuntimeResources.font20(),
+                DesktopRuntimeResources.font30()
+        );
     }
 
     @Override
     public void applyDefaultTextFont() {
-        if (MonopolyApp.font10 == null) {
+        if (DesktopRuntimeResources.font10() == null) {
             return;
         }
         try {
-            app.textFont(MonopolyApp.font10);
+            app.textFont(DesktopRuntimeResources.font10());
         } catch (RuntimeException e) {
             log.debug("Skipping textFont apply during runtime rebuild because graphics context is not ready yet");
         }

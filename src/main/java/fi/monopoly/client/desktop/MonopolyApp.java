@@ -8,11 +8,9 @@ import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.utils.UiTokens;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import processing.awt.PSurfaceAWT;
-import processing.core.PFont;
 
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -27,8 +25,6 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
     public static final int DEFAULT_WINDOW_HEIGHT = 996;
     public static MonopolyApp self;
-    public static ControlP5 p5;
-    public static PFont font10, font20, font30;
     private final DesktopAppShell desktopAppShell = new DesktopAppShell(this);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
@@ -46,9 +42,11 @@ public class MonopolyApp extends MonopolyEventObserver {
         frameRate(TARGET_FRAME_RATE);
         DesktopImageCatalog.initialize(this);
         configureWindowSizing();
-        font10 = createFont("Monopoly Regular.ttf", 10);
-        font20 = createFont("Monopoly Regular.ttf", 20);
-        font30 = createFont("Monopoly Regular.ttf", 30);
+        DesktopRuntimeResources.setFonts(
+                createFont("Monopoly Regular.ttf", 10),
+                createFont("Monopoly Regular.ttf", 20),
+                createFont("Monopoly Regular.ttf", 30)
+        );
         desktopAppShell.startFreshSession();
     }
 
@@ -107,7 +105,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             rect(12, 12, 270, 144, 14);
             fill(245, 245, 245);
             textAlign(LEFT, TOP);
-            textFont(font20);
+            textFont(DesktopRuntimeResources.font20());
             float debugTextY = 22;
             for (String line : currentView.debugPerformanceLines(frameRate)) {
                 text(line, 24, debugTextY);
@@ -116,7 +114,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             fill(255, 105, 180);
             noStroke();
             circle(mouseX, mouseY, 20);
-            textFont(font20);
+            textFont(DesktopRuntimeResources.font20());
             text(fi.monopoly.text.UiTexts.text("app.debug.mouseCoords", mouseX, mouseY), mouseX - 40, mouseY + 30);
             pop();
         }

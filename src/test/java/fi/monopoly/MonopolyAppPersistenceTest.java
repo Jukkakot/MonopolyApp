@@ -2,6 +2,7 @@ package fi.monopoly;
 
 import controlP5.ControlP5;
 import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.DesktopRuntimeResources;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Game;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
@@ -82,10 +83,8 @@ class MonopolyAppPersistenceTest {
 
         ControlP5 controlP5 = new ControlP5(app);
         PFont font = app.createFont("Arial", 20);
-        MonopolyApp.p5 = controlP5;
-        MonopolyApp.font10 = font;
-        MonopolyApp.font20 = font;
-        MonopolyApp.font30 = font;
+        DesktopRuntimeResources.setControlLayer(controlP5);
+        DesktopRuntimeResources.setFonts(font, font, font);
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
@@ -129,10 +128,8 @@ class MonopolyAppPersistenceTest {
 
         ControlP5 controlP5 = new ControlP5(app);
         PFont font = app.createFont("Arial", 20);
-        MonopolyApp.p5 = controlP5;
-        MonopolyApp.font10 = font;
-        MonopolyApp.font20 = font;
-        MonopolyApp.font30 = font;
+        DesktopRuntimeResources.setControlLayer(controlP5);
+        DesktopRuntimeResources.setFonts(font, font, font);
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
@@ -167,10 +164,8 @@ class MonopolyAppPersistenceTest {
 
         ControlP5 controlP5 = new ControlP5(app);
         PFont font = app.createFont("Arial", 20);
-        MonopolyApp.p5 = controlP5;
-        MonopolyApp.font10 = font;
-        MonopolyApp.font20 = font;
-        MonopolyApp.font30 = font;
+        DesktopRuntimeResources.setControlLayer(controlP5);
+        DesktopRuntimeResources.setFonts(font, font, font);
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
