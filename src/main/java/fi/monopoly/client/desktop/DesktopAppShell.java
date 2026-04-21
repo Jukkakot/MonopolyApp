@@ -3,6 +3,7 @@ package fi.monopoly.client.desktop;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
+import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 
 /**
@@ -19,7 +20,8 @@ public final class DesktopAppShell {
         DesktopRuntimeBridge runtimeBridge = new DesktopRuntimeBridge(
                 app,
                 this::saveLocalSession,
-                this::loadLocalSession
+                this::loadLocalSession,
+                new DefaultDesktopHostedGameFactory()
         );
         this.desktopClientShell = new DesktopEmbeddedClientShell(
                 runtimeBridge,

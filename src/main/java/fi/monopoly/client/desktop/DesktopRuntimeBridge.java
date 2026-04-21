@@ -3,8 +3,8 @@ package fi.monopoly.client.desktop;
 import controlP5.ControlP5;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
-import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.game.desktop.assembly.DesktopHostedGameFactory;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
@@ -22,15 +22,18 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
     private final MonopolyApp app;
     private final Runnable saveLocalSessionAction;
     private final Runnable loadLocalSessionAction;
+    private final DesktopHostedGameFactory desktopHostedGameFactory;
 
     DesktopRuntimeBridge(
             MonopolyApp app,
             Runnable saveLocalSessionAction,
-            Runnable loadLocalSessionAction
+            Runnable loadLocalSessionAction,
+            DesktopHostedGameFactory desktopHostedGameFactory
     ) {
         this.app = app;
         this.saveLocalSessionAction = saveLocalSessionAction;
         this.loadLocalSessionAction = loadLocalSessionAction;
+        this.desktopHostedGameFactory = desktopHostedGameFactory;
     }
 
     @Override
@@ -82,7 +85,7 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
                 saveLocalSessionAction,
                 loadLocalSessionAction
         );
-        return new Game(MonopolyRuntime.get(), restoredState, localSessionActions);
+        return desktopHostedGameFactory.create(MonopolyRuntime.get(), restoredState, localSessionActions);
     }
 
     @Override
