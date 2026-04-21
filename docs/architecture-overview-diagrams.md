@@ -52,6 +52,7 @@ flowchart LR
     end
 
     subgraph DesktopPresentation[Desktop Presentation]
+        CLIENTAPP[client.desktop]
         ASSEMBLY[desktop.assembly]
         SHELL[desktop.shell]
         UI[desktop.ui]
@@ -105,6 +106,7 @@ flowchart LR
     GAME --> HOSTFACTORY
     HOST --> GAME
     LOCALACTIONS --> GAME
+    HOSTFACTORY --> CLIENTAPP
     HOSTFACTORY --> ASSEMBLY
     HOSTFACTORY --> SHELL
     HOSTFACTORY --> UI
@@ -122,6 +124,9 @@ flowchart LR
     RUNTIMEFACTORY --> DEBUG
     BOOTSTRAP --> RESTORER
     RESTORER --> LEGACY
+    CLIENTAPP --> HOST
+    CLIENTAPP --> RUNTIMEFACTORY
+    CLIENTAPP --> UI
     SESSIONBRIDGE --> APPFACTORY
     SESSIONBRIDGE --> AUCTION
     SESSIONBRIDGE --> TRADE
@@ -159,7 +164,7 @@ flowchart LR
 What is important here:
 
 - `Game` is now more clearly a desktop host/compatibility surface, not the only place where wiring lives
-- desktop code is explicitly split into `assembly`, `shell`, `runtime`, `session`, and `ui`
+- desktop code is explicitly split into `client.desktop`, `assembly`, `shell`, `runtime`, `session`, and `ui`
 - turn flow, bot flow, and desktop session state are now separated into `turn`, `bot`, and `session` packages
 - local save/load still works through a narrow `SessionHost` seam instead of direct rebuild callbacks
 - authoritative state still lives in `SessionState` and related domain records, not only in live UI/runtime objects
@@ -214,10 +219,12 @@ This is the shortest package-oriented map of the current gameplay presentation s
 ```mermaid
 flowchart TD
     ROOT[presentation.game]
+    CLIENTROOT[client]
     ROOT --> BOT[bot]
     ROOT --> SESSION[session]
     ROOT --> TURN[turn]
     ROOT --> DESKTOP[desktop]
+    CLIENTROOT --> CLIENTDESKTOP[desktop]
 
     DESKTOP --> ASSEMBLY[assembly]
     DESKTOP --> SHELL[shell]
@@ -231,6 +238,7 @@ Useful mental model:
 - `bot`: bot scheduling and bot turn stepping
 - `session`: desktop session state/presentation coordination
 - `turn`: actual turn flow orchestration
+- `client.desktop`: Processing app-facing shell and runtime adapters around the embedded local host
 - `desktop.assembly`: object graph construction
 - `desktop.shell`: orchestration between host and extracted coordinators
 - `desktop.runtime`: legacy runtime bootstrap and lifecycle

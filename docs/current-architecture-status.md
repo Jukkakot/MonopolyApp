@@ -36,6 +36,8 @@ The project does not yet have full backend-ready architecture because:
 
 ### What is already separated
 
+- `client.desktop`
+  - Processing app-facing shell/runtime adapters around the embedded local client session
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -63,6 +65,7 @@ These are still transitional and should be treated as controlled legacy seams:
 
 - `fi.monopoly.components.Game`
 - `fi.monopoly.MonopolyApp`
+- `fi.monopoly.client.desktop.MonopolyRuntime`
 - `fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator`
 - `fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory`
 - `fi.monopoly.presentation.game.desktop.runtime.GameRuntimeAssemblyFactory`
