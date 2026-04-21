@@ -145,9 +145,9 @@ class GameSmokeTest {
             String currentSnapshot = snapshot();
             boolean transientFlowActive = runtime.popupService().isAnyVisible()
                     || isDebtResolutionActive(game)
-                    || (activeGame != null && activeGame.projectedSessionState().pendingDecision() != null)
-                    || (activeGame != null && activeGame.projectedSessionState().auctionState() != null)
-                    || (activeGame != null && activeGame.projectedSessionState().tradeState() != null);
+                    || (activeGame != null && activeGame.testFacade().projectedSessionState().pendingDecision() != null)
+                    || (activeGame != null && activeGame.testFacade().projectedSessionState().auctionState() != null)
+                    || (activeGame != null && activeGame.testFacade().projectedSessionState().tradeState() != null);
             if (currentSnapshot.equals(previousSnapshot) && !transientFlowActive) {
                 stagnantStepCount++;
             } else {
@@ -440,16 +440,16 @@ class GameSmokeTest {
     }
 
     private static boolean isDebtResolutionActive(Game game) {
-        return game.debtController().debtState() != null;
+        return game.testFacade().debtController().debtState() != null;
     }
 
     private static boolean isBankruptcyRisk(Game game) {
-        DebtState debtState = game.debtController().debtState();
+        DebtState debtState = game.testFacade().debtController().debtState();
         return debtState != null && debtState.bankruptcyRisk();
     }
 
     private static DebtState getDebtState(Game game) {
-        return game.debtController().debtState();
+        return game.testFacade().debtController().debtState();
     }
 
     private static void topUpDebtDebtorCash(Game game) {
@@ -464,11 +464,11 @@ class GameSmokeTest {
     }
 
     private static void invokeRetryPendingDebtPayment(Game game) {
-        game.debtController().retryPendingDebtPayment();
+        game.testFacade().debtController().retryPendingDebtPayment();
     }
 
     private static void invokeDeclareBankruptcy(Game game) {
-        game.debtController().declareBankruptcy();
+        game.testFacade().debtController().declareBankruptcy();
     }
 
     private static void invokePrimaryControlInvariant(Game game) {
@@ -550,7 +550,7 @@ class GameSmokeTest {
         String turnSpot = turn != null && turn.getSpot() != null ? turn.getSpot().getSpotType().name() : "none";
         int turnMoney = turn != null ? turn.getMoneyAmount() : -1;
         String diceValue = dices().getValue() != null ? dices().getValue().toString() : "null";
-        var projectedState = activeGame != null ? activeGame.projectedSessionState() : null;
+        var projectedState = activeGame != null ? activeGame.testFacade().projectedSessionState() : null;
         return turnName
                 + "|spot=" + turnSpot
                 + "|money=" + turnMoney

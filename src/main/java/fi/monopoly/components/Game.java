@@ -227,11 +227,11 @@ public class Game implements MonopolyEventListener {
         }
     }
 
-    Board getBoard() {
+    private Board getBoard() {
         return board;
     }
 
-    SessionState projectedSessionState() {
+    private SessionState projectedSessionState() {
         return sessionApplicationService.currentState();
     }
 
@@ -251,7 +251,7 @@ public class Game implements MonopolyEventListener {
         sessionApplicationService.handle(new RefreshSessionViewCommand(LOCAL_SESSION_ID));
     }
 
-    DebtController debtController() {
+    private DebtController debtController() {
         return debtController;
     }
 
@@ -259,7 +259,7 @@ public class Game implements MonopolyEventListener {
         gameDesktopPresentationCoordinator.onDebtStateChanged(shellDependencies);
     }
 
-    Players players() {
+    private Players players() {
         return players;
     }
 
@@ -267,11 +267,11 @@ public class Game implements MonopolyEventListener {
         return players != null ? players.getTurn() : null;
     }
 
-    Dices dices() {
+    private Dices dices() {
         return dices;
     }
 
-    Animations animations() {
+    private Animations animations() {
         return animations;
     }
 
@@ -501,7 +501,7 @@ public class Game implements MonopolyEventListener {
                 .orElse(null);
     }
 
-    GameView createGameView(Player currentPlayer) {
+    private GameView createGameView(Player currentPlayer) {
         return presentationHost.createGameView(currentPlayer);
     }
 
@@ -509,7 +509,7 @@ public class Game implements MonopolyEventListener {
         return presentationHost.debugPerformanceLines(fps);
     }
 
-    PlayerView createPlayerView(Player player) {
+    private PlayerView createPlayerView(Player player) {
         return presentationHost.createPlayerView(player);
     }
 
@@ -595,6 +595,30 @@ public class Game implements MonopolyEventListener {
             return botTurnScheduler;
         }
 
+        public Board board() {
+            return Game.this.getBoard();
+        }
+
+        public SessionState projectedSessionState() {
+            return Game.this.projectedSessionState();
+        }
+
+        public Players players() {
+            return Game.this.players();
+        }
+
+        public Dices dices() {
+            return Game.this.dices();
+        }
+
+        public Animations animations() {
+            return Game.this.animations();
+        }
+
+        public DebtController debtController() {
+            return Game.this.debtController();
+        }
+
         public GameSidebarPresenter.SidebarState sidebarState() {
             return createSidebarState();
         }
@@ -665,6 +689,14 @@ public class Game implements MonopolyEventListener {
                 CallbackAction onResolved
         ) {
             Game.this.handlePaymentRequest(request, continuationState, onResolved);
+        }
+
+        public GameView createGameView(Player player) {
+            return Game.this.createGameView(player);
+        }
+
+        public PlayerView createPlayerView(Player player) {
+            return Game.this.createPlayerView(player);
         }
     }
 

@@ -59,13 +59,13 @@ class GameComputerViewTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
-        Player turnPlayer = game.players().getTurn();
+        Player turnPlayer = game.testFacade().players().getTurn();
 
         turnPlayer.addOwnedProperty(PropertyFactory.getProperty(SpotType.DB1));
         turnPlayer.addOwnedProperty(PropertyFactory.getProperty(SpotType.B2));
         JailSpot.jailTimeLeftMap.put(turnPlayer, 2);
 
-        GameView view = game.createGameView(turnPlayer);
+        GameView view = game.testFacade().createGameView(turnPlayer);
         PlayerView self = view.currentPlayer().orElseThrow();
 
         assertEquals(turnPlayer.getId(), view.currentPlayerId());
@@ -83,7 +83,7 @@ class GameComputerViewTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
-        Player turnPlayer = game.players().getTurn();
+        Player turnPlayer = game.testFacade().players().getTurn();
 
         runtime.popupService().show("Test popup", () -> {
         }, () -> {
@@ -97,7 +97,7 @@ class GameComputerViewTest {
                 }
         );
 
-        GameView view = game.createGameView(turnPlayer);
+        GameView view = game.testFacade().createGameView(turnPlayer);
 
         assertNotNull(view.popup());
         assertEquals("ChoicePopup", view.popup().type());
@@ -115,7 +115,7 @@ class GameComputerViewTest {
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
 
-        GameView view = game.createGameView(game.players().getTurn());
+        GameView view = game.testFacade().createGameView(game.testFacade().players().getTurn());
 
         assertEquals(3, view.players().size());
         assertTrue(view.players().stream().map(PlayerView::computerProfile).allMatch(Objects::nonNull));

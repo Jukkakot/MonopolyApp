@@ -31,7 +31,7 @@ class GamePerformanceBenchmarkTest {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
-        Player turnPlayer = game.players().getTurn();
+        Player turnPlayer = game.testFacade().players().getTurn();
         turnPlayer.addOwnedProperty(PropertyFactory.getProperty(SpotType.DB1));
         turnPlayer.addOwnedProperty(PropertyFactory.getProperty(SpotType.B2));
 
@@ -60,7 +60,7 @@ class GamePerformanceBenchmarkTest {
     private static long benchmarkGameView(Game game, Player turnPlayer, int iterations) {
         long start = System.nanoTime();
         for (int i = 0; i < iterations; i++) {
-            game.createGameView(turnPlayer);
+            game.testFacade().createGameView(turnPlayer);
         }
         return System.nanoTime() - start;
     }

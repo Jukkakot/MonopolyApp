@@ -126,10 +126,10 @@ class GameBotSimulationTest {
         Game game = new Game(runtime);
         configureHeadsUpProfiles(game, ComputerPlayerProfile.STRONG, ComputerPlayerProfile.SMOKE_TEST);
         PropertyAuctionResolver.resetMetrics();
-        Player strongPlayer = game.players().getPlayers().stream()
+        Player strongPlayer = players(game).getPlayers().stream()
                 .min(Comparator.comparingInt(Player::getTurnNumber))
                 .orElseThrow();
-        Player smokePlayer = game.players().getPlayers().stream()
+        Player smokePlayer = players(game).getPlayers().stream()
                 .filter(player -> player != strongPlayer)
                 .findFirst()
                 .orElseThrow();
@@ -152,7 +152,7 @@ class GameBotSimulationTest {
         int debtResolutions = 0;
         int bankruptcies = 0;
         int stagnantSteps = 0;
-        int previousPlayerCount = game.players().count();
+        int previousPlayerCount = players(game).count();
         String previousTurn = currentTurnName(game);
         String previousSnapshot = snapshot(runtime, game);
         boolean debtActiveLastStep = false;
@@ -163,8 +163,8 @@ class GameBotSimulationTest {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (game.animations().isRunning()) {
-                game.animations().finishAllAnimations();
+            if (animations(game).isRunning()) {
+                animations(game).finishAllAnimations();
             }
 
             boolean debtActive = isDebtResolutionActive(game);
@@ -173,7 +173,7 @@ class GameBotSimulationTest {
             }
             debtActiveLastStep = debtActive;
 
-            int playerCount = game.players().count();
+            int playerCount = players(game).count();
             if (playerCount < previousPlayerCount) {
                 bankruptcies += previousPlayerCount - playerCount;
                 if (turnsToFirstBankruptcy < 0) {
@@ -199,7 +199,7 @@ class GameBotSimulationTest {
                 stagnantSteps = 0;
             }
 
-            if (game.players().count() <= 1) {
+            if (players(game).count() <= 1) {
                 return new SimulationResult(
                         turnSwitches,
                         debtResolutions,
@@ -268,18 +268,34 @@ class GameBotSimulationTest {
         field.setInt(null, 0);
     }
 
+    private static Players players(Game game) {
+        return game.testFacade().players();
+    }
+
+    private static fi.monopoly.components.animation.Animations animations(Game game) {
+        return game.testFacade().animations();
+    }
+
+    private static fi.monopoly.components.dices.Dices dices(Game game) {
+        return game.testFacade().dices();
+    }
+
+    private static fi.monopoly.presentation.session.debt.DebtController debtController(Game game) {
+        return game.testFacade().debtController();
+    }
+
     private static void invokeComputerStep(Game game) throws ReflectiveOperationException {
         game.testFacade().runComputerPlayerStep();
     }
 
     private static boolean isDebtResolutionActive(Game game) {
-        return game.debtController().debtState() != null;
+        return debtController(game).debtState() != null;
     }
 
     private static void promoteAllPlayersToStrongBots(Game game) throws ReflectiveOperationException {
         Field field = Player.class.getDeclaredField("computerProfile");
         field.setAccessible(true);
-        for (Player player : game.players().getPlayers()) {
+        for (Player player : players(game).getPlayers()) {
             field.set(player, ComputerPlayerProfile.STRONG);
         }
     }
@@ -287,12 +303,12 @@ class GameBotSimulationTest {
     private static void configureHeadsUpProfiles(Game game, ComputerPlayerProfile firstProfile, ComputerPlayerProfile secondProfile) throws ReflectiveOperationException {
         Field field = Player.class.getDeclaredField("computerProfile");
         field.setAccessible(true);
-        var players = game.players().getPlayers().stream()
+        var players = players(game).getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getTurnNumber))
                 .collect(Collectors.toCollection(java.util.ArrayList::new));
         while (players.size() > 2) {
             Player removed = players.remove(players.size() - 1);
-            game.players().removePlayer(removed);
+            GameBotSimulationTest.players(game).removePlayer(removed);
         }
         field.set(players.get(0), firstProfile);
         field.set(players.get(1), secondProfile);
@@ -311,37 +327,37 @@ class GameBotSimulationTest {
 
         strongPlayer.addMoney(700);
         smokePlayer.addMoney(-(smokePlayer.getMoneyAmount() - 180));
-        smokePlayer.setSpot(game.getBoard().getSpots().stream()
+        smokePlayer.setSpot(game.testFacade().board().getSpots().stream()
                 .filter(spot -> spot.getSpotType() == SpotType.RR2)
                 .findFirst()
                 .orElseThrow());
-        game.players().focusPlayer(strongPlayer);
+        players(game).focusPlayer(strongPlayer);
     }
 
     private static String currentTurnName(Game game) {
-        Player turn = game.players().getTurn();
+        Player turn = players(game).getTurn();
         return turn == null ? "none" : turn.getName();
     }
 
     private static String snapshot(MonopolyRuntime runtime, Game game) {
-        SessionState sessionState = game.projectedSessionState();
-        String playerState = game.players().getPlayers().stream()
+        SessionState sessionState = game.testFacade().projectedSessionState();
+        String playerState = players(game).getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getId))
                 .map(player -> player.getId() + ":" + player.getMoneyAmount() + ":" + player.getSpot().getSpotType() + ":" + player.getOwnedProperties().size())
                 .collect(Collectors.joining("|"));
-        String diceValue = game.dices() != null && game.dices().getValue() != null ? game.dices().getValue().toString() : "null";
+        String diceValue = dices(game) != null && dices(game).getValue() != null ? dices(game).getValue().toString() : "null";
         String popupKind = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupKind() : "none";
         String popupMessage = runtime.popupService().isAnyVisible() ? runtime.popupService().activePopupMessage() : "none";
         return playerState
                 + "|turn=" + currentTurnName(game)
-                + "|players=" + game.players().count()
+                + "|players=" + players(game).count()
                 + "|popup=" + runtime.popupService().isAnyVisible()
                 + "|popupKind=" + popupKind
                 + "|popupMessage=" + popupMessage
-                + "|diceVisible=" + (game.dices() != null && game.dices().isVisible())
+                + "|diceVisible=" + (dices(game) != null && dices(game).isVisible())
                 + "|dice=" + diceValue
-                + "|animations=" + (game.animations() != null && game.animations().isRunning())
-                + "|debt=" + (game.debtController().debtState() != null)
+                + "|animations=" + (animations(game) != null && animations(game).isRunning())
+                + "|debt=" + (debtController(game).debtState() != null)
                 + "|phase=" + sessionState.turn().phase()
                 + "|pendingDecision=" + (sessionState.pendingDecision() != null ? sessionState.pendingDecision().decisionType() : "none")
                 + "|auctionStatus=" + (sessionState.auctionState() != null ? sessionState.auctionState().status() : "none")
@@ -350,23 +366,23 @@ class GameBotSimulationTest {
     }
 
     private static double averageCash(Game game) {
-        return game.players().getPlayers().stream()
+        return players(game).getPlayers().stream()
                 .mapToInt(Player::getMoneyAmount)
                 .average()
                 .orElse(Double.NaN);
     }
 
     private static double winnerNetWorthShare(Game game) {
-        if (game.players().count() != 1) {
+        if (players(game).count() != 1) {
             return Double.NaN;
         }
-        int totalNetWorth = game.players().getPlayers().stream()
+        int totalNetWorth = players(game).getPlayers().stream()
                 .mapToInt(GameBotSimulationTest::netWorth)
                 .sum();
         if (totalNetWorth <= 0) {
             return Double.NaN;
         }
-        Player winner = game.players().getPlayers().get(0);
+        Player winner = players(game).getPlayers().get(0);
         return netWorth(winner) / (double) totalNetWorth;
     }
 

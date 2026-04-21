@@ -38,7 +38,19 @@ class GameBankruptcyTest {
     private static List<Player> getPlayers(Game game) throws ReflectiveOperationException {
         Field field = Players.class.getDeclaredField("playerList");
         field.setAccessible(true);
-        return (List<Player>) field.get(game.players());
+        return (List<Player>) field.get(game.testFacade().players());
+    }
+
+    private static Players players(Game game) {
+        return game.testFacade().players();
+    }
+
+    private static fi.monopoly.components.dices.Dices dices(Game game) {
+        return game.testFacade().dices();
+    }
+
+    private static fi.monopoly.presentation.session.debt.DebtController debtController(Game game) {
+        return game.testFacade().debtController();
     }
 
     @Test
@@ -68,7 +80,7 @@ class GameBankruptcyTest {
 
         invokeDeclareBankruptcy(game);
 
-        assertEquals(2, game.players().count());
+        assertEquals(2, players(game).count());
         assertFalse(getPlayers(game).contains(debtor));
         assertEquals(1_600, creditor.getMoneyAmount());
         assertEquals(1, creditor.getGetOutOfJailCardCount());
@@ -108,7 +120,7 @@ class GameBankruptcyTest {
         invokeDeclareBankruptcy(game);
         settlePopupQueue(runtime);
 
-        assertEquals(2, game.players().count());
+        assertEquals(2, players(game).count());
         assertFalse(getPlayers(game).contains(debtor));
         assertTrue(auctionWinner.getOwnedProperties().stream().anyMatch(property -> property.getSpotType() == SpotType.B1));
         assertTrue(auctionWinner.getOwnedProperties().stream().anyMatch(property -> property.getSpotType() == SpotType.B2));
@@ -147,7 +159,7 @@ class GameBankruptcyTest {
         invokeDeclareBankruptcy(game);
         settlePopupQueue(runtime);
 
-        assertEquals(2, game.players().count());
+        assertEquals(2, players(game).count());
         assertFalse(getPlayers(game).contains(debtor));
         assertNull(b1.getOwnerPlayer());
         assertNull(b2.getOwnerPlayer());
@@ -198,7 +210,7 @@ class GameBankruptcyTest {
         Player debtor = players.get(0);
         Player winner = players.get(1);
         Player third = players.get(2);
-        game.players().removePlayer(third);
+        players(game).removePlayer(third);
 
         setDebtState(game, new DebtState(
                 new PaymentRequest(debtor, new PlayerTarget(winner), 2_000, "Bankruptcy"),
@@ -209,8 +221,8 @@ class GameBankruptcyTest {
 
         invokeDeclareBankruptcy(game);
 
-        assertEquals(1, game.players().count());
-        assertEquals(winner, game.players().getPlayers().get(0));
+        assertEquals(1, players(game).count());
+        assertEquals(winner, players(game).getPlayers().get(0));
         assertTrue(gameSessionState(game).gameOver());
         assertEquals(winner.getSpot().getTokenCoords(winner), winner.getCoords());
         assertTrue(runtime.popupService().isAnyVisible());
@@ -220,18 +232,18 @@ class GameBankruptcyTest {
         runtime.popupService().triggerPrimaryAction();
 
         assertFalse(runtime.popupService().isAnyVisible());
-        assertFalse(game.dices().isVisible());
+        assertFalse(dices(game).isVisible());
         assertFalse(getEndRoundButton(game).isVisible());
 
         invokeEndRound(game);
 
-        assertEquals(winner, game.players().getTurn());
-        assertFalse(game.dices().isVisible());
+        assertEquals(winner, players(game).getTurn());
+        assertFalse(dices(game).isVisible());
         assertFalse(getEndRoundButton(game).isVisible());
     }
 
     private static void setDebtState(Game game, DebtState debtState) throws ReflectiveOperationException {
-        game.debtController().setDebtStateForTest(debtState);
+        debtController(game).setDebtStateForTest(debtState);
     }
 
     private static GameSessionState gameSessionState(Game game) throws ReflectiveOperationException {
@@ -243,7 +255,7 @@ class GameBankruptcyTest {
     }
 
     private static void invokeDeclareBankruptcy(Game game) throws ReflectiveOperationException {
-        game.debtController().declareBankruptcy();
+        debtController(game).declareBankruptcy();
     }
 
     private static void invokeEndRound(Game game) throws ReflectiveOperationException {

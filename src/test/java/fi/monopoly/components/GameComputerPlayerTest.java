@@ -71,6 +71,18 @@ class GameComputerPlayerTest {
         return game.onEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
 
+    private static Players players(Game game) {
+        return game.testFacade().players();
+    }
+
+    private static fi.monopoly.components.animation.Animations animations(Game game) {
+        return game.testFacade().animations();
+    }
+
+    private static fi.monopoly.components.dices.Dices dices(Game game) {
+        return game.testFacade().dices();
+    }
+
     @SuppressWarnings("unchecked")
     private static List<Player> getPlayerList(Players players) throws ReflectiveOperationException {
         Field field = Players.class.getDeclaredField("playerList");
@@ -99,7 +111,7 @@ class GameComputerPlayerTest {
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
 
-        List<Player> players = getPlayerList(game.players());
+        List<Player> players = getPlayerList(players(game));
         long computerPlayerCount = players.stream().filter(Player::isComputerControlled).count();
         long strongBotCount = players.stream()
                 .filter(player -> player.getComputerProfile() == ComputerPlayerProfile.STRONG)
@@ -119,21 +131,21 @@ class GameComputerPlayerTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
-        game.players().switchTurn();
-        Player bot = game.players().getTurn();
+        players(game).switchTurn();
+        players(game).switchTurn();
+        Player bot = players(game).getTurn();
         String botName = bot.getName();
 
-        for (int step = 0; step < 200 && Objects.equals(botName, game.players().getTurn().getName()); step++) {
+        for (int step = 0; step < 200 && Objects.equals(botName, players(game).getTurn().getName()); step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (game.animations().isRunning()) {
-                game.animations().finishAllAnimations();
+            if (animations(game).isRunning()) {
+                animations(game).finishAllAnimations();
             }
         }
 
-        assertNotEquals(botName, game.players().getTurn().getName());
+        assertNotEquals(botName, players(game).getTurn().getName());
     }
 
     @Test
@@ -145,19 +157,19 @@ class GameComputerPlayerTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        String botName = game.players().getTurn().getName();
+        String botName = players(game).getTurn().getName();
         invokeTogglePause(game);
 
         for (int step = 0; step < 50; step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (game.animations().isRunning()) {
-                game.animations().finishAllAnimations();
+            if (animations(game).isRunning()) {
+                animations(game).finishAllAnimations();
             }
         }
 
-        assertEquals(botName, game.players().getTurn().getName());
+        assertEquals(botName, players(game).getTurn().getName());
     }
 
     @Test
@@ -171,13 +183,13 @@ class GameComputerPlayerTest {
 
         assertTrue(dispatchKeyToGame(game, 'p'));
 
-        String botName = game.players().getTurn().getName();
+        String botName = players(game).getTurn().getName();
         for (int step = 0; step < 20; step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
         }
 
-        assertEquals(botName, game.players().getTurn().getName());
+        assertEquals(botName, players(game).getTurn().getName());
     }
 
     @Test
@@ -188,7 +200,7 @@ class GameComputerPlayerTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         BotTurnScheduler scheduler = getBotTurnScheduler(game);
         int now = runtime.app().millis();
 
@@ -209,12 +221,12 @@ class GameComputerPlayerTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.dices().rollDice();
-        assertNotNull(game.dices().getValue());
+        dices(game).rollDice();
+        assertNotNull(dices(game).getValue());
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         invokeShowRollDiceControl(game);
 
-        assertNull(game.dices().getValue(), "Bot turn must not inherit a stale dice result from the previous player");
+        assertNull(dices(game).getValue(), "Bot turn must not inherit a stale dice result from the previous player");
     }
 }
