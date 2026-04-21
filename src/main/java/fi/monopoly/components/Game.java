@@ -16,6 +16,7 @@ import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.host.session.local.LocalHostedGameLoopCoordinator;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopBootstrapFactory;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopHostFactory;
 import fi.monopoly.presentation.game.desktop.runtime.GameDesktopLifecycleCoordinator;
@@ -122,6 +123,7 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private final GameDesktopPresentationHost presentationHost;
     private final DesktopHostedGameView hostedGameView = new HostedGameView();
+    private final LocalHostedGameLoopCoordinator hostedGameLoopCoordinator;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     public Game(MonopolyRuntime runtime) {
         this(runtime, null, LocalSessionActions.NO_OP_ACTIONS);
@@ -212,6 +214,7 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         this.debtActionDispatcher = hostContext.debtActionDispatcher();
         this.gameTurnFlowCoordinator = hostContext.gameTurnFlowCoordinator();
         this.presentationHost = bootstrap.presentationHost();
+        this.hostedGameLoopCoordinator = hostContext.localHostedGameLoopCoordinator();
         this.presentationHost.bindButtonActions();
         gameDesktopShellCoordinator.applyRestoredSessionState(shellDependencies, restoredSessionState);
         gameDesktopShellCoordinator.initializeSessionPresentation(shellDependencies, restoredSessionState);
@@ -335,7 +338,7 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
 
     @Override
     public void advanceHostedFrame() {
-        presentationHost.advanceFrame();
+        hostedGameLoopCoordinator.advanceFrame();
     }
 
     @Override
@@ -473,8 +476,14 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         presentationHost.syncTransientPresentationState();
     }
 
+    /**
+     * Compatibility hook still used by reflection-based bot/smoke tests.
+     *
+     * <p>The real architecture now routes bot progression through the host-owned local game loop,
+     * but these tests still probe the old host surface directly while the transition is ongoing.</p>
+     */
     private void runComputerPlayerStep() {
-        presentationHost.runComputerPlayerStep();
+        hostedGameLoopCoordinator.runBotStep();
     }
 
     private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {

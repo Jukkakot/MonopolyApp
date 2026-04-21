@@ -13,6 +13,7 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.host.session.local.LocalHostedGameLoopCoordinator;
 import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
@@ -142,10 +143,17 @@ public final class GameDesktopHostFactory {
                 desktopAssembly.gamePrimaryTurnControls(),
                 new GameSidebarStateFactory(),
                 config.gameSessionStateCoordinator(),
-                config.botTurnDriver(),
                 config.botTurnScheduler(),
                 config.debugPerformanceStats(),
                 config.desktopControls().allButtons()
+        );
+        GameFrameCoordinator.FrameHooks frameHooks = shellCoordinator.createFrameHooks(shellDependencies);
+        LocalHostedGameLoopCoordinator localHostedGameLoopCoordinator = new LocalHostedGameLoopCoordinator(
+                gameFrameCoordinator,
+                frameHooks,
+                config.botTurnDriver(),
+                desktopAssembly.gameBotTurnHooks(),
+                config.debugPerformanceStats()
         );
 
         return new GameDesktopHostContext(
@@ -165,7 +173,8 @@ public final class GameDesktopHostFactory {
                 desktopAssembly.gameTurnFlowCoordinator(),
                 desktopAssembly.gameUiController(),
                 desktopAssembly.gameBotTurnHooks(),
-                gameFrameCoordinator
+                gameFrameCoordinator,
+                localHostedGameLoopCoordinator
         );
     }
 
@@ -202,7 +211,8 @@ public final class GameDesktopHostFactory {
             GameTurnFlowCoordinator gameTurnFlowCoordinator,
             GameUiController gameUiController,
             GameBotTurnDriver.Hooks gameBotTurnHooks,
-            GameFrameCoordinator gameFrameCoordinator
+            GameFrameCoordinator gameFrameCoordinator,
+            LocalHostedGameLoopCoordinator localHostedGameLoopCoordinator
     ) {
     }
 

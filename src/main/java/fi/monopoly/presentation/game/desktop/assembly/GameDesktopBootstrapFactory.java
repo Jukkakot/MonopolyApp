@@ -69,7 +69,6 @@ public final class GameDesktopBootstrapFactory {
                 hostContext.gamePrimaryTurnControls(),
                 hostContext.gameSessionQueries(),
                 hostContext.gameUiController(),
-                hostContext.gameBotTurnHooks(),
                 hostContext.gameFrameCoordinator()
         );
         return new GameDesktopBootstrap(desktopControls, hostContext, presentationHost);

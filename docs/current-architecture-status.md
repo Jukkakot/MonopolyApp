@@ -41,6 +41,7 @@ The project does not yet have full backend-ready architecture because:
   - Processing app-facing shell/runtime adapters, runtime resources, explicit client-global desktop settings, and client context around the embedded local client session
 - `host.session.local`
   - embedded host-owned session lifecycle, persistence, snapshot publication, and test-access seams for the in-process desktop mode
+  - embedded host-owned local game loop coordination now also drives bot stepping outside the presentation frame coordinator
 - `presentation.game.desktop.session`
   - hosted game lifecycle/view seams now distinguish host-owned frame advancement from client-facing render access
 - `domain.session`
@@ -127,12 +128,13 @@ Backend-ready target:
 - local runtime rebuild/reattachment becomes a client concern only
 - server/session-host concerns become separate package roots
 
-The recent `client.desktop` moves improved this:
+The recent `client.desktop` and embedded-host moves improved this:
 
 - `MonopolyApp` and `MonopolyRuntime` are now explicitly on the client side of the architecture
 - the root package no longer acts as the owner of desktop bootstrap/runtime state
 - future extraction work can now target `client.desktop` directly instead of peeling adapter classes out of `fi.monopoly`
 - host tick advancement and client render access are also now explicitly different seams, which is closer to the eventual client/host split even in embedded mode
+- embedded local bot stepping now runs through a host-owned loop coordinator instead of being scheduled from the presentation frame coordinator
 
 ### 4. Tests still lean on local host internals
 
@@ -199,9 +201,10 @@ That interface should work for both:
 - local embedded host
 - remote backend host
 
-### Blocker B: bot scheduling is not yet host-owned by architecture
+### Blocker B: bot ownership is only partially host-owned so far
 
-Bot coordination is cleaner now, but architecturally it still lives in the local desktop world.
+Bot coordination is cleaner now, and embedded local mode already routes bot stepping through a host-owned loop.
+But the concrete bot collaborators still mostly live under presentation-era packages instead of a clearer host-side package root.
 
 Backend-ready target:
 

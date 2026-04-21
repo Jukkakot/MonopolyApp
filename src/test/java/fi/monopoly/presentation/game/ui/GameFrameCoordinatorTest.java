@@ -13,7 +13,6 @@ import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.presentation.game.bot.BotTurnScheduler;
-import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;
@@ -159,7 +158,6 @@ class GameFrameCoordinatorTest {
                 primaryTurnControls,
                 new GameSidebarStateFactory(),
                 new GameSessionStateCoordinator(),
-                new GameBotTurnDriver(new BotTurnScheduler()),
                 new BotTurnScheduler(),
                 new DebugPerformanceStats(),
                 List.of(
@@ -282,11 +280,6 @@ class GameFrameCoordinatorTest {
 
         @Override
         public void restoreBotTurnControlsIfNeeded() {
-        }
-
-        @Override
-        public GameBotTurnDriver.Hooks botTurnHooks() {
-            throw new UnsupportedOperationException();
         }
     }
 

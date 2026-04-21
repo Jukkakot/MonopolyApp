@@ -12,7 +12,6 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.bot.BotTurnScheduler;
-import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -28,7 +27,6 @@ public final class GameFrameCoordinator {
     private final GamePrimaryTurnControls gamePrimaryTurnControls;
     private final GameSidebarStateFactory gameSidebarStateFactory;
     private final GameSessionStateCoordinator gameSessionStateCoordinator;
-    private final GameBotTurnDriver gameBotTurnDriver;
     private final BotTurnScheduler botTurnScheduler;
     private final DebugPerformanceStats debugPerformanceStats;
     private final List<MonopolyButton> buttons;
@@ -43,7 +41,6 @@ public final class GameFrameCoordinator {
             GamePrimaryTurnControls gamePrimaryTurnControls,
             GameSidebarStateFactory gameSidebarStateFactory,
             GameSessionStateCoordinator gameSessionStateCoordinator,
-            GameBotTurnDriver gameBotTurnDriver,
             BotTurnScheduler botTurnScheduler,
             DebugPerformanceStats debugPerformanceStats,
             List<MonopolyButton> buttons
@@ -55,17 +52,15 @@ public final class GameFrameCoordinator {
         this.gamePrimaryTurnControls = gamePrimaryTurnControls;
         this.gameSidebarStateFactory = gameSidebarStateFactory;
         this.gameSessionStateCoordinator = gameSessionStateCoordinator;
-        this.gameBotTurnDriver = gameBotTurnDriver;
         this.botTurnScheduler = botTurnScheduler;
         this.debugPerformanceStats = debugPerformanceStats;
         this.buttons = buttons;
     }
 
-    public void advanceFrame(FrameHooks hooks) {
-        long frameStart = System.nanoTime();
+    public void advancePresentationFrame(FrameHooks hooks) {
         updateLogTurnContext(hooks.sessionState().gameOver(), hooks.sessionState().winner(), hooks.turnPlayer());
         boolean animationWasRunning = hooks.animations().isRunning();
-        float animationDeltaSeconds = resolveAnimationDeltaSeconds(frameStart);
+        float animationDeltaSeconds = resolveAnimationDeltaSeconds(System.nanoTime());
         if (DesktopClientSettings.skipAnimations()) {
             hooks.animations().finishAllAnimations();
         }
@@ -79,8 +74,6 @@ public final class GameFrameCoordinator {
         updatePersistentButtons(hooks.sessionState().gameOver());
         enforcePrimaryTurnControlInvariant(hooks.debtState() != null);
         syncTransientPresentationState(hooks::restoreBotTurnControlsIfNeeded);
-        runComputerPlayerStep(hooks.botTurnHooks());
-        debugPerformanceStats.recordFrame(System.nanoTime() - frameStart);
     }
 
     public void renderFrame(FrameHooks hooks) {
@@ -190,10 +183,6 @@ public final class GameFrameCoordinator {
         restoreBotTurnControlsIfNeeded.run();
     }
 
-    public void runComputerPlayerStep(GameBotTurnDriver.Hooks hooks) {
-        gameBotTurnDriver.step(hooks);
-    }
-
     public void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning, FrameHooks hooks) {
         applyComputerActionCooldownIfAnimationJustFinishedInternal(animationWasRunning, hooks);
     }
@@ -262,7 +251,5 @@ public final class GameFrameCoordinator {
         void focusPlayer(Player player);
 
         void restoreBotTurnControlsIfNeeded();
-
-        GameBotTurnDriver.Hooks botTurnHooks();
     }
 }

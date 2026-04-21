@@ -479,10 +479,7 @@ public final class GameDesktopShellCoordinator {
         };
     }
 
-    public GameFrameCoordinator.FrameHooks createFrameHooks(
-            Dependencies dependencies,
-            GameBotTurnDriver.Hooks botTurnHooks
-    ) {
+    public GameFrameCoordinator.FrameHooks createFrameHooks(Dependencies dependencies) {
         return new GameFrameCoordinator.FrameHooks() {
             @Override
             public GameSessionState sessionState() {
@@ -557,11 +554,6 @@ public final class GameDesktopShellCoordinator {
             @Override
             public void restoreBotTurnControlsIfNeeded() {
                 GameDesktopShellCoordinator.this.restoreBotTurnControlsIfNeeded(dependencies);
-            }
-
-            @Override
-            public GameBotTurnDriver.Hooks botTurnHooks() {
-                return botTurnHooks;
             }
         };
     }

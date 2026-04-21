@@ -5,8 +5,6 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.presentation.game.bot.BotTurnScheduler;
-import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
 import fi.monopoly.presentation.game.desktop.session.SessionViewFacade;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
@@ -36,7 +34,6 @@ public final class GameDesktopPresentationHost {
     private final GamePrimaryTurnControls gamePrimaryTurnControls;
     private final GameSessionQueries gameSessionQueries;
     private final GameUiController gameUiController;
-    private final GameBotTurnDriver.Hooks gameBotTurnHooks;
     private final GameFrameCoordinator gameFrameCoordinator;
     private final SessionViewFacade sessionViewFacade;
 
@@ -49,7 +46,6 @@ public final class GameDesktopPresentationHost {
             GamePrimaryTurnControls gamePrimaryTurnControls,
             GameSessionQueries gameSessionQueries,
             GameUiController gameUiController,
-            GameBotTurnDriver.Hooks gameBotTurnHooks,
             GameFrameCoordinator gameFrameCoordinator
     ) {
         this.shellCoordinator = shellCoordinator;
@@ -60,7 +56,6 @@ public final class GameDesktopPresentationHost {
         this.gamePrimaryTurnControls = gamePrimaryTurnControls;
         this.gameSessionQueries = gameSessionQueries;
         this.gameUiController = gameUiController;
-        this.gameBotTurnHooks = gameBotTurnHooks;
         this.gameFrameCoordinator = gameFrameCoordinator;
         this.sessionViewFacade = shellCoordinator.createSessionViewFacade(shellDependencies);
     }
@@ -77,8 +72,8 @@ public final class GameDesktopPresentationHost {
         return gameSessionQueries;
     }
 
-    public void advanceFrame() {
-        gameFrameCoordinator.advanceFrame(createFrameHooks());
+    public void advancePresentationFrame() {
+        gameFrameCoordinator.advancePresentationFrame(createFrameHooks());
     }
 
     public void render() {
@@ -170,10 +165,6 @@ public final class GameDesktopPresentationHost {
         );
     }
 
-    public void runComputerPlayerStep() {
-        gameFrameCoordinator.runComputerPlayerStep(gameBotTurnHooks);
-    }
-
     public void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
         gameFrameCoordinator.applyComputerActionCooldownIfAnimationJustFinished(
                 animationWasRunning,
@@ -200,15 +191,11 @@ public final class GameDesktopPresentationHost {
         return debugPerformanceStats.overlayLines(fps, DesktopImageCatalog.getColoredImageCopies());
     }
 
-    public GameBotTurnDriver.Hooks botTurnHooks() {
-        return gameBotTurnHooks;
-    }
-
     public GameFrameCoordinator gameFrameCoordinator() {
         return gameFrameCoordinator;
     }
 
     private GameFrameCoordinator.FrameHooks createFrameHooks() {
-        return shellCoordinator.createFrameHooks(shellDependencies, gameBotTurnHooks);
+        return shellCoordinator.createFrameHooks(shellDependencies);
     }
 }
