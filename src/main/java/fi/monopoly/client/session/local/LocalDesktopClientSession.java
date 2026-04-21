@@ -40,7 +40,7 @@ public final class LocalDesktopClientSession implements ClientSession {
 
     @Override
     public void advanceFrame() {
-        hostedSession.advanceFrame();
+        hostedSession.advanceHostFrame();
     }
 
     @Override

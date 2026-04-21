@@ -16,7 +16,7 @@ import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess
 public interface HostedLocalSession extends SessionHost {
     void startFreshSession();
 
-    void advanceFrame();
+    void advanceHostFrame();
 
     LocalSessionPersistenceResult saveLocalSession();
 

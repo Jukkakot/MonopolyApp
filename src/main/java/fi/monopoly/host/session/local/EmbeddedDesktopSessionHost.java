@@ -8,6 +8,7 @@ import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameView;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
 import java.util.LinkedHashSet;
@@ -55,10 +56,10 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
     }
 
     @Override
-    public void advanceFrame() {
+    public void advanceHostFrame() {
         DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
         if (game != null) {
-            game.advanceFrame();
+            game.advanceHostedFrame();
         }
     }
 
@@ -77,7 +78,7 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
     @Override
     public ClientSessionView currentView() {
         DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
-        return game != null ? new GameClientSessionView(game) : null;
+        return game != null ? new GameClientSessionView(game.view()) : null;
     }
 
     @Override
@@ -117,15 +118,15 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
         }
     }
 
-    private record GameClientSessionView(DesktopHostedGame game) implements ClientSessionView {
+    private record GameClientSessionView(DesktopHostedGameView gameView) implements ClientSessionView {
         @Override
         public void draw() {
-            game.draw();
+            gameView.draw();
         }
 
         @Override
         public List<String> debugPerformanceLines(float fps) {
-            return game.debugPerformanceLines(fps);
+            return gameView.debugPerformanceLines(fps);
         }
     }
 

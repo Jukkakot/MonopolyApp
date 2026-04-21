@@ -2,8 +2,6 @@ package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.domain.session.SessionState;
 
-import java.util.List;
-
 /**
  * Minimal desktop-hosted gameplay surface needed by local session hosting and client-session
  * adapters.
@@ -16,11 +14,9 @@ public interface DesktopHostedGame {
 
     void showPersistenceNotice(String notice);
 
-    void advanceFrame();
+    void advanceHostedFrame();
 
-    void draw();
-
-    List<String> debugPerformanceLines(float fps);
+    DesktopHostedGameView view();
 
     void dispose();
 }

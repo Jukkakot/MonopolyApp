@@ -41,6 +41,8 @@ The project does not yet have full backend-ready architecture because:
   - Processing app-facing shell/runtime adapters, runtime resources, explicit client-global desktop settings, and client context around the embedded local client session
 - `host.session.local`
   - embedded host-owned session lifecycle, persistence, snapshot publication, and test-access seams for the in-process desktop mode
+- `presentation.game.desktop.session`
+  - hosted game lifecycle/view seams now distinguish host-owned frame advancement from client-facing render access
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -130,6 +132,7 @@ The recent `client.desktop` moves improved this:
 - `MonopolyApp` and `MonopolyRuntime` are now explicitly on the client side of the architecture
 - the root package no longer acts as the owner of desktop bootstrap/runtime state
 - future extraction work can now target `client.desktop` directly instead of peeling adapter classes out of `fi.monopoly`
+- host tick advancement and client render access are also now explicitly different seams, which is closer to the eventual client/host split even in embedded mode
 
 ### 4. Tests still lean on local host internals
 

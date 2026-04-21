@@ -24,6 +24,7 @@ import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameView;
 import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
@@ -120,6 +121,7 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     private final GameBotTurnDriver botTurnDriver = new GameBotTurnDriver(botTurnScheduler);
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private final GameDesktopPresentationHost presentationHost;
+    private final DesktopHostedGameView hostedGameView = new HostedGameView();
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     public Game(MonopolyRuntime runtime) {
         this(runtime, null, LocalSessionActions.NO_OP_ACTIONS);
@@ -331,8 +333,14 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         presentationHost.render();
     }
 
-    public void advanceFrame() {
+    @Override
+    public void advanceHostedFrame() {
         presentationHost.advanceFrame();
+    }
+
+    @Override
+    public DesktopHostedGameView view() {
+        return hostedGameView;
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {
@@ -517,4 +525,15 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         );
     }
 
+    private final class HostedGameView implements DesktopHostedGameView {
+        @Override
+        public void draw() {
+            Game.this.draw();
+        }
+
+        @Override
+        public List<String> debugPerformanceLines(float fps) {
+            return Game.this.debugPerformanceLines(fps);
+        }
+    }
 }
