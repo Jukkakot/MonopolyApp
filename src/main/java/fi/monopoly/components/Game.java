@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
+import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.animation.Animations;
@@ -25,7 +26,6 @@ import fi.monopoly.presentation.game.desktop.runtime.GameDesktopLifecycleCoordin
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
-import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.host.bot.GameBotTurnDriver;

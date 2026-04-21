@@ -1,9 +1,9 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
+import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.host.session.local.DesktopHostedGame;
-import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 
 /**
  * Factory seam for constructing the active desktop-hosted game instance.

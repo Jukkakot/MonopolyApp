@@ -48,11 +48,11 @@ flowchart LR
         GAME[Game host]
         HOSTFACTORY[GameDesktopHostFactory]
         HOST[host.session.local.DesktopSessionHostCoordinator]
-        LOCALACTIONS[LocalSessionActions]
     end
 
     subgraph DesktopPresentation[Desktop Presentation]
         CLIENTAPP[client.desktop]
+        CLIENTSESSION[client.session.desktop]
         ASSEMBLY[desktop.assembly]
         SHELL[desktop.shell]
         UI[desktop.ui]
@@ -106,8 +106,8 @@ flowchart LR
 
     GAME --> HOSTFACTORY
     HOST --> GAME
-    LOCALACTIONS --> GAME
     HOSTFACTORY --> CLIENTAPP
+    HOSTFACTORY --> CLIENTSESSION
     HOSTFACTORY --> ASSEMBLY
     HOSTFACTORY --> SHELL
     HOSTFACTORY --> UI
@@ -173,6 +173,7 @@ What is important here:
 - authoritative state still lives in `SessionState` and related domain records, not only in live UI/runtime objects
 - the Processing entry app and runtime now both live under `client.desktop`, so the root package no longer owns desktop bootstrap/runtime classes
 - desktop-only global flags such as debug mode and skip-animations now live in explicit `client.desktop` settings/state helpers instead of `MonopolyApp`
+- client-owned save/load trigger callbacks now also live under `client.session.desktop` instead of the presentation-session package
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - the current Processing app instance is now accessed through an explicit `client.desktop` context seam instead of `MonopolyApp.self`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type

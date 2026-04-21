@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
+import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.CallbackAction;
@@ -23,7 +24,6 @@ import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.game.desktop.assembly.GamePresentationFactory;
 import fi.monopoly.presentation.game.desktop.runtime.GameRuntimeAssemblyFactory;
 import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
-import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachmentCoordinator;
 import fi.monopoly.presentation.game.desktop.session.SessionViewFacade;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;

@@ -43,7 +43,9 @@ The project does not yet have full backend-ready architecture because:
   - embedded host-owned session lifecycle, persistence, snapshot publication, hosted-game lifecycle, and test-access seams for the in-process desktop mode
   - embedded host-owned local game loop coordination now also drives bot stepping outside the presentation frame coordinator
 - `presentation.game.desktop.session`
-  - session bridge, local session actions, and restored-session reattachment adapters around the embedded host
+  - session bridge and restored-session reattachment adapters around the embedded host
+- `client.session.desktop`
+  - desktop client-session shell/controller glue and client-owned local session control callbacks such as save/load triggers
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -62,7 +64,7 @@ The project does not yet have full backend-ready architecture because:
 - `presentation.game.desktop.runtime`
   - lifecycle/bootstrap/debug coordination for local runtime
 - `presentation.game.desktop.session`
-  - session bridge, local session actions, restored-session reattachment
+  - session bridge, restored-session reattachment
 - `presentation.game.desktop.ui`
   - frame/layout/input/presentation host responsibilities
 
