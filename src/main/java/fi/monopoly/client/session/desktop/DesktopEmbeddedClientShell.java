@@ -3,8 +3,8 @@ package fi.monopoly.client.session.desktop;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.components.Game;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
 import java.util.Objects;
@@ -56,11 +56,11 @@ public final class DesktopEmbeddedClientShell {
         return clientSession;
     }
 
-    public Game currentGameForTest() {
+    public DesktopHostedGame currentGameForTest() {
         return embeddedSessionHost.currentGameForTest();
     }
 
-    public void setGameForTest(Game game) {
+    public void setGameForTest(DesktopHostedGame game) {
         embeddedSessionHost.setGameForTest(game);
     }
 }

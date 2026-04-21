@@ -5,6 +5,7 @@ import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.DesktopRuntimeResources;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Game;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
 import fi.monopoly.presentation.game.session.GameSessionState;
@@ -103,7 +104,9 @@ class MonopolyAppPersistenceTest {
 
         dispatchCtrlKey(MonopolyRuntime.get(), 'l');
 
-        Game reloadedGame = app.desktopAppShell().currentGameForTest();
+        DesktopHostedGame reloadedHostedGame = app.desktopAppShell().currentGameForTest();
+        assertInstanceOf(Game.class, reloadedHostedGame);
+        Game reloadedGame = (Game) reloadedHostedGame;
         assertNotNull(reloadedGame);
         assertEquals(originalCash, reloadedGame.sessionStateForPersistence().players().get(0).cash());
         assertTrue(paused(reloadedGame));
@@ -182,7 +185,9 @@ class MonopolyAppPersistenceTest {
 
         app.loadLocalSession();
 
-        Game reloadedGame = app.desktopAppShell().currentGameForTest();
+        DesktopHostedGame reloadedHostedGame = app.desktopAppShell().currentGameForTest();
+        assertInstanceOf(Game.class, reloadedHostedGame);
+        Game reloadedGame = (Game) reloadedHostedGame;
         assertNotNull(reloadedGame);
         assertNotSame(game, reloadedGame);
         assertTrue(paused(reloadedGame));

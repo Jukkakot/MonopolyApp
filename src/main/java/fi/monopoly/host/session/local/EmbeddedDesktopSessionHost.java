@@ -4,7 +4,7 @@ import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCas
 import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.local.LocalDesktopClientSession;
-import fi.monopoly.components.Game;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
 /**
@@ -34,11 +34,11 @@ public final class EmbeddedDesktopSessionHost {
         return clientSession;
     }
 
-    public Game currentGameForTest() {
+    public DesktopHostedGame currentGameForTest() {
         return clientSession.currentGameForTest();
     }
 
-    public void setGameForTest(Game game) {
+    public void setGameForTest(DesktopHostedGame game) {
         clientSession.setGameForTest(game);
     }
 }

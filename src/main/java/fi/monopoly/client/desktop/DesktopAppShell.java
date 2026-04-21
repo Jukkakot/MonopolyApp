@@ -3,7 +3,7 @@ package fi.monopoly.client.desktop;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
-import fi.monopoly.components.Game;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 
 /**
  * Desktop app-side shell around the embedded local client session.
@@ -47,11 +47,11 @@ public final class DesktopAppShell {
         desktopClientShell.loadLocalSession();
     }
 
-    public Game currentGameForTest() {
+    public DesktopHostedGame currentGameForTest() {
         return desktopClientShell.currentGameForTest();
     }
 
-    public void setGameForTest(Game game) {
+    public void setGameForTest(DesktopHostedGame game) {
         desktopClientShell.setGameForTest(game);
     }
 }

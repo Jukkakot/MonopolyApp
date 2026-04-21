@@ -7,7 +7,6 @@ import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
@@ -115,11 +114,11 @@ public final class LocalDesktopClientSession implements ClientSession {
         publishSnapshot();
     }
 
-    public Game currentGameForTest() {
-        return desktopSessionHostCoordinator.currentGameForTest();
+    public DesktopHostedGame currentGameForTest() {
+        return desktopSessionHostCoordinator.currentGame();
     }
 
-    public void setGameForTest(Game game) {
+    public void setGameForTest(DesktopHostedGame game) {
         desktopSessionHostCoordinator.setGameForTest(game);
         publishSnapshot();
     }
