@@ -14,14 +14,15 @@ import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.TurnEngine;
+import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.game.desktop.assembly.GameDesktopBootstrapFactory;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopHostFactory;
 import fi.monopoly.presentation.game.desktop.runtime.GameDesktopLifecycleCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
-import fi.monopoly.presentation.game.desktop.ui.GameDesktopControlsFactory;
 import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
@@ -85,10 +86,9 @@ public class Game implements MonopolyEventListener {
     private final TurnEngine turnEngine = new TurnEngine();
     private final GameSessionStateCoordinator gameSessionStateCoordinator = new GameSessionStateCoordinator();
     private final GameBotTurnControlCoordinator gameBotTurnControlCoordinator = new GameBotTurnControlCoordinator();
-    private final GameDesktopHostFactory gameDesktopHostFactory = new GameDesktopHostFactory();
+    private final GameDesktopBootstrapFactory gameDesktopBootstrapFactory = new GameDesktopBootstrapFactory();
     private final GameDesktopShellCoordinator gameDesktopShellCoordinator;
     private final GameDesktopLifecycleCoordinator gameDesktopLifecycleCoordinator = new GameDesktopLifecycleCoordinator();
-    private final GameDesktopControlsFactory gameDesktopControlsFactory = new GameDesktopControlsFactory();
     private final GameDesktopShellDependencies shellDependencies;
     private final SessionApplicationService sessionApplicationService;
     private final DebtActionDispatcher debtActionDispatcher;
@@ -130,20 +130,8 @@ public class Game implements MonopolyEventListener {
 
     public Game(MonopolyRuntime runtime, SessionState restoredSessionState, LocalSessionActions localSessionActions) {
         this.runtime = runtime;
-        GameDesktopControlsFactory.GameDesktopControls desktopControls = gameDesktopControlsFactory.create(runtime);
-        this.endRoundButton = desktopControls.buttons().endRoundButton();
-        this.retryDebtButton = desktopControls.buttons().retryDebtButton();
-        this.declareBankruptcyButton = desktopControls.buttons().declareBankruptcyButton();
-        this.debugGodModeButton = desktopControls.buttons().debugGodModeButton();
-        this.pauseButton = desktopControls.buttons().pauseButton();
-        this.tradeButton = desktopControls.buttons().tradeButton();
-        this.saveButton = desktopControls.buttons().saveButton();
-        this.loadButton = desktopControls.buttons().loadButton();
-        this.botSpeedButton = desktopControls.buttons().botSpeedButton();
-        this.languageButton = desktopControls.buttons().languageButton();
-        this.desktopButtons = desktopControls.allButtons();
-        GameDesktopHostFactory.GameDesktopHostContext hostContext = gameDesktopHostFactory.create(
-                new GameDesktopHostFactory.Config(
+        GameDesktopBootstrapFactory.GameDesktopBootstrap bootstrap = gameDesktopBootstrapFactory.create(
+                new GameDesktopBootstrapFactory.Config(
                         runtime,
                         restoredSessionState,
                         localSessionActions,
@@ -155,7 +143,7 @@ public class Game implements MonopolyEventListener {
                         botTurnDriver,
                         botTurnScheduler,
                         debugPerformanceStats,
-                        desktopControls
+                        () -> sessionState
                 ),
                 GameDesktopHostFactory.Hooks.of(
                         this::sessionStateRef,
@@ -196,6 +184,19 @@ public class Game implements MonopolyEventListener {
                         () -> this
                 )
         );
+        var desktopControls = bootstrap.desktopControls();
+        this.endRoundButton = desktopControls.buttons().endRoundButton();
+        this.retryDebtButton = desktopControls.buttons().retryDebtButton();
+        this.declareBankruptcyButton = desktopControls.buttons().declareBankruptcyButton();
+        this.debugGodModeButton = desktopControls.buttons().debugGodModeButton();
+        this.pauseButton = desktopControls.buttons().pauseButton();
+        this.tradeButton = desktopControls.buttons().tradeButton();
+        this.saveButton = desktopControls.buttons().saveButton();
+        this.loadButton = desktopControls.buttons().loadButton();
+        this.botSpeedButton = desktopControls.buttons().botSpeedButton();
+        this.languageButton = desktopControls.buttons().languageButton();
+        this.desktopButtons = desktopControls.allButtons();
+        GameDesktopHostFactory.GameDesktopHostContext hostContext = bootstrap.hostContext();
         this.gameDesktopShellCoordinator = hostContext.shellCoordinator();
         this.shellDependencies = hostContext.shellDependencies();
         this.board = hostContext.board();
@@ -207,21 +208,10 @@ public class Game implements MonopolyEventListener {
         this.sessionApplicationService = hostContext.sessionApplicationService();
         this.debtActionDispatcher = hostContext.debtActionDispatcher();
         this.gameTurnFlowCoordinator = hostContext.gameTurnFlowCoordinator();
-        this.presentationHost = new GameDesktopPresentationHost(
-                gameDesktopShellCoordinator,
-                shellDependencies,
-                debugPerformanceStats,
-                () -> sessionState,
-                this::currentTurnPlayer,
-                hostContext.gamePrimaryTurnControls(),
-                hostContext.gameSessionQueries(),
-                hostContext.gameUiController(),
-                hostContext.gameBotTurnHooks(),
-                hostContext.gameFrameCoordinator()
-        );
+        this.presentationHost = bootstrap.presentationHost();
+        this.presentationHost.bindButtonActions();
         gameDesktopShellCoordinator.applyRestoredSessionState(shellDependencies, restoredSessionState);
         gameDesktopShellCoordinator.initializeSessionPresentation(shellDependencies, restoredSessionState);
-        setupButtonActions();
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
             debugController.initializeDebtDebugScenario();
@@ -258,10 +248,6 @@ public class Game implements MonopolyEventListener {
 
     private void onDebtStateChanged() {
         gameDesktopShellCoordinator.onDebtStateChanged(shellDependencies);
-    }
-
-    private void setupButtonActions() {
-        presentationHost.bindButtonActions();
     }
 
     Players players() {
@@ -308,7 +294,7 @@ public class Game implements MonopolyEventListener {
         return createPlayerView(currentTurnPlayer());
     }
 
-    private void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
+    private void resumeContinuation(TurnContinuationState continuationState) {
         if (continuationState != null && gameTurnFlowCoordinator != null) {
             gameTurnFlowCoordinator.resumeContinuation(continuationState);
         }
@@ -373,7 +359,7 @@ public class Game implements MonopolyEventListener {
         return presentationHost.handleEvent(event);
     }
 
-    private void handlePaymentRequest(PaymentRequest request, fi.monopoly.domain.session.TurnContinuationState continuationState, CallbackAction onResolved) {
+    private void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
         updateLogTurnContext();
         sessionApplicationService.handlePaymentRequest(request, continuationState, onResolved);
     }

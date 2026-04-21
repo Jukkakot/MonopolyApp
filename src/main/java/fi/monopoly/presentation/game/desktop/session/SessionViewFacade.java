@@ -27,8 +27,8 @@ import java.util.function.Supplier;
 
 public final class SessionViewFacade {
     private final PopupService popupService;
-    private final Players players;
-    private final Board board;
+    private final Supplier<Players> playersSupplier;
+    private final Supplier<Board> boardSupplier;
     private final Supplier<DebtState> debtStateSupplier;
     private final BooleanSupplier retryDebtVisibleSupplier;
     private final BooleanSupplier declareBankruptcyVisibleSupplier;
@@ -42,8 +42,8 @@ public final class SessionViewFacade {
 
     public SessionViewFacade(
             PopupService popupService,
-            Players players,
-            Board board,
+            Supplier<Players> playersSupplier,
+            Supplier<Board> boardSupplier,
             Supplier<DebtState> debtStateSupplier,
             BooleanSupplier retryDebtVisibleSupplier,
             BooleanSupplier declareBankruptcyVisibleSupplier,
@@ -53,8 +53,8 @@ public final class SessionViewFacade {
             Function<Player, Integer> boardDangerScoreSupplier
     ) {
         this.popupService = popupService;
-        this.players = players;
-        this.board = board;
+        this.playersSupplier = playersSupplier;
+        this.boardSupplier = boardSupplier;
         this.debtStateSupplier = debtStateSupplier;
         this.retryDebtVisibleSupplier = retryDebtVisibleSupplier;
         this.declareBankruptcyVisibleSupplier = declareBankruptcyVisibleSupplier;
@@ -65,6 +65,7 @@ public final class SessionViewFacade {
     }
 
     public GameView createGameView(Player currentPlayer) {
+        Players players = players();
         long gameViewSignature = buildGameViewSignature(currentPlayer);
         if (cachedGameView != null && cachedGameView.signature() == gameViewSignature) {
             return cachedGameView.view();
@@ -110,6 +111,7 @@ public final class SessionViewFacade {
     }
 
     public PlayerView createPlayerView(Player player) {
+        Players players = players();
         long playerSignature = buildPlayerViewSignature(player);
         CachedPlayerView cachedPlayerView = playerViewCache.get(player.getId());
         if (cachedPlayerView != null && cachedPlayerView.signature() == playerSignature) {
@@ -149,6 +151,7 @@ public final class SessionViewFacade {
     }
 
     private long buildGameViewSignature(Player currentPlayer) {
+        Players players = players();
         long signature = currentPlayer == null ? 0 : currentPlayer.getId();
         signature = signature * 31 + Boolean.hashCode(popupService.isAnyVisible());
         if (popupService.isAnyVisible()) {
@@ -260,6 +263,7 @@ public final class SessionViewFacade {
     }
 
     private int estimateRent(Property property, Player owner) {
+        Players players = players();
         if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
             return switch (owner.countOwnedProperties(property.getSpotType().streetType)) {
                 case 2 -> 70;
@@ -277,6 +281,7 @@ public final class SessionViewFacade {
     }
 
     private int estimateOfferedPropertyRent(Property property, Player currentPlayer) {
+        Players players = players();
         if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
             int utilityCount = currentPlayer == null ? 0 : currentPlayer.countOwnedProperties(property.getSpotType().streetType) + 1;
             return utilityCount >= 2 ? 70 : 28;
@@ -305,6 +310,15 @@ public final class SessionViewFacade {
             return playerTarget.player().getName();
         }
         return paymentRequest.target().getClass().getSimpleName();
+    }
+
+    private Players players() {
+        return playersSupplier.get();
+    }
+
+    @SuppressWarnings("unused")
+    private Board board() {
+        return boardSupplier.get();
     }
 
     private record CachedGameView(long signature, GameView view) {
