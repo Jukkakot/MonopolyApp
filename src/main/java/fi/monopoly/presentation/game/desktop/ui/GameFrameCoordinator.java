@@ -11,7 +11,7 @@ import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.presentation.game.bot.BotTurnScheduler;
+import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.utils.DebugPerformanceStats;

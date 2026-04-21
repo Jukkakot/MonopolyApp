@@ -5,7 +5,7 @@ import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
-import fi.monopoly.presentation.game.bot.BotTurnScheduler;
+import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.support.TestLogLevels;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

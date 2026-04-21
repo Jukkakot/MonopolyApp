@@ -1,4 +1,4 @@
-package fi.monopoly.presentation.game.bot;
+package fi.monopoly.host.bot;
 
 import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.components.Player;

@@ -4,7 +4,7 @@ import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.spots.Spot;
-import fi.monopoly.presentation.game.bot.BotTurnScheduler;
+import fi.monopoly.host.bot.BotTurnScheduler;
 import lombok.extern.slf4j.Slf4j;
 import processing.event.Event;
 import processing.event.KeyEvent;

@@ -48,8 +48,8 @@ The project does not yet have full backend-ready architecture because:
   - authoritative session records and continuation state
 - `application.session`
   - session-oriented orchestration and persistence-facing services
-- `presentation.game.bot`
-  - bot scheduling and bot turn stepping
+- `host.bot`
+  - host-owned bot scheduling, bot turn stepping, and embedded local bot command adapters
 - `presentation.game.turn`
   - turn flow orchestration
 - `presentation.game.session`

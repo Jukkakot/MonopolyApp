@@ -1,6 +1,6 @@
 package fi.monopoly.host.session.local;
 
-import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
+import fi.monopoly.host.bot.GameBotTurnDriver;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
 import fi.monopoly.utils.DebugPerformanceStats;
 

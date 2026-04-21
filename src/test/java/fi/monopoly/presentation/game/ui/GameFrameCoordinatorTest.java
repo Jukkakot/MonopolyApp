@@ -12,7 +12,7 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.presentation.game.bot.BotTurnScheduler;
+import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;

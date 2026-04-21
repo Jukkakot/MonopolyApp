@@ -2,9 +2,9 @@ package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.presentation.game.bot.BotTurnScheduler;
-import fi.monopoly.presentation.game.bot.GameBotTurnControlCoordinator;
-import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
+import fi.monopoly.host.bot.BotTurnScheduler;
+import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
+import fi.monopoly.host.bot.GameBotTurnDriver;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;

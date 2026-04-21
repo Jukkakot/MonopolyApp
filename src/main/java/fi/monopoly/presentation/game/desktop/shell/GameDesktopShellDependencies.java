@@ -13,7 +13,7 @@ import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.PopupService;
-import fi.monopoly.presentation.game.bot.BotTurnScheduler;
+import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
