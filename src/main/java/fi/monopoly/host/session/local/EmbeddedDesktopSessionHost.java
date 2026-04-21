@@ -52,6 +52,11 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
     }
 
     @Override
+    public void advanceFrame() {
+        advanceHostFrame();
+    }
+
+    @Override
     public void advanceHostFrame() {
         DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
         if (game != null) {

@@ -1,10 +1,7 @@
-package fi.monopoly.client.session.local;
+package fi.monopoly.host.session.local;
 
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.host.session.local.DesktopHostedGame;
-import fi.monopoly.host.session.local.DesktopSessionHostCoordinator;
-import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,17 +11,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class LocalDesktopClientSessionTest {
+class EmbeddedDesktopSessionHostTest {
 
     @Test
     void listenerReceivesImmediateSnapshotAndPublishesAgainWhenStateIsReplaced() {
-        LocalDesktopClientSession clientSession = new LocalDesktopClientSession(
-                new EmbeddedDesktopSessionHost(new HooksStub())
-        );
+        EmbeddedDesktopSessionHost hostedSession = new EmbeddedDesktopSessionHost(new HooksStub());
         AtomicReference<ClientSessionSnapshot> latestSnapshot = new AtomicReference<>();
         AtomicInteger eventCount = new AtomicInteger();
 
-        clientSession.addListener(snapshot -> {
+        hostedSession.addListener(snapshot -> {
             latestSnapshot.set(snapshot);
             eventCount.incrementAndGet();
         });
@@ -32,7 +27,7 @@ class LocalDesktopClientSessionTest {
         assertEquals(ClientSessionSnapshot.empty(), latestSnapshot.get());
         assertEquals(1, eventCount.get());
 
-        clientSession.replaceState(null);
+        hostedSession.replaceState(null);
 
         assertEquals(2, eventCount.get());
         assertEquals(ClientSessionSnapshot.empty(), latestSnapshot.get());
@@ -41,12 +36,10 @@ class LocalDesktopClientSessionTest {
 
     @Test
     void snapshotIsEmptyWhenNoGameExists() {
-        LocalDesktopClientSession clientSession = new LocalDesktopClientSession(
-                new EmbeddedDesktopSessionHost(new HooksStub())
-        );
+        EmbeddedDesktopSessionHost hostedSession = new EmbeddedDesktopSessionHost(new HooksStub());
 
-        assertNull(clientSession.currentState());
-        assertEquals(ClientSessionSnapshot.empty(), clientSession.snapshot());
+        assertNull(hostedSession.currentState());
+        assertEquals(ClientSessionSnapshot.empty(), hostedSession.snapshot());
     }
 
     private static final class HooksStub implements DesktopSessionHostCoordinator.Hooks {
