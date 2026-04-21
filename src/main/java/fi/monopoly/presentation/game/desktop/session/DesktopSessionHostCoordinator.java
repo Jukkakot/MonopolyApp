@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.application.session.SessionHost;
-import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
 
@@ -14,7 +13,7 @@ import fi.monopoly.domain.session.SessionStatus;
  * desktop client will still need, even after authoritative session ownership moves elsewhere.</p>
  */
 public final class DesktopSessionHostCoordinator implements SessionHost {
-    private Game game;
+    private DesktopHostedGame game;
     private final Hooks hooks;
 
     public DesktopSessionHostCoordinator(Hooks hooks) {
@@ -35,12 +34,16 @@ public final class DesktopSessionHostCoordinator implements SessionHost {
         rebuildGame(null);
     }
 
-    public Game currentGame() {
+    public DesktopHostedGame currentGame() {
         return game;
     }
 
-    public void setGameForTest(Game game) {
+    public void setGameForTest(DesktopHostedGame game) {
         this.game = game;
+    }
+
+    public fi.monopoly.components.Game currentGameForTest() {
+        return game instanceof fi.monopoly.components.Game concreteGame ? concreteGame : null;
     }
 
     public void showPersistenceNotice(String message) {
@@ -87,7 +90,7 @@ public final class DesktopSessionHostCoordinator implements SessionHost {
     public interface Hooks {
         void shutdownSessionRuntime();
 
-        void disposeGame(Game game);
+        void disposeGame(DesktopHostedGame game);
 
         void disposeControlLayer();
 
@@ -95,7 +98,7 @@ public final class DesktopSessionHostCoordinator implements SessionHost {
 
         void applyDefaultTextFont();
 
-        Game createGame(SessionState restoredState);
+        DesktopHostedGame createGame(SessionState restoredState);
 
         void flushPendingChanges();
     }

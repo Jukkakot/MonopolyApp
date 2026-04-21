@@ -4,6 +4,7 @@ import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,7 +55,7 @@ class LocalDesktopClientSessionTest {
         }
 
         @Override
-        public void disposeGame(Game game) {
+        public void disposeGame(DesktopHostedGame game) {
         }
 
         @Override
@@ -70,7 +71,7 @@ class LocalDesktopClientSessionTest {
         }
 
         @Override
-        public Game createGame(SessionState restoredState) {
+        public DesktopHostedGame createGame(SessionState restoredState) {
             return null;
         }
 

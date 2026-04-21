@@ -10,6 +10,7 @@ import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 
 import java.time.LocalTime;
 import java.util.LinkedHashSet;
@@ -65,7 +66,7 @@ public final class LocalDesktopClientSession implements ClientSession {
 
     @Override
     public void advanceFrame() {
-        Game game = desktopSessionHostCoordinator.currentGame();
+        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
         if (game != null) {
             game.advanceFrame();
         }
@@ -85,7 +86,7 @@ public final class LocalDesktopClientSession implements ClientSession {
 
     @Override
     public ClientSessionView currentView() {
-        Game game = desktopSessionHostCoordinator.currentGame();
+        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
         return game != null ? new GameClientSessionView(game) : null;
     }
 
@@ -115,7 +116,7 @@ public final class LocalDesktopClientSession implements ClientSession {
     }
 
     public Game currentGameForTest() {
-        return desktopSessionHostCoordinator.currentGame();
+        return desktopSessionHostCoordinator.currentGameForTest();
     }
 
     public void setGameForTest(Game game) {
@@ -130,7 +131,7 @@ public final class LocalDesktopClientSession implements ClientSession {
         }
     }
 
-    private record GameClientSessionView(Game game) implements ClientSessionView {
+    private record GameClientSessionView(DesktopHostedGame game) implements ClientSessionView {
         @Override
         public void draw() {
             game.draw();

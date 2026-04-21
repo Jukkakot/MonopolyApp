@@ -23,6 +23,7 @@ import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import fi.monopoly.presentation.game.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.bot.GameBotTurnDriver;
@@ -56,7 +57,7 @@ import static fi.monopoly.text.UiTexts.text;
  * the local shell around the older client runtime while the project moves toward a backend-ready
  * session architecture.</p>
  */
-public class Game implements MonopolyEventListener {
+public class Game implements MonopolyEventListener, DesktopHostedGame {
     private static final String LOCAL_SESSION_ID = "local-session";
     // UI and layout constants
     private static final List<Locale> SUPPORTED_UI_LOCALES = List.of(

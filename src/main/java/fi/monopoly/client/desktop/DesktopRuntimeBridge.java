@@ -6,6 +6,7 @@ import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +77,7 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
     }
 
     @Override
-    public Game createGame(SessionState restoredState) {
+    public DesktopHostedGame createGame(SessionState restoredState) {
         LocalSessionActions localSessionActions = new LocalSessionActions(
                 saveLocalSessionAction,
                 loadLocalSessionAction
@@ -90,7 +91,7 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
     }
 
     @Override
-    public void disposeGame(Game game) {
+    public void disposeGame(DesktopHostedGame game) {
         game.dispose();
     }
 }

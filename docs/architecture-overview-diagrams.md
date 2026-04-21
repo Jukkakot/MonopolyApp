@@ -176,6 +176,7 @@ What is important here:
 - frame/layout/session orchestration code now reads time and viewport state through `MonopolyRuntime` helpers instead of reaching directly into Processing app fields
 - projected desktop session views now read popup state through explicit collaborators instead of depending on the full runtime shell
 - the remaining `Game` host constructor is now driven through an explicit desktop bootstrap factory instead of assembling controls, shell, and presentation inline
+- embedded desktop session hosting now targets a small hosted-game interface instead of depending on the full `Game` host type for normal session/view lifecycle operations
 - the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 
