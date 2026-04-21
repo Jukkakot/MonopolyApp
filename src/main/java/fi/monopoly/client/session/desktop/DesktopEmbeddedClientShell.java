@@ -4,6 +4,7 @@ import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
+import fi.monopoly.client.session.local.LocalDesktopClientSession;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
@@ -28,7 +29,7 @@ public final class DesktopEmbeddedClientShell {
             Function<ClientSession, ClientSessionFeedbackSink> feedbackSinkFactory
     ) {
         this.embeddedSessionHost = new EmbeddedDesktopSessionHost(Objects.requireNonNull(hostHooks));
-        this.clientSession = embeddedSessionHost.clientSession();
+        this.clientSession = new LocalDesktopClientSession(embeddedSessionHost);
         this.testAccess = embeddedSessionHost.testAccess();
         ClientSessionFeedbackSink feedbackSink = Objects.requireNonNull(feedbackSinkFactory).apply(clientSession);
         this.clientSessionController = new DesktopClientSessionController(clientSession, feedbackSink);

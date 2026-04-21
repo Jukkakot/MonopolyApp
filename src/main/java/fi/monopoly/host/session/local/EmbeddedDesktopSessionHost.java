@@ -1,11 +1,18 @@
 package fi.monopoly.host.session.local;
 
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCase;
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
 import fi.monopoly.application.session.persistence.SessionPersistenceService;
-import fi.monopoly.client.session.ClientSession;
-import fi.monopoly.client.session.local.LocalDesktopClientSession;
+import fi.monopoly.client.session.ClientSessionListener;
+import fi.monopoly.client.session.ClientSessionSnapshot;
+import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
+import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Embedded local session host for the current single-process desktop client.
@@ -15,28 +22,123 @@ import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinat
  * of letting {@code MonopolyApp} coordinate host concerns directly. That makes the later jump to a
  * real remote host much narrower.</p>
  */
-public final class EmbeddedDesktopSessionHost {
+public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
     private final DesktopSessionHostCoordinator desktopSessionHostCoordinator;
-    private final LocalDesktopClientSession clientSession;
+    private final LocalSessionPersistenceUseCase persistenceUseCase;
+    private final Set<ClientSessionListener> listeners = new LinkedHashSet<>();
     private final DesktopHostedGameTestAccess testAccess;
 
     public EmbeddedDesktopSessionHost(DesktopSessionHostCoordinator.Hooks hooks) {
         this.desktopSessionHostCoordinator = new DesktopSessionHostCoordinator(hooks);
-        this.clientSession = new LocalDesktopClientSession(
-                desktopSessionHostCoordinator,
-                new LocalSessionPersistenceUseCase(
-                        new SessionPersistenceService(),
-                        desktopSessionHostCoordinator
-                )
+        this.persistenceUseCase = new LocalSessionPersistenceUseCase(
+                new SessionPersistenceService(),
+                desktopSessionHostCoordinator
         );
-        this.testAccess = clientSession.testAccess();
+        this.testAccess = new DesktopHostedGameTestAccess(new TestHostedGameAccess());
     }
 
-    public ClientSession clientSession() {
-        return clientSession;
+    @Override
+    public fi.monopoly.domain.session.SessionState currentState() {
+        return desktopSessionHostCoordinator.currentState();
     }
 
+    @Override
+    public void replaceState(fi.monopoly.domain.session.SessionState restoredState) {
+        desktopSessionHostCoordinator.replaceState(restoredState);
+        publishSnapshot();
+    }
+
+    @Override
+    public void startFreshSession() {
+        desktopSessionHostCoordinator.rebuildFreshGame();
+        publishSnapshot();
+    }
+
+    @Override
+    public void advanceFrame() {
+        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
+        if (game != null) {
+            game.advanceFrame();
+        }
+    }
+
+    @Override
+    public LocalSessionPersistenceResult saveLocalSession() {
+        return persistenceUseCase.saveLocalSession();
+    }
+
+    @Override
+    public LocalSessionPersistenceResult loadLocalSession() {
+        LocalSessionPersistenceResult result = persistenceUseCase.loadLocalSession();
+        publishSnapshot();
+        return result;
+    }
+
+    @Override
+    public ClientSessionView currentView() {
+        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
+        return game != null ? new GameClientSessionView(game) : null;
+    }
+
+    @Override
+    public ClientSessionSnapshot snapshot() {
+        return ClientSessionSnapshot.from(currentState(), currentView() != null);
+    }
+
+    @Override
+    public void addListener(ClientSessionListener listener) {
+        if (listener == null) {
+            return;
+        }
+        listeners.add(listener);
+        listener.onSnapshotChanged(snapshot());
+    }
+
+    @Override
+    public void removeListener(ClientSessionListener listener) {
+        listeners.remove(listener);
+    }
+
+    @Override
+    public void showPersistenceNotice(String message) {
+        desktopSessionHostCoordinator.showPersistenceNotice(message);
+        publishSnapshot();
+    }
+
+    @Override
     public DesktopHostedGameTestAccess testAccess() {
         return testAccess;
+    }
+
+    private void publishSnapshot() {
+        ClientSessionSnapshot snapshot = snapshot();
+        for (ClientSessionListener listener : List.copyOf(listeners)) {
+            listener.onSnapshotChanged(snapshot);
+        }
+    }
+
+    private record GameClientSessionView(DesktopHostedGame game) implements ClientSessionView {
+        @Override
+        public void draw() {
+            game.draw();
+        }
+
+        @Override
+        public List<String> debugPerformanceLines(float fps) {
+            return game.debugPerformanceLines(fps);
+        }
+    }
+
+    private final class TestHostedGameAccess implements DesktopHostedGameTestAccess.HostedGameAccess {
+        @Override
+        public DesktopHostedGame currentHostedGame() {
+            return desktopSessionHostCoordinator.currentGame();
+        }
+
+        @Override
+        public void setHostedGame(DesktopHostedGame game) {
+            desktopSessionHostCoordinator.testAccess().setHostedGame(game);
+            publishSnapshot();
+        }
     }
 }

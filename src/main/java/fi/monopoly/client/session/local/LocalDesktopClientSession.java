@@ -1,21 +1,13 @@
 package fi.monopoly.client.session.local;
 
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
-import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCase;
-import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.host.session.local.HostedLocalSession;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
-import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
-
-import java.time.LocalTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Client-session adapter backed by the current embedded desktop host.
@@ -25,131 +17,68 @@ import java.util.Set;
  * reaching directly into the desktop host coordinator for normal session operations.</p>
  */
 public final class LocalDesktopClientSession implements ClientSession {
-    private final DesktopSessionHostCoordinator desktopSessionHostCoordinator;
-    private final LocalSessionPersistenceUseCase persistenceUseCase;
-    private final Set<ClientSessionListener> listeners = new LinkedHashSet<>();
-    private final DesktopHostedGameTestAccess testAccess;
+    private final HostedLocalSession hostedSession;
 
-    public LocalDesktopClientSession(DesktopSessionHostCoordinator desktopSessionHostCoordinator) {
-        this(
-                desktopSessionHostCoordinator,
-                new LocalSessionPersistenceUseCase(
-                        new SessionPersistenceService(),
-                        desktopSessionHostCoordinator
-                )
-        );
-    }
-
-    public LocalDesktopClientSession(
-            DesktopSessionHostCoordinator desktopSessionHostCoordinator,
-            LocalSessionPersistenceUseCase persistenceUseCase
-    ) {
-        this.desktopSessionHostCoordinator = desktopSessionHostCoordinator;
-        this.persistenceUseCase = persistenceUseCase;
-        this.testAccess = new DesktopHostedGameTestAccess(new TestHostedGameAccess());
+    public LocalDesktopClientSession(HostedLocalSession hostedSession) {
+        this.hostedSession = hostedSession;
     }
 
     @Override
     public SessionState currentState() {
-        return desktopSessionHostCoordinator.currentState();
+        return hostedSession.currentState();
     }
 
     @Override
     public void replaceState(SessionState restoredState) {
-        desktopSessionHostCoordinator.replaceState(restoredState);
-        publishSnapshot();
+        hostedSession.replaceState(restoredState);
     }
 
     @Override
     public void startFreshSession() {
-        desktopSessionHostCoordinator.rebuildFreshGame();
-        publishSnapshot();
+        hostedSession.startFreshSession();
     }
 
     @Override
     public void advanceFrame() {
-        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
-        if (game != null) {
-            game.advanceFrame();
-        }
+        hostedSession.advanceFrame();
     }
 
     @Override
     public LocalSessionPersistenceResult saveLocalSession() {
-        return persistenceUseCase.saveLocalSession();
+        return hostedSession.saveLocalSession();
     }
 
     @Override
     public LocalSessionPersistenceResult loadLocalSession() {
-        LocalSessionPersistenceResult result = persistenceUseCase.loadLocalSession();
-        publishSnapshot();
-        return result;
+        return hostedSession.loadLocalSession();
     }
 
     @Override
     public ClientSessionView currentView() {
-        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
-        return game != null ? new GameClientSessionView(game) : null;
+        return hostedSession.currentView();
     }
 
     @Override
     public ClientSessionSnapshot snapshot() {
-        return ClientSessionSnapshot.from(currentState(), currentView() != null);
+        return hostedSession.snapshot();
     }
 
     @Override
     public void addListener(ClientSessionListener listener) {
-        if (listener == null) {
-            return;
-        }
-        listeners.add(listener);
-        listener.onSnapshotChanged(snapshot());
+        hostedSession.addListener(listener);
     }
 
     @Override
     public void removeListener(ClientSessionListener listener) {
-        listeners.remove(listener);
+        hostedSession.removeListener(listener);
     }
 
     @Override
     public void showPersistenceNotice(String message) {
-        desktopSessionHostCoordinator.showPersistenceNotice(message);
-        publishSnapshot();
+        hostedSession.showPersistenceNotice(message);
     }
 
     public DesktopHostedGameTestAccess testAccess() {
-        return testAccess;
-    }
-
-    private void publishSnapshot() {
-        ClientSessionSnapshot snapshot = snapshot();
-        for (ClientSessionListener listener : List.copyOf(listeners)) {
-            listener.onSnapshotChanged(snapshot);
-        }
-    }
-
-    private record GameClientSessionView(DesktopHostedGame game) implements ClientSessionView {
-        @Override
-        public void draw() {
-            game.draw();
-        }
-
-        @Override
-        public List<String> debugPerformanceLines(float fps) {
-            return game.debugPerformanceLines(fps);
-        }
-    }
-
-    private final class TestHostedGameAccess implements DesktopHostedGameTestAccess.HostedGameAccess {
-        @Override
-        public DesktopHostedGame currentHostedGame() {
-            return desktopSessionHostCoordinator.currentGame();
-        }
-
-        @Override
-        public void setHostedGame(DesktopHostedGame game) {
-            desktopSessionHostCoordinator.testAccess().setHostedGame(game);
-            publishSnapshot();
-        }
+        return hostedSession.testAccess();
     }
 }

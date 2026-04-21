@@ -31,6 +31,7 @@ The project does not yet have full backend-ready architecture because:
 - legacy runtime objects are still rebuilt and mutated in-process
 - `Game` is still a compatibility-heavy desktop host for tests and current orchestration
 - the desktop shell still contains local-only coordination that should become client/server seams later
+- the client still renders a host-provided live view in-process rather than a transport-neutral view model
 
 ## Current Implemented Shape
 
@@ -38,6 +39,8 @@ The project does not yet have full backend-ready architecture because:
 
 - `client.desktop`
   - Processing app-facing shell/runtime adapters, runtime resources, explicit client-global desktop settings, and client context around the embedded local client session
+- `host.session.local`
+  - embedded host-owned session lifecycle, persistence, snapshot publication, and test-access seams for the in-process desktop mode
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`

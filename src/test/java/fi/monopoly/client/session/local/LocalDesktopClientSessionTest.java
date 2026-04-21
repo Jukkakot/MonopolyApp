@@ -1,8 +1,8 @@
 package fi.monopoly.client.session.local;
 
 import fi.monopoly.client.session.ClientSessionSnapshot;
-import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ class LocalDesktopClientSessionTest {
     @Test
     void listenerReceivesImmediateSnapshotAndPublishesAgainWhenStateIsReplaced() {
         LocalDesktopClientSession clientSession = new LocalDesktopClientSession(
-                new DesktopSessionHostCoordinator(new HooksStub())
+                new EmbeddedDesktopSessionHost(new HooksStub())
         );
         AtomicReference<ClientSessionSnapshot> latestSnapshot = new AtomicReference<>();
         AtomicInteger eventCount = new AtomicInteger();
@@ -42,7 +42,7 @@ class LocalDesktopClientSessionTest {
     @Test
     void snapshotIsEmptyWhenNoGameExists() {
         LocalDesktopClientSession clientSession = new LocalDesktopClientSession(
-                new DesktopSessionHostCoordinator(new HooksStub())
+                new EmbeddedDesktopSessionHost(new HooksStub())
         );
 
         assertNull(clientSession.currentState());
