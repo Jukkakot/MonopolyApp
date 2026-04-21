@@ -6,8 +6,8 @@ import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.HostedLocalSession;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 
 /**
  * Client-session adapter backed by the current embedded desktop host.

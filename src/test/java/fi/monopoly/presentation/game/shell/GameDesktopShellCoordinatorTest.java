@@ -318,12 +318,12 @@ class GameDesktopShellCoordinatorTest {
         }
 
         @Override
-        public fi.monopoly.components.computer.GameView createCurrentGameView() {
+        public fi.monopoly.components.computer.GameView createGameViewFor(Player player) {
             return null;
         }
 
         @Override
-        public fi.monopoly.components.computer.PlayerView createCurrentPlayerView() {
+        public fi.monopoly.components.computer.PlayerView createPlayerViewFor(Player player) {
             return null;
         }
 

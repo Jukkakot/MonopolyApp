@@ -5,7 +5,6 @@ import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 
 /**
  * Host-owned local session seam used by the desktop client adapter.

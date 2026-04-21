@@ -3,8 +3,8 @@ package fi.monopoly.client.desktop;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
+import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
 
 /**
  * Desktop app-side shell around the embedded local client session.

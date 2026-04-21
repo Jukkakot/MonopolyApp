@@ -1,6 +1,7 @@
-package fi.monopoly.presentation.game.desktop.session;
+package fi.monopoly.host.session.local;
 
 import fi.monopoly.application.session.SessionHost;
+import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
 

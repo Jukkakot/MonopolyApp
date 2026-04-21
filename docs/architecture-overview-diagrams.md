@@ -47,7 +47,7 @@ flowchart LR
     subgraph DesktopHost[Desktop Host]
         GAME[Game host]
         HOSTFACTORY[GameDesktopHostFactory]
-        HOST[DesktopSessionHostCoordinator]
+        HOST[host.session.local.DesktopSessionHostCoordinator]
         LOCALACTIONS[LocalSessionActions]
     end
 
@@ -183,6 +183,7 @@ What is important here:
 - app-shell and embedded-client test-only hosted-game access is now isolated behind an explicit `testAccess()` seam instead of living on the normal production shell API
 - concrete local hosted-game creation now also lives behind an assembly-side factory seam, so the client-desktop runtime bridge no longer constructs `Game` directly
 - embedded local session lifecycle, persistence, and snapshot publication now live on the host side, while `LocalDesktopClientSession` is reduced to a thin client adapter over that host
+- the local hosted-game lifecycle/view/test-access seams now also live under `host.session.local` instead of the presentation package tree
 - the hosted-game seam is now split between host-owned frame advancement and a narrower client-facing render view, so bot/session ticking no longer shares the same interface surface as drawing
 - embedded local mode now also runs bot stepping from an explicit host-owned game loop coordinator instead of from the presentation frame coordinator itself
 - desktop-local popup, trade, and projected-view dependencies now cross into `host.bot` through a single `HostBotInteractionAdapter` seam

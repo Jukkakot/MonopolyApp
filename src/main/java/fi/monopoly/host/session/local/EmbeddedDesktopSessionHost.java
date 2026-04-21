@@ -6,10 +6,6 @@ import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameTestAccess;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGame;
-import fi.monopoly.presentation.game.desktop.session.DesktopHostedGameView;
-import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 
 import java.util.LinkedHashSet;
 import java.util.List;
