@@ -1,0 +1,84 @@
+package fi.monopoly.presentation.game.desktop.assembly;
+
+import fi.monopoly.components.Player;
+import fi.monopoly.components.computer.ComputerDecision;
+import fi.monopoly.components.computer.GameView;
+import fi.monopoly.components.computer.PlayerView;
+import fi.monopoly.host.bot.HostBotInteractionAdapter;
+import fi.monopoly.presentation.session.trade.TradeController;
+
+import java.util.function.Supplier;
+
+/**
+ * Desktop-local implementation of the host bot interaction bridge.
+ *
+ * <p>This adapts popup handling, trade automation, and projected view access from the embedded
+ * desktop runtime into the narrow host-bot port used by the embedded local host loop.</p>
+ */
+public final class DesktopHostBotInteractionAdapter implements HostBotInteractionAdapter {
+    private final PopupHooks popupHooks;
+    private final TradeController tradeController;
+    private final java.util.function.Function<Player, GameView> currentGameViewFactory;
+    private final java.util.function.Function<Player, PlayerView> currentPlayerViewFactory;
+
+    public DesktopHostBotInteractionAdapter(
+            PopupHooks popupHooks,
+            TradeController tradeController,
+            java.util.function.Function<Player, GameView> currentGameViewFactory,
+            java.util.function.Function<Player, PlayerView> currentPlayerViewFactory
+    ) {
+        this.popupHooks = popupHooks;
+        this.tradeController = tradeController;
+        this.currentGameViewFactory = currentGameViewFactory;
+        this.currentPlayerViewFactory = currentPlayerViewFactory;
+    }
+
+    @Override
+    public boolean popupVisible() {
+        return popupHooks.popupVisible();
+    }
+
+    @Override
+    public boolean resolveVisiblePopupFor(Player player) {
+        return popupHooks.resolveVisiblePopupFor(player);
+    }
+
+    @Override
+    public boolean acceptActivePopupFor(Player player) {
+        return popupHooks.acceptActivePopupFor(player);
+    }
+
+    @Override
+    public boolean declineActivePopupFor(Player player) {
+        return popupHooks.declineActivePopupFor(player);
+    }
+
+    @Override
+    public boolean handleComputerTradeTurn(Player player) {
+        return tradeController.handleComputerTradeTurn(player);
+    }
+
+    @Override
+    public ComputerDecision tryInitiateComputerTrade(Player player) {
+        return tradeController.tryInitiateComputerTrade(player);
+    }
+
+    @Override
+    public GameView currentGameView(Player player) {
+        return currentGameViewFactory.apply(player);
+    }
+
+    @Override
+    public PlayerView currentPlayerView(Player player) {
+        return currentPlayerViewFactory.apply(player);
+    }
+    public interface PopupHooks {
+        boolean popupVisible();
+
+        boolean resolveVisiblePopupFor(Player player);
+
+        boolean acceptActivePopupFor(Player player);
+
+        boolean declineActivePopupFor(Player player);
+    }
+}

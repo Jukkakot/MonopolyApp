@@ -50,6 +50,7 @@ The project does not yet have full backend-ready architecture because:
   - session-oriented orchestration and persistence-facing services
 - `host.bot`
   - host-owned bot scheduling, bot turn stepping, and embedded local bot command adapters
+  - desktop-local popup/trade/projected-view access now enters host bot flow through one explicit interaction adapter seam instead of direct runtime/controller references
 - `presentation.game.turn`
   - turn flow orchestration
 - `presentation.game.session`
@@ -135,6 +136,7 @@ The recent `client.desktop` and embedded-host moves improved this:
 - future extraction work can now target `client.desktop` directly instead of peeling adapter classes out of `fi.monopoly`
 - host tick advancement and client render access are also now explicitly different seams, which is closer to the eventual client/host split even in embedded mode
 - embedded local bot stepping now runs through a host-owned loop coordinator instead of being scheduled from the presentation frame coordinator
+- host-owned bot turn contexts now request projected game/player views for the actual acting player, which removes a local desktop assumption that leaked current-turn projections into debt resolution
 
 ### 4. Tests still lean on local host internals
 
@@ -205,6 +207,11 @@ That interface should work for both:
 
 Bot coordination is cleaner now, and embedded local mode already routes bot stepping through a host-owned loop.
 But the concrete bot collaborators still mostly live under presentation-era packages instead of a clearer host-side package root.
+
+That said, one important narrowing step is now in place:
+
+- `host.bot` no longer reaches directly into desktop runtime popup services, trade controllers, or turn-player-only projected view suppliers
+- those dependencies now cross the boundary through a dedicated desktop interaction adapter
 
 Backend-ready target:
 

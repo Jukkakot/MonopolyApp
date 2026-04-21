@@ -129,13 +129,13 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
     }
 
     @Override
-    public GameView createCurrentGameView() {
-        return projectionAccess.currentGameViewSupplier().get();
+    public GameView createGameViewFor(Player player) {
+        return projectionAccess.currentGameViewFactory().apply(player);
     }
 
     @Override
-    public PlayerView createCurrentPlayerView() {
-        return projectionAccess.currentPlayerViewSupplier().get();
+    public PlayerView createPlayerViewFor(Player player) {
+        return projectionAccess.currentPlayerViewFactory().apply(player);
     }
 
     @Override
@@ -267,8 +267,8 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
     }
 
     public record ProjectionAccess(
-            Supplier<GameView> currentGameViewSupplier,
-            Supplier<PlayerView> currentPlayerViewSupplier
+            java.util.function.Function<Player, GameView> currentGameViewFactory,
+            java.util.function.Function<Player, PlayerView> currentPlayerViewFactory
     ) {
     }
 

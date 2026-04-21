@@ -8,11 +8,14 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
+import fi.monopoly.components.computer.GameView;
+import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnDriver;
 import fi.monopoly.host.bot.GameBotTurnHooksAdapter;
+import fi.monopoly.host.bot.HostBotInteractionAdapter;
 import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.game.turn.GameTurnFlowHooksAdapter;
@@ -126,15 +129,38 @@ public final class GamePresentationFactory {
                 dependencies.pendingDecisionPopupAdapter(),
                 dependencies.tradeViewAdapter()
         );
+        HostBotInteractionAdapter interactionAdapter = new DesktopHostBotInteractionAdapter(
+                new DesktopHostBotInteractionAdapter.PopupHooks() {
+                    @Override
+                    public boolean popupVisible() {
+                        return runtime.popupService().isAnyVisible();
+                    }
+
+                    @Override
+                    public boolean resolveVisiblePopupFor(Player player) {
+                        return runtime.popupService().resolveForComputer(player.getComputerProfile());
+                    }
+
+                    @Override
+                    public boolean acceptActivePopupFor(Player player) {
+                        return runtime.popupService().triggerPrimaryComputerAction();
+                    }
+
+                    @Override
+                    public boolean declineActivePopupFor(Player player) {
+                        return runtime.popupService().triggerSecondaryComputerAction();
+                    }
+                },
+                dependencies.tradeController(),
+                hooks::createGameViewFor,
+                hooks::createPlayerViewFor
+        );
         GameBotTurnDriver.Hooks gameBotTurnHooks = new GameBotTurnHooksAdapter(
-                runtime,
                 dependencies.sessionApplicationService(),
                 gameSessionQueries,
-                dependencies.tradeController(),
+                interactionAdapter,
                 dependencies.debugPerformanceStats(),
                 hooks::currentTurnPlayer,
-                hooks::createCurrentGameView,
-                hooks::createCurrentPlayerView,
                 hooks::updateLogTurnContext,
                 hooks::syncTransientPresentationState,
                 hooks::gameOver,
@@ -210,9 +236,9 @@ public final class GamePresentationFactory {
 
         Player currentTurnPlayer();
 
-        fi.monopoly.components.computer.GameView createCurrentGameView();
+        fi.monopoly.components.computer.GameView createGameViewFor(Player player);
 
-        fi.monopoly.components.computer.PlayerView createCurrentPlayerView();
+        fi.monopoly.components.computer.PlayerView createPlayerViewFor(Player player);
 
         void updateLogTurnContext();
 

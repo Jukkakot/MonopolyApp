@@ -93,8 +93,8 @@ public final class GameDesktopHostFactory {
                         () -> config.botTurnScheduler()
                 ),
                 new GameDesktopShellDependencies.ProjectionAccess(
-                        hooks.currentGameViewSupplier(),
-                        hooks.currentPlayerViewSupplier()
+                        hooks.currentGameViewFactory(),
+                        hooks.currentPlayerViewFactory()
                 ),
                 new GameDesktopShellDependencies.ActionAccess(
                         hooks.refreshLabelsAction(),
@@ -231,8 +231,8 @@ public final class GameDesktopHostFactory {
                 Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier,
                 Supplier<GameSessionQueries> gameSessionQueriesSupplier,
                 Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
-                Supplier<GameView> currentGameViewSupplier,
-                Supplier<PlayerView> currentPlayerViewSupplier,
+                Function<Player, GameView> currentGameViewFactory,
+                Function<Player, PlayerView> currentPlayerViewFactory,
                 Runnable refreshLabelsAction,
                 Runnable rollDiceAction,
                 BiConsumer<Board, Players> setupDefaultGameStateAction,
@@ -269,8 +269,8 @@ public final class GameDesktopHostFactory {
                     gamePrimaryTurnControlsSupplier,
                     gameSessionQueriesSupplier,
                     sessionApplicationServiceSupplier,
-                    currentGameViewSupplier,
-                    currentPlayerViewSupplier,
+                    currentGameViewFactory,
+                    currentPlayerViewFactory,
                     refreshLabelsAction,
                     rollDiceAction,
                     setupDefaultGameStateAction,
@@ -321,9 +321,9 @@ public final class GameDesktopHostFactory {
 
         Supplier<SessionApplicationService> sessionApplicationServiceSupplier();
 
-        Supplier<GameView> currentGameViewSupplier();
+        Function<Player, GameView> currentGameViewFactory();
 
-        Supplier<PlayerView> currentPlayerViewSupplier();
+        Function<Player, PlayerView> currentPlayerViewFactory();
 
         Runnable refreshLabelsAction();
 
@@ -382,8 +382,8 @@ public final class GameDesktopHostFactory {
             Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier,
             Supplier<GameSessionQueries> gameSessionQueriesSupplier,
             Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
-            Supplier<GameView> currentGameViewSupplier,
-            Supplier<PlayerView> currentPlayerViewSupplier,
+            Function<Player, GameView> currentGameViewFactory,
+            Function<Player, PlayerView> currentPlayerViewFactory,
             Runnable refreshLabelsAction,
             Runnable rollDiceAction,
             BiConsumer<Board, Players> setupDefaultGameStateAction,

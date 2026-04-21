@@ -258,13 +258,13 @@ public final class GameDesktopShellCoordinator {
             }
 
             @Override
-            public fi.monopoly.components.computer.GameView createCurrentGameView() {
-                return dependencies.createCurrentGameView();
+            public fi.monopoly.components.computer.GameView createGameViewFor(Player player) {
+                return dependencies.createGameViewFor(player);
             }
 
             @Override
-            public fi.monopoly.components.computer.PlayerView createCurrentPlayerView() {
-                return dependencies.createCurrentPlayerView();
+            public fi.monopoly.components.computer.PlayerView createPlayerViewFor(Player player) {
+                return dependencies.createPlayerViewFor(player);
             }
 
             @Override
@@ -792,9 +792,9 @@ public final class GameDesktopShellCoordinator {
 
         BotTurnScheduler botTurnScheduler();
 
-        fi.monopoly.components.computer.GameView createCurrentGameView();
+        fi.monopoly.components.computer.GameView createGameViewFor(Player player);
 
-        fi.monopoly.components.computer.PlayerView createCurrentPlayerView();
+        fi.monopoly.components.computer.PlayerView createPlayerViewFor(Player player);
 
         void refreshLabels();
 

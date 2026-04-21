@@ -1,6 +1,5 @@
 package fi.monopoly.host.bot;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.command.BuyBuildingRoundCommand;
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclareBankruptcyCommand;
@@ -25,17 +24,13 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.types.SpotType;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Slf4j
 public final class SessionBackedComputerTurnContext implements ComputerTurnContext {
     private final Player player;
     private final SessionApplicationService sessionApplicationService;
-    private final MonopolyRuntime runtime;
-    private final Supplier<GameView> gameViewSupplier;
-    private final Supplier<PlayerView> currentPlayerViewSupplier;
-    private final Supplier<ComputerDecision> tradeInitiator;
+    private final HostBotInteractionAdapter interactionAdapter;
     private final Runnable syncPresentationState;
     private final Supplier<Boolean> rollDiceAvailableSupplier;
     private final Supplier<Boolean> endTurnAvailableSupplier;
@@ -44,20 +39,14 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
     public SessionBackedComputerTurnContext(
             Player player,
             SessionApplicationService sessionApplicationService,
-            MonopolyRuntime runtime,
-            Supplier<GameView> gameViewSupplier,
-            Supplier<PlayerView> currentPlayerViewSupplier,
-            Supplier<ComputerDecision> tradeInitiator,
+            HostBotInteractionAdapter interactionAdapter,
             Runnable syncPresentationState,
             Supplier<Boolean> rollDiceAvailableSupplier,
             Supplier<Boolean> endTurnAvailableSupplier
     ) {
         this.player = player;
         this.sessionApplicationService = sessionApplicationService;
-        this.runtime = runtime;
-        this.gameViewSupplier = gameViewSupplier;
-        this.currentPlayerViewSupplier = currentPlayerViewSupplier;
-        this.tradeInitiator = tradeInitiator;
+        this.interactionAdapter = interactionAdapter;
         this.syncPresentationState = syncPresentationState;
         this.rollDiceAvailableSupplier = rollDiceAvailableSupplier;
         this.endTurnAvailableSupplier = endTurnAvailableSupplier;
@@ -69,12 +58,12 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public GameView gameView() {
-        return gameViewSupplier.get();
+        return interactionAdapter.currentGameView(player);
     }
 
     @Override
     public PlayerView currentPlayerView() {
-        return currentPlayerViewSupplier.get();
+        return interactionAdapter.currentPlayerView(player);
     }
 
     @Override
@@ -111,7 +100,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public boolean resolveActivePopup() {
-        boolean resolved = runtime.popupService().resolveForComputer(player.getComputerProfile());
+        boolean resolved = interactionAdapter.resolveVisiblePopupFor(player);
         if (resolved) {
             delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
         }
@@ -120,7 +109,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public boolean acceptActivePopup() {
-        boolean accepted = runtime.popupService().triggerPrimaryComputerAction();
+        boolean accepted = interactionAdapter.acceptActivePopupFor(player);
         if (accepted) {
             delayKind = BotTurnScheduler.DelayKind.ACCEPT_POPUP;
         }
@@ -129,7 +118,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public boolean declineActivePopup() {
-        boolean declined = runtime.popupService().triggerSecondaryComputerAction();
+        boolean declined = interactionAdapter.declineActivePopupFor(player);
         if (declined) {
             delayKind = BotTurnScheduler.DelayKind.DECLINE_POPUP;
         }
@@ -138,7 +127,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public ComputerDecision initiateTrade() {
-        ComputerDecision decision = tradeInitiator.get();
+        ComputerDecision decision = interactionAdapter.tryInitiateComputerTrade(player);
         if (decision != null) {
             delayKind = BotTurnScheduler.DelayKind.TRADE;
         }

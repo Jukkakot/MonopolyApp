@@ -1,14 +1,10 @@
 package fi.monopoly.host.bot;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerTurnContext;
-import fi.monopoly.components.computer.GameView;
-import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.presentation.game.session.GameSessionQueries;
-import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.utils.DebugPerformanceStats;
 
@@ -18,14 +14,11 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
-    private final MonopolyRuntime runtime;
     private final SessionApplicationService sessionApplicationService;
     private final GameSessionQueries gameSessionQueries;
-    private final TradeController tradeController;
+    private final HostBotInteractionAdapter interactionAdapter;
     private final DebugPerformanceStats debugPerformanceStats;
     private final Supplier<Player> turnPlayerSupplier;
-    private final Supplier<GameView> currentGameViewSupplier;
-    private final Supplier<PlayerView> currentPlayerViewSupplier;
     private final Runnable updateLogTurnContextAction;
     private final Runnable syncPresentationStateAction;
     private final BooleanSupplier gameOverSupplier;
@@ -39,14 +32,11 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final BooleanSupplier recoverPrimaryTurnControlsSupplier;
 
     public GameBotTurnHooksAdapter(
-            MonopolyRuntime runtime,
             SessionApplicationService sessionApplicationService,
             GameSessionQueries gameSessionQueries,
-            TradeController tradeController,
+            HostBotInteractionAdapter interactionAdapter,
             DebugPerformanceStats debugPerformanceStats,
             Supplier<Player> turnPlayerSupplier,
-            Supplier<GameView> currentGameViewSupplier,
-            Supplier<PlayerView> currentPlayerViewSupplier,
             Runnable updateLogTurnContextAction,
             Runnable syncPresentationStateAction,
             BooleanSupplier gameOverSupplier,
@@ -59,14 +49,11 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
             BooleanSupplier projectedEndTurnAvailableSupplier,
             BooleanSupplier recoverPrimaryTurnControlsSupplier
     ) {
-        this.runtime = runtime;
         this.sessionApplicationService = sessionApplicationService;
         this.gameSessionQueries = gameSessionQueries;
-        this.tradeController = tradeController;
+        this.interactionAdapter = interactionAdapter;
         this.debugPerformanceStats = debugPerformanceStats;
         this.turnPlayerSupplier = turnPlayerSupplier;
-        this.currentGameViewSupplier = currentGameViewSupplier;
-        this.currentPlayerViewSupplier = currentPlayerViewSupplier;
         this.updateLogTurnContextAction = updateLogTurnContextAction;
         this.syncPresentationStateAction = syncPresentationStateAction;
         this.gameOverSupplier = gameOverSupplier;
@@ -132,12 +119,12 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     @Override
     public boolean handleComputerTradeTurn(Player tradeActor) {
-        return tradeController.handleComputerTradeTurn(tradeActor);
+        return interactionAdapter.handleComputerTradeTurn(tradeActor);
     }
 
     @Override
     public boolean popupVisible() {
-        return runtime.popupService().isAnyVisible();
+        return interactionAdapter.popupVisible();
     }
 
     @Override
@@ -147,7 +134,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     @Override
     public boolean resolveVisiblePopupFor(Player turnPlayer) {
-        return runtime.popupService().resolveForComputer(turnPlayer.getComputerProfile());
+        return interactionAdapter.resolveVisiblePopupFor(turnPlayer);
     }
 
     @Override
@@ -160,10 +147,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
         return new SessionBackedComputerTurnContext(
                 turnPlayer,
                 sessionApplicationService,
-                runtime,
-                currentGameViewSupplier,
-                currentPlayerViewSupplier,
-                () -> tradeController.tryInitiateComputerTrade(turnPlayer),
+                interactionAdapter,
                 syncPresentationStateAction,
                 projectedRollDiceAvailableSupplier::getAsBoolean,
                 projectedEndTurnAvailableSupplier::getAsBoolean
