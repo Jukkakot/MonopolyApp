@@ -147,6 +147,7 @@ The recent `client.desktop` and embedded-host moves improved this:
 - embedded local hosting now also talks to a dedicated `DesktopHostedGame` adapter around `Game` instead of depending on `Game` itself as the hosted-session interface
 - the embedded host now exposes the client-facing session seam directly, so the extra `LocalDesktopClientSession` forwarding adapter is no longer in the path
 - compatibility-heavy test inspection on `Game` is now also being centralized behind one explicit test facade instead of scattered private reflection hooks
+- desktop app-shell persistence/runtime helpers now also receive the active runtime explicitly from `DesktopRuntimeBridge` instead of reading it through the global runtime singleton
 
 ### 4. Tests still lean on local host internals
 

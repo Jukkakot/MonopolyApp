@@ -23,6 +23,7 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
     private final Runnable saveLocalSessionAction;
     private final Runnable loadLocalSessionAction;
     private final DesktopHostedGameFactory desktopHostedGameFactory;
+    private MonopolyRuntime runtime;
 
     DesktopRuntimeBridge(
             MonopolyApp app,
@@ -34,18 +35,19 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
         this.saveLocalSessionAction = saveLocalSessionAction;
         this.loadLocalSessionAction = loadLocalSessionAction;
         this.desktopHostedGameFactory = desktopHostedGameFactory;
+        this.runtime = MonopolyRuntime.peek();
     }
 
     @Override
     public void shutdownSessionRuntime() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
-        if (runtime == null) {
+        MonopolyRuntime activeRuntime = currentRuntimeOrNull();
+        if (activeRuntime == null) {
             return;
         }
-        runtime.popupService().hideAll();
-        runtime.setGameSession(null);
-        runtime.eventBus().flushPendingChanges();
-        runtime.popupService().hideAll();
+        activeRuntime.popupService().hideAll();
+        activeRuntime.setGameSession(null);
+        activeRuntime.eventBus().flushPendingChanges();
+        activeRuntime.popupService().hideAll();
     }
 
     @Override
@@ -58,7 +60,7 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
     @Override
     public void initializeControlLayer() {
         DesktopRuntimeResources.setControlLayer(new ControlP5(app));
-        MonopolyRuntime.initialize(
+        runtime = MonopolyRuntime.initialize(
                 app,
                 DesktopRuntimeResources.controlLayer(),
                 DesktopRuntimeResources.font10(),
@@ -85,16 +87,32 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
                 saveLocalSessionAction,
                 loadLocalSessionAction
         );
-        return desktopHostedGameFactory.create(MonopolyRuntime.get(), restoredState, localSessionActions);
+        return desktopHostedGameFactory.create(runtime(), restoredState, localSessionActions);
     }
 
     @Override
     public void flushPendingChanges() {
-        MonopolyRuntime.get().eventBus().flushPendingChanges();
+        runtime().eventBus().flushPendingChanges();
     }
 
     @Override
     public void disposeGame(DesktopHostedGame game) {
         game.dispose();
+    }
+
+    MonopolyRuntime runtime() {
+        MonopolyRuntime activeRuntime = currentRuntimeOrNull();
+        if (activeRuntime == null) {
+            throw new IllegalStateException("Desktop runtime has not been initialized yet");
+        }
+        return activeRuntime;
+    }
+
+    private MonopolyRuntime currentRuntimeOrNull() {
+        MonopolyRuntime current = MonopolyRuntime.peek();
+        if (current != null && current != runtime) {
+            runtime = current;
+        }
+        return runtime;
     }
 }

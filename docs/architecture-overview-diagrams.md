@@ -190,6 +190,7 @@ What is important here:
 - the current Processing app instance is now accessed through an explicit `client.desktop` context seam instead of `MonopolyApp.self`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type
 - frame/layout/session orchestration code now reads time and viewport state through `MonopolyRuntime` helpers instead of reaching directly into Processing app fields
+- desktop app-shell runtime/persistence adapters now receive the active runtime instance explicitly from `DesktopRuntimeBridge` instead of calling the global runtime singleton directly
 - projected desktop session views now read popup state through explicit collaborators instead of depending on the full runtime shell
 - the remaining `Game` host constructor is now driven through an explicit desktop bootstrap factory instead of assembling controls, shell, and presentation inline
 - embedded desktop session hosting now targets a small hosted-game interface instead of depending on the full `Game` host type for normal session/view lifecycle operations

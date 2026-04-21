@@ -28,7 +28,7 @@ public final class DesktopAppShell {
         );
         DesktopEmbeddedClientShell desktopClientShell = new DesktopEmbeddedClientShell(
                 runtimeBridge,
-                LocalSessionPersistenceUiHooks::new
+                clientSession -> new LocalSessionPersistenceUiHooks(clientSession, runtimeBridge::runtime)
         );
         this.sessionRuntime = desktopClientShell.runtime();
         this.testAccess = desktopClientShell.testAccess();
