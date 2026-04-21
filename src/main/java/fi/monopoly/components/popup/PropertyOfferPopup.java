@@ -45,13 +45,13 @@ public class PropertyOfferPopup extends ChoicePopup {
 
     @Override
     protected int getPopupWidth() {
-        int availableWidth = Math.round(runtime.app().width) - UiTokens.popupWindowMargin() * 2;
+        int availableWidth = runtime.windowWidth() - UiTokens.popupWindowMargin() * 2;
         return Math.max(420, Math.min(640, availableWidth));
     }
 
     @Override
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - UiTokens.popupWindowMargin() * 2;
+        int availableHeight = runtime.windowHeight() - UiTokens.popupWindowMargin() * 2;
         return Math.max(360, Math.min(540, availableHeight));
     }
 

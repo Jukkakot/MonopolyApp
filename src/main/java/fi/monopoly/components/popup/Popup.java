@@ -171,18 +171,18 @@ public abstract class Popup extends Canvas implements MonopolyEventListener {
     }
 
     protected Coordinates getPopupCenter() {
-        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
-        return Coordinates.of(layoutMetrics.boardWidth() / 2f, runtime.app().height / 2f);
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight());
+        return Coordinates.of(layoutMetrics.boardWidth() / 2f, runtime.windowHeight() / 2f);
     }
 
     protected int getPopupWidth() {
-        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight());
         int availableWidth = Math.round(layoutMetrics.boardWidth()) - UiTokens.popupWindowMargin() * 2;
         return Math.max(UiTokens.popupMinWidth(), Math.min(UiTokens.popupDefaultWidth(), availableWidth));
     }
 
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - UiTokens.popupWindowMargin() * 2;
+        int availableHeight = runtime.windowHeight() - UiTokens.popupWindowMargin() * 2;
         return Math.max(UiTokens.popupMinHeight(), Math.min(UiTokens.popupDefaultHeight(), availableHeight));
     }
 

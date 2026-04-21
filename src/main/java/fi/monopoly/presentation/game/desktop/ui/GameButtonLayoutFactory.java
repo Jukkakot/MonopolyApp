@@ -29,31 +29,31 @@ public final class GameButtonLayoutFactory {
         buttons.debugGodModeButton().setAutoWidth(180, 28, 300);
         buttons.debugGodModeButton().setAllowedDuringComputerTurn(true);
 
-        buttons.pauseButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 96);
+        buttons.pauseButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.windowHeight() - 96);
         buttons.pauseButton().setSize(140, 36);
         buttons.pauseButton().setAutoWidth(120, 28, 180);
         buttons.pauseButton().setAllowedDuringComputerTurn(true);
 
-        buttons.tradeButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 96);
+        buttons.tradeButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.windowHeight() - 96);
         buttons.tradeButton().setSize(140, 36);
         buttons.tradeButton().setAutoWidth(120, 28, 220);
 
-        buttons.saveButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
+        buttons.saveButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.windowHeight() - 48);
         buttons.saveButton().setSize(120, 36);
         buttons.saveButton().setAutoWidth(100, 28, 180);
         buttons.saveButton().setAllowedDuringComputerTurn(true);
 
-        buttons.loadButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
+        buttons.loadButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.windowHeight() - 48);
         buttons.loadButton().setSize(120, 36);
         buttons.loadButton().setAutoWidth(100, 28, 180);
         buttons.loadButton().setAllowedDuringComputerTurn(true);
 
-        buttons.botSpeedButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
+        buttons.botSpeedButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.windowHeight() - 48);
         buttons.botSpeedButton().setSize(140, 36);
         buttons.botSpeedButton().setAutoWidth(120, 28, 220);
         buttons.botSpeedButton().setAllowedDuringComputerTurn(true);
 
-        buttons.languageButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.app().height - 48);
+        buttons.languageButton().setPosition(defaultLayout.sidebarX() + UiTokens.spacingMd(), runtime.windowHeight() - 48);
         buttons.languageButton().setSize(220, 36);
         buttons.languageButton().setAutoWidth(180, 28, 280);
         buttons.languageButton().setAllowedDuringComputerTurn(true);

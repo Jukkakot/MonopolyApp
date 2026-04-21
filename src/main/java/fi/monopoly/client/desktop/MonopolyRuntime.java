@@ -45,6 +45,26 @@ public final class MonopolyRuntime {
         return app;
     }
 
+    public int windowWidth() {
+        return app.width;
+    }
+
+    public int windowHeight() {
+        return app.height;
+    }
+
+    public int mouseX() {
+        return app.mouseX;
+    }
+
+    public int mouseY() {
+        return app.mouseY;
+    }
+
+    public int millis() {
+        return app.millis();
+    }
+
     public static MonopolyRuntime peek() {
         return current;
     }

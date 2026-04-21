@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.client.desktop.DesktopClientSettings;
-import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
@@ -118,7 +117,7 @@ public final class GameFrameCoordinator {
     public LayoutMetrics getLayoutMetrics() {
         return frameLayoutMetrics != null
                 ? frameLayoutMetrics
-                : LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+                : LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight());
     }
 
     public void updateSidebarControlPositions() {
@@ -146,7 +145,7 @@ public final class GameFrameCoordinator {
     }
 
     public GameSidebarPresenter.SidebarState createSidebarState(FrameHooks hooks) {
-        gameSessionStateCoordinator.clearExpiredPersistenceNoticeIfNeeded(hooks.sessionState(), runtime.app().millis());
+        gameSessionStateCoordinator.clearExpiredPersistenceNoticeIfNeeded(hooks.sessionState(), runtime.millis());
         return gameSidebarStateFactory.createSidebarState(
                 hooks.turnPlayer(),
                 hooks.players().getPlayers(),
@@ -227,7 +226,7 @@ public final class GameFrameCoordinator {
                 animationWasRunning,
                 hooks.animations().isRunning(),
                 turnPlayer != null && turnPlayer.isComputerControlled(),
-                runtime.app().millis(),
+                runtime.millis(),
                 hooks.sessionState().botSpeedMode(),
                 hooks.players().getPlayers().stream().allMatch(Player::isComputerControlled)
         );

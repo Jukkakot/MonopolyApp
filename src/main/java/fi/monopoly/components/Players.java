@@ -508,7 +508,7 @@ public class Players {
         if (runtime == null) {
             return LayoutMetrics.defaultWindow().sidebarWidth();
         }
-        return LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height).sidebarWidth();
+        return LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight()).sidebarWidth();
     }
 
     private float getSidebarContentWidth() {

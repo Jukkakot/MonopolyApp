@@ -239,7 +239,7 @@ public final class GameDesktopShellCoordinator {
 
             @Override
             public int nowMillis() {
-                return runtime.app().millis();
+                return runtime.millis();
             }
 
             @Override
@@ -309,7 +309,7 @@ public final class GameDesktopShellCoordinator {
 
             @Override
             public void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind) {
-                dependencies.scheduleNextComputerAction(delayKind, runtime.app().millis());
+                dependencies.scheduleNextComputerAction(delayKind, runtime.millis());
             }
 
             @Override
@@ -585,7 +585,7 @@ public final class GameDesktopShellCoordinator {
     }
 
     public void showPersistenceNotice(GameSessionState sessionState, String notice) {
-        sessionStateCoordinator.showPersistenceNotice(sessionState, notice, runtime.app().millis());
+        sessionStateCoordinator.showPersistenceNotice(sessionState, notice, runtime.millis());
     }
 
     public void onDebtStateChanged(Dependencies dependencies) {
@@ -607,7 +607,7 @@ public final class GameDesktopShellCoordinator {
         BotTurnScheduler.SpeedMode nextMode = sessionStateCoordinator.cycleBotSpeedMode(
                 dependencies.sessionState(),
                 dependencies.botTurnScheduler()::markReadyNow,
-                runtime.app().millis(),
+                runtime.millis(),
                 dependencies::refreshLabels
         );
         log.info("Bot speed mode={}", nextMode);

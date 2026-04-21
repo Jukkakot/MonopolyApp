@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.client.desktop.DesktopClientSettings;
-import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.dices.Dices;
@@ -56,11 +55,11 @@ public final class GameControlLayout {
     }
 
     public LayoutMetrics updateFrameLayoutMetrics() {
-        LayoutMetrics frameLayoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        LayoutMetrics frameLayoutMetrics = LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight());
         reservedTop = frameLayoutMetrics.sidebarReservedTop(DesktopClientSettings.debugMode());
-        float availableHistoryHeight = runtime.app().height - reservedTop - frameLayoutMetrics.sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin();
+        float availableHistoryHeight = runtime.windowHeight() - reservedTop - frameLayoutMetrics.sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin();
         historyHeight = Math.max(UiTokens.sidebarHistoryMinHeight(), Math.min(UiTokens.sidebarHistoryPreferredHeight(), availableHistoryHeight));
-        historyPanelY = runtime.app().height - historyHeight - frameLayoutMetrics.sidebarHistoryBottomMargin();
+        historyPanelY = runtime.windowHeight() - historyHeight - frameLayoutMetrics.sidebarHistoryBottomMargin();
         return frameLayoutMetrics;
     }
 
@@ -102,7 +101,7 @@ public final class GameControlLayout {
         float controlRow2Y = controlRow1Y + pauseButton.getHeight() + UiTokens.spacingXs();
         float controlRow3Y = controlRow2Y + languageButton.getHeight() + UiTokens.spacingXs();
         float lowestControlBottom = (showBotSpeed ? controlRow3Y : controlRow2Y) + languageButton.getHeight();
-        if (lowestControlBottom > runtime.app().height - UiTokens.spacingMd()) {
+        if (lowestControlBottom > runtime.windowHeight() - UiTokens.spacingMd()) {
             layoutOverlayControls(layoutMetrics);
             dices.updateLayout(layoutMetrics);
             return;
@@ -134,13 +133,13 @@ public final class GameControlLayout {
                 UiTokens.sidebarHistoryMinHeight(),
                 Math.min(
                         UiTokens.sidebarHistoryPreferredHeight(),
-                        runtime.app().height - reservedTop(layoutMetrics) - layoutMetrics.sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin()
+                        runtime.windowHeight() - reservedTop(layoutMetrics) - layoutMetrics.sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin()
                 )
         );
     }
 
     public float historyPanelY(LayoutMetrics layoutMetrics) {
-        return historyPanelY > 0 ? historyPanelY : runtime.app().height - historyHeight(layoutMetrics) - layoutMetrics.sidebarHistoryBottomMargin();
+        return historyPanelY > 0 ? historyPanelY : runtime.windowHeight() - historyHeight(layoutMetrics) - layoutMetrics.sidebarHistoryBottomMargin();
     }
 
     public float reservedTop(LayoutMetrics layoutMetrics) {
@@ -154,11 +153,11 @@ public final class GameControlLayout {
         boolean showBotSpeed = DesktopClientSettings.debugMode();
         float overlayBottomRowY = Math.min(
                 overlayTopRowY + languageButton.getHeight() + UiTokens.spacingXs(),
-                runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
+                runtime.windowHeight() - languageButton.getHeight() - UiTokens.spacingMd()
         );
         float overlayThirdRowY = Math.min(
                 overlayBottomRowY + languageButton.getHeight() + UiTokens.spacingXs(),
-                runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
+                runtime.windowHeight() - languageButton.getHeight() - UiTokens.spacingMd()
         );
 
         endRoundButton.setPosition(leftX, UiTokens.overlayPrimaryButtonY());

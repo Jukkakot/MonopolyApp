@@ -94,19 +94,19 @@ public class TradePopup extends Popup {
 
     @Override
     protected int getPopupWidth() {
-        int availableWidth = Math.round(runtime.app().width) - UiTokens.popupWindowMargin() * 2;
+        int availableWidth = runtime.windowWidth() - UiTokens.popupWindowMargin() * 2;
         return Math.max(UiTokens.tradePopupMinWidth(), Math.min(UiTokens.tradePopupPreferredWidth(), availableWidth));
     }
 
     @Override
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - UiTokens.popupWindowMargin() * 2;
+        int availableHeight = runtime.windowHeight() - UiTokens.popupWindowMargin() * 2;
         return Math.max(UiTokens.tradePopupMinHeight(), Math.min(UiTokens.tradePopupPreferredHeight(), availableHeight));
     }
 
     @Override
     protected fi.monopoly.utils.Coordinates getPopupCenter() {
-        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight());
         return fi.monopoly.utils.Coordinates.of(layoutMetrics.boardWidth() / 2f, getPopupTop() + getPopupHeight() / 2f);
     }
 
@@ -134,7 +134,7 @@ public class TradePopup extends Popup {
         clickableRegions.clear();
         drawBackground(p);
         drawTradePanels(p);
-        hoveredItemKey = resolveHoveredItemKey(runtime.app().mouseX, runtime.app().mouseY);
+        hoveredItemKey = resolveHoveredItemKey(runtime.mouseX(), runtime.mouseY());
     }
 
     private void drawBackground(PGraphics p) {

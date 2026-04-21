@@ -54,7 +54,7 @@ public class Dices implements MonopolyEventListener {
         SpotProps sp1 = new SpotProps((int) defaultInlineFirstCenterX, (int) defaultButtonCenterY, diceSideLength, diceSideLength);
         SpotProps sp2 = new SpotProps((int) defaultInlineSecondCenterX, sp1.y(), sp1.w(), sp1.h());
         dices = new Pair<>(new Dice(runtime, sp1), new Dice(runtime, sp2));
-        updateLayout(LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height));
+        updateLayout(LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight()));
 
         rollDiceButton.addListener(e -> rollDice());
     }
