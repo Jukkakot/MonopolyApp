@@ -1,7 +1,7 @@
 package fi.monopoly.components.turn;
 
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.board.Path;

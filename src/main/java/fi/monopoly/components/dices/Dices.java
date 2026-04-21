@@ -1,7 +1,7 @@
 package fi.monopoly.components.dices;
 
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.event.MonopolyEventListener;

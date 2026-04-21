@@ -1,6 +1,6 @@
 package fi.monopoly.components;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.animation.Animations;

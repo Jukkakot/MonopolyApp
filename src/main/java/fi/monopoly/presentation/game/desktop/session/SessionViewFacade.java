@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.session;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.computer.*;

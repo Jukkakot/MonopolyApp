@@ -1,6 +1,6 @@
 package fi.monopoly.client.desktop;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;

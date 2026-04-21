@@ -2,7 +2,7 @@ package fi.monopoly.components;
 
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.support.TestLogLevels;
 import org.junit.jupiter.api.*;

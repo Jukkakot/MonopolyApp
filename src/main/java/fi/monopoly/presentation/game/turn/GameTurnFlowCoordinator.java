@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.turn;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;

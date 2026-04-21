@@ -1,6 +1,6 @@
 package fi.monopoly.components;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.Properties;
 import fi.monopoly.components.properties.Property;

@@ -1,7 +1,7 @@
 package fi.monopoly.components.popup;
 
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;

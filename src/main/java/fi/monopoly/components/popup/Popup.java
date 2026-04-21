@@ -2,7 +2,7 @@ package fi.monopoly.components.popup;
 
 
 import controlP5.Canvas;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.GameSession;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;

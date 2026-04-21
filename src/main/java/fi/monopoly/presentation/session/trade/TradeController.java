@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.session.trade;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.SessionApplicationService;

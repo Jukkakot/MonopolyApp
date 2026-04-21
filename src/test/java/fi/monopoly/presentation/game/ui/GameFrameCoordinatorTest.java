@@ -2,7 +2,7 @@ package fi.monopoly.presentation.game.ui;
 
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;

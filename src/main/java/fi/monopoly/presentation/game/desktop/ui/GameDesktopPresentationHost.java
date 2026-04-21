@@ -1,7 +1,7 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;

@@ -1,6 +1,6 @@
 package fi.monopoly.images;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.GameSession;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.components.ButtonProps;

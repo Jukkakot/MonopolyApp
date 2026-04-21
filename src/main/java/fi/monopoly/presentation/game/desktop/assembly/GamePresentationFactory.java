@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.MonopolyButton;

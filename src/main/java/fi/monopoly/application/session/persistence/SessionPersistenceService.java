@@ -1,6 +1,6 @@
 package fi.monopoly.application.session.persistence;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.infrastructure.persistence.session.JsonFileSessionSnapshotStore;
 import fi.monopoly.infrastructure.persistence.session.LegacySessionRuntimeRestorer;

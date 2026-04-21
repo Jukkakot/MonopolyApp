@@ -2,7 +2,7 @@ package fi.monopoly.components.popup;
 
 import controlP5.ControlP5;
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.StreetProperty;

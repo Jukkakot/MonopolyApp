@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.runtime;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.properties.PropertyFactory;

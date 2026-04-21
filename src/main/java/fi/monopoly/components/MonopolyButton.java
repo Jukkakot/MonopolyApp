@@ -3,7 +3,7 @@ package fi.monopoly.components;
 import controlP5.Button;
 import controlP5.CColor;
 import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.utils.Coordinates;
 import fi.monopoly.utils.MonopolyUtils;

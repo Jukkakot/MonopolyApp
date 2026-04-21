@@ -1,6 +1,6 @@
 package fi.monopoly.components.properties;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.types.SpotType;
