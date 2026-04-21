@@ -2,9 +2,9 @@ package fi.monopoly;
 
 import controlP5.ControlP5;
 import fi.monopoly.components.Game;
-import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
+import fi.monopoly.presentation.game.session.GameSessionState;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -87,7 +87,7 @@ class MonopolyAppPersistenceTest {
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
-        app.setGameForTest(game);
+        app.desktopAppShell().setGameForTest(game);
         runtime.eventBus().flushPendingChanges();
 
         int originalCash = game.sessionStateForPersistence().players().get(0).cash();
@@ -102,7 +102,7 @@ class MonopolyAppPersistenceTest {
 
         dispatchCtrlKey(MonopolyRuntime.get(), 'l');
 
-        Game reloadedGame = app.currentGame();
+        Game reloadedGame = app.desktopAppShell().currentGameForTest();
         assertNotNull(reloadedGame);
         assertEquals(originalCash, reloadedGame.sessionStateForPersistence().players().get(0).cash());
         assertTrue(paused(reloadedGame));
@@ -134,7 +134,7 @@ class MonopolyAppPersistenceTest {
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
-        app.setGameForTest(game);
+        app.desktopAppShell().setGameForTest(game);
         runtime.eventBus().flushPendingChanges();
 
         assertTrue(runtime.gameSession().players().getTurn().isComputerControlled());
@@ -172,7 +172,7 @@ class MonopolyAppPersistenceTest {
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
-        app.setGameForTest(game);
+        app.desktopAppShell().setGameForTest(game);
         runtime.eventBus().flushPendingChanges();
 
         app.saveLocalSession();
@@ -185,7 +185,7 @@ class MonopolyAppPersistenceTest {
 
         app.loadLocalSession();
 
-        Game reloadedGame = app.currentGame();
+        Game reloadedGame = app.desktopAppShell().currentGameForTest();
         assertNotNull(reloadedGame);
         assertNotSame(game, reloadedGame);
         assertTrue(paused(reloadedGame));
