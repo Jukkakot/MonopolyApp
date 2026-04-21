@@ -104,15 +104,28 @@ class GameTurnControlsTest {
     }
 
     private static MonopolyButton getButton(Game game, String fieldName) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        return (MonopolyButton) field.get(game);
+        return switch (fieldName) {
+            case "endRoundButton" -> game.testFacade().endRoundButton();
+            case "languageButton" -> game.testFacade().languageButton();
+            case "pauseButton" -> game.testFacade().pauseButton();
+            case "retryDebtButton" -> game.testFacade().retryDebtButton();
+            case "declareBankruptcyButton" -> game.testFacade().declareBankruptcyButton();
+            case "tradeButton" -> game.testFacade().tradeButton();
+            case "saveButton" -> game.testFacade().saveButton();
+            case "loadButton" -> game.testFacade().loadButton();
+            case "botSpeedButton" -> game.testFacade().botSpeedButton();
+            case "debugGodModeButton" -> game.testFacade().debugGodModeButton();
+            default -> throw new IllegalArgumentException("Unknown game button field: " + fieldName);
+        };
     }
 
     private static float invokeFloatMethod(Game game, String methodName) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod(methodName);
-        method.setAccessible(true);
-        return (float) method.invoke(game);
+        return switch (methodName) {
+            case "getSidebarHistoryHeight" -> game.testFacade().sidebarHistoryHeight();
+            case "getSidebarHistoryPanelY" -> game.testFacade().sidebarHistoryPanelY();
+            case "getSidebarContentTop" -> game.testFacade().sidebarContentTop();
+            default -> throw new IllegalArgumentException("Unknown float method: " + methodName);
+        };
     }
 
     private static MonopolyButton getDebugGodModeButton(Game game) throws ReflectiveOperationException {
@@ -120,15 +133,11 @@ class GameTurnControlsTest {
     }
 
     private static GameSessionState getSessionState(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("sessionState");
-        field.setAccessible(true);
-        return (GameSessionState) field.get(game);
+        return game.testFacade().sessionState();
     }
 
     private static fi.monopoly.presentation.game.desktop.runtime.DebugController getDebugController(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("debugController");
-        field.setAccessible(true);
-        return (fi.monopoly.presentation.game.desktop.runtime.DebugController) field.get(game);
+        return game.testFacade().debugController();
     }
 
     private static void openGodModeMenu(Game game) throws ReflectiveOperationException {
@@ -149,39 +158,27 @@ class GameTurnControlsTest {
     }
 
     private static void invokePrimaryControlInvariant(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("enforcePrimaryTurnControlInvariant");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().enforcePrimaryTurnControlInvariant();
     }
 
     private static void updateSidebarControlPositions(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("updateSidebarControlPositions");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().updateSidebarControlPositions();
     }
 
     private static void invokeShowRollDiceControl(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("showRollDiceControl");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().showRollDiceControl();
     }
 
     private static void invokeShowEndTurnControl(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("showEndTurnControl");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().showEndTurnControl();
     }
 
     private static void updateDebugButtons(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("updateDebugButtons");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().updateDebugButtons();
     }
 
     private static void refreshButtonInteractivityState(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("refreshButtonInteractivityState");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().refreshButtonInteractivityState();
     }
 
     private static void dispatchKey(MonopolyRuntime runtime, char key) {
@@ -287,9 +284,7 @@ class GameTurnControlsTest {
         MonopolyRuntime runtime = initHeadlessRuntime(1200, 800);
         Game game = new Game(runtime);
 
-        var method = Game.class.getDeclaredMethod("getLayoutMetrics");
-        method.setAccessible(true);
-        LayoutMetrics metrics = (LayoutMetrics) method.invoke(game);
+        LayoutMetrics metrics = game.testFacade().layoutMetrics();
 
         assertEquals(1200, metrics.windowWidth(), 0.0001f);
         assertEquals(800, metrics.windowHeight(), 0.0001f);
@@ -302,17 +297,9 @@ class GameTurnControlsTest {
         MonopolyRuntime runtime = initHeadlessRuntime(1700, 560);
         Game game = new Game(runtime);
 
-        var historyHeightMethod = Game.class.getDeclaredMethod("getSidebarHistoryHeight");
-        historyHeightMethod.setAccessible(true);
-        float historyHeight = (float) historyHeightMethod.invoke(game);
-
-        var historyYMethod = Game.class.getDeclaredMethod("getSidebarHistoryPanelY");
-        historyYMethod.setAccessible(true);
-        float historyY = (float) historyYMethod.invoke(game);
-
-        var contentTopMethod = Game.class.getDeclaredMethod("getSidebarContentTop");
-        contentTopMethod.setAccessible(true);
-        float contentTop = (float) contentTopMethod.invoke(game);
+        float historyHeight = game.testFacade().sidebarHistoryHeight();
+        float historyY = game.testFacade().sidebarHistoryPanelY();
+        float contentTop = game.testFacade().sidebarContentTop();
 
         assertTrue(historyHeight <= 192f);
         assertTrue(historyHeight >= 112f);

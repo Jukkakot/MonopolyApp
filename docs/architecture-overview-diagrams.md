@@ -197,6 +197,7 @@ What is important here:
 - concrete local hosted-game creation now also lives behind an assembly-side factory seam, so the client-desktop runtime bridge no longer constructs `Game` directly
 - embedded local session lifecycle, persistence, and snapshot publication now live on the host side, and the embedded host now exposes the client-session seam directly instead of routing through `LocalDesktopClientSession`
 - the embedded host now also reaches the concrete game through a dedicated `DesktopHostedGame` adapter instead of using `Game` itself as the hosted-session contract
+- integration and smoke tests now increasingly inspect `Game` through one explicit test facade instead of reaching into scattered private host internals
 - the local hosted-game lifecycle/view/test-access seams now also live under `host.session.local` instead of the presentation package tree
 - the hosted-game seam is now split between host-owned frame advancement and a narrower client-facing render view, so bot/session ticking no longer shares the same interface surface as drawing
 - embedded local mode now also runs bot stepping from an explicit host-owned game loop coordinator instead of from the presentation frame coordinator itself

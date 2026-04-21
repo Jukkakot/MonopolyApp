@@ -123,6 +123,7 @@ public class Game implements MonopolyEventListener {
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private final GameDesktopPresentationHost presentationHost;
     private final LocalHostedGameLoopCoordinator hostedGameLoopCoordinator;
+    private final TestFacade testFacade = new TestFacade();
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     public Game(MonopolyRuntime runtime) {
         this(runtime, null, LocalSessionActions.NO_OP_ACTIONS);
@@ -367,6 +368,10 @@ public class Game implements MonopolyEventListener {
         return presentationHost.handleEvent(event);
     }
 
+    public TestFacade testFacade() {
+        return testFacade;
+    }
+
     private void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
         updateLogTurnContext();
         sessionApplicationService.handlePaymentRequest(request, continuationState, onResolved);
@@ -528,6 +533,139 @@ public class Game implements MonopolyEventListener {
                 dices,
                 desktopButtons
         );
+    }
+
+    /**
+     * Centralized test/inspection surface for the compatibility-era desktop host.
+     *
+     * <p>This keeps test code from depending on scattered private reflection hooks while the
+     * project still carries the legacy {@code Game} host. Production code should not route normal
+     * behavior through this facade.</p>
+     */
+    public final class TestFacade {
+        public MonopolyButton endRoundButton() {
+            return endRoundButton;
+        }
+
+        public MonopolyButton retryDebtButton() {
+            return retryDebtButton;
+        }
+
+        public MonopolyButton declareBankruptcyButton() {
+            return declareBankruptcyButton;
+        }
+
+        public MonopolyButton debugGodModeButton() {
+            return debugGodModeButton;
+        }
+
+        public MonopolyButton pauseButton() {
+            return pauseButton;
+        }
+
+        public MonopolyButton tradeButton() {
+            return tradeButton;
+        }
+
+        public MonopolyButton saveButton() {
+            return saveButton;
+        }
+
+        public MonopolyButton loadButton() {
+            return loadButton;
+        }
+
+        public MonopolyButton botSpeedButton() {
+            return botSpeedButton;
+        }
+
+        public MonopolyButton languageButton() {
+            return languageButton;
+        }
+
+        public GameSessionState sessionState() {
+            return sessionState;
+        }
+
+        public DebugController debugController() {
+            return debugController;
+        }
+
+        public BotTurnScheduler botTurnScheduler() {
+            return botTurnScheduler;
+        }
+
+        public GameSidebarPresenter.SidebarState sidebarState() {
+            return createSidebarState();
+        }
+
+        public LayoutMetrics layoutMetrics() {
+            return getLayoutMetrics();
+        }
+
+        public float sidebarHistoryHeight() {
+            return getSidebarHistoryHeight();
+        }
+
+        public float sidebarHistoryPanelY() {
+            return getSidebarHistoryPanelY();
+        }
+
+        public float sidebarContentTop() {
+            return getSidebarContentTop();
+        }
+
+        public void updateSidebarControlPositions() {
+            Game.this.updateSidebarControlPositions();
+        }
+
+        public void enforcePrimaryTurnControlInvariant() {
+            Game.this.enforcePrimaryTurnControlInvariant();
+        }
+
+        public void showRollDiceControl() {
+            Game.this.showRollDiceControl();
+        }
+
+        public void showEndTurnControl() {
+            Game.this.showEndTurnControl();
+        }
+
+        public void updateDebugButtons() {
+            Game.this.updateDebugButtons();
+        }
+
+        public void refreshButtonInteractivityState() {
+            Game.this.refreshButtonInteractivityState();
+        }
+
+        public void togglePause() {
+            Game.this.togglePause();
+        }
+
+        public void runComputerPlayerStep() {
+            Game.this.runComputerPlayerStep();
+        }
+
+        public void syncTransientPresentationState() {
+            Game.this.syncTransientPresentationState();
+        }
+
+        public void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
+            Game.this.applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
+        }
+
+        public void endRound(boolean switchTurns) {
+            Game.this.endRound(switchTurns);
+        }
+
+        public void handlePaymentRequest(
+                PaymentRequest request,
+                TurnContinuationState continuationState,
+                CallbackAction onResolved
+        ) {
+            Game.this.handlePaymentRequest(request, continuationState, onResolved);
+        }
     }
 
 }

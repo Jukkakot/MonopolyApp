@@ -476,12 +476,12 @@ class GameSmokeTest {
     }
 
     private static void invokeNoArgMethod(Game game, String methodName) {
-        try {
-            Method method = Game.class.getDeclaredMethod(methodName);
-            method.setAccessible(true);
-            method.invoke(game);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
+        switch (methodName) {
+            case "syncTransientPresentationState" -> game.testFacade().syncTransientPresentationState();
+            case "runComputerPlayerStep" -> game.testFacade().runComputerPlayerStep();
+            case "enforcePrimaryTurnControlInvariant" -> game.testFacade().enforcePrimaryTurnControlInvariant();
+            case "updateSidebarControlPositions" -> game.testFacade().updateSidebarControlPositions();
+            default -> throw new IllegalArgumentException("Unknown game no-arg method: " + methodName);
         }
     }
 

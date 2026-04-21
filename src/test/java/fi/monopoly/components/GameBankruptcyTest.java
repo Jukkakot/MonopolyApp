@@ -235,15 +235,11 @@ class GameBankruptcyTest {
     }
 
     private static GameSessionState gameSessionState(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("sessionState");
-        field.setAccessible(true);
-        return (GameSessionState) field.get(game);
+        return game.testFacade().sessionState();
     }
 
     private static MonopolyButton getEndRoundButton(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("endRoundButton");
-        field.setAccessible(true);
-        return (MonopolyButton) field.get(game);
+        return game.testFacade().endRoundButton();
     }
 
     private static void invokeDeclareBankruptcy(Game game) throws ReflectiveOperationException {
@@ -251,9 +247,7 @@ class GameBankruptcyTest {
     }
 
     private static void invokeEndRound(Game game) throws ReflectiveOperationException {
-        Method method = Game.class.getDeclaredMethod("endRound", boolean.class);
-        method.setAccessible(true);
-        method.invoke(game, true);
+        game.testFacade().endRound(true);
     }
 
     private static void settlePopupQueue(MonopolyRuntime runtime) {

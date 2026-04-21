@@ -48,33 +48,23 @@ class GameComputerPlayerTest {
     }
 
     private static void invokeComputerStep(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("runComputerPlayerStep");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().runComputerPlayerStep();
     }
 
     private static void invokeTogglePause(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("togglePause");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().togglePause();
     }
 
     private static void invokeAnimationFinishCooldown(Game game, boolean animationWasRunning) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("applyComputerActionCooldownIfAnimationJustFinished", boolean.class);
-        method.setAccessible(true);
-        method.invoke(game, animationWasRunning);
+        game.testFacade().applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
     }
 
     private static void invokeShowRollDiceControl(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("showRollDiceControl");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().showRollDiceControl();
     }
 
     private static BotTurnScheduler getBotTurnScheduler(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("botTurnScheduler");
-        field.setAccessible(true);
-        return (BotTurnScheduler) field.get(game);
+        return game.testFacade().botTurnScheduler();
     }
 
     private static boolean dispatchKeyToGame(Game game, char key) {

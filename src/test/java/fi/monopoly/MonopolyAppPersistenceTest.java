@@ -10,7 +10,6 @@ import fi.monopoly.host.session.local.DesktopHostedGame;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.GameBackedDesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
-import fi.monopoly.presentation.game.session.GameSessionState;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -43,23 +42,11 @@ class MonopolyAppPersistenceTest {
     }
 
     private static GameSidebarPresenter.SidebarState currentSidebarState(Game game) {
-        try {
-            var method = Game.class.getDeclaredMethod("createSidebarState");
-            method.setAccessible(true);
-            return (GameSidebarPresenter.SidebarState) method.invoke(game);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError("Failed to inspect sidebar state", e);
-        }
+        return game.testFacade().sidebarState();
     }
 
     private static boolean paused(Game game) {
-        try {
-            var field = Game.class.getDeclaredField("sessionState");
-            field.setAccessible(true);
-            return ((GameSessionState) field.get(game)).paused();
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError("Failed to inspect paused state", e);
-        }
+        return game.testFacade().sessionState().paused();
     }
 
     @AfterEach

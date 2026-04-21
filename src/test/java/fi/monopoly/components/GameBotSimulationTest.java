@@ -20,7 +20,6 @@ import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -270,9 +269,7 @@ class GameBotSimulationTest {
     }
 
     private static void invokeComputerStep(Game game) throws ReflectiveOperationException {
-        Method method = Game.class.getDeclaredMethod("runComputerPlayerStep");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().runComputerPlayerStep();
     }
 
     private static boolean isDebtResolutionActive(Game game) {

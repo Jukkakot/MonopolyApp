@@ -18,7 +18,6 @@ import processing.awt.PGraphicsJava2D;
 import processing.core.PFont;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Objects;
 
 import static fi.monopoly.text.UiTexts.text;
@@ -91,15 +90,7 @@ class GameComputerViewTest {
         });
         turnPlayer.releaseAssetsToBank();
         turnPlayer.addMoney(40 - turnPlayer.getMoneyAmount());
-        Method handlePaymentRequest = Game.class.getDeclaredMethod(
-                "handlePaymentRequest",
-                PaymentRequest.class,
-                fi.monopoly.domain.session.TurnContinuationState.class,
-                CallbackAction.class
-        );
-        handlePaymentRequest.setAccessible(true);
-        handlePaymentRequest.invoke(
-                game,
+        game.testFacade().handlePaymentRequest(
                 new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 250, text("game.debug.reason.railDebt")),
                 null,
                 (CallbackAction) () -> {
