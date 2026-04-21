@@ -1,5 +1,6 @@
 package fi.monopoly.utils;
 
+import fi.monopoly.client.desktop.DesktopClientContext;
 import fi.monopoly.client.desktop.MonopolyApp;
 import javafx.scene.paint.Color;
 import lombok.experimental.UtilityClass;
@@ -18,7 +19,7 @@ public class MonopolyUtils {
     }
 
     public static int toColor(Color color) {
-        return toColor(MonopolyApp.self, color);
+        return toColor(DesktopClientContext.currentApp(), color);
     }
 
     public static int toColor(MonopolyApp app, Color color) {
@@ -30,8 +31,7 @@ public class MonopolyUtils {
     }
 
     public static boolean isMouseInArea(SpotProps areaProps) {
-        MonopolyApp app = MonopolyApp.self;
-        return isMouseInArea(app, areaProps);
+        return isMouseInArea(DesktopClientContext.currentApp(), areaProps);
     }
 
     public static boolean isMouseInArea(MonopolyApp app, SpotProps areaProps) {

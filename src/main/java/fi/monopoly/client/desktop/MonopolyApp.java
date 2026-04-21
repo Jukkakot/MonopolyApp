@@ -24,13 +24,12 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static final char SPACE = ' ';
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
     public static final int DEFAULT_WINDOW_HEIGHT = 996;
-    public static MonopolyApp self;
     private final DesktopAppShell desktopAppShell = new DesktopAppShell(this);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 
     public MonopolyApp() {
-        self = this;
+        DesktopClientContext.setCurrentApp(this);
         MonopolyRuntime.initialize(this, null, null, null, null);
     }
 
