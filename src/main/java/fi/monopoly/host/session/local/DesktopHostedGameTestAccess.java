@@ -21,7 +21,13 @@ public final class DesktopHostedGameTestAccess {
 
     public Game currentConcreteGameOrNull() {
         DesktopHostedGame hostedGame = currentHostedGame();
-        return hostedGame instanceof Game concreteGame ? concreteGame : null;
+        if (hostedGame instanceof Game concreteGame) {
+            return concreteGame;
+        }
+        if (hostedGame instanceof GameBackedDesktopHostedGame gameBackedHostedGame) {
+            return gameBackedHostedGame.game();
+        }
+        return null;
     }
 
     public void setHostedGame(DesktopHostedGame game) {

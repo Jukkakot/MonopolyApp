@@ -8,6 +8,7 @@ import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.components.Game;
 import fi.monopoly.host.session.local.DesktopHostedGame;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
+import fi.monopoly.host.session.local.GameBackedDesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import org.junit.jupiter.api.AfterEach;
@@ -91,7 +92,7 @@ class MonopolyAppPersistenceTest {
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
         DesktopHostedGameTestAccess testAccess = app.desktopAppShell().testAccess();
-        testAccess.setHostedGame(game);
+        testAccess.setHostedGame(new GameBackedDesktopHostedGame(game));
         runtime.eventBus().flushPendingChanges();
 
         int originalCash = game.sessionStateForPersistence().players().get(0).cash();
@@ -107,8 +108,7 @@ class MonopolyAppPersistenceTest {
         dispatchCtrlKey(MonopolyRuntime.get(), 'l');
 
         DesktopHostedGame reloadedHostedGame = testAccess.currentHostedGame();
-        assertInstanceOf(Game.class, reloadedHostedGame);
-        Game reloadedGame = (Game) reloadedHostedGame;
+        Game reloadedGame = testAccess.currentConcreteGameOrNull();
         assertNotNull(reloadedGame);
         assertEquals(originalCash, reloadedGame.sessionStateForPersistence().players().get(0).cash());
         assertTrue(paused(reloadedGame));
@@ -138,7 +138,7 @@ class MonopolyAppPersistenceTest {
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
-        app.desktopAppShell().testAccess().setHostedGame(game);
+        app.desktopAppShell().testAccess().setHostedGame(new GameBackedDesktopHostedGame(game));
         runtime.eventBus().flushPendingChanges();
 
         assertTrue(runtime.gameSession().players().getTurn().isComputerControlled());
@@ -175,7 +175,7 @@ class MonopolyAppPersistenceTest {
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
         DesktopHostedGameTestAccess testAccess = app.desktopAppShell().testAccess();
-        testAccess.setHostedGame(game);
+        testAccess.setHostedGame(new GameBackedDesktopHostedGame(game));
         runtime.eventBus().flushPendingChanges();
 
         app.saveLocalSession();
@@ -189,8 +189,7 @@ class MonopolyAppPersistenceTest {
         app.loadLocalSession();
 
         DesktopHostedGame reloadedHostedGame = testAccess.currentHostedGame();
-        assertInstanceOf(Game.class, reloadedHostedGame);
-        Game reloadedGame = (Game) reloadedHostedGame;
+        Game reloadedGame = testAccess.currentConcreteGameOrNull();
         assertNotNull(reloadedGame);
         assertNotSame(game, reloadedGame);
         assertTrue(paused(reloadedGame));

@@ -17,8 +17,6 @@ import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.host.session.local.DesktopHostedGame;
-import fi.monopoly.host.session.local.DesktopHostedGameView;
 import fi.monopoly.host.session.local.LocalHostedGameLoopCoordinator;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopBootstrapFactory;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopHostFactory;
@@ -60,7 +58,7 @@ import static fi.monopoly.text.UiTexts.text;
  * the local shell around the older client runtime while the project moves toward a backend-ready
  * session architecture.</p>
  */
-public class Game implements MonopolyEventListener, DesktopHostedGame {
+public class Game implements MonopolyEventListener {
     private static final String LOCAL_SESSION_ID = "local-session";
     // UI and layout constants
     private static final List<Locale> SUPPORTED_UI_LOCALES = List.of(
@@ -124,7 +122,6 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     private final GameBotTurnDriver botTurnDriver = new GameBotTurnDriver(botTurnScheduler);
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private final GameDesktopPresentationHost presentationHost;
-    private final DesktopHostedGameView hostedGameView = new HostedGameView();
     private final LocalHostedGameLoopCoordinator hostedGameLoopCoordinator;
     private GameTurnFlowCoordinator gameTurnFlowCoordinator;
     public Game(MonopolyRuntime runtime) {
@@ -341,14 +338,8 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         presentationHost.render();
     }
 
-    @Override
     public void advanceHostedFrame() {
         hostedGameLoopCoordinator.advanceFrame();
-    }
-
-    @Override
-    public DesktopHostedGameView view() {
-        return hostedGameView;
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {
@@ -539,15 +530,4 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         );
     }
 
-    private final class HostedGameView implements DesktopHostedGameView {
-        @Override
-        public void draw() {
-            Game.this.draw();
-        }
-
-        @Override
-        public List<String> debugPerformanceLines(float fps) {
-            return Game.this.debugPerformanceLines(fps);
-        }
-    }
 }

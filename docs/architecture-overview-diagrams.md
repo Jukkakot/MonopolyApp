@@ -46,6 +46,7 @@ This is the rough shape now after the local separation work currently implemente
 flowchart LR
     subgraph DesktopHost[Desktop Host]
         GAME[Game host]
+        HOSTEDADAPTER[GameBackedDesktopHostedGame]
         HOSTFACTORY[GameDesktopHostFactory]
         HOST[host.session.local.DesktopSessionHostCoordinator]
     end
@@ -108,7 +109,8 @@ flowchart LR
     end
 
     GAME --> HOSTFACTORY
-    HOST --> GAME
+    HOST --> HOSTEDADAPTER
+    HOSTEDADAPTER --> GAME
     HOSTFACTORY --> CLIENTAPP
     HOSTFACTORY --> CLIENTSESSION
     CLIENTAPP --> CLIENTRUNTIME
@@ -194,6 +196,7 @@ What is important here:
 - app-shell and embedded-client test-only hosted-game access is now isolated behind an explicit `testAccess()` seam instead of living on the normal production shell API
 - concrete local hosted-game creation now also lives behind an assembly-side factory seam, so the client-desktop runtime bridge no longer constructs `Game` directly
 - embedded local session lifecycle, persistence, and snapshot publication now live on the host side, while `LocalDesktopClientSession` is reduced to a thin client adapter over that host
+- the embedded host now also reaches the concrete game through a dedicated `DesktopHostedGame` adapter instead of using `Game` itself as the hosted-session contract
 - the local hosted-game lifecycle/view/test-access seams now also live under `host.session.local` instead of the presentation package tree
 - the hosted-game seam is now split between host-owned frame advancement and a narrower client-facing render view, so bot/session ticking no longer shares the same interface surface as drawing
 - embedded local mode now also runs bot stepping from an explicit host-owned game loop coordinator instead of from the presentation frame coordinator itself
@@ -209,6 +212,7 @@ This is the short “how the running app is assembled today” view.
 ```mermaid
 flowchart LR
     GAME[Game]
+    HOSTEDADAPTER[GameBackedDesktopHostedGame]
     HOSTFACTORY[GameDesktopHostFactory]
     SHELLSESSION[GameDesktopSessionCoordinator]
     SHELLPRESENT[GameDesktopPresentationCoordinator]
@@ -222,6 +226,7 @@ flowchart LR
     LEGACY[Legacy runtime objects]
 
     GAME --> HOSTFACTORY
+    HOSTEDADAPTER --> GAME
     HOSTFACTORY --> SHELLSESSION
     HOSTFACTORY --> SHELLPRESENT
     HOSTFACTORY --> ASSEMBLY

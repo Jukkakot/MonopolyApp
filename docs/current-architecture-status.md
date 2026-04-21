@@ -144,6 +144,7 @@ The recent `client.desktop` and embedded-host moves improved this:
 - embedded local bot stepping now runs through a host-owned loop coordinator instead of being scheduled from the presentation frame coordinator
 - host-owned bot turn contexts now request projected game/player views for the actual acting player, which removes a local desktop assumption that leaked current-turn projections into debt resolution
 - desktop UI session controls now cross the shell boundary through one dedicated `GameUiSessionControls` port instead of being mixed into the broader gameplay presentation hook surface
+- embedded local hosting now also talks to a dedicated `DesktopHostedGame` adapter around `Game` instead of depending on `Game` itself as the hosted-session interface
 
 ### 4. Tests still lean on local host internals
 
