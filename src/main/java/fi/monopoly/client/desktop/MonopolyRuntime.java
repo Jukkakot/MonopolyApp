@@ -1,7 +1,7 @@
 package fi.monopoly.client.desktop;
 
 import controlP5.ControlP5;
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.components.GameSession;
 import fi.monopoly.components.popup.PopupService;

@@ -168,6 +168,7 @@ What is important here:
 - turn flow, bot flow, and desktop session state are now separated into `turn`, `bot`, and `session` packages
 - local save/load still works through a narrow `SessionHost` seam instead of direct rebuild callbacks
 - authoritative state still lives in `SessionState` and related domain records, not only in live UI/runtime objects
+- the Processing entry app and runtime now both live under `client.desktop`, so the root package no longer owns desktop bootstrap/runtime classes
 - the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 

@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.bot;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 
 public final class BotTurnScheduler {
     private static final int NO_ACTION_READY = -1;

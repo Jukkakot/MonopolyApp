@@ -1,7 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.Button;
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.properties.Property;

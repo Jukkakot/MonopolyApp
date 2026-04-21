@@ -1,6 +1,6 @@
 package fi.monopoly.utils;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,7 @@
 package fi.monopoly.application.session.persistence;
 
 import controlP5.ControlP5;
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;

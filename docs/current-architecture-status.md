@@ -64,7 +64,7 @@ The project does not yet have full backend-ready architecture because:
 These are still transitional and should be treated as controlled legacy seams:
 
 - `fi.monopoly.components.Game`
-- `fi.monopoly.MonopolyApp`
+- `fi.monopoly.client.desktop.MonopolyApp`
 - `fi.monopoly.client.desktop.MonopolyRuntime`
 - `fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator`
 - `fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory`
@@ -121,6 +121,12 @@ Backend-ready target:
 - client command transport boundary becomes explicit
 - local runtime rebuild/reattachment becomes a client concern only
 - server/session-host concerns become separate package roots
+
+The recent `client.desktop` moves improved this:
+
+- `MonopolyApp` and `MonopolyRuntime` are now explicitly on the client side of the architecture
+- the root package no longer acts as the owner of desktop bootstrap/runtime state
+- future extraction work can now target `client.desktop` directly instead of peeling adapter classes out of `fi.monopoly`
 
 ### 4. Tests still lean on local host internals
 

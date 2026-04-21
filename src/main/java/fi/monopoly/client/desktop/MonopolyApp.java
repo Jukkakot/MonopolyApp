@@ -1,8 +1,8 @@
-package fi.monopoly;
+package fi.monopoly.client.desktop;
 
 import controlP5.ControlP5;
-import fi.monopoly.client.desktop.DesktopAppShell;
-import fi.monopoly.client.desktop.MonopolyRuntime;
+
+
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
@@ -237,7 +237,7 @@ public class MonopolyApp extends MonopolyEventObserver {
                 .toList();
     }
 
-    DesktopAppShell desktopAppShell() {
+    public DesktopAppShell desktopAppShell() {
         return desktopAppShell;
     }
 }

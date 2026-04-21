@@ -1,7 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.ControlP5;
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import org.junit.jupiter.api.Test;
 import processing.awt.PGraphicsJava2D;

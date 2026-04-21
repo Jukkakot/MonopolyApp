@@ -1,6 +1,7 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Game;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;

@@ -1,6 +1,6 @@
 package fi.monopoly.components.event;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import lombok.extern.slf4j.Slf4j;
 import processing.core.PApplet;

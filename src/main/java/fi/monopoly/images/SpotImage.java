@@ -1,6 +1,6 @@
 package fi.monopoly.images;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;

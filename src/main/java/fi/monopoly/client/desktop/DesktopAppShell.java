@@ -1,6 +1,6 @@
 package fi.monopoly.client.desktop;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
 import fi.monopoly.components.Game;
