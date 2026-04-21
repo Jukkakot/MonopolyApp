@@ -23,8 +23,9 @@ import fi.monopoly.host.session.local.LocalHostedGameLoopCoordinator;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopBootstrapFactory;
 import fi.monopoly.presentation.game.desktop.assembly.GameDesktopHostFactory;
 import fi.monopoly.presentation.game.desktop.runtime.GameDesktopLifecycleCoordinator;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopPresentationCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopSessionCoordinator;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
@@ -90,7 +91,8 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     private final GameSessionStateCoordinator gameSessionStateCoordinator = new GameSessionStateCoordinator();
     private final GameBotTurnControlCoordinator gameBotTurnControlCoordinator = new GameBotTurnControlCoordinator();
     private final GameDesktopBootstrapFactory gameDesktopBootstrapFactory = new GameDesktopBootstrapFactory();
-    private final GameDesktopShellCoordinator gameDesktopShellCoordinator;
+    private final GameDesktopSessionCoordinator gameDesktopSessionCoordinator;
+    private final GameDesktopPresentationCoordinator gameDesktopPresentationCoordinator;
     private final GameDesktopLifecycleCoordinator gameDesktopLifecycleCoordinator = new GameDesktopLifecycleCoordinator();
     private final GameDesktopShellDependencies shellDependencies;
     private final SessionApplicationService sessionApplicationService;
@@ -186,7 +188,9 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
                         this::declareBankruptcyVisible,
                         this::endRoundVisible,
                         this::rollDiceVisible,
-                        () -> this
+                        () -> this,
+                        () -> isRollDiceActionAvailable(currentTurnPlayer()),
+                        () -> isEndTurnActionAvailable(currentTurnPlayer())
                 )
         );
         var desktopControls = bootstrap.desktopControls();
@@ -202,7 +206,8 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         this.languageButton = desktopControls.buttons().languageButton();
         this.desktopButtons = desktopControls.allButtons();
         GameDesktopHostFactory.GameDesktopHostContext hostContext = bootstrap.hostContext();
-        this.gameDesktopShellCoordinator = hostContext.shellCoordinator();
+        this.gameDesktopSessionCoordinator = hostContext.sessionCoordinator();
+        this.gameDesktopPresentationCoordinator = hostContext.presentationCoordinator();
         this.shellDependencies = hostContext.shellDependencies();
         this.board = hostContext.board();
         this.players = hostContext.players();
@@ -216,8 +221,8 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
         this.presentationHost = bootstrap.presentationHost();
         this.hostedGameLoopCoordinator = hostContext.localHostedGameLoopCoordinator();
         this.presentationHost.bindButtonActions();
-        gameDesktopShellCoordinator.applyRestoredSessionState(shellDependencies, restoredSessionState);
-        gameDesktopShellCoordinator.initializeSessionPresentation(shellDependencies, restoredSessionState);
+        gameDesktopSessionCoordinator.applyRestoredSessionState(shellDependencies, restoredSessionState);
+        gameDesktopSessionCoordinator.initializeSessionPresentation(shellDependencies, restoredSessionState);
 
         if (FORCE_DEBT_DEBUG_SCENARIO) {
             debugController.initializeDebtDebugScenario();
@@ -241,7 +246,7 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     }
 
     public void showPersistenceNotice(String notice) {
-        gameDesktopShellCoordinator.showPersistenceNotice(sessionState, notice);
+        gameDesktopSessionCoordinator.showPersistenceNotice(sessionState, notice);
     }
 
     void refreshProjectedSessionState() {
@@ -253,7 +258,7 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     }
 
     private void onDebtStateChanged() {
-        gameDesktopShellCoordinator.onDebtStateChanged(shellDependencies);
+        gameDesktopPresentationCoordinator.onDebtStateChanged(shellDependencies);
     }
 
     Players players() {
@@ -433,23 +438,23 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     }
 
     private void togglePause() {
-        gameDesktopShellCoordinator.togglePause(shellDependencies);
+        gameDesktopPresentationCoordinator.togglePause(shellDependencies);
     }
 
     private void cycleBotSpeedMode() {
-        gameDesktopShellCoordinator.cycleBotSpeedMode(shellDependencies);
+        gameDesktopPresentationCoordinator.cycleBotSpeedMode(shellDependencies);
     }
 
     private void switchLanguage(Locale locale) {
-        gameDesktopShellCoordinator.switchLanguage(locale);
+        gameDesktopPresentationCoordinator.switchLanguage(locale);
     }
 
     private void debugResetTurnState() {
-        gameDesktopShellCoordinator.debugResetTurnState(shellDependencies);
+        gameDesktopPresentationCoordinator.debugResetTurnState(shellDependencies);
     }
 
     private void restoreNormalTurnControls() {
-        gameDesktopShellCoordinator.restoreNormalTurnControls(shellDependencies);
+        gameDesktopPresentationCoordinator.restoreNormalTurnControls(shellDependencies);
     }
 
     private void showRollDiceControl() {
@@ -465,7 +470,7 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     }
 
     private void declareWinner(Player winningPlayer) {
-        gameDesktopShellCoordinator.declareWinner(shellDependencies, winningPlayer);
+        gameDesktopPresentationCoordinator.declareWinner(shellDependencies, winningPlayer);
     }
 
     private void updateLogTurnContext() {
@@ -517,11 +522,11 @@ public class Game implements MonopolyEventListener, DesktopHostedGame {
     }
 
     private boolean isRollDiceActionAvailable(Player currentPlayer) {
-        return gameDesktopShellCoordinator.isRollDiceActionAvailable(shellDependencies, currentPlayer);
+        return gameDesktopPresentationCoordinator.isRollDiceActionAvailable(shellDependencies, currentPlayer);
     }
 
     private boolean isEndTurnActionAvailable(Player currentPlayer) {
-        return gameDesktopShellCoordinator.isEndTurnActionAvailable(shellDependencies, currentPlayer);
+        return gameDesktopPresentationCoordinator.isEndTurnActionAvailable(shellDependencies, currentPlayer);
     }
 
     public void dispose() {

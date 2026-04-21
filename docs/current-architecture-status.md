@@ -76,7 +76,8 @@ These are still transitional and should be treated as controlled legacy seams:
 - `fi.monopoly.components.Game`
 - `fi.monopoly.client.desktop.MonopolyApp`
 - `fi.monopoly.client.desktop.MonopolyRuntime`
-- `fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator`
+- `fi.monopoly.presentation.game.desktop.shell.GameDesktopSessionCoordinator`
+- `fi.monopoly.presentation.game.desktop.shell.GameDesktopPresentationCoordinator`
 - `fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory`
 - `fi.monopoly.presentation.game.desktop.runtime.GameRuntimeAssemblyFactory`
 - `fi.monopoly.presentation.session.*` gateway/adapter classes
@@ -120,7 +121,9 @@ Backend-ready target:
 
 ### 3. Desktop shell boundaries are still optimized for local mode
 
-The current shell is much cleaner than before, but some interfaces still bundle:
+The current shell is much cleaner than before, and the old single `GameDesktopShellCoordinator`
+has already been split into explicit session and presentation coordinators. Some interfaces still
+bundle:
 
 - local runtime concerns
 - session commands/state access

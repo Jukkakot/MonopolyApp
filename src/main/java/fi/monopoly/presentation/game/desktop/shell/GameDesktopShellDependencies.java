@@ -35,7 +35,7 @@ import java.util.function.Supplier;
  * from the monolithic {@code Game} class while still allowing late-bound access to the live
  * runtime objects.</p>
  */
-public final class GameDesktopShellDependencies implements GameDesktopShellCoordinator.Dependencies {
+public final class GameDesktopShellDependencies {
     private final StateAccess stateAccess;
     private final ProjectionAccess projectionAccess;
     private final ActionAccess actionAccess;
@@ -53,142 +53,114 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
         this.visibilityAccess = visibilityAccess;
     }
 
-    @Override
     public GameSessionState sessionState() {
         return stateAccess.sessionStateSupplier().get();
     }
 
-    @Override
     public Players players() {
         return stateAccess.playersSupplier().get();
     }
 
-    @Override
     public Player currentTurnPlayer() {
         return stateAccess.currentTurnPlayerSupplier().get();
     }
 
-    @Override
     public Player playerById(String playerId) {
         return stateAccess.playerByIdResolver().apply(playerId);
     }
 
-    @Override
     public Board board() {
         return stateAccess.boardSupplier().get();
     }
 
-    @Override
     public Dices dices() {
         return stateAccess.dicesSupplier().get();
     }
 
-    @Override
     public Animations animations() {
         return stateAccess.animationsSupplier().get();
     }
 
-    @Override
     public DebtController debtController() {
         return stateAccess.debtControllerSupplier().get();
     }
 
-    @Override
     public DebtState debtState() {
         return stateAccess.debtStateSupplier().get();
     }
 
-    @Override
     public GameTurnFlowCoordinator gameTurnFlowCoordinator() {
         return stateAccess.gameTurnFlowCoordinatorSupplier().get();
     }
 
-    @Override
     public GamePrimaryTurnControls gamePrimaryTurnControls() {
         return stateAccess.gamePrimaryTurnControlsSupplier().get();
     }
 
-    @Override
     public GameSessionQueries gameSessionQueries() {
         return stateAccess.gameSessionQueriesSupplier().get();
     }
 
-    @Override
     public SessionApplicationService sessionApplicationService() {
         return stateAccess.sessionApplicationServiceSupplier().get();
     }
 
-    @Override
     public PopupService popupService() {
         return stateAccess.popupServiceSupplier().get();
     }
 
-    @Override
     public BotTurnScheduler botTurnScheduler() {
         return stateAccess.botTurnSchedulerSupplier().get();
     }
 
-    @Override
     public GameView createGameViewFor(Player player) {
         return projectionAccess.currentGameViewFactory().apply(player);
     }
 
-    @Override
     public PlayerView createPlayerViewFor(Player player) {
         return projectionAccess.currentPlayerViewFactory().apply(player);
     }
 
-    @Override
     public void refreshLabels() {
         actionAccess.refreshLabelsAction().run();
     }
 
-    @Override
     public void rollDice() {
         actionAccess.rollDiceAction().run();
     }
 
-    @Override
     public void setupDefaultGameState(Board board, Players players) {
         actionAccess.setupDefaultGameStateAction().accept(board, players);
     }
 
-    @Override
     public void hidePrimaryTurnControls() {
         actionAccess.hidePrimaryTurnControlsAction().run();
     }
 
-    @Override
     public void showRollDiceControl() {
         actionAccess.showRollDiceControlAction().run();
     }
 
-    @Override
     public void showEndTurnControl() {
         actionAccess.showEndTurnControlAction().run();
     }
 
-    @Override
     public void updateDebtButtons() {
         actionAccess.updateDebtButtonsAction().run();
     }
 
-    @Override
     public void syncTransientPresentationState() {
         actionAccess.syncTransientPresentationStateAction().run();
     }
 
-    @Override
     public void updateLogTurnContext() {
         actionAccess.updateLogTurnContextAction().run();
     }
 
-    @Override
     public void retryPendingDebtPaymentAction() {
         actionAccess.retryPendingDebtPaymentAction().run();
     }
 
-    @Override
     public void handlePaymentRequest(
             PaymentRequest request,
             fi.monopoly.domain.session.TurnContinuationState continuationState,
@@ -197,54 +169,52 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
         actionAccess.paymentRequestHandler().handle(request, continuationState, onResolved);
     }
 
-    @Override
     public void endRound(boolean switchTurns) {
         actionAccess.endRoundAction().accept(switchTurns);
     }
 
-    @Override
     public void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
         actionAccess.scheduleNextComputerAction().schedule(delayKind, now);
     }
 
-    @Override
     public void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
         actionAccess.resumeContinuationAction().accept(continuationState);
     }
 
-    @Override
     public void focusPlayer(Player player) {
         actionAccess.focusPlayerAction().accept(player);
     }
 
-    @Override
     public int goMoneyAmount() {
         return visibilityAccess.goMoneyAmountSupplier().getAsInt();
     }
 
-    @Override
     public boolean retryDebtVisible() {
         return visibilityAccess.retryDebtVisibleSupplier().getAsBoolean();
     }
 
-    @Override
     public boolean declareBankruptcyVisible() {
         return visibilityAccess.declareBankruptcyVisibleSupplier().getAsBoolean();
     }
 
-    @Override
     public boolean endRoundVisible() {
         return visibilityAccess.endRoundVisibleSupplier().getAsBoolean();
     }
 
-    @Override
     public boolean rollDiceVisible() {
         return visibilityAccess.rollDiceVisibleSupplier().getAsBoolean();
     }
 
-    @Override
     public MonopolyEventListener eventListener() {
         return visibilityAccess.eventListenerSupplier().get();
+    }
+
+    public boolean projectedRollDiceActionAvailable() {
+        return visibilityAccess.projectedRollDiceActionAvailableSupplier().getAsBoolean();
+    }
+
+    public boolean projectedEndTurnActionAvailable() {
+        return visibilityAccess.projectedEndTurnActionAvailableSupplier().getAsBoolean();
     }
 
     public record StateAccess(
@@ -297,7 +267,9 @@ public final class GameDesktopShellDependencies implements GameDesktopShellCoord
             BooleanSupplier declareBankruptcyVisibleSupplier,
             BooleanSupplier endRoundVisibleSupplier,
             BooleanSupplier rollDiceVisibleSupplier,
-            Supplier<MonopolyEventListener> eventListenerSupplier
+            Supplier<MonopolyEventListener> eventListenerSupplier,
+            BooleanSupplier projectedRollDiceActionAvailableSupplier,
+            BooleanSupplier projectedEndTurnActionAvailableSupplier
     ) {
     }
 

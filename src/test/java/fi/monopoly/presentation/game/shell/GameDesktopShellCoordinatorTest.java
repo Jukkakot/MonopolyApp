@@ -1,11 +1,11 @@
 package fi.monopoly.presentation.game.shell;
 
 import controlP5.ControlP5;
+import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
-import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
@@ -20,12 +20,14 @@ import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
+import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopPresentationCoordinator;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopSessionCoordinator;
+import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
-import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
-import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
 import javafx.scene.paint.Color;
@@ -38,7 +40,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameDesktopShellCoordinatorTest {
 
@@ -51,8 +56,8 @@ class GameDesktopShellCoordinatorTest {
     @Test
     void sessionBridgeHooksBlockTradeWhenPopupDebtOrGameOverActive() {
         TestDependencies dependencies = createDependencies();
-        GameDesktopShellCoordinator coordinator = createCoordinator(dependencies.runtime);
-        GameSessionBridgeFactory.Hooks hooks = coordinator.createSessionBridgeHooks(dependencies);
+        GameDesktopSessionCoordinator coordinator = createSessionCoordinator(dependencies.runtime);
+        GameSessionBridgeFactory.Hooks hooks = coordinator.createSessionBridgeHooks(dependencies.shellDependencies);
 
         assertTrue(hooks.canOpenTrade());
 
@@ -72,9 +77,9 @@ class GameDesktopShellCoordinatorTest {
     @Test
     void togglePauseFlipsStateThroughCoordinator() {
         TestDependencies dependencies = createDependencies();
-        GameDesktopShellCoordinator coordinator = createCoordinator(dependencies.runtime);
+        GameDesktopPresentationCoordinator coordinator = createPresentationCoordinator(dependencies.runtime);
 
-        coordinator.togglePause(dependencies);
+        coordinator.togglePause(dependencies.shellDependencies);
 
         assertTrue(dependencies.sessionState.paused());
         assertEquals(1, dependencies.refreshLabelsCalls);
@@ -83,10 +88,10 @@ class GameDesktopShellCoordinatorTest {
     @Test
     void declareWinnerUpdatesShellStateAndRunsUiHooks() {
         TestDependencies dependencies = createDependencies();
-        GameDesktopShellCoordinator coordinator = createCoordinator(dependencies.runtime);
+        GameDesktopPresentationCoordinator coordinator = createPresentationCoordinator(dependencies.runtime);
         Player winner = dependencies.currentTurnPlayer;
 
-        coordinator.declareWinner(dependencies, winner);
+        coordinator.declareWinner(dependencies.shellDependencies, winner);
 
         assertTrue(dependencies.sessionState.gameOver());
         assertSame(winner, dependencies.sessionState.winner());
@@ -96,8 +101,12 @@ class GameDesktopShellCoordinatorTest {
         assertTrue(dependencies.runtime.popupService().isAnyVisible());
     }
 
-    private static GameDesktopShellCoordinator createCoordinator(MonopolyRuntime runtime) {
-        return new GameDesktopShellCoordinator(
+    private static GameDesktopSessionCoordinator createSessionCoordinator(MonopolyRuntime runtime) {
+        return new GameDesktopSessionCoordinator(runtime, new GameSessionStateCoordinator());
+    }
+
+    private static GameDesktopPresentationCoordinator createPresentationCoordinator(MonopolyRuntime runtime) {
+        return new GameDesktopPresentationCoordinator(
                 runtime,
                 "local-session",
                 List.of(Locale.ENGLISH),
@@ -206,7 +215,7 @@ class GameDesktopShellCoordinatorTest {
         return MonopolyRuntime.initialize(app, controlP5, font, font, font);
     }
 
-    private static final class TestDependencies implements GameDesktopShellCoordinator.Dependencies {
+    private static final class TestDependencies {
         private final MonopolyRuntime runtime;
         private final Players players;
         private final Player currentTurnPlayer;
@@ -219,6 +228,7 @@ class GameDesktopShellCoordinatorTest {
         private final AtomicBoolean hideControlsCalled = new AtomicBoolean();
         private final AtomicBoolean updateDebtButtonsCalled = new AtomicBoolean();
         private final AtomicBoolean refreshLabelsCalled = new AtomicBoolean();
+        private final GameDesktopShellDependencies shellDependencies;
         private DebtState debtState;
         private int refreshLabelsCalls;
 
@@ -240,189 +250,81 @@ class GameDesktopShellCoordinatorTest {
             this.animations = animations;
             this.debtController = debtController;
             this.gameTurnFlowCoordinator = gameTurnFlowCoordinator;
+            this.shellDependencies = new GameDesktopShellDependencies(
+                    new GameDesktopShellDependencies.StateAccess(
+                            () -> sessionState,
+                            () -> players,
+                            () -> currentTurnPlayer,
+                            playerId -> currentTurnPlayer,
+                            () -> null,
+                            () -> dices,
+                            () -> animations,
+                            () -> debtController,
+                            () -> debtState,
+                            () -> gameTurnFlowCoordinator,
+                            () -> primaryTurnControls,
+                            () -> null,
+                            () -> null,
+                            runtime::popupService,
+                            BotTurnScheduler::new
+                    ),
+                    new GameDesktopShellDependencies.ProjectionAccess(
+                            player -> null,
+                            player -> null
+                    ),
+                    new GameDesktopShellDependencies.ActionAccess(
+                            this::refreshLabels,
+                            () -> {
+                            },
+                            (board, playerList) -> {
+                            },
+                            this::hidePrimaryTurnControls,
+                            () -> {
+                            },
+                            () -> {
+                            },
+                            this::updateDebtButtons,
+                            () -> {
+                            },
+                            () -> {
+                            },
+                            () -> {
+                            },
+                            (request, continuationState, onResolved) -> {
+                            },
+                            switchTurns -> {
+                            },
+                            (delayKind, now) -> {
+                            },
+                            continuationState -> {
+                            },
+                            player -> {
+                            }
+                    ),
+                    new GameDesktopShellDependencies.VisibilityAccess(
+                            () -> 200,
+                            () -> false,
+                            () -> false,
+                            () -> false,
+                            () -> false,
+                            () -> event -> false,
+                            () -> false,
+                            () -> false
+                    )
+            );
         }
 
-        @Override
-        public GameSessionState sessionState() {
-            return sessionState;
-        }
-
-        @Override
-        public Players players() {
-            return players;
-        }
-
-        @Override
-        public Player currentTurnPlayer() {
-            return currentTurnPlayer;
-        }
-
-        @Override
-        public Player playerById(String playerId) {
-            return currentTurnPlayer;
-        }
-
-        @Override
-        public Board board() {
-            return null;
-        }
-
-        @Override
-        public Dices dices() {
-            return dices;
-        }
-
-        @Override
-        public Animations animations() {
-            return animations;
-        }
-
-        @Override
-        public fi.monopoly.presentation.session.debt.DebtController debtController() {
-            return debtController;
-        }
-
-        @Override
-        public DebtState debtState() {
-            return debtState;
-        }
-
-        @Override
-        public GameTurnFlowCoordinator gameTurnFlowCoordinator() {
-            return gameTurnFlowCoordinator;
-        }
-
-        @Override
-        public GamePrimaryTurnControls gamePrimaryTurnControls() {
-            return primaryTurnControls;
-        }
-
-        @Override
-        public GameSessionQueries gameSessionQueries() {
-            return null;
-        }
-
-        @Override
-        public SessionApplicationService sessionApplicationService() {
-            return null;
-        }
-
-        @Override
-        public PopupService popupService() {
-            return runtime.popupService();
-        }
-
-        @Override
-        public BotTurnScheduler botTurnScheduler() {
-            return new BotTurnScheduler();
-        }
-
-        @Override
-        public fi.monopoly.components.computer.GameView createGameViewFor(Player player) {
-            return null;
-        }
-
-        @Override
-        public fi.monopoly.components.computer.PlayerView createPlayerViewFor(Player player) {
-            return null;
-        }
-
-        @Override
-        public void refreshLabels() {
+        private void refreshLabels() {
             refreshLabelsCalls++;
             refreshLabelsCalled.set(true);
         }
 
-        @Override
-        public void rollDice() {
-        }
-
-        @Override
-        public void setupDefaultGameState(Board board, Players players) {
-        }
-
-        @Override
-        public void hidePrimaryTurnControls() {
+        private void hidePrimaryTurnControls() {
             hideControlsCalled.set(true);
         }
 
-        @Override
-        public void showRollDiceControl() {
-        }
-
-        @Override
-        public void showEndTurnControl() {
-        }
-
-        @Override
-        public void updateDebtButtons() {
+        private void updateDebtButtons() {
             updateDebtButtonsCalled.set(true);
-        }
-
-        @Override
-        public void syncTransientPresentationState() {
-        }
-
-        @Override
-        public void updateLogTurnContext() {
-        }
-
-        @Override
-        public void retryPendingDebtPaymentAction() {
-        }
-
-        @Override
-        public void handlePaymentRequest(
-                PaymentRequest request,
-                fi.monopoly.domain.session.TurnContinuationState continuationState,
-                CallbackAction onResolved
-        ) {
-        }
-
-        @Override
-        public void endRound(boolean switchTurns) {
-        }
-
-        @Override
-        public void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind, int now) {
-        }
-
-        @Override
-        public void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState) {
-        }
-
-        @Override
-        public void focusPlayer(Player player) {
-        }
-
-        @Override
-        public int goMoneyAmount() {
-            return 200;
-        }
-
-        @Override
-        public boolean retryDebtVisible() {
-            return false;
-        }
-
-        @Override
-        public boolean declareBankruptcyVisible() {
-            return false;
-        }
-
-        @Override
-        public boolean endRoundVisible() {
-            return false;
-        }
-
-        @Override
-        public boolean rollDiceVisible() {
-            return false;
-        }
-
-        @Override
-        public fi.monopoly.components.event.MonopolyEventListener eventListener() {
-            return event -> false;
         }
     }
 }

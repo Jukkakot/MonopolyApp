@@ -19,8 +19,9 @@ import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.host.bot.GameBotTurnDriver;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopPresentationCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopSessionCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GameDesktopControlsFactory;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
@@ -65,7 +66,11 @@ public final class GameDesktopHostFactory {
     }
 
     public GameDesktopHostContext create(Config config, Hooks hooks) {
-        GameDesktopShellCoordinator shellCoordinator = new GameDesktopShellCoordinator(
+        GameDesktopSessionCoordinator sessionCoordinator = new GameDesktopSessionCoordinator(
+                config.runtime(),
+                config.gameSessionStateCoordinator()
+        );
+        GameDesktopPresentationCoordinator presentationCoordinator = new GameDesktopPresentationCoordinator(
                 config.runtime(),
                 config.sessionId(),
                 config.supportedLocales(),
@@ -119,7 +124,9 @@ public final class GameDesktopHostFactory {
                         hooks.declareBankruptcyVisibleSupplier(),
                         hooks.endRoundVisibleSupplier(),
                         hooks.rollDiceVisibleSupplier(),
-                        hooks.eventListenerSupplier()
+                        hooks.eventListenerSupplier(),
+                        hooks.projectedRollDiceActionAvailableSupplier(),
+                        hooks.projectedEndTurnActionAvailableSupplier()
                 )
         );
 
@@ -129,10 +136,10 @@ public final class GameDesktopHostFactory {
                 config.sessionId(),
                 config.desktopControls().buttons(),
                 config.turnEngine(),
-                shellCoordinator.createRuntimeAssemblyHooks(shellDependencies),
-                shellCoordinator.createSessionBridgeHooks(shellDependencies),
-                shellCoordinator.createUiSessionControls(shellDependencies),
-                shellCoordinator.createPresentationHooks(shellDependencies),
+                presentationCoordinator.createRuntimeAssemblyHooks(shellDependencies),
+                sessionCoordinator.createSessionBridgeHooks(shellDependencies),
+                presentationCoordinator.createUiSessionControls(shellDependencies),
+                presentationCoordinator.createPresentationHooks(shellDependencies),
                 config.debugPerformanceStats()
         );
 
@@ -148,7 +155,7 @@ public final class GameDesktopHostFactory {
                 config.debugPerformanceStats(),
                 config.desktopControls().allButtons()
         );
-        GameFrameCoordinator.FrameHooks frameHooks = shellCoordinator.createFrameHooks(shellDependencies);
+        GameFrameCoordinator.FrameHooks frameHooks = presentationCoordinator.createFrameHooks(shellDependencies);
         LocalHostedGameLoopCoordinator localHostedGameLoopCoordinator = new LocalHostedGameLoopCoordinator(
                 gameFrameCoordinator,
                 frameHooks,
@@ -158,7 +165,8 @@ public final class GameDesktopHostFactory {
         );
 
         return new GameDesktopHostContext(
-                shellCoordinator,
+                sessionCoordinator,
+                presentationCoordinator,
                 shellDependencies,
                 desktopAssembly.board(),
                 desktopAssembly.players(),
@@ -196,7 +204,8 @@ public final class GameDesktopHostFactory {
     }
 
     public record GameDesktopHostContext(
-            GameDesktopShellCoordinator shellCoordinator,
+            GameDesktopSessionCoordinator sessionCoordinator,
+            GameDesktopPresentationCoordinator presentationCoordinator,
             GameDesktopShellDependencies shellDependencies,
             Board board,
             Players players,
@@ -254,7 +263,9 @@ public final class GameDesktopHostFactory {
                 BooleanSupplier declareBankruptcyVisibleSupplier,
                 BooleanSupplier endRoundVisibleSupplier,
                 BooleanSupplier rollDiceVisibleSupplier,
-                Supplier<MonopolyEventListener> eventListenerSupplier
+                Supplier<MonopolyEventListener> eventListenerSupplier,
+                BooleanSupplier projectedRollDiceActionAvailableSupplier,
+                BooleanSupplier projectedEndTurnActionAvailableSupplier
         ) {
             return new DefaultHooks(
                     sessionStateSupplier,
@@ -292,7 +303,9 @@ public final class GameDesktopHostFactory {
                     declareBankruptcyVisibleSupplier,
                     endRoundVisibleSupplier,
                     rollDiceVisibleSupplier,
-                    eventListenerSupplier
+                    eventListenerSupplier,
+                    projectedRollDiceActionAvailableSupplier,
+                    projectedEndTurnActionAvailableSupplier
             );
         }
 
@@ -367,6 +380,10 @@ public final class GameDesktopHostFactory {
         BooleanSupplier rollDiceVisibleSupplier();
 
         Supplier<MonopolyEventListener> eventListenerSupplier();
+
+        BooleanSupplier projectedRollDiceActionAvailableSupplier();
+
+        BooleanSupplier projectedEndTurnActionAvailableSupplier();
     }
 
     private record DefaultHooks(
@@ -405,7 +422,9 @@ public final class GameDesktopHostFactory {
             BooleanSupplier declareBankruptcyVisibleSupplier,
             BooleanSupplier endRoundVisibleSupplier,
             BooleanSupplier rollDiceVisibleSupplier,
-            Supplier<MonopolyEventListener> eventListenerSupplier
+            Supplier<MonopolyEventListener> eventListenerSupplier,
+            BooleanSupplier projectedRollDiceActionAvailableSupplier,
+            BooleanSupplier projectedEndTurnActionAvailableSupplier
     ) implements Hooks {
     }
 }

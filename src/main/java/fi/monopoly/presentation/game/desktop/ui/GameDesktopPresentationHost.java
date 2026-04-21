@@ -5,8 +5,8 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopPresentationCoordinator;
 import fi.monopoly.presentation.game.desktop.session.SessionViewFacade;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.session.GameSessionState;
@@ -22,11 +22,11 @@ import java.util.function.Supplier;
  *
  * <p>This groups frame rendering, projected session views, button binding, and input dispatch into
  * one object so {@code Game} no longer needs to directly coordinate every UI-facing collaborator.
- * The extracted desktop shell still provides the authoritative hooks for projected state and bot
- * control availability.</p>
+ * The extracted presentation coordinator still provides the authoritative hooks for projected
+ * state and bot control availability.</p>
  */
 public final class GameDesktopPresentationHost {
-    private final GameDesktopShellCoordinator shellCoordinator;
+    private final GameDesktopPresentationCoordinator presentationCoordinator;
     private final GameDesktopShellDependencies shellDependencies;
     private final DebugPerformanceStats debugPerformanceStats;
     private final Supplier<GameSessionState> sessionStateSupplier;
@@ -38,7 +38,7 @@ public final class GameDesktopPresentationHost {
     private final SessionViewFacade sessionViewFacade;
 
     public GameDesktopPresentationHost(
-            GameDesktopShellCoordinator shellCoordinator,
+            GameDesktopPresentationCoordinator presentationCoordinator,
             GameDesktopShellDependencies shellDependencies,
             DebugPerformanceStats debugPerformanceStats,
             Supplier<GameSessionState> sessionStateSupplier,
@@ -48,7 +48,7 @@ public final class GameDesktopPresentationHost {
             GameUiController gameUiController,
             GameFrameCoordinator gameFrameCoordinator
     ) {
-        this.shellCoordinator = shellCoordinator;
+        this.presentationCoordinator = presentationCoordinator;
         this.shellDependencies = shellDependencies;
         this.debugPerformanceStats = debugPerformanceStats;
         this.sessionStateSupplier = sessionStateSupplier;
@@ -57,7 +57,7 @@ public final class GameDesktopPresentationHost {
         this.gameSessionQueries = gameSessionQueries;
         this.gameUiController = gameUiController;
         this.gameFrameCoordinator = gameFrameCoordinator;
-        this.sessionViewFacade = shellCoordinator.createSessionViewFacade(shellDependencies);
+        this.sessionViewFacade = presentationCoordinator.createSessionViewFacade(shellDependencies);
     }
 
     public void bindButtonActions() {
@@ -161,7 +161,7 @@ public final class GameDesktopPresentationHost {
 
     public void syncTransientPresentationState() {
         gameFrameCoordinator.syncTransientPresentationState(
-                () -> shellCoordinator.restoreBotTurnControlsIfNeeded(shellDependencies)
+                () -> presentationCoordinator.restoreBotTurnControlsIfNeeded(shellDependencies)
         );
     }
 
@@ -196,6 +196,6 @@ public final class GameDesktopPresentationHost {
     }
 
     private GameFrameCoordinator.FrameHooks createFrameHooks() {
-        return shellCoordinator.createFrameHooks(shellDependencies);
+        return presentationCoordinator.createFrameHooks(shellDependencies);
     }
 }

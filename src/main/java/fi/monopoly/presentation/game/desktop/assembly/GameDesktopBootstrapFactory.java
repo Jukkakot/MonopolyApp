@@ -6,8 +6,6 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.host.bot.GameBotTurnDriver;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellCoordinator;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.ui.GameDesktopControlsFactory;
 import fi.monopoly.presentation.game.desktop.ui.GameDesktopPresentationHost;
 import fi.monopoly.presentation.game.session.GameSessionState;
@@ -61,7 +59,7 @@ public final class GameDesktopBootstrapFactory {
                 hooks
         );
         GameDesktopPresentationHost presentationHost = new GameDesktopPresentationHost(
-                hostContext.shellCoordinator(),
+                hostContext.presentationCoordinator(),
                 hostContext.shellDependencies(),
                 config.debugPerformanceStats(),
                 config.sessionStateSupplier(),

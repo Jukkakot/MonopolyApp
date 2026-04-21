@@ -55,7 +55,8 @@ flowchart LR
         CLIENTSESSION[client.session.desktop]
         CLIENTRUNTIME[DesktopClientSessionRuntime]
         ASSEMBLY[desktop.assembly]
-        SHELL[desktop.shell]
+        SHELLSESSION[GameDesktopSessionCoordinator]
+        SHELLPRESENT[GameDesktopPresentationCoordinator]
         UI[desktop.ui]
         UICONTROLS[GameUiSessionControls]
         VIEW[desktop.session.SessionViewFacade]
@@ -113,19 +114,20 @@ flowchart LR
     CLIENTAPP --> CLIENTRUNTIME
     CLIENTSESSION --> CLIENTRUNTIME
     HOSTFACTORY --> ASSEMBLY
-    SHELL --> UICONTROLS
+    SHELLPRESENT --> UICONTROLS
     ASSEMBLY --> UICONTROLS
-    HOSTFACTORY --> SHELL
+    HOSTFACTORY --> SHELLSESSION
+    HOSTFACTORY --> SHELLPRESENT
     HOSTFACTORY --> UI
     HOSTFACTORY --> RUNTIMEFACTORY
     HOSTFACTORY --> VIEW
     HOSTFACTORY --> SESSIONPRESENT
-    SHELL --> TURN
-    SHELL --> BOT
+    SHELLPRESENT --> TURN
+    SHELLPRESENT --> BOT
     ASSEMBLY --> BOTPORT
     BOT --> BOTPORT
-    SHELL --> QUERIES
-    SHELL --> REATTACH
+    SHELLPRESENT --> QUERIES
+    SHELLSESSION --> REATTACH
     UI --> TURN
     UI --> BOT
     UI --> VIEW
@@ -208,7 +210,8 @@ This is the short “how the running app is assembled today” view.
 flowchart LR
     GAME[Game]
     HOSTFACTORY[GameDesktopHostFactory]
-    SHELL[GameDesktopShellCoordinator]
+    SHELLSESSION[GameDesktopSessionCoordinator]
+    SHELLPRESENT[GameDesktopPresentationCoordinator]
     ASSEMBLY[GameDesktopAssemblyFactory]
     PRESENTATION[GameDesktopPresentationHost]
     SESSIONBRIDGE[GameSessionBridgeFactory]
@@ -219,16 +222,17 @@ flowchart LR
     LEGACY[Legacy runtime objects]
 
     GAME --> HOSTFACTORY
-    HOSTFACTORY --> SHELL
+    HOSTFACTORY --> SHELLSESSION
+    HOSTFACTORY --> SHELLPRESENT
     HOSTFACTORY --> ASSEMBLY
     GAME --> PRESENTATION
-    PRESENTATION --> SHELL
+    PRESENTATION --> SHELLPRESENT
     PRESENTATION --> FRAME
     ASSEMBLY --> SESSIONBRIDGE
     ASSEMBLY --> RUNTIME
     HOSTFACTORY --> FRAME
     SESSIONBRIDGE --> APP
-    SHELL --> APP
+    SHELLSESSION --> APP
     APP --> STATE
     RUNTIME --> LEGACY
     APP --> LEGACY
