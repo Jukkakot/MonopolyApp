@@ -1,6 +1,7 @@
 package fi.monopoly;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.DesktopAppShell;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.components.Game;
 import fi.monopoly.components.PlayerToken;
@@ -45,7 +46,7 @@ public class MonopolyApp extends MonopolyEventObserver {
         }
     };
     private static long coloredImageCopies;
-    private final MonopolyDesktopAppShell desktopAppShell = new MonopolyDesktopAppShell(this);
+    private final DesktopAppShell desktopAppShell = new DesktopAppShell(this);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 
@@ -235,7 +236,7 @@ public class MonopolyApp extends MonopolyEventObserver {
                 .toList();
     }
 
-    MonopolyDesktopAppShell desktopAppShell() {
+    DesktopAppShell desktopAppShell() {
         return desktopAppShell;
     }
 }

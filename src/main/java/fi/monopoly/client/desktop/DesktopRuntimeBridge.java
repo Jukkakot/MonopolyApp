@@ -1,10 +1,12 @@
-package fi.monopoly;
+package fi.monopoly.client.desktop;
 
 import controlP5.ControlP5;
+import fi.monopoly.MonopolyApp;
+import fi.monopoly.MonopolyRuntime;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
+import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -15,12 +17,12 @@ import lombok.extern.slf4j.Slf4j;
  * host bootstrap details live here as a dedicated adapter.</p>
  */
 @Slf4j
-final class MonopolyDesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks {
+final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks {
     private final MonopolyApp app;
     private final Runnable saveLocalSessionAction;
     private final Runnable loadLocalSessionAction;
 
-    MonopolyDesktopRuntimeBridge(
+    DesktopRuntimeBridge(
             MonopolyApp app,
             Runnable saveLocalSessionAction,
             Runnable loadLocalSessionAction

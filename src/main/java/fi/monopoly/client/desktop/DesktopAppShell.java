@@ -1,5 +1,6 @@
-package fi.monopoly;
+package fi.monopoly.client.desktop;
 
+import fi.monopoly.MonopolyApp;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
 import fi.monopoly.components.Game;
@@ -11,46 +12,46 @@ import fi.monopoly.components.Game;
  * sketch can stay focused on window lifecycle and drawing. The shell still runs locally in-process,
  * but it centralizes the remaining desktop-host wiring behind one app-facing adapter.</p>
  */
-final class MonopolyDesktopAppShell {
+public final class DesktopAppShell {
     private final DesktopEmbeddedClientShell desktopClientShell;
 
-    MonopolyDesktopAppShell(MonopolyApp app) {
-        MonopolyDesktopRuntimeBridge runtimeBridge = new MonopolyDesktopRuntimeBridge(
+    public DesktopAppShell(MonopolyApp app) {
+        DesktopRuntimeBridge runtimeBridge = new DesktopRuntimeBridge(
                 app,
                 this::saveLocalSession,
                 this::loadLocalSession
         );
         this.desktopClientShell = new DesktopEmbeddedClientShell(
                 runtimeBridge,
-                MonopolyLocalSessionPersistenceUiHooks::new
+                LocalSessionPersistenceUiHooks::new
         );
     }
 
-    void startFreshSession() {
+    public void startFreshSession() {
         desktopClientShell.startFreshSession();
     }
 
-    void advanceFrame() {
+    public void advanceFrame() {
         desktopClientShell.advanceFrame();
     }
 
-    ClientSessionView currentView() {
+    public ClientSessionView currentView() {
         return desktopClientShell.currentView();
     }
 
-    void saveLocalSession() {
+    public void saveLocalSession() {
         desktopClientShell.saveLocalSession();
     }
 
-    void loadLocalSession() {
+    public void loadLocalSession() {
         desktopClientShell.loadLocalSession();
     }
 
-    Game currentGameForTest() {
+    public Game currentGameForTest() {
         return desktopClientShell.currentGameForTest();
     }
 
-    void setGameForTest(Game game) {
+    public void setGameForTest(Game game) {
         desktopClientShell.setGameForTest(game);
     }
 }
