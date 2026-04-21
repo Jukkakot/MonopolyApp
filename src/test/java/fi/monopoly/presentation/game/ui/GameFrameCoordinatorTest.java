@@ -22,6 +22,7 @@ import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarStateFactory;
 import fi.monopoly.presentation.game.desktop.ui.GameUiController;
+import fi.monopoly.presentation.game.desktop.ui.GameUiSessionControls;
 import fi.monopoly.utils.DebugPerformanceStats;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.AfterEach;
@@ -131,7 +132,7 @@ class GameFrameCoordinatorTest {
                 loadButton,
                 botSpeedButton,
                 languageButton,
-                List.of(Locale.ENGLISH),
+                new NoOpUiSessionControls(),
                 new NoOpUiHooks()
         );
         GamePresentationSupport presentationSupport = new GamePresentationSupport(
@@ -305,14 +306,6 @@ class GameFrameCoordinatorTest {
         }
 
         @Override
-        public void togglePause() {
-        }
-
-        @Override
-        public void cycleBotSpeedMode() {
-        }
-
-        @Override
         public void openTradeMenu() {
         }
 
@@ -350,6 +343,14 @@ class GameFrameCoordinatorTest {
             return false;
         }
 
+    }
+
+    private static final class NoOpUiSessionControls implements GameUiSessionControls {
+        @Override
+        public List<Locale> supportedLocales() {
+            return List.of(Locale.ENGLISH);
+        }
+
         @Override
         public Locale currentLocale() {
             return Locale.ENGLISH;
@@ -357,6 +358,14 @@ class GameFrameCoordinatorTest {
 
         @Override
         public void switchLanguage(Locale locale) {
+        }
+
+        @Override
+        public void togglePause() {
+        }
+
+        @Override
+        public void cycleBotSpeedMode() {
         }
 
         @Override

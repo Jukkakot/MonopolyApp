@@ -28,6 +28,7 @@ import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachment
 import fi.monopoly.presentation.game.desktop.session.SessionViewFacade;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
 import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
+import fi.monopoly.presentation.game.desktop.ui.GameUiSessionControls;
 import fi.monopoly.presentation.session.debt.DebtController;
 import lombok.extern.slf4j.Slf4j;
 
@@ -243,11 +244,6 @@ public final class GameDesktopShellCoordinator {
             }
 
             @Override
-            public List<Locale> supportedLocales() {
-                return supportedLocales;
-            }
-
-            @Override
             public String sessionId() {
                 return sessionId;
             }
@@ -293,21 +289,6 @@ public final class GameDesktopShellCoordinator {
             }
 
             @Override
-            public void togglePause() {
-                GameDesktopShellCoordinator.this.togglePause(dependencies);
-            }
-
-            @Override
-            public void cycleBotSpeedMode() {
-                GameDesktopShellCoordinator.this.cycleBotSpeedMode(dependencies);
-            }
-
-            @Override
-            public void switchLanguage(Locale locale) {
-                GameDesktopShellCoordinator.this.switchLanguage(locale);
-            }
-
-            @Override
             public void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind) {
                 dependencies.scheduleNextComputerAction(delayKind, runtime.millis());
             }
@@ -335,15 +316,44 @@ public final class GameDesktopShellCoordinator {
             public boolean restoreBotTurnControlsIfNeeded() {
                 return GameDesktopShellCoordinator.this.restoreBotTurnControlsIfNeeded(dependencies);
             }
+        };
+    }
 
+    public GameUiSessionControls createUiSessionControls(Dependencies dependencies) {
+        return new GameUiSessionControls() {
             @Override
-            public Runnable saveSessionAction() {
-                return localSessionActions.saveSession();
+            public List<Locale> supportedLocales() {
+                return supportedLocales;
             }
 
             @Override
-            public Runnable loadSessionAction() {
-                return localSessionActions.loadSession();
+            public Locale currentLocale() {
+                return fi.monopoly.text.UiTexts.getLocale();
+            }
+
+            @Override
+            public void switchLanguage(Locale locale) {
+                GameDesktopShellCoordinator.this.switchLanguage(locale);
+            }
+
+            @Override
+            public void togglePause() {
+                GameDesktopShellCoordinator.this.togglePause(dependencies);
+            }
+
+            @Override
+            public void cycleBotSpeedMode() {
+                GameDesktopShellCoordinator.this.cycleBotSpeedMode(dependencies);
+            }
+
+            @Override
+            public void saveSession() {
+                localSessionActions.saveSession().run();
+            }
+
+            @Override
+            public void loadSession() {
+                localSessionActions.loadSession().run();
             }
         };
     }

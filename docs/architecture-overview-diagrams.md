@@ -57,6 +57,7 @@ flowchart LR
         ASSEMBLY[desktop.assembly]
         SHELL[desktop.shell]
         UI[desktop.ui]
+        UICONTROLS[GameUiSessionControls]
         VIEW[desktop.session.SessionViewFacade]
         REATTACH[RestoredSessionReattachmentCoordinator]
     end
@@ -112,6 +113,8 @@ flowchart LR
     CLIENTAPP --> CLIENTRUNTIME
     CLIENTSESSION --> CLIENTRUNTIME
     HOSTFACTORY --> ASSEMBLY
+    SHELL --> UICONTROLS
+    ASSEMBLY --> UICONTROLS
     HOSTFACTORY --> SHELL
     HOSTFACTORY --> UI
     HOSTFACTORY --> RUNTIMEFACTORY
@@ -178,6 +181,7 @@ What is important here:
 - desktop-only global flags such as debug mode and skip-animations now live in explicit `client.desktop` settings/state helpers instead of `MonopolyApp`
 - client-owned save/load trigger callbacks now also live under `client.session.desktop` instead of the presentation-session package
 - the Processing app shell now talks to a single `DesktopClientSessionRuntime` port instead of directly forwarding embedded-session shell methods one by one
+- pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - the current Processing app instance is now accessed through an explicit `client.desktop` context seam instead of `MonopolyApp.self`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type

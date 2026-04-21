@@ -25,6 +25,7 @@ import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.game.desktop.ui.GameUiController;
 import fi.monopoly.presentation.game.desktop.ui.GameUiHooksAdapter;
+import fi.monopoly.presentation.game.desktop.ui.GameUiSessionControls;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
@@ -44,6 +45,7 @@ public final class GamePresentationFactory {
             MonopolyRuntime runtime,
             Buttons buttons,
             Dependencies dependencies,
+            GameUiSessionControls uiSessionControls,
             Hooks hooks
     ) {
         GameControlLayout gameControlLayout = new GameControlLayout(
@@ -100,7 +102,7 @@ public final class GamePresentationFactory {
                 buttons.loadButton(),
                 buttons.botSpeedButton(),
                 buttons.languageButton(),
-                hooks.supportedLocales(),
+                uiSessionControls,
                 new GameUiHooksAdapter(
                         dependencies.board(),
                         dependencies.dices(),
@@ -108,17 +110,12 @@ public final class GamePresentationFactory {
                         dependencies.tradeController(),
                         dependencies.debugController(),
                         gameTurnFlowCoordinator,
-                        hooks::togglePause,
-                        hooks::cycleBotSpeedMode,
                         dependencies.debtActionDispatcher()::payDebt,
                         dependencies.debtActionDispatcher()::declareBankruptcy,
                         dependencies.animations()::finishAllAnimations,
                         hooks::gameOver,
                         hooks::popupVisible,
-                        buttons.endRoundButton()::isVisible,
-                        hooks::switchLanguage,
-                        hooks.saveSessionAction(),
-                        hooks.loadSessionAction()
+                        buttons.endRoundButton()::isVisible
                 )
         );
         GamePresentationSupport gamePresentationSupport = new GamePresentationSupport(
@@ -230,8 +227,6 @@ public final class GamePresentationFactory {
 
         int nowMillis();
 
-        List<Locale> supportedLocales();
-
         String sessionId();
 
         Player currentTurnPlayer();
@@ -250,12 +245,6 @@ public final class GamePresentationFactory {
 
         void syncTransientPresentationState();
 
-        void togglePause();
-
-        void cycleBotSpeedMode();
-
-        void switchLanguage(Locale locale);
-
         void scheduleNextComputerAction(BotTurnScheduler.DelayKind delayKind);
 
         void handlePaymentRequest(fi.monopoly.components.payment.PaymentRequest request,
@@ -268,9 +257,6 @@ public final class GamePresentationFactory {
 
         boolean restoreBotTurnControlsIfNeeded();
 
-        Runnable saveSessionAction();
-
-        Runnable loadSessionAction();
     }
 
     public record GamePresentationBundle(

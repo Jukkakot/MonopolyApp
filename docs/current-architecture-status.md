@@ -67,6 +67,7 @@ The project does not yet have full backend-ready architecture because:
   - session bridge, restored-session reattachment
 - `presentation.game.desktop.ui`
   - frame/layout/input/presentation host responsibilities
+  - dedicated UI session-controls port now isolates pause/bot-speed/language/save-load actions from broader presentation hooks
 
 ### Important current bridge classes
 
@@ -139,6 +140,7 @@ The recent `client.desktop` and embedded-host moves improved this:
 - host tick advancement and client render access are also now explicitly different seams, which is closer to the eventual client/host split even in embedded mode
 - embedded local bot stepping now runs through a host-owned loop coordinator instead of being scheduled from the presentation frame coordinator
 - host-owned bot turn contexts now request projected game/player views for the actual acting player, which removes a local desktop assumption that leaked current-turn projections into debt resolution
+- desktop UI session controls now cross the shell boundary through one dedicated `GameUiSessionControls` port instead of being mixed into the broader gameplay presentation hook surface
 
 ### 4. Tests still lean on local host internals
 

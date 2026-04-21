@@ -14,9 +14,7 @@ import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.DiceState;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Locale;
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 
 @Slf4j
 public final class GameUiHooksAdapter implements GameUiController.Hooks {
@@ -26,17 +24,12 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
     private final TradeController tradeController;
     private final DebugController debugController;
     private final GameTurnFlowCoordinator gameTurnFlowCoordinator;
-    private final Runnable togglePauseAction;
-    private final Runnable cycleBotSpeedModeAction;
     private final Runnable payDebtAction;
     private final Runnable declareBankruptcyAction;
     private final Runnable finishAllAnimationsAction;
     private final BooleanSupplier gameOverSupplier;
     private final BooleanSupplier popupVisibleSupplier;
     private final BooleanSupplier canEndTurnSupplier;
-    private final Consumer<Locale> languageSwitcher;
-    private final Runnable saveSessionAction;
-    private final Runnable loadSessionAction;
 
     public GameUiHooksAdapter(
             Board board,
@@ -45,17 +38,12 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
             TradeController tradeController,
             DebugController debugController,
             GameTurnFlowCoordinator gameTurnFlowCoordinator,
-            Runnable togglePauseAction,
-            Runnable cycleBotSpeedModeAction,
             Runnable payDebtAction,
             Runnable declareBankruptcyAction,
             Runnable finishAllAnimationsAction,
             BooleanSupplier gameOverSupplier,
             BooleanSupplier popupVisibleSupplier,
-            BooleanSupplier canEndTurnSupplier,
-            Consumer<Locale> switchLanguageAction,
-            Runnable saveSessionAction,
-            Runnable loadSessionAction
+            BooleanSupplier canEndTurnSupplier
     ) {
         this.board = board;
         this.dices = dices;
@@ -63,17 +51,12 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
         this.tradeController = tradeController;
         this.debugController = debugController;
         this.gameTurnFlowCoordinator = gameTurnFlowCoordinator;
-        this.togglePauseAction = togglePauseAction;
-        this.cycleBotSpeedModeAction = cycleBotSpeedModeAction;
         this.payDebtAction = payDebtAction;
         this.declareBankruptcyAction = declareBankruptcyAction;
         this.finishAllAnimationsAction = finishAllAnimationsAction;
         this.gameOverSupplier = gameOverSupplier;
         this.popupVisibleSupplier = popupVisibleSupplier;
         this.canEndTurnSupplier = canEndTurnSupplier;
-        this.languageSwitcher = switchLanguageAction;
-        this.saveSessionAction = saveSessionAction;
-        this.loadSessionAction = loadSessionAction;
     }
 
     @Override
@@ -94,16 +77,6 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
     @Override
     public boolean canEndTurn() {
         return canEndTurnSupplier.getAsBoolean();
-    }
-
-    @Override
-    public void togglePause() {
-        togglePauseAction.run();
-    }
-
-    @Override
-    public void cycleBotSpeedMode() {
-        cycleBotSpeedModeAction.run();
     }
 
     @Override
@@ -162,23 +135,4 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
         return played;
     }
 
-    @Override
-    public Locale currentLocale() {
-        return UiTexts.getLocale();
-    }
-
-    @Override
-    public void switchLanguage(Locale locale) {
-        languageSwitcher.accept(locale);
-    }
-
-    @Override
-    public void saveSession() {
-        saveSessionAction.run();
-    }
-
-    @Override
-    public void loadSession() {
-        loadSessionAction.run();
-    }
 }

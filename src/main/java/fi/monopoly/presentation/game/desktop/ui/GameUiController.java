@@ -28,7 +28,7 @@ public class GameUiController {
     private final MonopolyButton loadButton;
     private final MonopolyButton botSpeedButton;
     private final MonopolyButton languageButton;
-    private final List<Locale> supportedLocales;
+    private final GameUiSessionControls sessionControls;
     private final Hooks hooks;
 
     public GameUiController(
@@ -42,7 +42,7 @@ public class GameUiController {
             MonopolyButton loadButton,
             MonopolyButton botSpeedButton,
             MonopolyButton languageButton,
-            List<Locale> supportedLocales,
+            GameUiSessionControls sessionControls,
             Hooks hooks
     ) {
         this.endRoundButton = endRoundButton;
@@ -55,7 +55,7 @@ public class GameUiController {
         this.loadButton = loadButton;
         this.botSpeedButton = botSpeedButton;
         this.languageButton = languageButton;
-        this.supportedLocales = supportedLocales;
+        this.sessionControls = sessionControls;
         this.hooks = hooks;
     }
 
@@ -64,11 +64,11 @@ public class GameUiController {
         retryDebtButton.addListener(() -> hooks.payDebt());
         declareBankruptcyButton.addListener(() -> hooks.declareBankruptcy());
         debugGodModeButton.addListener(() -> hooks.openGodModeMenu());
-        pauseButton.addListener(() -> hooks.togglePause());
+        pauseButton.addListener(sessionControls::togglePause);
         tradeButton.addListener(() -> hooks.openTradeMenu());
-        saveButton.addListener(() -> hooks.saveSession());
-        loadButton.addListener(() -> hooks.loadSession());
-        botSpeedButton.addListener(() -> hooks.cycleBotSpeedMode());
+        saveButton.addListener(sessionControls::saveSession);
+        loadButton.addListener(sessionControls::loadSession);
+        botSpeedButton.addListener(sessionControls::cycleBotSpeedMode);
         languageButton.addListener(this::cycleLanguage);
     }
 
@@ -126,19 +126,19 @@ public class GameUiController {
             return false;
         }
         if (keyEvent.isControlDown() && key == 's') {
-            hooks.saveSession();
+            sessionControls.saveSession();
             return true;
         }
         if (keyEvent.isControlDown() && key == 'l') {
-            hooks.loadSession();
+            sessionControls.loadSession();
             return true;
         }
         if (key == 'p') {
-            hooks.togglePause();
+            sessionControls.togglePause();
             return true;
         }
         if (key == 'b') {
-            hooks.cycleBotSpeedMode();
+            sessionControls.cycleBotSpeedMode();
             return true;
         }
         if (hooks.popupVisible()) {
@@ -185,10 +185,11 @@ public class GameUiController {
     }
 
     private void cycleLanguage() {
-        Locale currentLocale = hooks.currentLocale();
+        List<Locale> supportedLocales = sessionControls.supportedLocales();
+        Locale currentLocale = sessionControls.currentLocale();
         int currentIndex = supportedLocales.indexOf(currentLocale);
         int nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % supportedLocales.size();
-        hooks.switchLanguage(supportedLocales.get(nextIndex));
+        sessionControls.switchLanguage(supportedLocales.get(nextIndex));
     }
 
     public interface Hooks {
@@ -199,10 +200,6 @@ public class GameUiController {
         boolean debtActive();
 
         boolean canEndTurn();
-
-        void togglePause();
-
-        void cycleBotSpeedMode();
 
         void openTradeMenu();
 
@@ -222,12 +219,5 @@ public class GameUiController {
 
         boolean debugFlyToHoveredSpot(Spot hoveredSpot);
 
-        Locale currentLocale();
-
-        void switchLanguage(Locale locale);
-
-        void saveSession();
-
-        void loadSession();
     }
 }

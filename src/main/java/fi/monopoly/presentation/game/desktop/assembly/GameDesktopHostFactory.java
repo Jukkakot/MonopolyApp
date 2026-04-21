@@ -131,6 +131,7 @@ public final class GameDesktopHostFactory {
                 config.turnEngine(),
                 shellCoordinator.createRuntimeAssemblyHooks(shellDependencies),
                 shellCoordinator.createSessionBridgeHooks(shellDependencies),
+                shellCoordinator.createUiSessionControls(shellDependencies),
                 shellCoordinator.createPresentationHooks(shellDependencies),
                 config.debugPerformanceStats()
         );
