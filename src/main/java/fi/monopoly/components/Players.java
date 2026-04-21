@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.Button;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.board.Board;
@@ -87,7 +88,7 @@ public class Players {
         playerButtons.put("" + p.getId(), new MonopolyButton(runtime, "" + p.getId())
                 .setValue(p.getId())
                 .addListener(e -> selectPlayer(playerList.get(playerList.indexOf(p))))
-                .setImages(MonopolyApp.getImage("BigToken.png", p.getColor()), MonopolyApp.getImage("BigTokenHover.png", p.getColor()), MonopolyApp.getImage("BigTokenPressed.png", p.getColor()))
+                .setImages(DesktopImageCatalog.getImage("BigToken.png", p.getColor()), DesktopImageCatalog.getImage("BigTokenHover.png", p.getColor()), DesktopImageCatalog.getImage("BigTokenPressed.png", p.getColor()))
                 .setSize(PLAYER_LIST_BUTTON_DIAMETER, PLAYER_LIST_BUTTON_DIAMETER)
         );
     }

@@ -1,5 +1,6 @@
 package fi.monopoly.components.popup;
 
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.properties.Property;
@@ -131,7 +132,7 @@ public class PropertyOfferPopup extends ChoicePopup {
         if (hasStripe) {
             drawStripe(p, x, y, width);
         }
-        PImage image = MonopolyApp.getImage(offeredProperty.getSpotType());
+        PImage image = DesktopImageCatalog.getImage(offeredProperty.getSpotType());
         if (image != null) {
             p.imageMode(CORNER);
             float imageTopInset = hasStripe ? 8f + UiTokens.tradePropertyColorStripeHeight() : 8f;

@@ -4,11 +4,7 @@ import controlP5.ControlP5;
 
 
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.components.Game;
-import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.event.MonopolyEventObserver;
-import fi.monopoly.types.SpotType;
-import fi.monopoly.utils.MonopolyUtils;
 import fi.monopoly.utils.UiTokens;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
@@ -17,15 +13,11 @@ import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import processing.awt.PSurfaceAWT;
 import processing.core.PFont;
-import processing.core.PImage;
 
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.io.File;
-import java.util.*;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 public class MonopolyApp extends MonopolyEventObserver {
@@ -39,14 +31,6 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static boolean SKIP_ANNIMATIONS = false;
     public static ControlP5 p5;
     public static PFont font10, font20, font30;
-    private static Map<String, PImage> IMAGES = new HashMap<>();
-    private static final Map<String, PImage> TINTED_IMAGE_CACHE = new LinkedHashMap<>(64, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, PImage> eldest) {
-            return size() > 128;
-        }
-    };
-    private static long coloredImageCopies;
     private final DesktopAppShell desktopAppShell = new DesktopAppShell(this);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
@@ -56,68 +40,13 @@ public class MonopolyApp extends MonopolyEventObserver {
         MonopolyRuntime.initialize(this, null, null, null, null);
     }
 
-    /**
-     * @param name  name of the image
-     * @param color color the image should be tinted
-     * @return Instance of an image. If color is given, then it returns a copy of the image tinted with the given color
-     */
-    public static PImage getImage(String name, Color color) {
-        PImage image = IMAGES.get(name);
-        if (image == null) {
-            return null;
-        }
-        if (color != null) {
-            int tintColor = MonopolyUtils.toColor(self, color);
-            String cacheKey = name + "#" + tintColor;
-            PImage cachedImage = TINTED_IMAGE_CACHE.get(cacheKey);
-            if (cachedImage != null) {
-                return cachedImage;
-            }
-            PImage tintedImage = getColoredCopy(image, tintColor);
-            TINTED_IMAGE_CACHE.put(cacheKey, tintedImage);
-            return tintedImage;
-        }
-        return image;
-    }
-
-    private static PImage getColoredCopy(PImage img, int color) {
-        coloredImageCopies++;
-        PImage result = self.createImage(img.width, img.height, RGB);
-        for (int i = 0; i < img.pixels.length; i++) {
-            int pixel = blendColor(img.pixels[i], color, DARKEST);
-            result.pixels[i] = pixel;
-        }
-        result.mask(img);
-        result.updatePixels();
-        return result;
-    }
-
-    public static PImage getImage(String name) {
-        return getImage(name, null);
-    }
-
-    public static PImage getImage(SpotType spotType) {
-        PImage image = getImage(spotType.streetType.imgName, null);
-        if (image == null) {
-            String imgName = spotType.streetType.imgName;
-            if (imgName != null) {
-                image = getImage(imgName.substring(0, imgName.indexOf(".")) + spotType.id + imgName.substring(imgName.indexOf(".")), null);
-            }
-        }
-        return image;
-    }
-
-    public static long getColoredImageCopies() {
-        return coloredImageCopies;
-    }
-
     public void settings() {
         size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, FX2D);
     }
 
     public void setup() {
         frameRate(TARGET_FRAME_RATE);
-        initImages();
+        DesktopImageCatalog.initialize(this);
         configureWindowSizing();
         font10 = createFont("Monopoly Regular.ttf", 10);
         font20 = createFont("Monopoly Regular.ttf", 20);
@@ -214,27 +143,6 @@ public class MonopolyApp extends MonopolyEventObserver {
 //        log.debug("Draw observed sketch resize: {}x{} -> {}x{}", lastDrawWidth, lastDrawHeight, width, height);
         lastDrawWidth = width;
         lastDrawHeight = height;
-    }
-
-    private void initImages() {
-        coloredImageCopies = 0;
-        TINTED_IMAGE_CACHE.clear();
-        String dirPath = "src/main/resources/img/";
-        List<String> fileNames = listFiles(dirPath);
-        for (String fileName : fileNames) {
-            IMAGES.put(fileName, loadImage(dirPath + fileName));
-        }
-        IMAGES.get("BigToken.png").resize(PlayerToken.PLAYER_TOKEN_BIG_DIAMETER, PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
-        IMAGES.get("BigTokenHover.png").resize(PlayerToken.PLAYER_TOKEN_BIG_DIAMETER, PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
-        IMAGES.get("BigTokenPressed.png").resize(PlayerToken.PLAYER_TOKEN_BIG_DIAMETER, PlayerToken.PLAYER_TOKEN_BIG_DIAMETER);
-        println("Finished loading", IMAGES.size(), "images.");
-    }
-
-    private List<String> listFiles(String dir) {
-        return Stream.of(Objects.requireNonNull(new File(dir).listFiles()))
-                .filter(file -> !file.isDirectory())
-                .map(File::getName)
-                .toList();
     }
 
     public DesktopAppShell desktopAppShell() {

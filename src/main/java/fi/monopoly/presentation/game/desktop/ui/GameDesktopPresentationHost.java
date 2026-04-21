@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
@@ -199,7 +200,7 @@ public final class GameDesktopPresentationHost {
     }
 
     public List<String> debugPerformanceLines(float fps) {
-        return debugPerformanceStats.overlayLines(fps, MonopolyApp.getColoredImageCopies());
+        return debugPerformanceStats.overlayLines(fps, DesktopImageCatalog.getColoredImageCopies());
     }
 
     public GameBotTurnDriver.Hooks botTurnHooks() {

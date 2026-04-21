@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.properties.PropertyFactory;
@@ -43,7 +44,7 @@ class GamePerformanceBenchmarkTest {
         System.out.println(" - wrapText avg: " + formatMillis(wrapNs / 3_000.0));
         System.out.println(" - createGameView avg: " + formatMillis(gameViewNs / 2_000.0));
         System.out.println(" - tinted image lookup avg: " + formatMillis(tintNs / 2_000.0));
-        System.out.println(" - tinted copies created: " + MonopolyApp.getColoredImageCopies());
+        System.out.println(" - tinted copies created: " + DesktopImageCatalog.getColoredImageCopies());
         System.out.println(" - debug overlay sample: " + String.join(" | ", game.debugPerformanceLines(runtime.app().frameRate)));
     }
 
@@ -66,7 +67,7 @@ class GamePerformanceBenchmarkTest {
     private static long benchmarkTintedImageLookup(int iterations) {
         long start = System.nanoTime();
         for (int i = 0; i < iterations; i++) {
-            MonopolyApp.getImage("BigToken.png", javafx.scene.paint.Color.PINK);
+            DesktopImageCatalog.getImage("BigToken.png", javafx.scene.paint.Color.PINK);
         }
         return System.nanoTime() - start;
     }

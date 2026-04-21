@@ -1,5 +1,6 @@
 package fi.monopoly.components.popup;
 
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
@@ -92,7 +93,7 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
             return;
         }
 
-        PImage token = MonopolyApp.getImage("BigToken.png", currentLeader.getColor());
+        PImage token = DesktopImageCatalog.getImage("BigToken.png", currentLeader.getColor());
         if (token != null) {
             float tokenSize = 28f;
             p.imageMode(CORNER);

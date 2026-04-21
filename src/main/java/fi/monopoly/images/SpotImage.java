@@ -1,5 +1,6 @@
 package fi.monopoly.images;
 
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.spots.Spot;
@@ -96,7 +97,7 @@ public class SpotImage extends Image {
 
     private void drawIconSpot() {
         MonopolyApp p = runtime.app();
-        PImage img = MonopolyApp.getImage(spotType);
+        PImage img = DesktopImageCatalog.getImage(spotType);
         if (img != null) {
             p.push();
 

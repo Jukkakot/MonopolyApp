@@ -1,5 +1,6 @@
 package fi.monopoly.components.popup;
 
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
@@ -297,7 +298,7 @@ public class TradePopup extends Popup {
         int stripeColor = resolveTradePropertyStripeColor(item.property());
         drawCardStripe(p, x, y, width, stripeColor);
 
-        PImage image = MonopolyApp.getImage(item.property().getSpotType());
+        PImage image = DesktopImageCatalog.getImage(item.property().getSpotType());
         if (image != null) {
             p.imageMode(CORNER);
             p.image(image, x + 8f, y + 8f + UiTokens.tradePropertyColorStripeHeight(), width - 16f, height - (showLabel ? 42f : 16f) - UiTokens.tradePropertyColorStripeHeight());
@@ -310,7 +311,7 @@ public class TradePopup extends Popup {
     }
 
     private void drawJailCardItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
-        PImage image = MonopolyApp.getImage("GetOutOfJail.png");
+        PImage image = DesktopImageCatalog.getImage("GetOutOfJail.png");
         if (image != null) {
             p.imageMode(CORNER);
             p.image(image, x + 8f, y + 8f, width - 16f, height - 40f);
@@ -351,7 +352,7 @@ public class TradePopup extends Popup {
     }
 
     private void drawPlayerToken(PGraphics p, Player player, float centerX, float centerY, float size) {
-        PImage tokenImage = MonopolyApp.getImage("Token.png", player.getColor());
+        PImage tokenImage = DesktopImageCatalog.getImage("Token.png", player.getColor());
         if (tokenImage != null) {
             p.imageMode(CENTER);
             p.image(tokenImage, centerX, centerY, size, size);

@@ -1,5 +1,6 @@
 package fi.monopoly.images;
 
+import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Drawable;
@@ -67,7 +68,7 @@ public class Image implements Drawable {
         p.translate(c.x(), c.y());
         p.rotate(MonopolyApp.radians(c.r() + rotation));
         p.imageMode(PConstants.CENTER);
-        PImage img = color != null ? MonopolyApp.getImage(imgName, color) : MonopolyApp.getImage(imgName);
+        PImage img = color != null ? DesktopImageCatalog.getImage(imgName, color) : DesktopImageCatalog.getImage(imgName);
         if (img != null) {
             p.image(img, 0, 0, getWidth(), getHeight());
         }
