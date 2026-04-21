@@ -4,6 +4,7 @@ import controlP5.ControlP5;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.LocalSessionActions;
+import fi.monopoly.presentation.game.desktop.session.DesktopSessionHostCoordinator;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -14,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * host bootstrap details live here as a dedicated adapter.</p>
  */
 @Slf4j
-final class MonopolyDesktopRuntimeBridge {
+final class MonopolyDesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks {
     private final MonopolyApp app;
     private final Runnable saveLocalSessionAction;
     private final Runnable loadLocalSessionAction;
@@ -29,7 +30,8 @@ final class MonopolyDesktopRuntimeBridge {
         this.loadLocalSessionAction = loadLocalSessionAction;
     }
 
-    void shutdownSessionRuntime() {
+    @Override
+    public void shutdownSessionRuntime() {
         MonopolyRuntime runtime = MonopolyRuntime.peek();
         if (runtime == null) {
             return;
@@ -40,18 +42,21 @@ final class MonopolyDesktopRuntimeBridge {
         runtime.popupService().hideAll();
     }
 
-    void disposeControlLayer() {
+    @Override
+    public void disposeControlLayer() {
         if (MonopolyApp.p5 != null) {
             MonopolyApp.p5.dispose();
         }
     }
 
-    void initializeControlLayer() {
+    @Override
+    public void initializeControlLayer() {
         MonopolyApp.p5 = new ControlP5(app);
         MonopolyRuntime.initialize(app, MonopolyApp.p5, MonopolyApp.font10, MonopolyApp.font20, MonopolyApp.font30);
     }
 
-    void applyDefaultTextFont() {
+    @Override
+    public void applyDefaultTextFont() {
         if (MonopolyApp.font10 == null) {
             return;
         }
@@ -62,7 +67,8 @@ final class MonopolyDesktopRuntimeBridge {
         }
     }
 
-    Game createGame(SessionState restoredState) {
+    @Override
+    public Game createGame(SessionState restoredState) {
         LocalSessionActions localSessionActions = new LocalSessionActions(
                 saveLocalSessionAction,
                 loadLocalSessionAction
@@ -70,7 +76,13 @@ final class MonopolyDesktopRuntimeBridge {
         return new Game(MonopolyRuntime.get(), restoredState, localSessionActions);
     }
 
-    void flushPendingChanges() {
+    @Override
+    public void flushPendingChanges() {
         MonopolyRuntime.get().eventBus().flushPendingChanges();
+    }
+
+    @Override
+    public void disposeGame(Game game) {
+        game.dispose();
     }
 }

@@ -53,7 +53,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             this::loadLocalSession
     );
     private final DesktopEmbeddedClientShell desktopClientShell = new DesktopEmbeddedClientShell(
-            new MonopolyDesktopSessionHostHooks(desktopRuntimeBridge),
+            desktopRuntimeBridge,
             MonopolyLocalSessionPersistenceUiHooks::new
     );
     private int lastDrawWidth = -1;
