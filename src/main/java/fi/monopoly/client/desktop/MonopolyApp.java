@@ -18,7 +18,7 @@ import java.awt.event.ComponentEvent;
 import java.util.List;
 
 @Slf4j
-public class MonopolyApp extends MonopolyEventObserver {
+public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderingContext {
     public static final int TARGET_FRAME_RATE = 120;
     public static final char ENTER = '\n';
     public static final char SPACE = ' ';
@@ -142,5 +142,15 @@ public class MonopolyApp extends MonopolyEventObserver {
 
     public DesktopAppShell desktopAppShell() {
         return desktopAppShell;
+    }
+
+    @Override
+    public int mouseX() {
+        return mouseX;
+    }
+
+    @Override
+    public int mouseY() {
+        return mouseY;
     }
 }

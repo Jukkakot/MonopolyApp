@@ -172,6 +172,7 @@ What is important here:
 - desktop-only global flags such as debug mode and skip-animations now live in explicit `client.desktop` settings/state helpers instead of `MonopolyApp`
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - the current Processing app instance is now accessed through an explicit `client.desktop` context seam instead of `MonopolyApp.self`
+- shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type
 - the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 
