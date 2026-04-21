@@ -37,7 +37,7 @@ The project does not yet have full backend-ready architecture because:
 ### What is already separated
 
 - `client.desktop`
-  - Processing app-facing shell/runtime adapters around the embedded local client session
+  - Processing app-facing shell/runtime adapters and explicit client-global desktop settings around the embedded local client session
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`

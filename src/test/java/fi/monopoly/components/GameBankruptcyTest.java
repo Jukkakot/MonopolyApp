@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.payment.BankTarget;
@@ -159,8 +160,8 @@ class GameBankruptcyTest {
         if (logConfigSnapshot != null) {
             logConfigSnapshot.restore();
         }
-        MonopolyApp.DEBUG_MODE = false;
-        MonopolyApp.SKIP_ANNIMATIONS = false;
+        DesktopClientSettings.setDebugMode(false);
+        DesktopClientSettings.setSkipAnimations(false);
         fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.clear();
     }
 

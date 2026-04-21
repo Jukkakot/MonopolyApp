@@ -1,5 +1,6 @@
 package fi.monopoly.images;
 
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.DesktopImageCatalog;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
@@ -43,7 +44,7 @@ public class SpotImage extends Image {
     }
 
     private void drawDebugSpot() {
-        if (!MonopolyApp.DEBUG_MODE) {
+        if (!DesktopClientSettings.debugMode()) {
             return;
         }
         MonopolyApp p = runtime.app();

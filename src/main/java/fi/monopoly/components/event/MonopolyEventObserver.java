@@ -1,6 +1,6 @@
 package fi.monopoly.components.event;
 
-import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import lombok.extern.slf4j.Slf4j;
 import processing.core.PApplet;
@@ -25,8 +25,8 @@ public class MonopolyEventObserver extends PApplet {
         eventBus().sendConsumableEvent(keyEvent);
         char key = Character.toLowerCase(keyEvent.getKey());
         if (key == 'd') {
-            MonopolyApp.DEBUG_MODE = !MonopolyApp.DEBUG_MODE;
-            log.debug("Debug mode {},", MonopolyApp.DEBUG_MODE);
+            DesktopClientSettings.toggleDebugMode();
+            log.debug("Debug mode {},", DesktopClientSettings.debugMode());
         }
         if (key == 'h') {
             log.info("""

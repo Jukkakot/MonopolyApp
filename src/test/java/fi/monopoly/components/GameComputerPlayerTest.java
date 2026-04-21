@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -97,8 +98,8 @@ class GameComputerPlayerTest {
         if (logConfigSnapshot != null) {
             logConfigSnapshot.restore();
         }
-        MonopolyApp.DEBUG_MODE = false;
-        MonopolyApp.SKIP_ANNIMATIONS = false;
+        DesktopClientSettings.setDebugMode(false);
+        DesktopClientSettings.setSkipAnimations(false);
     }
 
     @Test
@@ -123,7 +124,7 @@ class GameComputerPlayerTest {
     @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void defaultBotCanFinishItsTurnWithoutUserInput() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
@@ -149,7 +150,7 @@ class GameComputerPlayerTest {
     @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void pausePreventsComputerTurnFromAdvancing() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
@@ -213,7 +214,7 @@ class GameComputerPlayerTest {
     @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void botTurnStartClearsPreviousPlayerDiceState() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();

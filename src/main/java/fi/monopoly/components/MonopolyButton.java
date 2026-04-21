@@ -2,7 +2,7 @@ package fi.monopoly.components;
 
 import controlP5.Button;
 import controlP5.CColor;
-import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.utils.Coordinates;
@@ -105,7 +105,7 @@ public class MonopolyButton extends Button {
     }
 
     private boolean isManualActionAllowed() {
-        if (MonopolyApp.DEBUG_MODE) {
+        if (DesktopClientSettings.debugMode()) {
             return true;
         }
         var session = runtime.gameSessionOrNull();

@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -44,14 +45,14 @@ class GameBotSimulationTest {
         if (logConfigSnapshot != null) {
             logConfigSnapshot.restore();
         }
-        MonopolyApp.DEBUG_MODE = false;
-        MonopolyApp.SKIP_ANNIMATIONS = false;
+        DesktopClientSettings.setDebugMode(false);
+        DesktopClientSettings.setSkipAnimations(false);
     }
 
     @Test
     @Timeout(value = 20, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void strongBotsDoNotDeadlockAcrossRepeatedSimulations() throws ReflectiveOperationException {
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
 
         int stalledRuns = 0;
         int totalTurnSwitches = 0;
@@ -119,7 +120,7 @@ class GameBotSimulationTest {
     @Test
     @Timeout(value = 15, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void strongBotBeatsSmokeTestBotInHeadsUpAdvantageScenario() throws ReflectiveOperationException {
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
 
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);

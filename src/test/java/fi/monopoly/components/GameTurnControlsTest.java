@@ -1,6 +1,7 @@
 package fi.monopoly.components;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -205,8 +206,8 @@ class GameTurnControlsTest {
 
     @AfterEach
     void tearDown() {
-        MonopolyApp.DEBUG_MODE = false;
-        MonopolyApp.SKIP_ANNIMATIONS = false;
+        DesktopClientSettings.setDebugMode(false);
+        DesktopClientSettings.setSkipAnimations(false);
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
     }
 
@@ -370,7 +371,7 @@ class GameTurnControlsTest {
     @Test
     void shortDebugSidebarKeepsControlsAboveHistoryPanel() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.DEBUG_MODE = true;
+        DesktopClientSettings.setDebugMode(true);
         MonopolyRuntime runtime = initHeadlessRuntime(1700, 560);
         Game game = new Game(runtime);
 
@@ -659,7 +660,7 @@ class GameTurnControlsTest {
     @Test
     void debugModeAllowsTradeButtonDuringBotTurn() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.DEBUG_MODE = true;
+        DesktopClientSettings.setDebugMode(true);
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
@@ -804,7 +805,7 @@ class GameTurnControlsTest {
     @Test
     void botSpeedButtonCyclesModeWithoutPopup() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.DEBUG_MODE = true;
+        DesktopClientSettings.setDebugMode(true);
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();

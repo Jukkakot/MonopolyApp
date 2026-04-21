@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.DiceValue;
@@ -139,8 +140,8 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
 
     @Override
     public void toggleSkipAnimations() {
-        MonopolyApp.SKIP_ANNIMATIONS = !MonopolyApp.SKIP_ANNIMATIONS;
-        log.debug("Skip animations: {}", MonopolyApp.SKIP_ANNIMATIONS);
+        DesktopClientSettings.toggleSkipAnimations();
+        log.debug("Skip animations: {}", DesktopClientSettings.skipAnimations());
     }
 
     @Override

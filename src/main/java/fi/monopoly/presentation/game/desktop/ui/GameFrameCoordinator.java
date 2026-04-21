@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
@@ -66,7 +67,7 @@ public final class GameFrameCoordinator {
         updateLogTurnContext(hooks.sessionState().gameOver(), hooks.sessionState().winner(), hooks.turnPlayer());
         boolean animationWasRunning = hooks.animations().isRunning();
         float animationDeltaSeconds = resolveAnimationDeltaSeconds(frameStart);
-        if (MonopolyApp.SKIP_ANNIMATIONS) {
+        if (DesktopClientSettings.skipAnimations()) {
             hooks.animations().finishAllAnimations();
         }
         if (!hooks.popupVisible()) {

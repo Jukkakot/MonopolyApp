@@ -27,8 +27,6 @@ public class MonopolyApp extends MonopolyEventObserver {
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
     public static final int DEFAULT_WINDOW_HEIGHT = 996;
     public static MonopolyApp self;
-    public static boolean DEBUG_MODE = false;
-    public static boolean SKIP_ANNIMATIONS = false;
     public static ControlP5 p5;
     public static PFont font10, font20, font30;
     private final DesktopAppShell desktopAppShell = new DesktopAppShell(this);
@@ -102,7 +100,7 @@ public class MonopolyApp extends MonopolyEventObserver {
             return;
         }
         currentView.draw();
-        if (DEBUG_MODE) {
+        if (DesktopClientSettings.debugMode()) {
             push();
             fill(22, 36, 31, 190);
             noStroke();

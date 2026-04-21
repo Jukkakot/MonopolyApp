@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.spots.Spot;
@@ -100,7 +101,7 @@ public class GameUiController {
         saveButton.show();
         loadButton.show();
         languageButton.show();
-        if (!MonopolyApp.DEBUG_MODE) {
+        if (!DesktopClientSettings.debugMode()) {
             debugGodModeButton.hide();
             botSpeedButton.hide();
             return;
@@ -158,13 +159,13 @@ public class GameUiController {
             hooks.endRound();
             return true;
         }
-        if (MonopolyApp.DEBUG_MODE && key == 'e') {
+        if (DesktopClientSettings.debugMode() && key == 'e') {
             log.debug("Ending round");
             hooks.finishAllAnimations();
             hooks.endRound();
             return true;
         }
-        if (MonopolyApp.DEBUG_MODE && key == 'g') {
+        if (DesktopClientSettings.debugMode() && key == 'g') {
             hooks.openGodModeMenu();
             return true;
         }
@@ -180,7 +181,7 @@ public class GameUiController {
             return false;
         }
         Spot hoveredSpot = hooks.hoveredSpot();
-        return hoveredSpot != null && MonopolyApp.DEBUG_MODE && hooks.debugFlyToHoveredSpot(hoveredSpot);
+        return hoveredSpot != null && DesktopClientSettings.debugMode() && hooks.debugFlyToHoveredSpot(hoveredSpot);
     }
 
     private void cycleLanguage() {

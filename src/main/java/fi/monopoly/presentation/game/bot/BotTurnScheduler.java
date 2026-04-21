@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.bot;
 
-import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 
 public final class BotTurnScheduler {
     private static final int NO_ACTION_READY = -1;
@@ -8,7 +8,7 @@ public final class BotTurnScheduler {
     private int nextReadyAt = NO_ACTION_READY;
 
     public boolean isWaiting(int now) {
-        return !MonopolyApp.SKIP_ANNIMATIONS && nextReadyAt != NO_ACTION_READY && now < nextReadyAt;
+        return !DesktopClientSettings.skipAnimations() && nextReadyAt != NO_ACTION_READY && now < nextReadyAt;
     }
 
     public void schedule(DelayKind delayKind, int now, SpeedMode speedMode, boolean allPlayersComputerControlled) {
@@ -27,14 +27,14 @@ public final class BotTurnScheduler {
             SpeedMode speedMode,
             boolean allPlayersComputerControlled
     ) {
-        if (MonopolyApp.SKIP_ANNIMATIONS || !animationWasRunning || animationsStillRunning || !currentTurnComputerControlled) {
+        if (DesktopClientSettings.skipAnimations() || !animationWasRunning || animationsStillRunning || !currentTurnComputerControlled) {
             return;
         }
         schedule(DelayKind.ANIMATION_FINISH, now, speedMode, allPlayersComputerControlled);
     }
 
     private int computeDelayMs(DelayKind delayKind, SpeedMode speedMode, boolean allPlayersComputerControlled) {
-        if (MonopolyApp.SKIP_ANNIMATIONS || speedMode == SpeedMode.INSTANT) {
+        if (DesktopClientSettings.skipAnimations() || speedMode == SpeedMode.INSTANT) {
             return 0;
         }
         int baseDelayMs = switch (delayKind) {

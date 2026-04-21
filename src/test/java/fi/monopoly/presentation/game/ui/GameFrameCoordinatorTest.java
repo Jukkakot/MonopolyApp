@@ -1,6 +1,7 @@
 package fi.monopoly.presentation.game.ui;
 
 import controlP5.ControlP5;
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
@@ -38,7 +39,7 @@ class GameFrameCoordinatorTest {
 
     @AfterEach
     void tearDown() {
-        MonopolyApp.DEBUG_MODE = false;
+        DesktopClientSettings.setDebugMode(false);
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
     }
 

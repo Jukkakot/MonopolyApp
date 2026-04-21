@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
@@ -56,7 +57,7 @@ public final class GameControlLayout {
 
     public LayoutMetrics updateFrameLayoutMetrics() {
         LayoutMetrics frameLayoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
-        reservedTop = frameLayoutMetrics.sidebarReservedTop(MonopolyApp.DEBUG_MODE);
+        reservedTop = frameLayoutMetrics.sidebarReservedTop(DesktopClientSettings.debugMode());
         float availableHistoryHeight = runtime.app().height - reservedTop - frameLayoutMetrics.sidebarHistoryBottomMargin() - UiTokens.sidebarHistoryTopMargin();
         historyHeight = Math.max(UiTokens.sidebarHistoryMinHeight(), Math.min(UiTokens.sidebarHistoryPreferredHeight(), availableHistoryHeight));
         historyPanelY = runtime.app().height - historyHeight - frameLayoutMetrics.sidebarHistoryBottomMargin();
@@ -72,7 +73,7 @@ public final class GameControlLayout {
                 Math.round(layoutMetrics.sidebarDebugButtonRow1Y()),
                 Math.round(historyHeight),
                 Math.round(historyPanelY),
-                MonopolyApp.DEBUG_MODE,
+                DesktopClientSettings.debugMode(),
                 pauseButton.getWidth(),
                 tradeButton.getWidth(),
                 saveButton.getWidth(),
@@ -97,7 +98,7 @@ public final class GameControlLayout {
         float primaryButtonY = layoutMetrics.sidebarPrimaryButtonY();
         float debugRow1Y = layoutMetrics.sidebarDebugButtonRow1Y();
         float controlRow1Y = historyPanelY + historyHeight + UiTokens.spacingSm();
-        boolean showBotSpeed = MonopolyApp.DEBUG_MODE;
+        boolean showBotSpeed = DesktopClientSettings.debugMode();
         float controlRow2Y = controlRow1Y + pauseButton.getHeight() + UiTokens.spacingXs();
         float controlRow3Y = controlRow2Y + languageButton.getHeight() + UiTokens.spacingXs();
         float lowestControlBottom = (showBotSpeed ? controlRow3Y : controlRow2Y) + languageButton.getHeight();
@@ -143,14 +144,14 @@ public final class GameControlLayout {
     }
 
     public float reservedTop(LayoutMetrics layoutMetrics) {
-        return reservedTop > 0 ? reservedTop : layoutMetrics.sidebarReservedTop(MonopolyApp.DEBUG_MODE);
+        return reservedTop > 0 ? reservedTop : layoutMetrics.sidebarReservedTop(DesktopClientSettings.debugMode());
     }
 
     private void layoutOverlayControls(LayoutMetrics layoutMetrics) {
         float leftX = UiTokens.overlayMargin();
         float rightX = layoutMetrics.boardWidth() - UiTokens.overlayMargin();
         float overlayTopRowY = UiTokens.overlaySecondaryRow3Y();
-        boolean showBotSpeed = MonopolyApp.DEBUG_MODE;
+        boolean showBotSpeed = DesktopClientSettings.debugMode();
         float overlayBottomRowY = Math.min(
                 overlayTopRowY + languageButton.getHeight() + UiTokens.spacingXs(),
                 runtime.app().height - languageButton.getHeight() - UiTokens.spacingMd()
