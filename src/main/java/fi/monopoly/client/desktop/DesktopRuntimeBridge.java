@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * host bootstrap details live here as a dedicated adapter.</p>
  */
 @Slf4j
-final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks {
+final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks, DesktopRuntimeAccess {
     private final MonopolyApp app;
     private final Runnable saveLocalSessionAction;
     private final Runnable loadLocalSessionAction;
@@ -100,11 +100,13 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
         game.dispose();
     }
 
-    MonopolyRuntime runtimeOrNull() {
+    @Override
+    public MonopolyRuntime runtimeOrNull() {
         return currentRuntimeOrNull();
     }
 
-    MonopolyRuntime runtime() {
+    @Override
+    public MonopolyRuntime runtime() {
         MonopolyRuntime activeRuntime = currentRuntimeOrNull();
         if (activeRuntime == null) {
             throw new IllegalStateException("Desktop runtime has not been initialized yet");

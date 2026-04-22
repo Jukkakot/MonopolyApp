@@ -39,6 +39,7 @@ The project does not yet have full backend-ready architecture because:
 
 - `client.desktop`
   - Processing app-facing shell/runtime adapters, runtime resources, explicit client-global desktop settings, and narrow rendering/runtime seams around the embedded local client session
+  - desktop app bootstrap now also consumes one explicit client-host binding instead of assembling the embedded-local host shell inline inside `DesktopAppShell`
 - `host.session.local`
   - embedded host-owned session lifecycle, persistence, snapshot publication, hosted-game lifecycle, and test-access seams for the in-process desktop mode
   - embedded host-owned local game loop coordination now also drives bot stepping outside the presentation frame coordinator
@@ -156,6 +157,7 @@ The recent `client.desktop` and embedded-host moves improved this:
 - the embedded host now exposes the client-facing session seam directly, so the extra `LocalDesktopClientSession` forwarding adapter is no longer in the path
 - compatibility-heavy test inspection on `Game` is now also being centralized behind one explicit test facade instead of scattered private reflection hooks
 - desktop app-shell persistence/runtime helpers now also receive the active runtime explicitly from `DesktopRuntimeBridge` instead of reading it through the global runtime singleton
+- `DesktopAppShell` now also depends on a bundled client-host binding plus narrow `DesktopRuntimeAccess` port instead of directly owning the embedded local host shell/bootstrap graph
 - desktop input/event dispatch now also reads the active event bus through the app-shell/runtime seam instead of a global runtime lookup inside the Processing observer base class
 - `MonopolyApp` no longer installs a placeholder global runtime during construction; the desktop runtime now appears only from explicit bootstrap/test initialization paths
 - shared rendering helpers no longer depend on a global current-app context; callers now pass an explicit rendering context instead

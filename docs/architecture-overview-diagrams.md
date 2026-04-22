@@ -193,11 +193,13 @@ What is important here:
 - the live render view type itself no longer sits in the transport-neutral client-session package; it now lives under the desktop-local session package
 - the desktop app shell now owns a small `DesktopClientSessionModel` fed by `ClientSessionUpdates` listener updates, so raw snapshot/listener pass-through no longer lives on `DesktopClientSessionRuntime`
 - the desktop app shell now also owns a small `DesktopClientRenderModel`, so `DesktopClientSessionRuntime` no longer exposes raw `currentView()` polling either
+- `DesktopAppShell` now also receives one bundled client-host binding and narrow `DesktopRuntimeAccess` port instead of constructing the embedded local host shell/bootstrap graph itself
 - pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type
 - frame/layout/session orchestration code now reads time and viewport state through `MonopolyRuntime` helpers instead of reaching directly into Processing app fields
 - desktop app-shell runtime/persistence adapters now receive the active runtime instance explicitly from `DesktopRuntimeBridge` instead of calling the global runtime singleton directly
+- embedded-local bootstrapping now also lives behind an explicit `EmbeddedLocalDesktopClientBindingFactory`, which is closer to the future point where embedded and remote client bindings can be swapped
 - the Processing input observer now also pulls its event bus through `DesktopAppShell` instead of reaching for a global runtime singleton
 - the Processing app constructor no longer creates a placeholder runtime singleton before real desktop bootstrap happens
 - shared utility helpers no longer rely on a global current-app context at all; rendering callers pass an explicit rendering context
