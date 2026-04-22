@@ -189,6 +189,7 @@ What is important here:
 - embedded desktop frame advancement no longer lives on `ClientSession`; the Processing runtime now gets that local-only behavior through a separate desktop frame-driver seam
 - `ClientSession` is now closer to a pure client state/view subscription seam, while fresh-session and local persistence workflows go through a separate desktop-local controls port
 - embedded live render access also no longer lives on `ClientSession`; desktop mode reaches it through a dedicated local view port
+- the live render view type itself no longer sits in the transport-neutral client-session package; it now lives under the desktop-local session package
 - pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type

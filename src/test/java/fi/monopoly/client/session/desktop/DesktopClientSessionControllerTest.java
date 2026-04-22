@@ -5,7 +5,6 @@ import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
-import fi.monopoly.client.session.ClientSessionView;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -181,7 +180,7 @@ class DesktopClientSessionControllerTest {
     }
 
     private static final class RecordingViewPort implements DesktopSessionViewPort {
-        private final ClientSessionView view = new ClientSessionView() {
+        private final DesktopSessionRenderView view = new DesktopSessionRenderView() {
             @Override
             public void draw() {
             }
@@ -193,7 +192,7 @@ class DesktopClientSessionControllerTest {
         };
 
         @Override
-        public ClientSessionView currentView() {
+        public DesktopSessionRenderView currentView() {
             return view;
         }
     }

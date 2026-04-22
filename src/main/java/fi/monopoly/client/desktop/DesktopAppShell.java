@@ -1,9 +1,9 @@
 package fi.monopoly.client.desktop;
 
 import fi.monopoly.client.session.ClientSessionSnapshot;
-import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopClientSessionRuntime;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
+import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
@@ -43,7 +43,7 @@ public final class DesktopAppShell {
         sessionRuntime.advanceFrame();
     }
 
-    public ClientSessionView currentView() {
+    public DesktopSessionRenderView currentView() {
         return sessionRuntime.currentView();
     }
 

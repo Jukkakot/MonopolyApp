@@ -4,7 +4,6 @@ import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
-import fi.monopoly.client.session.ClientSessionView;
 
 import java.util.Objects;
 
@@ -47,7 +46,7 @@ public final class DesktopClientSessionController implements DesktopClientSessio
     }
 
     @Override
-    public ClientSessionView currentView() {
+    public DesktopSessionRenderView currentView() {
         return viewPort.currentView();
     }
 

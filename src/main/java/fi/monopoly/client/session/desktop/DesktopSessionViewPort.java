@@ -1,7 +1,5 @@
 package fi.monopoly.client.session.desktop;
 
-import fi.monopoly.client.session.ClientSessionView;
-
 /**
  * Desktop-local live view port for embedded rendering.
  *
@@ -10,5 +8,5 @@ import fi.monopoly.client.session.ClientSessionView;
  * crosses this separate local-only seam instead.</p>
  */
 public interface DesktopSessionViewPort {
-    ClientSessionView currentView();
+    DesktopSessionRenderView currentView();
 }

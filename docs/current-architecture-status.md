@@ -50,6 +50,7 @@ The project does not yet have full backend-ready architecture because:
   - embedded desktop frame advancement now also crosses a dedicated local frame-driver seam instead of living on `ClientSession`
   - fresh local session creation, local save/load, and persistence notices now also live behind a dedicated desktop-local session controls port instead of the transport-neutral `ClientSession` seam
   - embedded desktop live render access now also crosses a dedicated local view port instead of living on `ClientSession`
+  - the live render view type itself now also lives under `client.session.desktop` instead of the transport-neutral `client.session` package
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`

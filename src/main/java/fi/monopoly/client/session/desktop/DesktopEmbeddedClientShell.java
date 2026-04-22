@@ -2,7 +2,6 @@ package fi.monopoly.client.session.desktop;
 
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
-import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.DesktopSessionHostCoordinator;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;

@@ -5,7 +5,7 @@ import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult
 import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
-import fi.monopoly.client.session.ClientSessionView;
+import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -72,9 +72,9 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
     }
 
     @Override
-    public ClientSessionView currentView() {
+    public DesktopSessionRenderView currentView() {
         DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
-        return game != null ? new GameClientSessionView(game.view()) : null;
+        return game != null ? new EmbeddedDesktopRenderView(game.view()) : null;
     }
 
     @Override
@@ -114,7 +114,7 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
         }
     }
 
-    private record GameClientSessionView(DesktopHostedGameView gameView) implements ClientSessionView {
+    private record EmbeddedDesktopRenderView(DesktopHostedGameView gameView) implements DesktopSessionRenderView {
         @Override
         public void draw() {
             gameView.draw();

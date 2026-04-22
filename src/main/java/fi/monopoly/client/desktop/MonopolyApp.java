@@ -1,6 +1,6 @@
 package fi.monopoly.client.desktop;
 
-import fi.monopoly.client.session.ClientSessionView;
+import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.utils.UiTokens;
@@ -85,7 +85,7 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
         logWindowSizeChangeFromDraw();
         background(205, 230, 209);
         desktopAppShell.advanceFrame();
-        ClientSessionView currentView = desktopAppShell.currentView();
+        DesktopSessionRenderView currentView = desktopAppShell.currentView();
         if (currentView == null) {
             return;
         }

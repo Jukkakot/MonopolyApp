@@ -2,7 +2,6 @@ package fi.monopoly.client.session.desktop;
 
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
-import fi.monopoly.client.session.ClientSessionView;
 
 /**
  * Client-owned desktop session runtime port used by the Processing app shell.
@@ -17,7 +16,7 @@ public interface DesktopClientSessionRuntime {
 
     void advanceFrame();
 
-    ClientSessionView currentView();
+    DesktopSessionRenderView currentView();
 
     ClientSessionSnapshot currentSnapshot();
 
