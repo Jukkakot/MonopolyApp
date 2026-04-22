@@ -36,6 +36,7 @@ class GameSmokeTest {
     private static final int MIN_TURN_SWITCHES = 15;
     private static final int MIN_UNIQUE_SPOTS = 12;
     private static Game activeGame;
+    private static MonopolyRuntime activeRuntime;
     private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
 
     private static void runAutoConfirmedRollSmokeTest(int targetRollCount) {
@@ -48,6 +49,7 @@ class GameSmokeTest {
         MonopolyRuntime runtime = initHeadlessRuntime(width, height);
         Game game = new Game(runtime);
         activeGame = game;
+        activeRuntime = runtime;
         runtime.eventBus().flushPendingChanges();
 
         int initialPlayerCount = players().count();
@@ -424,15 +426,15 @@ class GameSmokeTest {
     }
 
     private static Players players() {
-        return MonopolyRuntime.get().gameSession().players();
+        return activeRuntime.gameSession().players();
     }
 
     private static fi.monopoly.components.dices.Dices dices() {
-        return MonopolyRuntime.get().gameSession().dices();
+        return activeRuntime.gameSession().dices();
     }
 
     private static fi.monopoly.components.animation.Animations animations() {
-        return MonopolyRuntime.get().gameSession().animations();
+        return activeRuntime.gameSession().animations();
     }
 
     private static void dispatchKey(MonopolyRuntime runtime, char key) {
@@ -554,12 +556,12 @@ class GameSmokeTest {
         return turnName
                 + "|spot=" + turnSpot
                 + "|money=" + turnMoney
-                + "|popup=" + MonopolyRuntime.get().popupService().isAnyVisible()
+                + "|popup=" + activeRuntime.popupService().isAnyVisible()
                 + "|diceVisible=" + dices().isVisible()
                 + "|dice=" + diceValue
                 + "|animations=" + animations().isRunning()
                 + "|players=" + players().count()
-                + "|debt=" + MonopolyRuntime.get().gameSession().isDebtResolutionActive()
+                + "|debt=" + activeRuntime.gameSession().isDebtResolutionActive()
                 + "|phase=" + (projectedState != null && projectedState.turn() != null ? projectedState.turn().phase() : "none")
                 + "|canRoll=" + (projectedState != null && projectedState.turn() != null && projectedState.turn().canRoll())
                 + "|canEnd=" + (projectedState != null && projectedState.turn() != null && projectedState.turn().canEndTurn())
@@ -581,6 +583,7 @@ class GameSmokeTest {
         DesktopClientSettings.setDebugMode(false);
         DesktopClientSettings.setSkipAnimations(false);
         activeGame = null;
+        activeRuntime = null;
         fi.monopoly.components.spots.JailSpot.jailTimeLeftMap.clear();
     }
 

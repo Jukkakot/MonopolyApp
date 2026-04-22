@@ -4,6 +4,7 @@ import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
@@ -21,8 +22,7 @@ class BoardTest {
 
     @BeforeEach
     void setUp() {
-        new MonopolyApp();
-        runtime = MonopolyRuntime.get();
+        runtime = TestDesktopRuntimeFactory.create().runtime();
         board = new Board(runtime);
     }
 
