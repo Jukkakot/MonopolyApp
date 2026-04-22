@@ -18,21 +18,24 @@ import java.util.Objects;
 public final class DesktopClientSessionController implements DesktopClientSessionRuntime {
     private final ClientSession clientSession;
     private final DesktopSessionFrameDriver frameDriver;
+    private final DesktopLocalSessionControls localSessionControls;
     private final ClientSessionFeedbackSink feedbackSink;
 
     public DesktopClientSessionController(
             ClientSession clientSession,
             DesktopSessionFrameDriver frameDriver,
+            DesktopLocalSessionControls localSessionControls,
             ClientSessionFeedbackSink feedbackSink
     ) {
         this.clientSession = Objects.requireNonNull(clientSession);
         this.frameDriver = Objects.requireNonNull(frameDriver);
+        this.localSessionControls = Objects.requireNonNull(localSessionControls);
         this.feedbackSink = Objects.requireNonNull(feedbackSink);
     }
 
     @Override
     public void startFreshSession() {
-        clientSession.startFreshSession();
+        localSessionControls.startFreshSession();
     }
 
     @Override
@@ -62,11 +65,11 @@ public final class DesktopClientSessionController implements DesktopClientSessio
 
     @Override
     public void saveLocalSession() {
-        feedbackSink.showPersistenceResult(clientSession.saveLocalSession());
+        feedbackSink.showPersistenceResult(localSessionControls.saveLocalSession());
     }
 
     @Override
     public void loadLocalSession() {
-        feedbackSink.showPersistenceResult(clientSession.loadLocalSession());
+        feedbackSink.showPersistenceResult(localSessionControls.loadLocalSession());
     }
 }

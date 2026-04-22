@@ -2,8 +2,8 @@ package fi.monopoly.client.desktop;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
-import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
+import fi.monopoly.client.session.desktop.DesktopLocalSessionControls;
 import fi.monopoly.components.popup.components.ButtonProps;
 
 import java.util.Objects;
@@ -13,11 +13,11 @@ import java.util.function.Supplier;
  * Renders local persistence feedback into the current desktop runtime.
  */
 final class LocalSessionPersistenceUiHooks implements ClientSessionFeedbackSink {
-    private final ClientSession clientSession;
+    private final DesktopLocalSessionControls localSessionControls;
     private final Supplier<MonopolyRuntime> runtimeSupplier;
 
-    LocalSessionPersistenceUiHooks(ClientSession clientSession, Supplier<MonopolyRuntime> runtimeSupplier) {
-        this.clientSession = clientSession;
+    LocalSessionPersistenceUiHooks(DesktopLocalSessionControls localSessionControls, Supplier<MonopolyRuntime> runtimeSupplier) {
+        this.localSessionControls = Objects.requireNonNull(localSessionControls);
         this.runtimeSupplier = Objects.requireNonNull(runtimeSupplier);
     }
 
@@ -29,7 +29,7 @@ final class LocalSessionPersistenceUiHooks implements ClientSessionFeedbackSink 
     }
 
     public void showPersistenceNotice(String message) {
-        clientSession.showPersistenceNotice(message);
+        localSessionControls.showPersistenceNotice(message);
     }
 
     public void showResult(LocalSessionPersistenceResult result) {

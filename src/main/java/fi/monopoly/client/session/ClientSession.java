@@ -1,7 +1,5 @@
 package fi.monopoly.client.session;
 
-import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
-
 /**
  * Transitional client-facing session seam for whichever host currently owns Monopoly session
  * authority.
@@ -12,12 +10,6 @@ import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult
  * is introduced later.</p>
  */
 public interface ClientSession {
-    void startFreshSession();
-
-    LocalSessionPersistenceResult saveLocalSession();
-
-    LocalSessionPersistenceResult loadLocalSession();
-
     ClientSessionView currentView();
 
     ClientSessionSnapshot snapshot();
@@ -25,6 +17,4 @@ public interface ClientSession {
     void addListener(ClientSessionListener listener);
 
     void removeListener(ClientSessionListener listener);
-
-    void showPersistenceNotice(String message);
 }

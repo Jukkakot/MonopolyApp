@@ -48,6 +48,7 @@ The project does not yet have full backend-ready architecture because:
   - desktop client-session shell/runtime glue, client-owned local session control callbacks such as save/load triggers, and the app-facing desktop session runtime port
   - client-facing `ClientSession` no longer inherits host-side state replacement directly; host-only restore authority stays behind `SessionHost`
   - embedded desktop frame advancement now also crosses a dedicated local frame-driver seam instead of living on `ClientSession`
+  - fresh local session creation, local save/load, and persistence notices now also live behind a dedicated desktop-local session controls port instead of the transport-neutral `ClientSession` seam
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
