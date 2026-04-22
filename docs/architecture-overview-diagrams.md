@@ -188,6 +188,7 @@ What is important here:
 - the client-facing `ClientSession` seam no longer inherits host-side `SessionHost` state replacement directly, which keeps restore authority on the host side
 - embedded desktop frame advancement no longer lives on `ClientSession`; the Processing runtime now gets that local-only behavior through a separate desktop frame-driver seam
 - `ClientSession` is now closer to a pure client state/view subscription seam, while fresh-session and local persistence workflows go through a separate desktop-local controls port
+- embedded live render access also no longer lives on `ClientSession`; desktop mode reaches it through a dedicated local view port
 - pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type
@@ -355,4 +356,4 @@ Current practical status:
 - `A -> B` is largely done
 - `C`, `D`, and `E` are now substantially in place
 - the remaining local cleanup now mostly means shrinking `Game` further and reducing remaining desktop-host compatibility glue
-- `F` is still the next major architecture milestone after that, with the biggest remaining step being to narrow the existing `ClientSession` seam so remote hosting can reuse it without desktop-local assumptions
+- `F` is still the next major architecture milestone after that, with the biggest remaining step being to replace the remaining snapshot-plus-live-view embedded model with a transport-neutral session update flow that a remote host can drive directly

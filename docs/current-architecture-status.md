@@ -49,6 +49,7 @@ The project does not yet have full backend-ready architecture because:
   - client-facing `ClientSession` no longer inherits host-side state replacement directly; host-only restore authority stays behind `SessionHost`
   - embedded desktop frame advancement now also crosses a dedicated local frame-driver seam instead of living on `ClientSession`
   - fresh local session creation, local save/load, and persistence notices now also live behind a dedicated desktop-local session controls port instead of the transport-neutral `ClientSession` seam
+  - embedded desktop live render access now also crosses a dedicated local view port instead of living on `ClientSession`
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -218,6 +219,11 @@ The Processing client should ultimately depend on a transport-neutral session-fa
 - submit command
 - receive snapshot/view updates
 - query current connection/session status
+
+The current direction is now much closer to that target:
+
+- `ClientSession` is down to snapshot/listener concerns
+- desktop-only frame advancement, local controls, and live rendering now cross separate local seams
 
 The current seam should evolve cleanly into something that works for both:
 

@@ -18,17 +18,20 @@ import java.util.Objects;
 public final class DesktopClientSessionController implements DesktopClientSessionRuntime {
     private final ClientSession clientSession;
     private final DesktopSessionFrameDriver frameDriver;
+    private final DesktopSessionViewPort viewPort;
     private final DesktopLocalSessionControls localSessionControls;
     private final ClientSessionFeedbackSink feedbackSink;
 
     public DesktopClientSessionController(
             ClientSession clientSession,
             DesktopSessionFrameDriver frameDriver,
+            DesktopSessionViewPort viewPort,
             DesktopLocalSessionControls localSessionControls,
             ClientSessionFeedbackSink feedbackSink
     ) {
         this.clientSession = Objects.requireNonNull(clientSession);
         this.frameDriver = Objects.requireNonNull(frameDriver);
+        this.viewPort = Objects.requireNonNull(viewPort);
         this.localSessionControls = Objects.requireNonNull(localSessionControls);
         this.feedbackSink = Objects.requireNonNull(feedbackSink);
     }
@@ -45,7 +48,7 @@ public final class DesktopClientSessionController implements DesktopClientSessio
 
     @Override
     public ClientSessionView currentView() {
-        return clientSession.currentView();
+        return viewPort.currentView();
     }
 
     @Override

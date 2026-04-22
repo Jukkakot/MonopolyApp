@@ -17,11 +17,13 @@ class DesktopClientSessionControllerTest {
     void saveLocalSessionRoutesHostResultToFeedbackSink() {
         RecordingClientSession clientSession = new RecordingClientSession();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
+        RecordingViewPort viewPort = new RecordingViewPort();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
                 clientSession,
                 frameDriver,
+                viewPort,
                 localSessionControls,
                 feedbackSink
         );
@@ -36,11 +38,13 @@ class DesktopClientSessionControllerTest {
     void loadLocalSessionRoutesHostResultToFeedbackSink() {
         RecordingClientSession clientSession = new RecordingClientSession();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
+        RecordingViewPort viewPort = new RecordingViewPort();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
                 clientSession,
                 frameDriver,
+                viewPort,
                 localSessionControls,
                 feedbackSink
         );
@@ -55,11 +59,13 @@ class DesktopClientSessionControllerTest {
     void advanceFrameUsesDedicatedDesktopFrameDriver() {
         RecordingClientSession clientSession = new RecordingClientSession();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
+        RecordingViewPort viewPort = new RecordingViewPort();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
                 clientSession,
                 frameDriver,
+                viewPort,
                 localSessionControls,
                 feedbackSink
         );
@@ -73,11 +79,13 @@ class DesktopClientSessionControllerTest {
     void startFreshSessionUsesDedicatedLocalSessionControls() {
         RecordingClientSession clientSession = new RecordingClientSession();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
+        RecordingViewPort viewPort = new RecordingViewPort();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
                 clientSession,
                 frameDriver,
+                viewPort,
                 localSessionControls,
                 feedbackSink
         );
@@ -87,12 +95,25 @@ class DesktopClientSessionControllerTest {
         assertEquals(1, localSessionControls.startCalls);
     }
 
-    private static final class RecordingClientSession implements ClientSession {
-        @Override
-        public ClientSessionView currentView() {
-            return null;
-        }
+    @Test
+    void currentViewUsesDedicatedDesktopViewPort() {
+        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingFrameDriver frameDriver = new RecordingFrameDriver();
+        RecordingViewPort viewPort = new RecordingViewPort();
+        RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
+        RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
+        DesktopClientSessionController controller = new DesktopClientSessionController(
+                clientSession,
+                frameDriver,
+                viewPort,
+                localSessionControls,
+                feedbackSink
+        );
 
+        assertSame(viewPort.view, controller.currentView());
+    }
+
+    private static final class RecordingClientSession implements ClientSession {
         @Override
         public ClientSessionSnapshot snapshot() {
             return ClientSessionSnapshot.empty();
@@ -156,6 +177,24 @@ class DesktopClientSessionControllerTest {
         @Override
         public void showPersistenceNotice(String message) {
             lastPersistenceNotice = message;
+        }
+    }
+
+    private static final class RecordingViewPort implements DesktopSessionViewPort {
+        private final ClientSessionView view = new ClientSessionView() {
+            @Override
+            public void draw() {
+            }
+
+            @Override
+            public java.util.List<String> debugPerformanceLines(float fps) {
+                return java.util.List.of();
+            }
+        };
+
+        @Override
+        public ClientSessionView currentView() {
+            return view;
         }
     }
 }
