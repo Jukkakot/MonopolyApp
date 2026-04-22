@@ -1,6 +1,5 @@
 package fi.monopoly.components;
 
-import controlP5.ControlP5;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
@@ -9,6 +8,7 @@ import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.turn.PropertyAuctionResolver;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.support.TestLogLevels;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
@@ -16,8 +16,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 
 import java.lang.reflect.Field;
 import java.util.Comparator;
@@ -247,19 +245,7 @@ class GameBotSimulationTest {
     }
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
-        MonopolyApp app = new MonopolyApp();
-        app.width = width;
-        app.height = height;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create(width, height).runtime();
     }
 
     private static void resetNextPlayerId() throws ReflectiveOperationException {

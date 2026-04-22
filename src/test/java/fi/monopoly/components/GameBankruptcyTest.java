@@ -1,8 +1,6 @@
 package fi.monopoly.components;
 
-import controlP5.ControlP5;
 import fi.monopoly.client.desktop.DesktopClientSettings;
-import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.DebtState;
@@ -10,6 +8,7 @@ import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.presentation.game.session.GameSessionState;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.support.TestLogLevels;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
@@ -17,8 +16,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -178,19 +175,7 @@ class GameBankruptcyTest {
     }
 
     private static MonopolyRuntime initHeadlessRuntime() {
-        MonopolyApp app = new MonopolyApp();
-        app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;
-        app.height = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create().runtime();
     }
 
     private static void resetNextPlayerId() throws ReflectiveOperationException {

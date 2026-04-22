@@ -35,9 +35,16 @@ public final class TestDesktopRuntimeFactory {
         DesktopRuntimeResources.setFonts(font, font, font);
 
         MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
-        return new DesktopTestContext(app, runtime);
+        return new DesktopTestContext(app, runtime, controlP5, font);
     }
 
-    public record DesktopTestContext(MonopolyApp app, MonopolyRuntime runtime) {
+    public record DesktopTestContext(MonopolyApp app, MonopolyRuntime runtime, ControlP5 controlP5, PFont font) {
+        public DesktopTestContext prepareTextDrawing() {
+            if (app.g instanceof PGraphicsJava2D graphics) {
+                graphics.beginDraw();
+                graphics.textFont(font);
+            }
+            return this;
+        }
     }
 }

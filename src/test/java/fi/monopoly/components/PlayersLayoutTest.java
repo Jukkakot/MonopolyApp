@@ -1,11 +1,9 @@
 package fi.monopoly.components;
 
-import controlP5.ControlP5;
-import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import org.junit.jupiter.api.Test;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -14,19 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PlayersLayoutTest {
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
-        MonopolyApp app = new MonopolyApp();
-        app.width = width;
-        app.height = height;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create(width, height).runtime();
     }
 
     private static Object invoke(Players players, String methodName) throws ReflectiveOperationException {
