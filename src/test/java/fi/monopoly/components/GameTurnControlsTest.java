@@ -1,6 +1,5 @@
 package fi.monopoly.components;
 
-import controlP5.ControlP5;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
@@ -17,14 +16,13 @@ import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.support.TestGameSessions;
 import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 import processing.event.KeyEvent;
 
 import java.lang.reflect.Field;
@@ -41,19 +39,7 @@ class GameTurnControlsTest {
     }
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
-        MonopolyApp app = new MonopolyApp();
-        app.width = width;
-        app.height = height;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create(width, height).runtime();
     }
 
     private static MonopolyButton getEndRoundButton(Game game) throws ReflectiveOperationException {

@@ -1,7 +1,5 @@
 package fi.monopoly.application.session.persistence;
 
-import controlP5.ControlP5;
-import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
@@ -20,10 +18,9 @@ import fi.monopoly.infrastructure.persistence.session.LegacySessionRuntimeRestor
 import fi.monopoly.infrastructure.persistence.session.SessionSnapshot;
 import fi.monopoly.infrastructure.persistence.session.SessionSnapshotMapper;
 import fi.monopoly.infrastructure.persistence.session.SessionSnapshotStore;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -154,18 +151,6 @@ class SessionPersistenceServiceTest {
     }
 
     private static MonopolyRuntime initHeadlessRuntime() {
-        MonopolyApp app = new MonopolyApp();
-        app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;
-        app.height = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create().runtime();
     }
 }

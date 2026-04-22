@@ -1,8 +1,6 @@
 package fi.monopoly;
 
-import controlP5.ControlP5;
 import fi.monopoly.client.desktop.MonopolyApp;
-import fi.monopoly.client.desktop.DesktopRuntimeResources;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.components.Game;
@@ -10,11 +8,10 @@ import fi.monopoly.host.session.local.DesktopHostedGame;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.GameBackedDesktopHostedGame;
 import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 import processing.event.KeyEvent;
 
 import java.nio.file.Files;
@@ -61,22 +58,9 @@ class MonopolyAppPersistenceTest {
         System.setProperty("monopoly.localSavePath", snapshotPath.toString());
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
 
-        MonopolyApp app = new MonopolyApp();
-        app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;
-        app.height = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        DesktopRuntimeResources.setControlLayer(controlP5);
-        DesktopRuntimeResources.setFonts(font, font, font);
-
-        MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        TestDesktopRuntimeFactory.DesktopTestContext context = TestDesktopRuntimeFactory.create();
+        MonopolyApp app = context.app();
+        MonopolyRuntime runtime = context.runtime();
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
         DesktopHostedGameTestAccess testAccess = app.desktopAppShell().testAccess();
         testAccess.setHostedGame(new GameBackedDesktopHostedGame(game));
@@ -108,22 +92,9 @@ class MonopolyAppPersistenceTest {
         System.setProperty("monopoly.localSavePath", snapshotPath.toString());
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
 
-        MonopolyApp app = new MonopolyApp();
-        app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;
-        app.height = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        DesktopRuntimeResources.setControlLayer(controlP5);
-        DesktopRuntimeResources.setFonts(font, font, font);
-
-        MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        TestDesktopRuntimeFactory.DesktopTestContext context = TestDesktopRuntimeFactory.create();
+        MonopolyApp app = context.app();
+        MonopolyRuntime runtime = context.runtime();
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
         app.desktopAppShell().testAccess().setHostedGame(new GameBackedDesktopHostedGame(game));
         runtime.eventBus().flushPendingChanges();
@@ -144,22 +115,9 @@ class MonopolyAppPersistenceTest {
         System.setProperty("monopoly.localSavePath", snapshotPath.toString());
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
 
-        MonopolyApp app = new MonopolyApp();
-        app.width = MonopolyApp.DEFAULT_WINDOW_WIDTH;
-        app.height = MonopolyApp.DEFAULT_WINDOW_HEIGHT;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        DesktopRuntimeResources.setControlLayer(controlP5);
-        DesktopRuntimeResources.setFonts(font, font, font);
-
-        MonopolyRuntime runtime = MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        TestDesktopRuntimeFactory.DesktopTestContext context = TestDesktopRuntimeFactory.create();
+        MonopolyApp app = context.app();
+        MonopolyRuntime runtime = context.runtime();
         Game game = new Game(runtime, null, new LocalSessionActions(app::saveLocalSession, app::loadLocalSession));
         DesktopHostedGameTestAccess testAccess = app.desktopAppShell().testAccess();
         testAccess.setHostedGame(new GameBackedDesktopHostedGame(game));
