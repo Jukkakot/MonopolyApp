@@ -417,16 +417,20 @@ public class StreetProperty extends Property {
     }
 
     private boolean isDebtResolutionActive() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        MonopolyRuntime runtime = runtimeOrNull();
         return runtime != null && runtime.gameSessionOrNull() != null && runtime.gameSessionOrNull().isDebtResolutionActive();
     }
 
     private Players getPlayersOrNull() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        MonopolyRuntime runtime = runtimeOrNull();
         if (runtime == null || runtime.gameSessionOrNull() == null) {
             return null;
         }
         return runtime.gameSessionOrNull().players();
+    }
+
+    private MonopolyRuntime runtimeOrNull() {
+        return ownerPlayer != null ? ownerPlayer.getRuntime() : null;
     }
 
     private enum BuildValidationResult {

@@ -38,7 +38,7 @@ The project does not yet have full backend-ready architecture because:
 ### What is already separated
 
 - `client.desktop`
-  - Processing app-facing shell/runtime adapters, runtime resources, explicit client-global desktop settings, and client context around the embedded local client session
+  - Processing app-facing shell/runtime adapters, runtime resources, explicit client-global desktop settings, and narrow rendering/runtime seams around the embedded local client session
 - `host.session.local`
   - embedded host-owned session lifecycle, persistence, snapshot publication, hosted-game lifecycle, and test-access seams for the in-process desktop mode
   - embedded host-owned local game loop coordination now also drives bot stepping outside the presentation frame coordinator
@@ -150,6 +150,8 @@ The recent `client.desktop` and embedded-host moves improved this:
 - desktop app-shell persistence/runtime helpers now also receive the active runtime explicitly from `DesktopRuntimeBridge` instead of reading it through the global runtime singleton
 - desktop input/event dispatch now also reads the active event bus through the app-shell/runtime seam instead of a global runtime lookup inside the Processing observer base class
 - `MonopolyApp` no longer installs a placeholder global runtime during construction; the desktop runtime now appears only from explicit bootstrap/test initialization paths
+- shared rendering helpers no longer depend on a global current-app context; callers now pass an explicit rendering context instead
+- street/utility property runtime-dependent checks now also resolve through the owning player's runtime/session context instead of reading the global runtime singleton
 
 ### 4. Tests still lean on local host internals
 
@@ -203,15 +205,18 @@ That is a strong staging point for introducing actual backend/client package roo
 
 These are the blockers that matter most before the project is truly backend-ready.
 
-### Blocker A: no explicit client session interface yet
+### Blocker A: the client session interface is still too host-shaped
 
-The Processing client should depend on a narrow session-facing interface such as:
+The Processing client already has an explicit `ClientSession` seam and embedded local mode uses it.
+The remaining problem is that the seam is not yet narrow enough for a future remote host.
+
+The Processing client should ultimately depend on a transport-neutral session-facing interface such as:
 
 - submit command
 - receive snapshot/view updates
 - query current connection/session status
 
-That interface should work for both:
+The current seam should evolve cleanly into something that works for both:
 
 - local embedded host
 - remote backend host

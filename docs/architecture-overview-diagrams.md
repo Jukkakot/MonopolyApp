@@ -187,12 +187,13 @@ What is important here:
 - the Processing app shell now talks to a single `DesktopClientSessionRuntime` port instead of directly forwarding embedded-session shell methods one by one
 - pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
-- the current Processing app instance is now accessed through an explicit `client.desktop` context seam instead of `MonopolyApp.self`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type
 - frame/layout/session orchestration code now reads time and viewport state through `MonopolyRuntime` helpers instead of reaching directly into Processing app fields
 - desktop app-shell runtime/persistence adapters now receive the active runtime instance explicitly from `DesktopRuntimeBridge` instead of calling the global runtime singleton directly
 - the Processing input observer now also pulls its event bus through `DesktopAppShell` instead of reaching for a global runtime singleton
 - the Processing app constructor no longer creates a placeholder runtime singleton before real desktop bootstrap happens
+- shared utility helpers no longer rely on a global current-app context at all; rendering callers pass an explicit rendering context
+- property-level runtime checks for building supply and utility rent now also resolve through the owning player's runtime/session context instead of the global runtime singleton
 - projected desktop session views now read popup state through explicit collaborators instead of depending on the full runtime shell
 - the remaining `Game` host constructor is now driven through an explicit desktop bootstrap factory instead of assembling controls, shell, and presentation inline
 - embedded desktop session hosting now targets a small hosted-game interface instead of depending on the full `Game` host type for normal session/view lifecycle operations
@@ -351,4 +352,4 @@ Current practical status:
 - `A -> B` is largely done
 - `C`, `D`, and `E` are now substantially in place
 - the remaining local cleanup now mostly means shrinking `Game` further and reducing remaining desktop-host compatibility glue
-- `F` is still the next major architecture milestone after that
+- `F` is still the next major architecture milestone after that, with the biggest remaining step being to narrow the existing `ClientSession` seam so remote hosting can reuse it without desktop-local assumptions

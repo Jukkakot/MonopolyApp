@@ -1,8 +1,5 @@
 package fi.monopoly.client.desktop;
 
-import controlP5.ControlP5;
-
-
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.components.event.MonopolyEventObserver;
@@ -28,10 +25,6 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
     private final DesktopAppShell desktopAppShell = new DesktopAppShell(this);
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
-
-    public MonopolyApp() {
-        DesktopClientContext.setCurrentApp(this);
-    }
 
     public void settings() {
         size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, FX2D);

@@ -1,14 +1,11 @@
 package fi.monopoly.components.properties;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
-import fi.monopoly.components.Game;
 import fi.monopoly.components.GameSession;
 import fi.monopoly.components.Player;
 import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.types.SpotType;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -17,23 +14,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class StreetPropertyTest {
-
-    @BeforeEach
-    void resetRuntimeSessionBeforeTest() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
-        if (runtime != null) {
-            runtime.setGameSession(null);
-        }
-    }
-
-    @AfterEach
-    void clearGamePlayers() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
-        if (runtime != null) {
-            runtime.setGameSession(null);
-        }
-    }
-
     private static MonopolyRuntime initHeadlessRuntime() {
         return TestDesktopRuntimeFactory.create().runtime();
     }
@@ -268,8 +248,9 @@ class StreetPropertyTest {
 
     @Test
     void buyingHouseFailsWhenBankHasNoHousesLeft() {
-        Player owner = TestObjectFactory.player("Owner", 2000, 1);
-        Player other = TestObjectFactory.player("Other", 2000, 2);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Player owner = TestObjectFactory.player(runtime, "Owner", 2000, 1);
+        Player other = TestObjectFactory.player(runtime, "Other", 2000, 2);
         StreetProperty first = new StreetProperty(SpotType.B1);
         StreetProperty second = new StreetProperty(SpotType.B2);
         TestObjectFactory.giveProperty(owner, first);
@@ -282,7 +263,6 @@ class StreetPropertyTest {
         setBuildingState(fillerA, 16, 0);
         setBuildingState(fillerB, 16, 0);
 
-        MonopolyRuntime runtime = initHeadlessRuntime();
         runtime.setGameSession(new GameSession(TestObjectFactory.playersWithTurn(owner, other), null, null));
 
         assertFalse(first.buyHouses(1));
@@ -291,8 +271,9 @@ class StreetPropertyTest {
 
     @Test
     void buyingHotelFailsWhenBankHasNoHotelsLeft() {
-        Player owner = TestObjectFactory.player("Owner", 5000, 1);
-        Player hotelOwner = TestObjectFactory.player("HotelOwner", 5000, 2);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Player owner = TestObjectFactory.player(runtime, "Owner", 5000, 1);
+        Player hotelOwner = TestObjectFactory.player(runtime, "HotelOwner", 5000, 2);
         StreetProperty first = new StreetProperty(SpotType.B1);
         StreetProperty second = new StreetProperty(SpotType.B2);
         TestObjectFactory.giveProperty(owner, first);
@@ -311,7 +292,6 @@ class StreetPropertyTest {
             setBuildingState(property, 0, 1);
         }
 
-        MonopolyRuntime runtime = initHeadlessRuntime();
         runtime.setGameSession(new GameSession(TestObjectFactory.playersWithTurn(owner, hotelOwner), null, null));
 
         assertFalse(first.buyHouses(1));
@@ -321,8 +301,9 @@ class StreetPropertyTest {
 
     @Test
     void sellingHotelFailsWhenBankCannotReturnFourHouses() {
-        Player owner = TestObjectFactory.player("Owner", 5000, 1);
-        Player other = TestObjectFactory.player("Other", 5000, 2);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Player owner = TestObjectFactory.player(runtime, "Owner", 5000, 1);
+        Player other = TestObjectFactory.player(runtime, "Other", 5000, 2);
         StreetProperty first = new StreetProperty(SpotType.B1);
         StreetProperty second = new StreetProperty(SpotType.B2);
         TestObjectFactory.giveProperty(owner, first);
@@ -334,7 +315,6 @@ class StreetPropertyTest {
         TestObjectFactory.giveProperty(other, filler);
         setBuildingState(filler, 29, 0);
 
-        MonopolyRuntime runtime = initHeadlessRuntime();
         runtime.setGameSession(new GameSession(TestObjectFactory.playersWithTurn(owner, other), null, null));
 
         assertFalse(first.sellHouses(1));

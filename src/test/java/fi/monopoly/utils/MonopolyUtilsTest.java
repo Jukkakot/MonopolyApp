@@ -62,11 +62,11 @@ class MonopolyUtilsTest {
         app.mouseY = 20;
         SpotProps area = new SpotProps(10, 20, 8, 6, 0);
 
-        assertTrue(MonopolyUtils.isMouseInArea(area));
+        assertTrue(MonopolyUtils.isMouseInArea(app, area));
 
         app.mouseX = 100;
         app.mouseY = 100;
-        assertFalse(MonopolyUtils.isMouseInArea(area));
+        assertFalse(MonopolyUtils.isMouseInArea(app, area));
     }
 
     @Test
@@ -75,11 +75,11 @@ class MonopolyUtilsTest {
         app.mouseX = 12;
         app.mouseY = 20;
 
-        assertTrue(MonopolyUtils.isMouseInArea(new Coordinates(10, 20, 0), 8, 6));
+        assertTrue(MonopolyUtils.isMouseInArea(app, new Coordinates(10, 20, 0), 8, 6));
 
         app.mouseX = 30;
         app.mouseY = 30;
-        assertFalse(MonopolyUtils.isMouseInArea(new Coordinates(10, 20, 0), 8, 6));
+        assertFalse(MonopolyUtils.isMouseInArea(app, new Coordinates(10, 20, 0), 8, 6));
     }
 
     @Test

@@ -17,7 +17,7 @@ public class UtilityProperty extends Property {
     @Override
     public Integer getRent(Player player) {
         if (hasOwner() && isNotOwner(player)) {
-            MonopolyRuntime runtime = MonopolyRuntime.peek();
+            MonopolyRuntime runtime = ownerPlayer != null ? ownerPlayer.getRuntime() : null;
             if (runtime == null || runtime.gameSessionOrNull() == null || runtime.gameSessionOrNull().dices() == null
                     || runtime.gameSessionOrNull().dices().getValue() == null) {
                 return 0;
