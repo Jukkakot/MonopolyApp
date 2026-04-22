@@ -31,7 +31,6 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
 
     public MonopolyApp() {
         DesktopClientContext.setCurrentApp(this);
-        MonopolyRuntime.initialize(this, null, null, null, null);
     }
 
     public void settings() {
@@ -146,8 +145,8 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
     }
 
     @Override
-    protected MonopolyEventBus eventBus() {
-        return desktopAppShell.eventBus();
+    protected MonopolyEventBus eventBusOrNull() {
+        return desktopAppShell.eventBusOrNull();
     }
 
     @Override

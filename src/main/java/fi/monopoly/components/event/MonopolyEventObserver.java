@@ -8,18 +8,24 @@ import processing.event.MouseEvent;
 
 @Slf4j
 public abstract class MonopolyEventObserver extends PApplet {
-    protected abstract MonopolyEventBus eventBus();
+    protected abstract MonopolyEventBus eventBusOrNull();
 
     @Override
     protected void dequeueEvents() {
-        eventBus().flushPendingChanges();
+        MonopolyEventBus eventBus = eventBusOrNull();
+        if (eventBus != null) {
+            eventBus.flushPendingChanges();
+        }
         super.dequeueEvents();
     }
 
     @Override
     public void keyPressed(KeyEvent keyEvent) {
         super.keyPressed(keyEvent);
-        eventBus().sendConsumableEvent(keyEvent);
+        MonopolyEventBus eventBus = eventBusOrNull();
+        if (eventBus != null) {
+            eventBus.sendConsumableEvent(keyEvent);
+        }
         char key = Character.toLowerCase(keyEvent.getKey());
         if (key == 'd') {
             DesktopClientSettings.toggleDebugMode();
@@ -43,13 +49,19 @@ public abstract class MonopolyEventObserver extends PApplet {
     @Override
     public void mouseClicked(MouseEvent mouseEvent) {
         super.mouseClicked(mouseEvent);
-        eventBus().sendEventToAll(mouseEvent);
+        MonopolyEventBus eventBus = eventBusOrNull();
+        if (eventBus != null) {
+            eventBus.sendEventToAll(mouseEvent);
+        }
     }
 
     @Override
     public void mousePressed(MouseEvent mouseEvent) {
         super.mousePressed(mouseEvent);
-        eventBus().sendConsumableEvent(mouseEvent);
+        MonopolyEventBus eventBus = eventBusOrNull();
+        if (eventBus != null) {
+            eventBus.sendConsumableEvent(mouseEvent);
+        }
     }
 
 }

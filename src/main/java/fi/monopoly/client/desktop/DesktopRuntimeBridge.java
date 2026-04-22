@@ -100,6 +100,10 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks 
         game.dispose();
     }
 
+    MonopolyRuntime runtimeOrNull() {
+        return currentRuntimeOrNull();
+    }
+
     MonopolyRuntime runtime() {
         MonopolyRuntime activeRuntime = currentRuntimeOrNull();
         if (activeRuntime == null) {

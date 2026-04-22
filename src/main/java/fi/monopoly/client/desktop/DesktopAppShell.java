@@ -63,8 +63,17 @@ public final class DesktopAppShell {
         return testAccess;
     }
 
+    public MonopolyRuntime runtimeOrNull() {
+        return runtimeBridge.runtimeOrNull();
+    }
+
     public MonopolyRuntime runtime() {
         return runtimeBridge.runtime();
+    }
+
+    public MonopolyEventBus eventBusOrNull() {
+        MonopolyRuntime runtime = runtimeOrNull();
+        return runtime != null ? runtime.eventBus() : null;
     }
 
     public MonopolyEventBus eventBus() {

@@ -192,6 +192,7 @@ What is important here:
 - frame/layout/session orchestration code now reads time and viewport state through `MonopolyRuntime` helpers instead of reaching directly into Processing app fields
 - desktop app-shell runtime/persistence adapters now receive the active runtime instance explicitly from `DesktopRuntimeBridge` instead of calling the global runtime singleton directly
 - the Processing input observer now also pulls its event bus through `DesktopAppShell` instead of reaching for a global runtime singleton
+- the Processing app constructor no longer creates a placeholder runtime singleton before real desktop bootstrap happens
 - projected desktop session views now read popup state through explicit collaborators instead of depending on the full runtime shell
 - the remaining `Game` host constructor is now driven through an explicit desktop bootstrap factory instead of assembling controls, shell, and presentation inline
 - embedded desktop session hosting now targets a small hosted-game interface instead of depending on the full `Game` host type for normal session/view lifecycle operations
