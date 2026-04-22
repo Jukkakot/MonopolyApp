@@ -13,8 +13,6 @@ public interface DesktopClientSessionRuntime {
 
     void advanceFrame();
 
-    DesktopSessionRenderView currentView();
-
     void saveLocalSession();
 
     void loadLocalSession();

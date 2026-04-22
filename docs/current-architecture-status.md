@@ -52,6 +52,7 @@ The project does not yet have full backend-ready architecture because:
   - embedded desktop live render access now also crosses a dedicated local view port instead of living on `ClientSession`
   - the live render view type itself now also lives under `client.session.desktop` instead of the transport-neutral `client.session` package
   - the desktop app shell now owns a small client-side session model fed by `ClientSession` listener updates, so snapshot state no longer reaches the app by raw runtime pass-through getters/listener registration
+  - the desktop app shell now also owns a small client-side render model, so the runtime port no longer exposes raw live-view polling directly to the app
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -227,6 +228,7 @@ The current direction is now much closer to that target:
 - `ClientSession` is down to snapshot/listener concerns
 - desktop-only frame advancement, local controls, and live rendering now cross separate local seams
 - the Processing app shell now keeps its own client-side snapshot model populated from the listener stream instead of polling the runtime adapter for host-owned snapshot state
+- the Processing app shell now also reads the embedded live render target through a client-owned render model instead of a `DesktopClientSessionRuntime.currentView()` pass-through
 
 The current seam should evolve cleanly into something that works for both:
 

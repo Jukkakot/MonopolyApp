@@ -17,6 +17,7 @@ public final class DesktopClientSessionController implements DesktopClientSessio
     private final DesktopSessionFrameDriver frameDriver;
     private final DesktopSessionViewPort viewPort;
     private final DesktopClientSessionModel sessionModel;
+    private final DesktopClientRenderModel renderModel;
     private final DesktopLocalSessionControls localSessionControls;
     private final ClientSessionFeedbackSink feedbackSink;
 
@@ -25,6 +26,7 @@ public final class DesktopClientSessionController implements DesktopClientSessio
             DesktopSessionFrameDriver frameDriver,
             DesktopSessionViewPort viewPort,
             DesktopClientSessionModel sessionModel,
+            DesktopClientRenderModel renderModel,
             DesktopLocalSessionControls localSessionControls,
             ClientSessionFeedbackSink feedbackSink
     ) {
@@ -32,24 +34,23 @@ public final class DesktopClientSessionController implements DesktopClientSessio
         this.frameDriver = Objects.requireNonNull(frameDriver);
         this.viewPort = Objects.requireNonNull(viewPort);
         this.sessionModel = Objects.requireNonNull(sessionModel);
+        this.renderModel = Objects.requireNonNull(renderModel);
         this.localSessionControls = Objects.requireNonNull(localSessionControls);
         this.feedbackSink = Objects.requireNonNull(feedbackSink);
         this.clientSession.addListener(this.sessionModel);
+        refreshRenderModel();
     }
 
     @Override
     public void startFreshSession() {
         localSessionControls.startFreshSession();
+        refreshRenderModel();
     }
 
     @Override
     public void advanceFrame() {
         frameDriver.advanceFrame();
-    }
-
-    @Override
-    public DesktopSessionRenderView currentView() {
-        return viewPort.currentView();
+        refreshRenderModel();
     }
 
     @Override
@@ -60,5 +61,10 @@ public final class DesktopClientSessionController implements DesktopClientSessio
     @Override
     public void loadLocalSession() {
         feedbackSink.showPersistenceResult(localSessionControls.loadLocalSession());
+        refreshRenderModel();
+    }
+
+    private void refreshRenderModel() {
+        renderModel.setCurrentView(viewPort.currentView());
     }
 }

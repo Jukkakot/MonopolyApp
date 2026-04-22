@@ -191,6 +191,7 @@ What is important here:
 - embedded live render access also no longer lives on `ClientSession`; desktop mode reaches it through a dedicated local view port
 - the live render view type itself no longer sits in the transport-neutral client-session package; it now lives under the desktop-local session package
 - the desktop app shell now owns a small `DesktopClientSessionModel` fed by `ClientSession` listener updates, so raw snapshot/listener pass-through no longer lives on `DesktopClientSessionRuntime`
+- the desktop app shell now also owns a small `DesktopClientRenderModel`, so `DesktopClientSessionRuntime` no longer exposes raw `currentView()` polling either
 - pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type
@@ -259,7 +260,7 @@ This is already much closer to backend-safe behavior than the original project s
 
 - the desktop client still owns the authoritative application service instance locally
 - the bridge still mutates legacy runtime objects in-process
-- the desktop client now has its own listener-fed session model, but the rendered live view is still host-provided rather than a transport-neutral client projection
+- the desktop client now has its own listener-fed session and render models, but the rendered live view is still host-provided rather than a transport-neutral client projection
 - `Game` still exposes a broad compatibility surface for tests and local desktop orchestration, even though frame and session-view work now sits behind `GameDesktopPresentationHost`
 
 ## 4. Current Package View

@@ -21,21 +21,21 @@ public final class DesktopEmbeddedClientShell {
     private final ClientSession clientSession;
     private final DesktopSessionFrameDriver frameDriver;
     private final DesktopSessionViewPort viewPort;
-    private final DesktopClientSessionModel sessionModel;
+    private final DesktopClientViewModels viewModels;
     private final DesktopLocalSessionControls localSessionControls;
     private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
     public DesktopEmbeddedClientShell(
             DesktopSessionHostCoordinator.Hooks hostHooks,
-            DesktopClientSessionModel sessionModel,
+            DesktopClientViewModels viewModels,
             Function<DesktopLocalSessionControls, ClientSessionFeedbackSink> feedbackSinkFactory
     ) {
         this.embeddedSessionHost = new EmbeddedDesktopSessionHost(Objects.requireNonNull(hostHooks));
         this.clientSession = embeddedSessionHost;
         this.frameDriver = embeddedSessionHost::advanceHostFrame;
         this.viewPort = embeddedSessionHost;
-        this.sessionModel = Objects.requireNonNull(sessionModel);
+        this.viewModels = Objects.requireNonNull(viewModels);
         this.localSessionControls = embeddedSessionHost;
         this.testAccess = embeddedSessionHost.testAccess();
         ClientSessionFeedbackSink feedbackSink = Objects.requireNonNull(feedbackSinkFactory).apply(localSessionControls);
@@ -43,7 +43,8 @@ public final class DesktopEmbeddedClientShell {
                 clientSession,
                 frameDriver,
                 viewPort,
-                this.sessionModel,
+                this.viewModels.sessionModel(),
+                this.viewModels.renderModel(),
                 localSessionControls,
                 feedbackSink
         );

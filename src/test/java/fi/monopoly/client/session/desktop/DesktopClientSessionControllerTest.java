@@ -18,6 +18,7 @@ class DesktopClientSessionControllerTest {
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
+        DesktopClientRenderModel renderModel = new DesktopClientRenderModel();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
@@ -25,6 +26,7 @@ class DesktopClientSessionControllerTest {
                 frameDriver,
                 viewPort,
                 sessionModel,
+                renderModel,
                 localSessionControls,
                 feedbackSink
         );
@@ -41,6 +43,7 @@ class DesktopClientSessionControllerTest {
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
+        DesktopClientRenderModel renderModel = new DesktopClientRenderModel();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
@@ -48,6 +51,7 @@ class DesktopClientSessionControllerTest {
                 frameDriver,
                 viewPort,
                 sessionModel,
+                renderModel,
                 localSessionControls,
                 feedbackSink
         );
@@ -64,6 +68,7 @@ class DesktopClientSessionControllerTest {
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
+        DesktopClientRenderModel renderModel = new DesktopClientRenderModel();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
@@ -71,6 +76,7 @@ class DesktopClientSessionControllerTest {
                 frameDriver,
                 viewPort,
                 sessionModel,
+                renderModel,
                 localSessionControls,
                 feedbackSink
         );
@@ -78,6 +84,7 @@ class DesktopClientSessionControllerTest {
         controller.advanceFrame();
 
         assertEquals(1, frameDriver.advanceCalls);
+        assertSame(viewPort.view, renderModel.currentView());
     }
 
     @Test
@@ -86,6 +93,7 @@ class DesktopClientSessionControllerTest {
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
+        DesktopClientRenderModel renderModel = new DesktopClientRenderModel();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
@@ -93,6 +101,7 @@ class DesktopClientSessionControllerTest {
                 frameDriver,
                 viewPort,
                 sessionModel,
+                renderModel,
                 localSessionControls,
                 feedbackSink
         );
@@ -100,14 +109,38 @@ class DesktopClientSessionControllerTest {
         controller.startFreshSession();
 
         assertEquals(1, localSessionControls.startCalls);
+        assertSame(viewPort.view, renderModel.currentView());
     }
 
     @Test
-    void currentViewUsesDedicatedDesktopViewPort() {
+    void constructorSeedsClientOwnedRenderModelFromDedicatedDesktopViewPort() {
         RecordingClientSession clientSession = new RecordingClientSession();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
+        DesktopClientRenderModel renderModel = new DesktopClientRenderModel();
+        RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
+        RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
+        new DesktopClientSessionController(
+                clientSession,
+                frameDriver,
+                viewPort,
+                sessionModel,
+                renderModel,
+                localSessionControls,
+                feedbackSink
+        );
+
+        assertSame(viewPort.view, renderModel.currentView());
+    }
+
+    @Test
+    void loadLocalSessionRefreshesClientOwnedRenderModel() {
+        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingFrameDriver frameDriver = new RecordingFrameDriver();
+        RecordingViewPort viewPort = new RecordingViewPort();
+        DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
+        DesktopClientRenderModel renderModel = new DesktopClientRenderModel();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
@@ -115,11 +148,14 @@ class DesktopClientSessionControllerTest {
                 frameDriver,
                 viewPort,
                 sessionModel,
+                renderModel,
                 localSessionControls,
                 feedbackSink
         );
 
-        assertSame(viewPort.view, controller.currentView());
+        controller.loadLocalSession();
+
+        assertSame(viewPort.view, renderModel.currentView());
     }
 
     @Test
@@ -128,6 +164,7 @@ class DesktopClientSessionControllerTest {
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
+        DesktopClientRenderModel renderModel = new DesktopClientRenderModel();
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
 
@@ -136,6 +173,7 @@ class DesktopClientSessionControllerTest {
                 frameDriver,
                 viewPort,
                 sessionModel,
+                renderModel,
                 localSessionControls,
                 feedbackSink
         );

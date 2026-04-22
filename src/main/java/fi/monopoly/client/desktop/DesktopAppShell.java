@@ -1,8 +1,10 @@
 package fi.monopoly.client.desktop;
 
 import fi.monopoly.client.session.ClientSessionSnapshot;
+import fi.monopoly.client.session.desktop.DesktopClientRenderModel;
 import fi.monopoly.client.session.desktop.DesktopClientSessionModel;
 import fi.monopoly.client.session.desktop.DesktopClientSessionRuntime;
+import fi.monopoly.client.session.desktop.DesktopClientViewModels;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
 import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 import fi.monopoly.components.event.MonopolyEventBus;
@@ -18,7 +20,7 @@ import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFa
  */
 public final class DesktopAppShell {
     private final DesktopRuntimeBridge runtimeBridge;
-    private final DesktopClientSessionModel sessionModel;
+    private final DesktopClientViewModels viewModels;
     private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
@@ -29,10 +31,13 @@ public final class DesktopAppShell {
                 this::loadLocalSession,
                 new DefaultDesktopHostedGameFactory()
         );
-        this.sessionModel = new DesktopClientSessionModel();
+        this.viewModels = new DesktopClientViewModels(
+                new DesktopClientSessionModel(),
+                new DesktopClientRenderModel()
+        );
         DesktopEmbeddedClientShell desktopClientShell = new DesktopEmbeddedClientShell(
                 runtimeBridge,
-                sessionModel,
+                viewModels,
                 clientSession -> new LocalSessionPersistenceUiHooks(clientSession, runtimeBridge::runtime)
         );
         this.sessionRuntime = desktopClientShell.runtime();
@@ -48,15 +53,15 @@ public final class DesktopAppShell {
     }
 
     public DesktopSessionRenderView currentView() {
-        return sessionRuntime.currentView();
+        return viewModels.renderModel().currentView();
     }
 
     public ClientSessionSnapshot currentSnapshot() {
-        return sessionModel.currentSnapshot();
+        return viewModels.sessionModel().currentSnapshot();
     }
 
     public DesktopClientSessionModel sessionModel() {
-        return sessionModel;
+        return viewModels.sessionModel();
     }
 
     public void saveLocalSession() {
