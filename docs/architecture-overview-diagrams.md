@@ -186,6 +186,7 @@ What is important here:
 - client-owned save/load trigger callbacks now also live under `client.session.desktop` instead of the presentation-session package
 - the Processing app shell now talks to a single `DesktopClientSessionRuntime` port instead of directly forwarding embedded-session shell methods one by one
 - the client-facing `ClientSession` seam no longer inherits host-side `SessionHost` state replacement directly, which keeps restore authority on the host side
+- embedded desktop frame advancement no longer lives on `ClientSession`; the Processing runtime now gets that local-only behavior through a separate desktop frame-driver seam
 - pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
 - shared rendering helpers now depend on a small `client.desktop` rendering context seam instead of the full `MonopolyApp` type

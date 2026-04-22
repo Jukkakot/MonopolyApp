@@ -20,6 +20,7 @@ import java.util.function.Function;
 public final class DesktopEmbeddedClientShell {
     private final EmbeddedDesktopSessionHost embeddedSessionHost;
     private final ClientSession clientSession;
+    private final DesktopSessionFrameDriver frameDriver;
     private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
@@ -29,9 +30,10 @@ public final class DesktopEmbeddedClientShell {
     ) {
         this.embeddedSessionHost = new EmbeddedDesktopSessionHost(Objects.requireNonNull(hostHooks));
         this.clientSession = embeddedSessionHost;
+        this.frameDriver = embeddedSessionHost::advanceHostFrame;
         this.testAccess = embeddedSessionHost.testAccess();
         ClientSessionFeedbackSink feedbackSink = Objects.requireNonNull(feedbackSinkFactory).apply(clientSession);
-        this.sessionRuntime = new DesktopClientSessionController(clientSession, feedbackSink);
+        this.sessionRuntime = new DesktopClientSessionController(clientSession, frameDriver, feedbackSink);
     }
 
     public ClientSession clientSession() {

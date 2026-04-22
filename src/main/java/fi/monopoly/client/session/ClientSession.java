@@ -14,8 +14,6 @@ import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult
 public interface ClientSession {
     void startFreshSession();
 
-    void advanceFrame();
-
     LocalSessionPersistenceResult saveLocalSession();
 
     LocalSessionPersistenceResult loadLocalSession();

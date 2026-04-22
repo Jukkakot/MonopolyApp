@@ -16,8 +16,9 @@ class DesktopClientSessionControllerTest {
     @Test
     void saveLocalSessionRoutesHostResultToFeedbackSink() {
         RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
-        DesktopClientSessionController controller = new DesktopClientSessionController(clientSession, feedbackSink);
+        DesktopClientSessionController controller = new DesktopClientSessionController(clientSession, frameDriver, feedbackSink);
 
         controller.saveLocalSession();
 
@@ -28,13 +29,26 @@ class DesktopClientSessionControllerTest {
     @Test
     void loadLocalSessionRoutesHostResultToFeedbackSink() {
         RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
-        DesktopClientSessionController controller = new DesktopClientSessionController(clientSession, feedbackSink);
+        DesktopClientSessionController controller = new DesktopClientSessionController(clientSession, frameDriver, feedbackSink);
 
         controller.loadLocalSession();
 
         assertEquals(1, clientSession.loadCalls);
         assertSame(clientSession.loadResult, feedbackSink.lastResult);
+    }
+
+    @Test
+    void advanceFrameUsesDedicatedDesktopFrameDriver() {
+        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingFrameDriver frameDriver = new RecordingFrameDriver();
+        RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
+        DesktopClientSessionController controller = new DesktopClientSessionController(clientSession, frameDriver, feedbackSink);
+
+        controller.advanceFrame();
+
+        assertEquals(1, frameDriver.advanceCalls);
     }
 
     private static final class RecordingClientSession implements ClientSession {
@@ -47,10 +61,6 @@ class DesktopClientSessionControllerTest {
 
         @Override
         public void startFreshSession() {
-        }
-
-        @Override
-        public void advanceFrame() {
         }
 
         @Override
@@ -94,6 +104,15 @@ class DesktopClientSessionControllerTest {
         @Override
         public void showPersistenceResult(LocalSessionPersistenceResult result) {
             lastResult = result;
+        }
+    }
+
+    private static final class RecordingFrameDriver implements DesktopSessionFrameDriver {
+        private int advanceCalls;
+
+        @Override
+        public void advanceFrame() {
+            advanceCalls++;
         }
     }
 }

@@ -17,13 +17,16 @@ import java.util.Objects;
  */
 public final class DesktopClientSessionController implements DesktopClientSessionRuntime {
     private final ClientSession clientSession;
+    private final DesktopSessionFrameDriver frameDriver;
     private final ClientSessionFeedbackSink feedbackSink;
 
     public DesktopClientSessionController(
             ClientSession clientSession,
+            DesktopSessionFrameDriver frameDriver,
             ClientSessionFeedbackSink feedbackSink
     ) {
         this.clientSession = Objects.requireNonNull(clientSession);
+        this.frameDriver = Objects.requireNonNull(frameDriver);
         this.feedbackSink = Objects.requireNonNull(feedbackSink);
     }
 
@@ -34,7 +37,7 @@ public final class DesktopClientSessionController implements DesktopClientSessio
 
     @Override
     public void advanceFrame() {
-        clientSession.advanceFrame();
+        frameDriver.advanceFrame();
     }
 
     @Override
