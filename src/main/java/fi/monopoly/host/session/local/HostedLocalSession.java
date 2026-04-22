@@ -1,5 +1,6 @@
 package fi.monopoly.host.session.local;
 
+import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.client.session.ClientSession;
 
 /**
@@ -8,7 +9,7 @@ import fi.monopoly.client.session.ClientSession;
  * <p>This keeps session lifecycle, persistence, and snapshot publication on the host side even
  * while the current implementation still runs in the same process as the client.</p>
  */
-public interface HostedLocalSession extends ClientSession {
+public interface HostedLocalSession extends ClientSession, SessionHost {
     void advanceHostFrame();
 
     DesktopHostedGameTestAccess testAccess();

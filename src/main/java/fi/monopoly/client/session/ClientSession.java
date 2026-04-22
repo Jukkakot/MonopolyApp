@@ -1,6 +1,5 @@
 package fi.monopoly.client.session;
 
-import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
 
 /**
@@ -12,7 +11,7 @@ import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult
  * local desktop host coordinator. The same surface should remain valid when a remote backend host
  * is introduced later.</p>
  */
-public interface ClientSession extends SessionHost {
+public interface ClientSession {
     void startFreshSession();
 
     void advanceFrame();

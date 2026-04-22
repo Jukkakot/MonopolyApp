@@ -46,6 +46,7 @@ The project does not yet have full backend-ready architecture because:
   - session bridge and restored-session reattachment adapters around the embedded host
 - `client.session.desktop`
   - desktop client-session shell/runtime glue, client-owned local session control callbacks such as save/load triggers, and the app-facing desktop session runtime port
+  - client-facing `ClientSession` no longer inherits host-side state replacement directly; host-only restore authority stays behind `SessionHost`
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`

@@ -6,7 +6,6 @@ import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
-import fi.monopoly.domain.session.SessionState;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -86,15 +85,6 @@ class DesktopClientSessionControllerTest {
 
         @Override
         public void showPersistenceNotice(String message) {
-        }
-
-        @Override
-        public SessionState currentState() {
-            return null;
-        }
-
-        @Override
-        public void replaceState(SessionState restoredState) {
         }
     }
 
