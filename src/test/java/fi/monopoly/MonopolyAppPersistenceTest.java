@@ -92,7 +92,7 @@ class MonopolyAppPersistenceTest {
         runtime.gameSession().players().getPlayers().get(0).addMoney(-200);
         assertEquals(originalCash - 200, game.sessionStateForPersistence().players().get(0).cash());
 
-        dispatchCtrlKey(MonopolyRuntime.get(), 'l');
+        dispatchCtrlKey(app.desktopAppShell().runtime(), 'l');
 
         DesktopHostedGame reloadedHostedGame = testAccess.currentHostedGame();
         Game reloadedGame = testAccess.currentConcreteGameOrNull();
@@ -180,8 +180,9 @@ class MonopolyAppPersistenceTest {
         assertNotNull(reloadedGame);
         assertNotSame(game, reloadedGame);
         assertTrue(paused(reloadedGame));
-        assertTrue(MonopolyRuntime.get().eventBus().eventListenerCount() > 0);
-        assertNotNull(MonopolyRuntime.get().popupService().activePopupMessage());
-        assertTrue(MonopolyRuntime.get().popupService().activePopupMessage().startsWith("Loaded "));
+        MonopolyRuntime reloadedRuntime = app.desktopAppShell().runtime();
+        assertTrue(reloadedRuntime.eventBus().eventListenerCount() > 0);
+        assertNotNull(reloadedRuntime.popupService().activePopupMessage());
+        assertTrue(reloadedRuntime.popupService().activePopupMessage().startsWith("Loaded "));
     }
 }

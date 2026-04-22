@@ -4,6 +4,7 @@ import controlP5.ControlP5;
 
 
 import fi.monopoly.client.session.ClientSessionView;
+import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.components.event.MonopolyEventObserver;
 import fi.monopoly.utils.UiTokens;
 import javafx.application.Platform;
@@ -142,6 +143,11 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
 
     public DesktopAppShell desktopAppShell() {
         return desktopAppShell;
+    }
+
+    @Override
+    protected MonopolyEventBus eventBus() {
+        return desktopAppShell.eventBus();
     }
 
     @Override

@@ -1,10 +1,10 @@
 package fi.monopoly.client.desktop;
 
-import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionView;
 import fi.monopoly.client.session.desktop.DesktopClientSessionRuntime;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
+import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
 
@@ -16,11 +16,12 @@ import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFa
  * but it centralizes the remaining desktop-host wiring behind one app-facing adapter.</p>
  */
 public final class DesktopAppShell {
+    private final DesktopRuntimeBridge runtimeBridge;
     private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
     public DesktopAppShell(MonopolyApp app) {
-        DesktopRuntimeBridge runtimeBridge = new DesktopRuntimeBridge(
+        this.runtimeBridge = new DesktopRuntimeBridge(
                 app,
                 this::saveLocalSession,
                 this::loadLocalSession,
@@ -60,5 +61,13 @@ public final class DesktopAppShell {
 
     public DesktopHostedGameTestAccess testAccess() {
         return testAccess;
+    }
+
+    public MonopolyRuntime runtime() {
+        return runtimeBridge.runtime();
+    }
+
+    public MonopolyEventBus eventBus() {
+        return runtime().eventBus();
     }
 }

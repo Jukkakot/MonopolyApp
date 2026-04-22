@@ -1,17 +1,14 @@
 package fi.monopoly.components.event;
 
 import fi.monopoly.client.desktop.DesktopClientSettings;
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import lombok.extern.slf4j.Slf4j;
 import processing.core.PApplet;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
 @Slf4j
-public class MonopolyEventObserver extends PApplet {
-    private MonopolyEventBus eventBus() {
-        return MonopolyRuntime.get().eventBus();
-    }
+public abstract class MonopolyEventObserver extends PApplet {
+    protected abstract MonopolyEventBus eventBus();
 
     @Override
     protected void dequeueEvents() {

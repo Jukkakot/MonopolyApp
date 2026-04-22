@@ -148,6 +148,7 @@ The recent `client.desktop` and embedded-host moves improved this:
 - the embedded host now exposes the client-facing session seam directly, so the extra `LocalDesktopClientSession` forwarding adapter is no longer in the path
 - compatibility-heavy test inspection on `Game` is now also being centralized behind one explicit test facade instead of scattered private reflection hooks
 - desktop app-shell persistence/runtime helpers now also receive the active runtime explicitly from `DesktopRuntimeBridge` instead of reading it through the global runtime singleton
+- desktop input/event dispatch now also reads the active event bus through the app-shell/runtime seam instead of a global runtime lookup inside the Processing observer base class
 
 ### 4. Tests still lean on local host internals
 
