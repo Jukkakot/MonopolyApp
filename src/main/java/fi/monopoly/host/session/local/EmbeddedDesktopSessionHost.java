@@ -77,8 +77,7 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
         return game != null ? new EmbeddedDesktopRenderView(game.view()) : null;
     }
 
-    @Override
-    public ClientSessionSnapshot snapshot() {
+    private ClientSessionSnapshot currentSnapshot() {
         return ClientSessionSnapshot.from(currentState(), currentView() != null);
     }
 
@@ -88,7 +87,7 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
             return;
         }
         listeners.add(listener);
-        listener.onSnapshotChanged(snapshot());
+        listener.onSnapshotChanged(currentSnapshot());
     }
 
     @Override
@@ -108,7 +107,7 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
     }
 
     private void publishSnapshot() {
-        ClientSessionSnapshot snapshot = snapshot();
+        ClientSessionSnapshot snapshot = currentSnapshot();
         for (ClientSessionListener listener : List.copyOf(listeners)) {
             listener.onSnapshotChanged(snapshot);
         }

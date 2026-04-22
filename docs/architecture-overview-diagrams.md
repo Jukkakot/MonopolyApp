@@ -186,6 +186,7 @@ What is important here:
 - client-owned save/load trigger callbacks now also live under `client.session.desktop` instead of the presentation-session package
 - the Processing app shell now talks to a single `DesktopClientSessionRuntime` port instead of directly forwarding embedded-session shell methods one by one
 - the client-facing `ClientSession` seam no longer inherits host-side `SessionHost` state replacement directly, which keeps restore authority on the host side
+- the client-facing `ClientSession` seam also no longer exposes a direct snapshot getter; embedded local mode now publishes snapshot state through listener updates only
 - embedded desktop frame advancement no longer lives on `ClientSession`; the Processing runtime now gets that local-only behavior through a separate desktop frame-driver seam
 - `ClientSession` is now closer to a pure client state/view subscription seam, while fresh-session and local persistence workflows go through a separate desktop-local controls port
 - embedded live render access also no longer lives on `ClientSession`; desktop mode reaches it through a dedicated local view port

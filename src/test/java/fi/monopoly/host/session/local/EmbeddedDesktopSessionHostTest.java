@@ -35,11 +35,14 @@ class EmbeddedDesktopSessionHostTest {
     }
 
     @Test
-    void snapshotIsEmptyWhenNoGameExists() {
+    void listenerReceivesEmptySnapshotWhenNoGameExists() {
         EmbeddedDesktopSessionHost hostedSession = new EmbeddedDesktopSessionHost(new HooksStub());
+        AtomicReference<ClientSessionSnapshot> latestSnapshot = new AtomicReference<>();
+
+        hostedSession.addListener(latestSnapshot::set);
 
         assertNull(hostedSession.currentState());
-        assertEquals(ClientSessionSnapshot.empty(), hostedSession.snapshot());
+        assertEquals(ClientSessionSnapshot.empty(), latestSnapshot.get());
     }
 
     private static final class HooksStub implements DesktopSessionHostCoordinator.Hooks {

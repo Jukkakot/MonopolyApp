@@ -10,8 +10,6 @@ package fi.monopoly.client.session;
  * is introduced later.</p>
  */
 public interface ClientSession {
-    ClientSessionSnapshot snapshot();
-
     void addListener(ClientSessionListener listener);
 
     void removeListener(ClientSessionListener listener);

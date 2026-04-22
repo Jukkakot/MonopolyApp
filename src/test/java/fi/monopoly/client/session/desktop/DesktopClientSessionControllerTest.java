@@ -189,11 +189,6 @@ class DesktopClientSessionControllerTest {
         private ClientSessionListener lastAddedListener;
 
         @Override
-        public ClientSessionSnapshot snapshot() {
-            return snapshot;
-        }
-
-        @Override
         public void addListener(ClientSessionListener listener) {
             addListenerCalls++;
             lastAddedListener = listener;
