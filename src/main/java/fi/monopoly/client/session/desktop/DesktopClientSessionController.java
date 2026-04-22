@@ -2,8 +2,6 @@ package fi.monopoly.client.session.desktop;
 
 import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
-import fi.monopoly.client.session.ClientSessionListener;
-import fi.monopoly.client.session.ClientSessionSnapshot;
 
 import java.util.Objects;
 
@@ -18,6 +16,7 @@ public final class DesktopClientSessionController implements DesktopClientSessio
     private final ClientSession clientSession;
     private final DesktopSessionFrameDriver frameDriver;
     private final DesktopSessionViewPort viewPort;
+    private final DesktopClientSessionModel sessionModel;
     private final DesktopLocalSessionControls localSessionControls;
     private final ClientSessionFeedbackSink feedbackSink;
 
@@ -25,14 +24,17 @@ public final class DesktopClientSessionController implements DesktopClientSessio
             ClientSession clientSession,
             DesktopSessionFrameDriver frameDriver,
             DesktopSessionViewPort viewPort,
+            DesktopClientSessionModel sessionModel,
             DesktopLocalSessionControls localSessionControls,
             ClientSessionFeedbackSink feedbackSink
     ) {
         this.clientSession = Objects.requireNonNull(clientSession);
         this.frameDriver = Objects.requireNonNull(frameDriver);
         this.viewPort = Objects.requireNonNull(viewPort);
+        this.sessionModel = Objects.requireNonNull(sessionModel);
         this.localSessionControls = Objects.requireNonNull(localSessionControls);
         this.feedbackSink = Objects.requireNonNull(feedbackSink);
+        this.clientSession.addListener(this.sessionModel);
     }
 
     @Override
@@ -48,21 +50,6 @@ public final class DesktopClientSessionController implements DesktopClientSessio
     @Override
     public DesktopSessionRenderView currentView() {
         return viewPort.currentView();
-    }
-
-    @Override
-    public ClientSessionSnapshot currentSnapshot() {
-        return clientSession.snapshot();
-    }
-
-    @Override
-    public void addListener(ClientSessionListener listener) {
-        clientSession.addListener(listener);
-    }
-
-    @Override
-    public void removeListener(ClientSessionListener listener) {
-        clientSession.removeListener(listener);
     }
 
     @Override

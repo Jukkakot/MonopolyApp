@@ -1,6 +1,7 @@
 package fi.monopoly.client.desktop;
 
 import fi.monopoly.client.session.ClientSessionSnapshot;
+import fi.monopoly.client.session.desktop.DesktopClientSessionModel;
 import fi.monopoly.client.session.desktop.DesktopClientSessionRuntime;
 import fi.monopoly.client.session.desktop.DesktopEmbeddedClientShell;
 import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
@@ -17,6 +18,7 @@ import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFa
  */
 public final class DesktopAppShell {
     private final DesktopRuntimeBridge runtimeBridge;
+    private final DesktopClientSessionModel sessionModel;
     private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
@@ -27,8 +29,10 @@ public final class DesktopAppShell {
                 this::loadLocalSession,
                 new DefaultDesktopHostedGameFactory()
         );
+        this.sessionModel = new DesktopClientSessionModel();
         DesktopEmbeddedClientShell desktopClientShell = new DesktopEmbeddedClientShell(
                 runtimeBridge,
+                sessionModel,
                 clientSession -> new LocalSessionPersistenceUiHooks(clientSession, runtimeBridge::runtime)
         );
         this.sessionRuntime = desktopClientShell.runtime();
@@ -48,7 +52,11 @@ public final class DesktopAppShell {
     }
 
     public ClientSessionSnapshot currentSnapshot() {
-        return sessionRuntime.currentSnapshot();
+        return sessionModel.currentSnapshot();
+    }
+
+    public DesktopClientSessionModel sessionModel() {
+        return sessionModel;
     }
 
     public void saveLocalSession() {
