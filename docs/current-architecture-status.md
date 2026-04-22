@@ -46,13 +46,13 @@ The project does not yet have full backend-ready architecture because:
   - session bridge and restored-session reattachment adapters around the embedded host
 - `client.session.desktop`
   - desktop client-session shell/runtime glue, client-owned local session control callbacks such as save/load triggers, and the app-facing desktop session runtime port
-  - client-facing `ClientSession` no longer inherits host-side state replacement directly; host-only restore authority stays behind `SessionHost`
-  - client-facing `ClientSession` is now listener-based for snapshot publication instead of exposing a raw snapshot getter on the transport-neutral seam
-  - embedded desktop frame advancement now also crosses a dedicated local frame-driver seam instead of living on `ClientSession`
-  - fresh local session creation, local save/load, and persistence notices now also live behind a dedicated desktop-local session controls port instead of the transport-neutral `ClientSession` seam
-  - embedded desktop live render access now also crosses a dedicated local view port instead of living on `ClientSession`
+  - client-facing `ClientSessionUpdates` now carries the transport-neutral session update stream, while host-only restore authority stays behind `SessionHost`
+  - the old generic `ClientSession` type has now been removed; the client depends explicitly on a listener-based session-update gateway instead of a host-shaped session object
+  - embedded desktop frame advancement now also crosses a dedicated local frame-driver seam instead of living on the client session-update gateway
+  - fresh local session creation, local save/load, and persistence notices now also live behind a dedicated desktop-local session controls port instead of the transport-neutral session-update gateway
+  - embedded desktop live render access now also crosses a dedicated local view port instead of living on the session-update gateway
   - the live render view type itself now also lives under `client.session.desktop` instead of the transport-neutral `client.session` package
-  - the desktop app shell now owns a small client-side session model fed by `ClientSession` listener updates, so snapshot state no longer reaches the app by raw runtime pass-through getters/listener registration
+  - the desktop app shell now owns a small client-side session model fed by `ClientSessionUpdates` listener updates, so snapshot state no longer reaches the app by raw runtime pass-through getters/listener registration
   - the desktop app shell now also owns a small client-side render model, so the runtime port no longer exposes raw live-view polling directly to the app
 - `domain.session`
   - authoritative session records and continuation state
@@ -213,9 +213,9 @@ That is a strong staging point for introducing actual backend/client package roo
 
 These are the blockers that matter most before the project is truly backend-ready.
 
-### Blocker A: the client session interface is still too host-shaped
+### Blocker A: the client session-update gateway is still too embedded-shaped
 
-The Processing client already has an explicit `ClientSession` seam and embedded local mode uses it.
+The Processing client already has an explicit `ClientSessionUpdates` seam and embedded local mode uses it.
 The remaining problem is that the seam is not yet narrow enough for a future remote host.
 
 The Processing client should ultimately depend on a transport-neutral session-facing interface such as:
@@ -226,8 +226,8 @@ The Processing client should ultimately depend on a transport-neutral session-fa
 
 The current direction is now much closer to that target:
 
-- `ClientSession` is down to snapshot/listener concerns
-- `ClientSession` no longer exposes a direct snapshot getter; the client snapshot path is now listener-first
+- `ClientSessionUpdates` is down to snapshot/listener concerns
+- the old generic `ClientSession` surface is gone; the client snapshot path is now explicitly listener-first
 - desktop-only frame advancement, local controls, and live rendering now cross separate local seams
 - the Processing app shell now keeps its own client-side snapshot model populated from the listener stream instead of polling the runtime adapter for host-owned snapshot state
 - the Processing app shell now also reads the embedded live render target through a client-owned render model instead of a `DesktopClientSessionRuntime.currentView()` pass-through

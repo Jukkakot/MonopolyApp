@@ -1,10 +1,10 @@
 package fi.monopoly.client.session.desktop;
 
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
-import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
+import fi.monopoly.client.session.ClientSessionUpdates;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,7 +14,7 @@ class DesktopClientSessionControllerTest {
 
     @Test
     void saveLocalSessionRoutesHostResultToFeedbackSink() {
-        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingClientSessionUpdates sessionUpdates = new RecordingClientSessionUpdates();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
@@ -22,7 +22,7 @@ class DesktopClientSessionControllerTest {
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 sessionModel,
@@ -39,7 +39,7 @@ class DesktopClientSessionControllerTest {
 
     @Test
     void loadLocalSessionRoutesHostResultToFeedbackSink() {
-        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingClientSessionUpdates sessionUpdates = new RecordingClientSessionUpdates();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
@@ -47,7 +47,7 @@ class DesktopClientSessionControllerTest {
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 sessionModel,
@@ -64,7 +64,7 @@ class DesktopClientSessionControllerTest {
 
     @Test
     void advanceFrameUsesDedicatedDesktopFrameDriver() {
-        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingClientSessionUpdates sessionUpdates = new RecordingClientSessionUpdates();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
@@ -72,7 +72,7 @@ class DesktopClientSessionControllerTest {
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 sessionModel,
@@ -89,7 +89,7 @@ class DesktopClientSessionControllerTest {
 
     @Test
     void startFreshSessionUsesDedicatedLocalSessionControls() {
-        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingClientSessionUpdates sessionUpdates = new RecordingClientSessionUpdates();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
@@ -97,7 +97,7 @@ class DesktopClientSessionControllerTest {
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 sessionModel,
@@ -114,7 +114,7 @@ class DesktopClientSessionControllerTest {
 
     @Test
     void constructorSeedsClientOwnedRenderModelFromDedicatedDesktopViewPort() {
-        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingClientSessionUpdates sessionUpdates = new RecordingClientSessionUpdates();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
@@ -122,7 +122,7 @@ class DesktopClientSessionControllerTest {
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 sessionModel,
@@ -136,7 +136,7 @@ class DesktopClientSessionControllerTest {
 
     @Test
     void loadLocalSessionRefreshesClientOwnedRenderModel() {
-        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingClientSessionUpdates sessionUpdates = new RecordingClientSessionUpdates();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
@@ -144,7 +144,7 @@ class DesktopClientSessionControllerTest {
         RecordingLocalSessionControls localSessionControls = new RecordingLocalSessionControls();
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
         DesktopClientSessionController controller = new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 sessionModel,
@@ -160,7 +160,7 @@ class DesktopClientSessionControllerTest {
 
     @Test
     void constructorRegistersClientOwnedSessionModelAsSnapshotListener() {
-        RecordingClientSession clientSession = new RecordingClientSession();
+        RecordingClientSessionUpdates sessionUpdates = new RecordingClientSessionUpdates();
         RecordingFrameDriver frameDriver = new RecordingFrameDriver();
         RecordingViewPort viewPort = new RecordingViewPort();
         DesktopClientSessionModel sessionModel = new DesktopClientSessionModel();
@@ -169,7 +169,7 @@ class DesktopClientSessionControllerTest {
         RecordingFeedbackSink feedbackSink = new RecordingFeedbackSink();
 
         new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 sessionModel,
@@ -178,12 +178,12 @@ class DesktopClientSessionControllerTest {
                 feedbackSink
         );
 
-        assertEquals(1, clientSession.addListenerCalls);
-        assertSame(clientSession.lastAddedListener, sessionModel);
-        assertEquals(clientSession.snapshot, sessionModel.currentSnapshot());
+        assertEquals(1, sessionUpdates.addListenerCalls);
+        assertSame(sessionUpdates.lastAddedListener, sessionModel);
+        assertEquals(sessionUpdates.snapshot, sessionModel.currentSnapshot());
     }
 
-    private static final class RecordingClientSession implements ClientSession {
+    private static final class RecordingClientSessionUpdates implements ClientSessionUpdates {
         private final ClientSessionSnapshot snapshot = new ClientSessionSnapshot("session-1", 3L, null, true);
         private int addListenerCalls;
         private ClientSessionListener lastAddedListener;

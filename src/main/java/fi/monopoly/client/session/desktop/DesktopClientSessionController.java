@@ -1,7 +1,7 @@
 package fi.monopoly.client.session.desktop;
 
-import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
+import fi.monopoly.client.session.ClientSessionUpdates;
 
 import java.util.Objects;
 
@@ -13,7 +13,7 @@ import java.util.Objects;
  * one place so the app shell stays closer to a pure Processing host.</p>
  */
 public final class DesktopClientSessionController implements DesktopClientSessionRuntime {
-    private final ClientSession clientSession;
+    private final ClientSessionUpdates sessionUpdates;
     private final DesktopSessionFrameDriver frameDriver;
     private final DesktopSessionViewPort viewPort;
     private final DesktopClientSessionModel sessionModel;
@@ -22,7 +22,7 @@ public final class DesktopClientSessionController implements DesktopClientSessio
     private final ClientSessionFeedbackSink feedbackSink;
 
     public DesktopClientSessionController(
-            ClientSession clientSession,
+            ClientSessionUpdates sessionUpdates,
             DesktopSessionFrameDriver frameDriver,
             DesktopSessionViewPort viewPort,
             DesktopClientSessionModel sessionModel,
@@ -30,14 +30,14 @@ public final class DesktopClientSessionController implements DesktopClientSessio
             DesktopLocalSessionControls localSessionControls,
             ClientSessionFeedbackSink feedbackSink
     ) {
-        this.clientSession = Objects.requireNonNull(clientSession);
+        this.sessionUpdates = Objects.requireNonNull(sessionUpdates);
         this.frameDriver = Objects.requireNonNull(frameDriver);
         this.viewPort = Objects.requireNonNull(viewPort);
         this.sessionModel = Objects.requireNonNull(sessionModel);
         this.renderModel = Objects.requireNonNull(renderModel);
         this.localSessionControls = Objects.requireNonNull(localSessionControls);
         this.feedbackSink = Objects.requireNonNull(feedbackSink);
-        this.clientSession.addListener(this.sessionModel);
+        this.sessionUpdates.addListener(this.sessionModel);
         refreshRenderModel();
     }
 

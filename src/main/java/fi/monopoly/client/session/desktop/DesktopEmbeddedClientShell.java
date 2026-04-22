@@ -1,7 +1,7 @@
 package fi.monopoly.client.session.desktop;
 
-import fi.monopoly.client.session.ClientSession;
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
+import fi.monopoly.client.session.ClientSessionUpdates;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.DesktopSessionHostCoordinator;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
@@ -18,7 +18,7 @@ import java.util.function.Function;
  */
 public final class DesktopEmbeddedClientShell {
     private final EmbeddedDesktopSessionHost embeddedSessionHost;
-    private final ClientSession clientSession;
+    private final ClientSessionUpdates sessionUpdates;
     private final DesktopSessionFrameDriver frameDriver;
     private final DesktopSessionViewPort viewPort;
     private final DesktopClientViewModels viewModels;
@@ -32,7 +32,7 @@ public final class DesktopEmbeddedClientShell {
             Function<DesktopLocalSessionControls, ClientSessionFeedbackSink> feedbackSinkFactory
     ) {
         this.embeddedSessionHost = new EmbeddedDesktopSessionHost(Objects.requireNonNull(hostHooks));
-        this.clientSession = embeddedSessionHost;
+        this.sessionUpdates = embeddedSessionHost;
         this.frameDriver = embeddedSessionHost::advanceHostFrame;
         this.viewPort = embeddedSessionHost;
         this.viewModels = Objects.requireNonNull(viewModels);
@@ -40,7 +40,7 @@ public final class DesktopEmbeddedClientShell {
         this.testAccess = embeddedSessionHost.testAccess();
         ClientSessionFeedbackSink feedbackSink = Objects.requireNonNull(feedbackSinkFactory).apply(localSessionControls);
         this.sessionRuntime = new DesktopClientSessionController(
-                clientSession,
+                sessionUpdates,
                 frameDriver,
                 viewPort,
                 this.viewModels.sessionModel(),
@@ -50,8 +50,8 @@ public final class DesktopEmbeddedClientShell {
         );
     }
 
-    public ClientSession clientSession() {
-        return clientSession;
+    public ClientSessionUpdates sessionUpdates() {
+        return sessionUpdates;
     }
 
     public DesktopClientSessionRuntime runtime() {

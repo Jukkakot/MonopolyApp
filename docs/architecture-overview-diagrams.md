@@ -185,13 +185,13 @@ What is important here:
 - desktop-only global flags such as debug mode and skip-animations now live in explicit `client.desktop` settings/state helpers instead of `MonopolyApp`
 - client-owned save/load trigger callbacks now also live under `client.session.desktop` instead of the presentation-session package
 - the Processing app shell now talks to a single `DesktopClientSessionRuntime` port instead of directly forwarding embedded-session shell methods one by one
-- the client-facing `ClientSession` seam no longer inherits host-side `SessionHost` state replacement directly, which keeps restore authority on the host side
-- the client-facing `ClientSession` seam also no longer exposes a direct snapshot getter; embedded local mode now publishes snapshot state through listener updates only
-- embedded desktop frame advancement no longer lives on `ClientSession`; the Processing runtime now gets that local-only behavior through a separate desktop frame-driver seam
-- `ClientSession` is now closer to a pure client state/view subscription seam, while fresh-session and local persistence workflows go through a separate desktop-local controls port
-- embedded live render access also no longer lives on `ClientSession`; desktop mode reaches it through a dedicated local view port
+- the old generic `ClientSession` type is gone; the client now depends on an explicit `ClientSessionUpdates` gateway for session-update subscriptions, while host-side restore authority stays behind `SessionHost`
+- `ClientSessionUpdates` also no longer exposes a direct snapshot getter; embedded local mode now publishes snapshot state through listener updates only
+- embedded desktop frame advancement no longer lives on the client session-update gateway; the Processing runtime now gets that local-only behavior through a separate desktop frame-driver seam
+- `ClientSessionUpdates` is now closer to a pure client state/view subscription seam, while fresh-session and local persistence workflows go through a separate desktop-local controls port
+- embedded live render access also no longer lives on the session-update gateway; desktop mode reaches it through a dedicated local view port
 - the live render view type itself no longer sits in the transport-neutral client-session package; it now lives under the desktop-local session package
-- the desktop app shell now owns a small `DesktopClientSessionModel` fed by `ClientSession` listener updates, so raw snapshot/listener pass-through no longer lives on `DesktopClientSessionRuntime`
+- the desktop app shell now owns a small `DesktopClientSessionModel` fed by `ClientSessionUpdates` listener updates, so raw snapshot/listener pass-through no longer lives on `DesktopClientSessionRuntime`
 - the desktop app shell now also owns a small `DesktopClientRenderModel`, so `DesktopClientSessionRuntime` no longer exposes raw `currentView()` polling either
 - pause, bot-speed, language, and local save/load UI actions now also cross into desktop presentation through a dedicated `GameUiSessionControls` port instead of the broad `GamePresentationFactory.Hooks` surface
 - desktop control-layer and font resources are also isolated behind `client.desktop` runtime resource helpers instead of hanging off `MonopolyApp`
