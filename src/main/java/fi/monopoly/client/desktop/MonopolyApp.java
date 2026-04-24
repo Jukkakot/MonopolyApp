@@ -22,7 +22,7 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
     public static final char SPACE = ' ';
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
     public static final int DEFAULT_WINDOW_HEIGHT = 996;
-    private final DesktopAppShell desktopAppShell = new DesktopAppShell(this);
+    private final DesktopAppShell desktopAppShell = new DesktopAppShell(this, new EmbeddedLocalDesktopClientBindingFactory());
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 

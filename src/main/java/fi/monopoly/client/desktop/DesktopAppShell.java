@@ -8,6 +8,8 @@ import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 
+import java.util.Objects;
+
 /**
  * Desktop app-side shell around the embedded local client session.
  *
@@ -21,8 +23,8 @@ public final class DesktopAppShell {
     private final DesktopClientSessionRuntime sessionRuntime;
     private final DesktopHostedGameTestAccess testAccess;
 
-    public DesktopAppShell(MonopolyApp app) {
-        DesktopClientHostBinding binding = new EmbeddedLocalDesktopClientBindingFactory().create(
+    public DesktopAppShell(MonopolyApp app, DesktopClientHostBindingFactory bindingFactory) {
+        DesktopClientHostBinding binding = Objects.requireNonNull(bindingFactory).create(
                 app,
                 this::saveLocalSession,
                 this::loadLocalSession
