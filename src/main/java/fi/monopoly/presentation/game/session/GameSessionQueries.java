@@ -10,7 +10,7 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.types.PlaceType;
 
-public final class GameSessionQueries {
+public final class GameSessionQueries implements fi.monopoly.host.bot.BotSessionQueries {
     private final Players players;
     private final Board board;
 

@@ -4,7 +4,6 @@ import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerTurnContext;
-import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.utils.DebugPerformanceStats;
 
@@ -15,7 +14,7 @@ import java.util.function.Supplier;
 
 public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final SessionApplicationService sessionApplicationService;
-    private final GameSessionQueries gameSessionQueries;
+    private final BotSessionQueries sessionQueries;
     private final HostBotInteractionAdapter interactionAdapter;
     private final DebugPerformanceStats debugPerformanceStats;
     private final Supplier<Player> turnPlayerSupplier;
@@ -33,7 +32,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     public GameBotTurnHooksAdapter(
             SessionApplicationService sessionApplicationService,
-            GameSessionQueries gameSessionQueries,
+            BotSessionQueries sessionQueries,
             HostBotInteractionAdapter interactionAdapter,
             DebugPerformanceStats debugPerformanceStats,
             Supplier<Player> turnPlayerSupplier,
@@ -50,7 +49,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
             BooleanSupplier recoverPrimaryTurnControlsSupplier
     ) {
         this.sessionApplicationService = sessionApplicationService;
-        this.gameSessionQueries = gameSessionQueries;
+        this.sessionQueries = sessionQueries;
         this.interactionAdapter = interactionAdapter;
         this.debugPerformanceStats = debugPerformanceStats;
         this.turnPlayerSupplier = turnPlayerSupplier;
@@ -109,12 +108,12 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     @Override
     public Player findPlayerById(String playerId) {
-        return gameSessionQueries.findPlayerById(playerId);
+        return sessionQueries.findPlayerById(playerId);
     }
 
     @Override
     public String resolveTradeActorId(SessionState sessionState) {
-        return gameSessionQueries.resolveTradeActorId(sessionState);
+        return sessionQueries.resolveTradeActorId(sessionState);
     }
 
     @Override
