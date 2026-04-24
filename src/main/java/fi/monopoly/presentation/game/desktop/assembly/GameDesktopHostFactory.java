@@ -157,8 +157,7 @@ public final class GameDesktopHostFactory {
         );
         GameFrameCoordinator.FrameHooks frameHooks = presentationCoordinator.createFrameHooks(shellDependencies);
         LocalHostedGameLoopCoordinator localHostedGameLoopCoordinator = new LocalHostedGameLoopCoordinator(
-                gameFrameCoordinator,
-                frameHooks,
+                () -> gameFrameCoordinator.advancePresentationFrame(frameHooks),
                 config.botTurnDriver(),
                 desktopAssembly.gameBotTurnHooks(),
                 config.debugPerformanceStats()
