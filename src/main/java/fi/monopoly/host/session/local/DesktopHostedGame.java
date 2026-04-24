@@ -19,4 +19,6 @@ public interface DesktopHostedGame {
     DesktopHostedGameView view();
 
     void dispose();
+
+    void setPostCommandListener(Runnable listener);
 }

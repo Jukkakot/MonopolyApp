@@ -80,10 +80,15 @@ public final class SessionApplicationService {
     private TradeCommandHandler tradeCommandHandler;
     private TurnActionCommandHandler turnActionCommandHandler;
     private TurnContinuationGateway turnContinuationGateway;
+    private Runnable postCommandListener = () -> {};
 
     public SessionApplicationService(String sessionId, Supplier<SessionState> sessionStateSupplier) {
         this.sessionId = sessionId;
         this.sessionStateSupplier = sessionStateSupplier;
+    }
+
+    public void setPostCommandListener(Runnable listener) {
+        this.postCommandListener = listener != null ? listener : () -> {};
     }
 
     public SessionState currentState() {
@@ -269,6 +274,14 @@ public final class SessionApplicationService {
     }
 
     public CommandResult handle(SessionCommand command) {
+        CommandResult result = dispatch(command);
+        if (result.accepted()) {
+            postCommandListener.run();
+        }
+        return result;
+    }
+
+    private CommandResult dispatch(SessionCommand command) {
         if (propertyPurchaseCommandHandler != null
                 && (command instanceof BuyPropertyCommand || command instanceof DeclinePropertyCommand)) {
             return propertyPurchaseCommandHandler.handle(command);

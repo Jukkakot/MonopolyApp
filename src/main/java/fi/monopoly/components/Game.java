@@ -343,6 +343,10 @@ public class Game implements MonopolyEventListener {
         hostedGameLoopCoordinator.advanceFrame();
     }
 
+    public void setPostCommandListener(Runnable listener) {
+        sessionApplicationService.setPostCommandListener(listener);
+    }
+
     private LayoutMetrics updateFrameLayoutMetrics() {
         return presentationHost.updateFrameLayoutMetrics();
     }

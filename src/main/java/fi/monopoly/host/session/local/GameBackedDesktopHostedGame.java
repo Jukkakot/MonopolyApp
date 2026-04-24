@@ -50,6 +50,11 @@ public final class GameBackedDesktopHostedGame implements DesktopHostedGame {
         game.dispose();
     }
 
+    @Override
+    public void setPostCommandListener(Runnable listener) {
+        game.setPostCommandListener(listener);
+    }
+
     private final class HostedGameView implements DesktopHostedGameView {
         @Override
         public void draw() {

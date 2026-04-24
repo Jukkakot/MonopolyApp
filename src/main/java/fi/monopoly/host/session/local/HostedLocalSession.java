@@ -13,6 +13,4 @@ import fi.monopoly.client.session.desktop.DesktopSessionViewPort;
  */
 public interface HostedLocalSession extends ClientSessionUpdates, SessionHost, DesktopLocalSessionControls, DesktopSessionViewPort {
     void advanceHostFrame();
-
-    DesktopHostedGameTestAccess testAccess();
 }

@@ -42,12 +42,14 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
     @Override
     public void replaceState(fi.monopoly.domain.session.SessionState restoredState) {
         desktopSessionHostCoordinator.replaceState(restoredState);
+        registerPostCommandListener();
         publishSnapshot();
     }
 
     @Override
     public void startFreshSession() {
         desktopSessionHostCoordinator.rebuildFreshGame();
+        registerPostCommandListener();
         publishSnapshot();
     }
 
@@ -101,9 +103,15 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
         publishSnapshot();
     }
 
-    @Override
     public DesktopHostedGameTestAccess testAccess() {
         return testAccess;
+    }
+
+    private void registerPostCommandListener() {
+        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
+        if (game != null) {
+            game.setPostCommandListener(this::publishSnapshot);
+        }
     }
 
     private void publishSnapshot() {
