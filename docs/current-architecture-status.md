@@ -255,10 +255,22 @@ Backend-ready target:
 
 This is the biggest structural bridge still left.
 
-We need one more narrowing step so that:
+Progress made:
 
-- session host output becomes client-facing session state/view state
-- legacy runtime reconstruction becomes a client adapter
+- `EmbeddedDesktopSessionHost` now implements `SessionCommandPort`, making it the single named
+  entry point for both command submission and snapshot reception
+- `HostedLocalSession` explicitly extends `SessionCommandPort`, so any future host implementation
+  must satisfy both halves of the client-facing seam
+- presentation-layer adapters already depend on `SessionCommandPort` — they can be rewired to
+  the host entry point without behavior change once the assembly is restructured
+
+Remaining:
+
+- session host output must become client-facing session state/view state
+- legacy runtime reconstruction must become a client adapter
+- adapters are still assembled inside `Game` and use `SessionApplicationService` directly;
+  they should eventually be assembled at the host level and receive `EmbeddedDesktopSessionHost`
+  as their `SessionCommandPort`
 
 ### Blocker D: no real server package root yet
 
@@ -266,9 +278,14 @@ There is still no concrete:
 
 - `server.session`
 - `server.transport`
-- `client.session`
 
-That means the architecture is backend-friendly in shape, but not yet backend-ready in project structure.
+The `client.session` package now exists and holds the transport-neutral seam types:
+- `SessionCommandPort` — command submission interface any host implementation must satisfy
+- `ClientSessionUpdates` — snapshot listener interface any host implementation must satisfy
+- `ClientSessionSnapshot` — transport-neutral snapshot payload
+
+That means the architecture is backend-friendly in shape, and the client-facing contract is now
+explicitly defined. A remote host MVP can now be planned against these interfaces.
 
 ## Recommended Immediate Architectural Focus
 
