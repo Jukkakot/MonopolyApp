@@ -1,7 +1,8 @@
 package fi.monopoly.host.bot;
 
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.result.CommandResult;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.domain.session.SessionState;
@@ -9,11 +10,13 @@ import fi.monopoly.utils.DebugPerformanceStats;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionCommandPort;
+    private final Function<String, CommandResult> computerAuctionActionHandler;
     private final BotSessionQueries sessionQueries;
     private final HostBotInteractionAdapter interactionAdapter;
     private final DebugPerformanceStats debugPerformanceStats;
@@ -31,7 +34,8 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final BooleanSupplier recoverPrimaryTurnControlsSupplier;
 
     public GameBotTurnHooksAdapter(
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionCommandPort,
+            Function<String, CommandResult> computerAuctionActionHandler,
             BotSessionQueries sessionQueries,
             HostBotInteractionAdapter interactionAdapter,
             DebugPerformanceStats debugPerformanceStats,
@@ -48,7 +52,8 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
             BooleanSupplier projectedEndTurnAvailableSupplier,
             BooleanSupplier recoverPrimaryTurnControlsSupplier
     ) {
-        this.sessionApplicationService = sessionApplicationService;
+        this.sessionCommandPort = sessionCommandPort;
+        this.computerAuctionActionHandler = computerAuctionActionHandler;
         this.sessionQueries = sessionQueries;
         this.interactionAdapter = interactionAdapter;
         this.debugPerformanceStats = debugPerformanceStats;
@@ -98,7 +103,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     @Override
     public SessionState sessionState() {
-        return sessionApplicationService.currentState();
+        return sessionCommandPort.currentState();
     }
 
     @Override
@@ -128,7 +133,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     @Override
     public boolean finishAuctionResolution(FinishAuctionResolutionCommand command) {
-        return sessionApplicationService.handle(command).accepted();
+        return sessionCommandPort.handle(command).accepted();
     }
 
     @Override
@@ -138,14 +143,14 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     @Override
     public boolean handleComputerAuctionAction(String actorPlayerId) {
-        return sessionApplicationService.handleComputerAuctionAction(actorPlayerId).accepted();
+        return computerAuctionActionHandler.apply(actorPlayerId).accepted();
     }
 
     @Override
     public ComputerTurnContext createTurnContext(Player turnPlayer) {
         return new SessionBackedComputerTurnContext(
                 turnPlayer,
-                sessionApplicationService,
+                sessionCommandPort,
                 interactionAdapter,
                 syncPresentationStateAction,
                 projectedRollDiceAvailableSupplier::getAsBoolean,

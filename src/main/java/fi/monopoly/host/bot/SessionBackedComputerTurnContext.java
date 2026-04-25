@@ -12,7 +12,7 @@ import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
 import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.command.ToggleMortgageCommand;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerTurnContext;
@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 @Slf4j
 public final class SessionBackedComputerTurnContext implements ComputerTurnContext {
     private final Player player;
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionCommandPort;
     private final HostBotInteractionAdapter interactionAdapter;
     private final Runnable syncPresentationState;
     private final Supplier<Boolean> rollDiceAvailableSupplier;
@@ -38,14 +38,14 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     public SessionBackedComputerTurnContext(
             Player player,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionCommandPort,
             HostBotInteractionAdapter interactionAdapter,
             Runnable syncPresentationState,
             Supplier<Boolean> rollDiceAvailableSupplier,
             Supplier<Boolean> endTurnAvailableSupplier
     ) {
         this.player = player;
-        this.sessionApplicationService = sessionApplicationService;
+        this.sessionCommandPort = sessionCommandPort;
         this.interactionAdapter = interactionAdapter;
         this.syncPresentationState = syncPresentationState;
         this.rollDiceAvailableSupplier = rollDiceAvailableSupplier;
@@ -68,15 +68,15 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public SessionState sessionState() {
-        return sessionApplicationService.currentState();
+        return sessionCommandPort.currentState();
     }
 
     @Override
     public boolean submit(SessionCommand command) {
-        var result = sessionApplicationService.handle(command);
+        var result = sessionCommandPort.handle(command);
         boolean accepted = result.accepted();
         if (!accepted) {
-            SessionState state = sessionApplicationService.currentState();
+            SessionState state = sessionCommandPort.currentState();
             if (!result.rejections().isEmpty()) {
                 log.debug("Rejected bot command {} for player {}: {}",
                         command.getClass().getSimpleName(),

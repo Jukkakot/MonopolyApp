@@ -154,6 +154,7 @@ public final class GamePresentationFactory {
         );
         GameBotTurnDriver.Hooks gameBotTurnHooks = new GameBotTurnHooksAdapter(
                 dependencies.sessionApplicationService(),
+                dependencies.sessionApplicationService()::handleComputerAuctionAction,
                 gameSessionQueries,
                 interactionAdapter,
                 dependencies.debugPerformanceStats(),
