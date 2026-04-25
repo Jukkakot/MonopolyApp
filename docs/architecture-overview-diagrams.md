@@ -229,6 +229,8 @@ What is important here:
 - `HostedLocalSession` extends `SessionCommandPort`, making it a requirement for all future local host implementations
 - the five presentation-layer session adapters (debt, auction, purchase, trade) now depend only on `SessionCommandPort` instead of the full `SessionApplicationService` — any future transport adapter automatically satisfies their constructor requirement
 - `BotTurnScheduler` no longer imports `DesktopClientSettings` directly; the `skipAnimations` flag is now injected as a `BooleanSupplier`, removing the desktop-specific global dependency from the `host.bot` layer
+- `SessionBackedComputerTurnContext` and `GameBotTurnHooksAdapter` both now depend on `SessionCommandPort` instead of `SessionApplicationService` — bot command submissions go through the same transport-neutral interface as human player commands; the specialized `handleComputerAuctionAction` is injected as a `Function<String, CommandResult>` lambda
+- `GameDesktopShellDependencies.sessionCommandPort()` now exposes the narrower `SessionCommandPort` type alongside `sessionApplicationService()`, and the two bot coordinator hooks for active auction/trade state use it instead of the full service wrapper methods
 - `GameSessionStateCoordinator.onDebtStateChanged()` no longer takes `SessionApplicationService`; the `clearDebtOverride` behavior is now passed as a `Runnable` callback, removing the application-service dependency from the presentation-session coordinator
 - the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client

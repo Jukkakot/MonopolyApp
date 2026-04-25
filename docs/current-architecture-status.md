@@ -255,6 +255,8 @@ Additional narrowing steps now in place:
 - `BotTurnScheduler` no longer imports `DesktopClientSettings`; `skipAnimations` is injected as `BooleanSupplier`
 - `host.bot` no longer reaches directly into desktop runtime popup services, trade controllers, or turn-player-only projected view suppliers
 - those dependencies now cross the boundary through a dedicated desktop interaction adapter
+- `SessionBackedComputerTurnContext` now depends on `SessionCommandPort` instead of `SessionApplicationService` — all bot command submissions and state queries go through the transport-neutral interface
+- `GameBotTurnHooksAdapter` also takes `SessionCommandPort` for the main command flow; the computer auction action (a specialized application-layer behavior) is injected as a `Function<String, CommandResult>` lambda rather than requiring the full service type
 
 Backend-ready target:
 
