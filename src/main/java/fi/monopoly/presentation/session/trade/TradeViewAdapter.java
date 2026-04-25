@@ -2,7 +2,7 @@ package fi.monopoly.presentation.session.trade;
 
 import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandResult;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.PopupService;
@@ -25,7 +25,7 @@ import static fi.monopoly.text.UiTexts.text;
 
 public final class TradeViewAdapter {
     private final String sessionId;
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionApplicationService;
     private final PopupService popupService;
     private final LegacyTradeGateway legacyTradeGateway;
     private final TradeUiBuilder tradeUiBuilder;
@@ -34,7 +34,7 @@ public final class TradeViewAdapter {
 
     public TradeViewAdapter(
             String sessionId,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionApplicationService,
             PopupService popupService,
             LegacyTradeGateway legacyTradeGateway,
             TradeUiBuilder tradeUiBuilder,

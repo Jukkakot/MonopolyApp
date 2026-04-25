@@ -3,7 +3,7 @@ package fi.monopoly.presentation.session.trade;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandResult;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -41,7 +41,7 @@ public final class TradeController {
 
     private final MonopolyRuntime runtime;
     private final String sessionId;
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionApplicationService;
     private final TradeViewAdapter tradeViewAdapter;
     private final LegacyTradeGateway legacyTradeGateway;
     private final BooleanSupplier canOpenTrade;
@@ -55,7 +55,7 @@ public final class TradeController {
     public TradeController(
             MonopolyRuntime runtime,
             String sessionId,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionApplicationService,
             TradeViewAdapter tradeViewAdapter,
             LegacyTradeGateway legacyTradeGateway,
             BooleanSupplier canOpenTrade,
@@ -77,7 +77,7 @@ public final class TradeController {
     }
 
     public void openTradeMenu() {
-        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.hasActiveTrade()) {
+        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.currentState().tradeState() != null) {
             return;
         }
         Player proposer = currentPlayerSupplier.get();
@@ -103,7 +103,7 @@ public final class TradeController {
     }
 
     public ComputerDecision tryInitiateComputerTrade(Player proposer) {
-        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.hasActiveTrade() || proposer == null || !proposer.isComputerControlled()) {
+        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.currentState().tradeState() != null || proposer == null || !proposer.isComputerControlled()) {
             return null;
         }
         if (currentPlayerSupplier.get() != proposer || lastProactiveTradePlayer == proposer) {

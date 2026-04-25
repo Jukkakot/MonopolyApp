@@ -5,7 +5,7 @@ import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
 import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.domain.session.DebtStateModel;
@@ -15,13 +15,13 @@ import java.util.function.Supplier;
 
 public final class DebtActionDispatcher {
     private final String sessionId;
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionApplicationService;
     private final PopupService popupService;
     private final Supplier<Player> actorSupplier;
 
     public DebtActionDispatcher(
             String sessionId,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionApplicationService,
             PopupService popupService,
             Supplier<Player> actorSupplier
     ) {

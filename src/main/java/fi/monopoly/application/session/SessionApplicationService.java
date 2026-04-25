@@ -38,6 +38,7 @@ import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.PaymentRequest;
@@ -65,7 +66,7 @@ import java.util.function.Supplier;
  * that are already represented in the separated session model but still need to coordinate with
  * legacy runtime objects.</p>
  */
-public final class SessionApplicationService {
+public final class SessionApplicationService implements SessionCommandPort {
     private final String sessionId;
     private final Supplier<SessionState> sessionStateSupplier;
     private PendingDecision pendingDecisionOverride;

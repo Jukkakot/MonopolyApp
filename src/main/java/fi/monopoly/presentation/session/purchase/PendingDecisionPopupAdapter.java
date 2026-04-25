@@ -3,7 +3,7 @@ package fi.monopoly.presentation.session.purchase;
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
 import fi.monopoly.application.result.CommandResult;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.PopupService;
@@ -20,7 +20,7 @@ import java.util.function.Function;
 
 public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final String sessionId;
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionApplicationService;
     private final PopupService popupService;
     private final LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport;
     private final Runnable postHandleSync;
@@ -29,7 +29,7 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
 
     public PendingDecisionPopupAdapter(
             String sessionId,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionApplicationService,
             PopupService popupService,
             LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport,
             Runnable postHandleSync,

@@ -4,7 +4,7 @@ import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.command.PassAuctionCommand;
 import fi.monopoly.application.command.PlaceAuctionBidCommand;
 import fi.monopoly.application.result.CommandResult;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.popup.PopupService;
@@ -21,7 +21,7 @@ import static fi.monopoly.text.UiTexts.text;
 
 public final class AuctionViewAdapter {
     private final String sessionId;
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionApplicationService;
     private final PopupService popupService;
     private final Players players;
     private String renderedAuctionSignature;
@@ -29,7 +29,7 @@ public final class AuctionViewAdapter {
 
     public AuctionViewAdapter(
             String sessionId,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionApplicationService,
             PopupService popupService,
             Players players
     ) {
