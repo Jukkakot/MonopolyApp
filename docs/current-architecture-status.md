@@ -55,6 +55,9 @@ The project does not yet have full backend-ready architecture because:
   - the live render view type itself now also lives under `client.session.desktop` instead of the transport-neutral `client.session` package
   - the desktop app shell now owns a small client-side session model fed by `ClientSessionUpdates` listener updates, so snapshot state no longer reaches the app by raw runtime pass-through getters/listener registration
   - the desktop app shell now also owns a small client-side render model, so the runtime port no longer exposes raw live-view polling directly to the app
+  - `SessionCommandPort` now defines the transport-neutral command submission and state query seam; presentation-layer session adapters (debt, auction, purchase, trade) depend on `SessionCommandPort` instead of the full `SessionApplicationService`
+  - `BotTurnScheduler` no longer imports `DesktopClientSettings` directly; `skipAnimations` is now injected as a `BooleanSupplier` at construction time
+  - `GameSessionStateCoordinator.onDebtStateChanged()` no longer takes `SessionApplicationService` directly; `clearDebtOverride` is passed as a `Runnable` callback
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -215,37 +218,31 @@ That is a strong staging point for introducing actual backend/client package roo
 
 These are the blockers that matter most before the project is truly backend-ready.
 
-### Blocker A: the client session-update gateway is still too embedded-shaped
+### Blocker A: the client session-update gateway — LARGELY RESOLVED
 
-The Processing client already has an explicit `ClientSessionUpdates` seam and embedded local mode uses it.
-The remaining problem is that the seam is not yet narrow enough for a future remote host.
+The client now has two complementary transport-neutral seams:
 
-The Processing client should ultimately depend on a transport-neutral session-facing interface such as:
+- `ClientSessionUpdates` — listener-only snapshot stream (receive snapshots from host)
+- `SessionCommandPort` — command submission and state query (send commands to host)
 
-- submit command
-- receive snapshot/view updates
-- query current connection/session status
-
-The current direction is now much closer to that target:
-
-- `ClientSessionUpdates` is down to snapshot/listener concerns
-- the old generic `ClientSession` surface is gone; the client snapshot path is now explicitly listener-first
-- desktop-only frame advancement, local controls, and live rendering now cross separate local seams
-- the Processing app shell now keeps its own client-side snapshot model populated from the listener stream instead of polling the runtime adapter for host-owned snapshot state
-- the Processing app shell now also reads the embedded live render target through a client-owned render model instead of a `DesktopClientSessionRuntime.currentView()` pass-through
+Presentation-layer adapters (debt, auction, purchase, trade) now depend on `SessionCommandPort`
+instead of the full `SessionApplicationService`. `SessionApplicationService` implements
+`SessionCommandPort`, so the embedded local mode works without any behavioral change.
 
 The current seam should evolve cleanly into something that works for both:
 
-- local embedded host
-- remote backend host
+- local embedded host (current: `SessionApplicationService` implements `SessionCommandPort`)
+- remote backend host (future: transport adapter implements `SessionCommandPort`)
 
 ### Blocker B: bot ownership is only partially host-owned so far
 
 Bot coordination is cleaner now, and embedded local mode already routes bot stepping through a host-owned loop.
-But the concrete bot collaborators still mostly live under presentation-era packages instead of a clearer host-side package root.
+The concrete bot collaborators live in `host.bot` (with `DesktopHostBotInteractionAdapter` as the only
+desktop-specific implementation in `presentation.game.desktop.assembly`).
 
-That said, one important narrowing step is now in place:
+Additional narrowing steps now in place:
 
+- `BotTurnScheduler` no longer imports `DesktopClientSettings`; `skipAnimations` is injected as `BooleanSupplier`
 - `host.bot` no longer reaches directly into desktop runtime popup services, trade controllers, or turn-player-only projected view suppliers
 - those dependencies now cross the boundary through a dedicated desktop interaction adapter
 
