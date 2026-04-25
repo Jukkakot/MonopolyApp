@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.session;
 
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.components.Player;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachmentCoordinator;
@@ -33,13 +33,13 @@ public final class GameSessionStateCoordinator {
     public void restoreSessionState(
             GameSessionState sessionState,
             fi.monopoly.domain.session.SessionState restoredSessionState,
-            SessionApplicationService sessionApplicationService,
+            SessionPresentationStatePort sessionPresentationState,
             Function<String, Player> playerById
     ) {
         RestoredSessionReattachmentCoordinator.RestoredGameState restoredGameState =
                 restoredSessionReattachmentCoordinator.restoreAuthoritativeState(
                         restoredSessionState,
-                        sessionApplicationService,
+                        sessionPresentationState,
                         playerById
                 );
         sessionState.setPaused(restoredGameState.paused());
@@ -49,13 +49,13 @@ public final class GameSessionStateCoordinator {
 
     public void initializePresentation(
             fi.monopoly.domain.session.SessionState restoredSessionState,
-            SessionApplicationService sessionApplicationService,
+            SessionPresentationStatePort sessionPresentationState,
             DebtController debtController,
             RestoredSessionReattachmentCoordinator.Hooks hooks
     ) {
         restoredSessionReattachmentCoordinator.restorePresentation(
                 restoredSessionState,
-                sessionApplicationService,
+                sessionPresentationState,
                 debtController,
                 hooks
         );

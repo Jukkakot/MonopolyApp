@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
@@ -102,12 +102,12 @@ public final class GameDesktopShellDependencies {
         return stateAccess.gameSessionQueriesSupplier().get();
     }
 
-    public SessionApplicationService sessionApplicationService() {
-        return stateAccess.sessionApplicationServiceSupplier().get();
+    public SessionCommandPort sessionCommandPort() {
+        return stateAccess.sessionCommandPortSupplier().get();
     }
 
-    public SessionCommandPort sessionCommandPort() {
-        return stateAccess.sessionApplicationServiceSupplier().get();
+    public SessionPresentationStatePort sessionPresentationState() {
+        return stateAccess.sessionPresentationStateSupplier().get();
     }
 
     public PopupService popupService() {
@@ -235,7 +235,8 @@ public final class GameDesktopShellDependencies {
             Supplier<GameTurnFlowCoordinator> gameTurnFlowCoordinatorSupplier,
             Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier,
             Supplier<GameSessionQueries> gameSessionQueriesSupplier,
-            Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
+            Supplier<SessionCommandPort> sessionCommandPortSupplier,
+            Supplier<SessionPresentationStatePort> sessionPresentationStateSupplier,
             Supplier<PopupService> popupServiceSupplier,
             Supplier<BotTurnScheduler> botTurnSchedulerSupplier
     ) {

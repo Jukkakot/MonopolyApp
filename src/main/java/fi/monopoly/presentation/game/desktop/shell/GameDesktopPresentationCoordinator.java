@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
@@ -323,17 +323,17 @@ public final class GameDesktopPresentationCoordinator {
 
             @Override
             public boolean auctionOverrideActive() {
-                return dependencies.sessionApplicationService().hasAuctionOverride();
+                return dependencies.sessionPresentationState().hasAuctionOverride();
             }
 
             @Override
             public boolean tradeOverrideActive() {
-                return dependencies.sessionApplicationService().hasTradeOverride();
+                return dependencies.sessionPresentationState().hasTradeOverride();
             }
 
             @Override
             public boolean pendingDecisionOverrideActive() {
-                return dependencies.sessionApplicationService().hasPendingDecisionOverride();
+                return dependencies.sessionPresentationState().hasPendingDecisionOverride();
             }
 
             @Override
@@ -452,7 +452,7 @@ public final class GameDesktopPresentationCoordinator {
 
     public void onDebtStateChanged(GameDesktopShellDependencies dependencies) {
         sessionStateCoordinator.onDebtStateChanged(
-                () -> dependencies.sessionApplicationService().clearActiveDebtOverride(),
+                () -> dependencies.sessionPresentationState().clearActiveDebtOverride(),
                 dependencies::updateDebtButtons,
                 () -> restoreBotTurnControlsIfNeeded(dependencies)
         );

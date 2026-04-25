@@ -2,6 +2,8 @@ package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
@@ -93,7 +95,8 @@ public final class GameDesktopHostFactory {
                         hooks.gameTurnFlowCoordinatorSupplier(),
                         hooks.gamePrimaryTurnControlsSupplier(),
                         hooks.gameSessionQueriesSupplier(),
-                        hooks.sessionApplicationServiceSupplier(),
+                        hooks.sessionCommandPortSupplier(),
+                        hooks.sessionPresentationStateSupplier(),
                         () -> config.runtime().popupService(),
                         () -> config.botTurnScheduler()
                 ),
@@ -239,7 +242,8 @@ public final class GameDesktopHostFactory {
                 Supplier<GameTurnFlowCoordinator> gameTurnFlowCoordinatorSupplier,
                 Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier,
                 Supplier<GameSessionQueries> gameSessionQueriesSupplier,
-                Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
+                Supplier<SessionCommandPort> sessionCommandPortSupplier,
+                Supplier<SessionPresentationStatePort> sessionPresentationStateSupplier,
                 Function<Player, GameView> currentGameViewFactory,
                 Function<Player, PlayerView> currentPlayerViewFactory,
                 Runnable refreshLabelsAction,
@@ -279,7 +283,8 @@ public final class GameDesktopHostFactory {
                     gameTurnFlowCoordinatorSupplier,
                     gamePrimaryTurnControlsSupplier,
                     gameSessionQueriesSupplier,
-                    sessionApplicationServiceSupplier,
+                    sessionCommandPortSupplier,
+                    sessionPresentationStateSupplier,
                     currentGameViewFactory,
                     currentPlayerViewFactory,
                     refreshLabelsAction,
@@ -332,7 +337,9 @@ public final class GameDesktopHostFactory {
 
         Supplier<GameSessionQueries> gameSessionQueriesSupplier();
 
-        Supplier<SessionApplicationService> sessionApplicationServiceSupplier();
+        Supplier<SessionCommandPort> sessionCommandPortSupplier();
+
+        Supplier<SessionPresentationStatePort> sessionPresentationStateSupplier();
 
         Function<Player, GameView> currentGameViewFactory();
 
@@ -398,7 +405,8 @@ public final class GameDesktopHostFactory {
             Supplier<GameTurnFlowCoordinator> gameTurnFlowCoordinatorSupplier,
             Supplier<GamePrimaryTurnControls> gamePrimaryTurnControlsSupplier,
             Supplier<GameSessionQueries> gameSessionQueriesSupplier,
-            Supplier<SessionApplicationService> sessionApplicationServiceSupplier,
+            Supplier<SessionCommandPort> sessionCommandPortSupplier,
+            Supplier<SessionPresentationStatePort> sessionPresentationStateSupplier,
             Function<Player, GameView> currentGameViewFactory,
             Function<Player, PlayerView> currentPlayerViewFactory,
             Runnable refreshLabelsAction,

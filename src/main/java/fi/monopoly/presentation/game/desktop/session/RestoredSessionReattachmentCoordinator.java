@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.session;
 
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.PaymentRequest;
@@ -25,13 +25,13 @@ public final class RestoredSessionReattachmentCoordinator {
 
     public RestoredGameState restoreAuthoritativeState(
             SessionState restoredSessionState,
-            SessionApplicationService sessionApplicationService,
+            SessionPresentationStatePort sessionPresentationState,
             Function<String, Player> playerById
     ) {
         if (restoredSessionState == null) {
             return new RestoredGameState(false, false, null);
         }
-        sessionApplicationService.restoreFrom(restoredSessionState);
+        sessionPresentationState.restoreFrom(restoredSessionState);
         boolean paused = restoredSessionState.status() == SessionStatus.PAUSED;
         boolean gameOver = restoredSessionState.status() == SessionStatus.GAME_OVER
                 || restoredSessionState.winnerPlayerId() != null;
@@ -43,7 +43,7 @@ public final class RestoredSessionReattachmentCoordinator {
 
     public void restorePresentation(
             SessionState restoredSessionState,
-            SessionApplicationService sessionApplicationService,
+            SessionPresentationStatePort sessionPresentationState,
             DebtController debtController,
             Hooks hooks
     ) {
@@ -55,7 +55,7 @@ public final class RestoredSessionReattachmentCoordinator {
         restoreDebtPresentationState(restoredSessionState, debtController, hooks);
         hooks.updateDebtButtons();
         hooks.syncTransientPresentationState();
-        restorePrimaryTurnControls(sessionApplicationService.currentState(), hooks);
+        restorePrimaryTurnControls(restoredSessionState, hooks);
     }
 
     private void restoreDebtPresentationState(

@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.shell;
 
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
@@ -248,6 +248,7 @@ class GameDesktopShellCoordinatorTest {
                             () -> debtState,
                             () -> gameTurnFlowCoordinator,
                             () -> primaryTurnControls,
+                            () -> null,
                             () -> null,
                             () -> null,
                             runtime::popupService,

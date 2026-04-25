@@ -5,6 +5,8 @@ import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -164,7 +166,8 @@ public class Game implements MonopolyEventListener {
                         this::gameTurnFlowCoordinatorRef,
                         this::gamePrimaryTurnControlsRef,
                         this::gameSessionQueriesRef,
-                        this::sessionApplicationServiceRef,
+                        this::sessionCommandPortRef,
+                        this::sessionPresentationStateRef,
                         this::createGameView,
                         this::createPlayerView,
                         this::refreshLabels,
@@ -297,6 +300,14 @@ public class Game implements MonopolyEventListener {
     }
 
     private SessionApplicationService sessionApplicationServiceRef() {
+        return sessionApplicationService;
+    }
+
+    private SessionCommandPort sessionCommandPortRef() {
+        return sessionApplicationService;
+    }
+
+    private SessionPresentationStatePort sessionPresentationStateRef() {
         return sessionApplicationService;
     }
 

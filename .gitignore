@@ -43,3 +43,4 @@ build/
 /.aiassistant/
 /logs/
 /saves/
+/.claude/

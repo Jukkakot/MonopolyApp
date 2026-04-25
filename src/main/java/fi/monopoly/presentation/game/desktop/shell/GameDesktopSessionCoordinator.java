@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.components.Player;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
@@ -147,7 +147,7 @@ public final class GameDesktopSessionCoordinator {
         sessionStateCoordinator.restoreSessionState(
                 dependencies.sessionState(),
                 restoredSessionState,
-                dependencies.sessionApplicationService(),
+                dependencies.sessionPresentationState(),
                 dependencies::playerById
         );
     }
@@ -155,7 +155,7 @@ public final class GameDesktopSessionCoordinator {
     public void initializeSessionPresentation(GameDesktopShellDependencies dependencies, SessionState restoredSessionState) {
         sessionStateCoordinator.initializePresentation(
                 restoredSessionState,
-                dependencies.sessionApplicationService(),
+                dependencies.sessionPresentationState(),
                 dependencies.debtController(),
                 createRestoredSessionReattachmentHooks(dependencies)
         );
