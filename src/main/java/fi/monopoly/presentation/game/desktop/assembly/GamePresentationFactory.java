@@ -1,7 +1,9 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.result.CommandResult;
+import fi.monopoly.application.session.turn.TurnContinuationGateway;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
@@ -88,7 +90,7 @@ public final class GamePresentationFactory {
                         hooks::handlePaymentRequest
                 )
         );
-        dependencies.sessionApplicationService().configureTurnContinuationFlow(
+        dependencies.turnContinuationConfigurator().accept(
                 continuationState -> gameTurnFlowCoordinator.resumeContinuation(continuationState)
         );
         GameUiController gameUiController = new GameUiController(
@@ -153,8 +155,8 @@ public final class GamePresentationFactory {
                 hooks::createPlayerViewFor
         );
         GameBotTurnDriver.Hooks gameBotTurnHooks = new GameBotTurnHooksAdapter(
-                dependencies.sessionApplicationService(),
-                dependencies.sessionApplicationService()::handleComputerAuctionAction,
+                dependencies.sessionCommandPort(),
+                dependencies.computerAuctionActionHandler(),
                 gameSessionQueries,
                 interactionAdapter,
                 dependencies.debugPerformanceStats(),
@@ -202,7 +204,9 @@ public final class GamePresentationFactory {
             Board board,
             Animations animations,
             TurnEngine turnEngine,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionCommandPort,
+            java.util.function.Consumer<TurnContinuationGateway> turnContinuationConfigurator,
+            java.util.function.Function<String, CommandResult> computerAuctionActionHandler,
             PendingDecisionPopupAdapter pendingDecisionPopupAdapter,
             fi.monopoly.application.session.purchase.PropertyPurchaseFlow propertyPurchaseFlow,
             DebtActionDispatcher debtActionDispatcher,

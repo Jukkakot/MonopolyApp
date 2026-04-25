@@ -107,6 +107,8 @@ public final class GameDesktopAssemblyFactory {
                         runtimeAssembly.animations(),
                         turnEngine,
                         sessionBridge.sessionApplicationService(),
+                        sessionBridge.sessionApplicationService()::configureTurnContinuationFlow,
+                        sessionBridge.sessionApplicationService()::handleComputerAuctionAction,
                         sessionBridge.pendingDecisionPopupAdapter(),
                         sessionBridge.pendingDecisionPopupAdapter(),
                         sessionBridge.debtActionDispatcher(),
