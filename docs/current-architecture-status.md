@@ -218,14 +218,24 @@ That is a strong staging point for introducing actual backend/client package roo
 
 These are the blockers that matter most before the project is truly backend-ready.
 
-### Blocker A: the client session-update gateway — LARGELY RESOLVED
+### Blocker A: the client session-update gateway — RESOLVED
 
-The client now has two complementary transport-neutral seams:
+The client now has three complementary transport-neutral seams:
 
 - `ClientSessionUpdates` — listener-only snapshot stream (receive snapshots from host)
 - `SessionCommandPort` — command submission and state query (send commands to host)
+- `ClientSessionSnapshot` — now carries the full `SessionState` alongside session metadata
 
-Presentation-layer adapters (debt, auction, purchase, trade) now depend on `SessionCommandPort`
+`ClientSessionSnapshot` was intentionally small initially (just `sessionId`, `version`, `status`,
+`viewAvailable`). It now also carries the complete authoritative `SessionState`. This means:
+- any host implementation (embedded or remote) can push a self-sufficient snapshot
+- the client can reconstruct its local presentation model from the received snapshot
+- a remote transport MVP can serialize and push `ClientSessionSnapshot` over the wire directly
+
+`DesktopClientSessionModel.sessionState()` exposes the current session state for any client code
+that needs to drive its presentation from host-approved state rather than polling live runtime objects.
+
+Presentation-layer adapters (debt, auction, purchase, trade) depend on `SessionCommandPort`
 instead of the full `SessionApplicationService`. `SessionApplicationService` implements
 `SessionCommandPort`, so the embedded local mode works without any behavioral change.
 

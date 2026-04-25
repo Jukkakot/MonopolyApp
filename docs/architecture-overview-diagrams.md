@@ -48,6 +48,7 @@ flowchart LR
         GAME[Game host]
         HOSTEDADAPTER[GameBackedDesktopHostedGame]
         HOSTFACTORY[GameDesktopHostFactory]
+        EMBHOST[EmbeddedDesktopSessionHost]
         HOST[host.session.local.DesktopSessionHostCoordinator]
     end
 
@@ -81,6 +82,7 @@ flowchart LR
 
     subgraph Application[Application Layer]
         APP[SessionApplicationService]
+        CMDPORT[client.session.SessionCommandPort]
         APPFACTORY[LegacySessionApplicationFactory]
         PURCHASE[Property purchase flow]
         DEBT[Debt / debt dispatch]
@@ -137,7 +139,11 @@ flowchart LR
     RUNTIMEFACTORY --> DEBUG
     BOOTSTRAP --> RESTORER
     RESTORER --> LEGACY
-    CLIENTAPP --> HOST
+    CLIENTAPP --> EMBHOST
+    EMBHOST --> HOST
+    EMBHOST --> HOSTEDADAPTER
+    EMBHOST -.->|implements| CMDPORT
+    APP -.->|implements| CMDPORT
     CLIENTAPP --> RUNTIMEFACTORY
     CLIENTAPP --> UI
     SESSIONBRIDGE --> APPFACTORY
@@ -217,6 +223,13 @@ What is important here:
 - embedded local mode now also runs bot stepping from an explicit host-owned game loop coordinator instead of from the presentation frame coordinator itself
 - desktop-local popup, trade, and projected-view dependencies now cross into `host.bot` through a single `HostBotInteractionAdapter` seam
 - bot turn contexts now build projected views for the actual acting player, which is important when debt resolution is driven by someone other than the nominal current turn owner
+- `SessionCommandPort` in `client.session` is now the transport-neutral command submission and state query seam: `handle(SessionCommand)` + `currentState()` — any future remote host transport adapter only needs to implement these two methods
+- `SessionApplicationService` now implements `SessionCommandPort`, so the embedded local mode works without behavioral change while the seam is ready for a remote backend
+- `EmbeddedDesktopSessionHost` now also implements `SessionCommandPort` and acts as the single named command entry point on the host side, so command submission and snapshot publication both flow through it
+- `HostedLocalSession` extends `SessionCommandPort`, making it a requirement for all future local host implementations
+- the five presentation-layer session adapters (debt, auction, purchase, trade) now depend only on `SessionCommandPort` instead of the full `SessionApplicationService` — any future transport adapter automatically satisfies their constructor requirement
+- `BotTurnScheduler` no longer imports `DesktopClientSettings` directly; the `skipAnimations` flag is now injected as a `BooleanSupplier`, removing the desktop-specific global dependency from the `host.bot` layer
+- `GameSessionStateCoordinator.onDebtStateChanged()` no longer takes `SessionApplicationService`; the `clearDebtOverride` behavior is now passed as a `Runnable` callback, removing the application-service dependency from the presentation-session coordinator
 - the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 
@@ -229,6 +242,7 @@ flowchart LR
     GAME[Game]
     HOSTEDADAPTER[GameBackedDesktopHostedGame]
     HOSTFACTORY[GameDesktopHostFactory]
+    EMBHOST[EmbeddedDesktopSessionHost]
     SHELLSESSION[GameDesktopSessionCoordinator]
     SHELLPRESENT[GameDesktopPresentationCoordinator]
     ASSEMBLY[GameDesktopAssemblyFactory]
@@ -237,11 +251,16 @@ flowchart LR
     RUNTIME[GameRuntimeAssemblyFactory]
     FRAME[GameFrameCoordinator]
     APP[SessionApplicationService]
+    CMDPORT[SessionCommandPort]
     STATE[SessionState]
     LEGACY[Legacy runtime objects]
 
     GAME --> HOSTFACTORY
+    HOSTFACTORY --> EMBHOST
+    EMBHOST --> HOSTEDADAPTER
     HOSTEDADAPTER --> GAME
+    EMBHOST -.->|implements| CMDPORT
+    APP -.->|implements| CMDPORT
     HOSTFACTORY --> SHELLSESSION
     HOSTFACTORY --> SHELLPRESENT
     HOSTFACTORY --> ASSEMBLY
@@ -251,7 +270,7 @@ flowchart LR
     ASSEMBLY --> SESSIONBRIDGE
     ASSEMBLY --> RUNTIME
     HOSTFACTORY --> FRAME
-    SESSIONBRIDGE --> APP
+    SESSIONBRIDGE --> CMDPORT
     SHELLSESSION --> APP
     APP --> STATE
     RUNTIME --> LEGACY
@@ -274,17 +293,26 @@ This is the shortest package-oriented map of the current gameplay presentation s
 flowchart TD
     ROOT[presentation.game]
     CLIENTROOT[client]
+    HOSTROOT[host.session.local]
     ROOT --> BOT[bot]
     ROOT --> SESSION[session]
     ROOT --> TURN[turn]
     ROOT --> DESKTOP[desktop]
     CLIENTROOT --> CLIENTDESKTOP[desktop]
+    CLIENTROOT --> CLIENTSESSION[session]
 
     DESKTOP --> ASSEMBLY[assembly]
     DESKTOP --> SHELL[shell]
     DESKTOP --> RUNTIME[runtime]
     DESKTOP --> DESKTOPSESSION[session]
     DESKTOP --> UI[ui]
+
+    CLIENTSESSION --> CMDPORT[SessionCommandPort]
+    CLIENTSESSION --> CLIENTUPDATES[ClientSessionUpdates]
+    CLIENTSESSION --> SNAPSHOT[ClientSessionSnapshot]
+
+    HOSTROOT --> EMBHOST[EmbeddedDesktopSessionHost]
+    HOSTROOT --> HOSTEDLOCAL[HostedLocalSession]
 ```
 
 Useful mental model:
@@ -293,11 +321,13 @@ Useful mental model:
 - `session`: desktop session state/presentation coordination
 - `turn`: actual turn flow orchestration
 - `client.desktop`: Processing app-facing shell and runtime adapters around the embedded local host
+- `client.session`: transport-neutral seam types — `SessionCommandPort` (send commands), `ClientSessionUpdates` (receive snapshots), `ClientSessionSnapshot` (snapshot payload)
 - `desktop.assembly`: object graph construction
 - `desktop.shell`: orchestration between host and extracted coordinators
 - `desktop.runtime`: legacy runtime bootstrap and lifecycle
 - `desktop.session`: session bridge and restored-session reattachment
 - `desktop.ui`: controls, layout, frame rendering, input binding, and the extracted desktop presentation host
+- `host.session.local`: `EmbeddedDesktopSessionHost` (single command entry point + snapshot publisher) and `HostedLocalSession` (combines all local host seams)
 
 ## 5. Target Backend-Ready Architecture
 
@@ -362,5 +392,9 @@ Current practical status:
 
 - `A -> B` is largely done
 - `C`, `D`, and `E` are now substantially in place
-- the remaining local cleanup now mostly means shrinking `Game` further and reducing remaining desktop-host compatibility glue
-- `F` is still the next major architecture milestone after that, with the biggest remaining step being to replace the remaining snapshot-plus-live-view embedded model with a transport-neutral session update flow that a remote host can drive directly
+- the client-facing backend contract is now fully defined: `SessionCommandPort` (commands in), `ClientSessionUpdates` (snapshots out), `ClientSessionSnapshot` (transport-neutral payload carrying the full `SessionState`) — all in `client.session`
+- `ClientSessionSnapshot` now carries the complete authoritative `SessionState`, making snapshots self-sufficient: a client can reconstruct its presentation model from the snapshot without a separate state query to the host
+- `EmbeddedDesktopSessionHost` now implements `SessionCommandPort` and is the single named command entry point for the embedded local host — a remote transport adapter needs only to implement the same two-method interface
+- the five presentation-layer adapters (debt, auction, purchase, trade) already depend only on `SessionCommandPort`, so they are ready to be rewired to either an embedded or remote host without behavioral change
+- the remaining local cleanup means: (1) moving adapter assembly out of `Game` and into host-level wiring so adapters receive `EmbeddedDesktopSessionHost` directly, (2) separating legacy runtime reconstruction from authoritative session execution
+- `F` is the next major architecture milestone, with the main prerequisite being a concrete server-side session host that implements the already-defined `SessionCommandPort` + `ClientSessionUpdates` contract

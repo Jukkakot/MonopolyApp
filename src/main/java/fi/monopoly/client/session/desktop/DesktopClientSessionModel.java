@@ -25,6 +25,10 @@ public final class DesktopClientSessionModel implements ClientSessionListener {
         return snapshot.viewAvailable();
     }
 
+    public fi.monopoly.domain.session.SessionState sessionState() {
+        return snapshot.state();
+    }
+
     @Override
     public void onSnapshotChanged(ClientSessionSnapshot snapshot) {
         this.snapshot = snapshot != null ? snapshot : ClientSessionSnapshot.empty();

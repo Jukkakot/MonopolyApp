@@ -184,7 +184,7 @@ class DesktopClientSessionControllerTest {
     }
 
     private static final class RecordingClientSessionUpdates implements ClientSessionUpdates {
-        private final ClientSessionSnapshot snapshot = new ClientSessionSnapshot("session-1", 3L, null, true);
+        private final ClientSessionSnapshot snapshot = new ClientSessionSnapshot("session-1", 3L, null, true, null);
         private int addListenerCalls;
         private ClientSessionListener lastAddedListener;
 
