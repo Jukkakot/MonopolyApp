@@ -452,7 +452,7 @@ public final class GameDesktopPresentationCoordinator {
 
     public void onDebtStateChanged(GameDesktopShellDependencies dependencies) {
         sessionStateCoordinator.onDebtStateChanged(
-                dependencies.sessionApplicationService(),
+                () -> dependencies.sessionApplicationService().clearActiveDebtOverride(),
                 dependencies::updateDebtButtons,
                 () -> restoreBotTurnControlsIfNeeded(dependencies)
         );

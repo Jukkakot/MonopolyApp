@@ -80,13 +80,13 @@ public final class GameSessionStateCoordinator {
     }
 
     public void onDebtStateChanged(
-            SessionApplicationService sessionApplicationService,
+            Runnable clearDebtOverride,
             Runnable updateDebtButtons,
             Runnable restoreBotTurnControlsIfNeeded
     ) {
         updateDebtButtons.run();
-        if (sessionApplicationService != null) {
-            sessionApplicationService.clearActiveDebtOverride();
+        if (clearDebtOverride != null) {
+            clearDebtOverride.run();
         }
         restoreBotTurnControlsIfNeeded.run();
     }
