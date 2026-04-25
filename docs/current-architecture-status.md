@@ -59,7 +59,10 @@ The project does not yet have full backend-ready architecture because:
   - `BotTurnScheduler` no longer imports `DesktopClientSettings` directly; `skipAnimations` is now injected as a `BooleanSupplier` at construction time
   - `GameSessionStateCoordinator.onDebtStateChanged()` no longer takes `SessionApplicationService` directly; `clearDebtOverride` is passed as a `Runnable` callback
   - `SessionPresentationStatePort` introduced in `application.session` for the legacy override-state operations; `GameDesktopShellDependencies.StateAccess` now uses two narrow typed suppliers (`SessionCommandPort` + `SessionPresentationStatePort`) so shell and session coordinators no longer import `SessionApplicationService`
-  - `GamePresentationFactory.Dependencies` now holds `SessionCommandPort` + narrow callbacks instead of `SessionApplicationService`; `SessionApplicationService` is now only imported at the composition root (`Game`), the assembly tunnel records, and the two factories that create and build it
+  - `GamePresentationFactory.Dependencies` now holds `SessionCommandPort` + narrow callbacks instead of `SessionApplicationService`
+  - `SessionApplicationService` eliminated from `Game`, all assembly tunnel records (`GameDesktopAssembly`, `GameDesktopHostContext`), and `GameSessionBridge`; replaced with narrow port types
+  - `SessionPaymentPort` introduced in `application.session` for the `handlePaymentRequest` seam
+  - `SessionApplicationService` now only imported in `GameSessionBridgeFactory` (internal use) and `LegacySessionApplicationFactory` (construction)
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -286,17 +289,24 @@ Progress made:
 - `GamePresentationFactory.Dependencies` now holds `SessionCommandPort` + explicit
   `Consumer<TurnContinuationGateway>` + `Function<String,CommandResult>` instead of the full
   application service; `GamePresentationFactory` no longer imports `SessionApplicationService`
-- `SessionApplicationService` is now only imported in: `Game` (composition root),
-  `GameDesktopAssemblyFactory`/`GameDesktopHostFactory` (assembly tunnels), `GameSessionBridgeFactory`
-  (where it is created), and `LegacySessionApplicationFactory` (where it is built)
+- `SessionApplicationService` removed from `Game`, `GameDesktopAssembly`, `GameDesktopHostContext`,
+  and `GameSessionBridge` record — these now hold only narrow types: `SessionCommandPort`,
+  `SessionPresentationStatePort`, `SessionPaymentPort` (new), `Consumer<Runnable>`
+  (postCommandListenerRegistrar), `Consumer<TurnContinuationGateway>`, `Function<String,CommandResult>`
+- `SessionPaymentPort` introduced in `application.session` for the `handlePaymentRequest` seam;
+  `Game` no longer imports `SessionApplicationService` at all
+- `SessionApplicationService` is now only imported in: `GameSessionBridgeFactory` (where it is
+  used internally to build the bridge) and `LegacySessionApplicationFactory` (where it is built)
+- no assembly record above the bridge factory level references `SessionApplicationService` by name
 
 Remaining:
 
 - session host output must become client-facing session state/view state
 - legacy runtime reconstruction must become a client adapter
-- adapters are still assembled inside the `Game` assembly chain — they should eventually be
-  assembled at the host level so a remote `SessionCommandPort` implementation can be wired in
-  without changing adapter code
+- adapters are still wired to the locally-created `SessionApplicationService` inside
+  `GameSessionBridgeFactory`; for a remote host, they would need a transport `SessionCommandPort`
+  — routing them through `EmbeddedDesktopSessionHost.handle()` (a late-binding proxy approach)
+  is the remaining structural step before adapter assembly can move fully to the host level
 
 ### Blocker D: no real server package root yet
 
