@@ -1,6 +1,7 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
+import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
@@ -178,7 +179,7 @@ public final class GameDesktopHostFactory {
                 desktopAssembly.sessionCommandPort(),
                 desktopAssembly.sessionPresentationStatePort(),
                 desktopAssembly.postCommandListenerRegistrar(),
-                desktopAssembly.sessionPaymentRequestHandler(),
+                desktopAssembly.sessionPaymentPort(),
                 desktopAssembly.debtActionDispatcher(),
                 desktopAssembly.gameControlLayout(),
                 desktopAssembly.gamePrimaryTurnControls(),
@@ -220,7 +221,7 @@ public final class GameDesktopHostFactory {
             SessionCommandPort sessionCommandPort,
             SessionPresentationStatePort sessionPresentationStatePort,
             java.util.function.Consumer<Runnable> postCommandListenerRegistrar,
-            GameDesktopShellDependencies.PaymentRequestHandler sessionPaymentRequestHandler,
+            SessionPaymentPort sessionPaymentPort,
             DebtActionDispatcher debtActionDispatcher,
             fi.monopoly.presentation.game.desktop.ui.GameControlLayout gameControlLayout,
             GamePrimaryTurnControls gamePrimaryTurnControls,

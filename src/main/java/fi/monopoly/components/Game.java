@@ -3,6 +3,7 @@ package fi.monopoly.components;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
+import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.animation.Animations;
@@ -97,7 +98,7 @@ public class Game implements MonopolyEventListener {
     private final SessionCommandPort sessionCommandPort;
     private final SessionPresentationStatePort sessionPresentationState;
     private final java.util.function.Consumer<Runnable> postCommandListenerRegistrar;
-    private final GameDesktopShellDependencies.PaymentRequestHandler sessionPaymentRequestHandler;
+    private final SessionPaymentPort sessionPaymentPort;
     private final DebtActionDispatcher debtActionDispatcher;
     private DebtController debtController;
     private DebugController debugController;
@@ -221,7 +222,7 @@ public class Game implements MonopolyEventListener {
         this.sessionCommandPort = hostContext.sessionCommandPort();
         this.sessionPresentationState = hostContext.sessionPresentationStatePort();
         this.postCommandListenerRegistrar = hostContext.postCommandListenerRegistrar();
-        this.sessionPaymentRequestHandler = hostContext.sessionPaymentRequestHandler();
+        this.sessionPaymentPort = hostContext.sessionPaymentPort();
         this.debtActionDispatcher = hostContext.debtActionDispatcher();
         this.gameTurnFlowCoordinator = hostContext.gameTurnFlowCoordinator();
         this.presentationHost = bootstrap.presentationHost();
@@ -390,7 +391,7 @@ public class Game implements MonopolyEventListener {
 
     private void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
         updateLogTurnContext();
-        sessionPaymentRequestHandler.handle(request, continuationState, onResolved);
+        sessionPaymentPort.handlePaymentRequest(request, continuationState, onResolved);
     }
 
     private LayoutMetrics getLayoutMetrics() {

@@ -1,7 +1,12 @@
 package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
+import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPaymentPort;
+import fi.monopoly.application.session.SessionPresentationStatePort;
+import fi.monopoly.application.session.turn.TurnContinuationGateway;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
@@ -18,6 +23,8 @@ import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Builds the desktop session bridge objects that sit between the legacy runtime and the
@@ -95,6 +102,11 @@ public final class GameSessionBridgeFactory {
         );
         return new GameSessionBridge(
                 sessionApplicationService,
+                sessionApplicationService,
+                sessionApplicationService,
+                sessionApplicationService::setPostCommandListener,
+                sessionApplicationService::configureTurnContinuationFlow,
+                sessionApplicationService::handleComputerAuctionAction,
                 pendingDecisionPopupAdapter,
                 debtActionDispatcher,
                 auctionViewAdapter,
@@ -128,7 +140,12 @@ public final class GameSessionBridgeFactory {
     }
 
     public record GameSessionBridge(
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionCommandPort,
+            SessionPresentationStatePort sessionPresentationStatePort,
+            SessionPaymentPort sessionPaymentPort,
+            Consumer<Runnable> postCommandListenerRegistrar,
+            Consumer<TurnContinuationGateway> turnContinuationConfigurator,
+            Function<String, CommandResult> computerAuctionActionHandler,
             PendingDecisionPopupAdapter pendingDecisionPopupAdapter,
             DebtActionDispatcher debtActionDispatcher,
             AuctionViewAdapter auctionViewAdapter,

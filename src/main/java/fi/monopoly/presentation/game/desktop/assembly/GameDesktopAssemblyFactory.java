@@ -1,6 +1,7 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
+import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.client.session.SessionCommandPort;
@@ -22,7 +23,6 @@ import fi.monopoly.presentation.game.desktop.ui.GameButtonLayoutFactory;
 import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.game.desktop.ui.GameUiController;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.ui.GameUiSessionControls;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
@@ -107,9 +107,9 @@ public final class GameDesktopAssemblyFactory {
                         runtimeAssembly.board(),
                         runtimeAssembly.animations(),
                         turnEngine,
-                        sessionBridge.sessionApplicationService(),
-                        sessionBridge.sessionApplicationService()::configureTurnContinuationFlow,
-                        sessionBridge.sessionApplicationService()::handleComputerAuctionAction,
+                        sessionBridge.sessionCommandPort(),
+                        sessionBridge.turnContinuationConfigurator(),
+                        sessionBridge.computerAuctionActionHandler(),
                         sessionBridge.pendingDecisionPopupAdapter(),
                         sessionBridge.pendingDecisionPopupAdapter(),
                         sessionBridge.debtActionDispatcher(),
@@ -131,10 +131,10 @@ public final class GameDesktopAssemblyFactory {
                 runtimeAssembly.animations(),
                 runtimeAssembly.debtController(),
                 runtimeAssembly.debugController(),
-                sessionBridge.sessionApplicationService(),
-                sessionBridge.sessionApplicationService(),
-                sessionBridge.sessionApplicationService()::setPostCommandListener,
-                sessionBridge.sessionApplicationService()::handlePaymentRequest,
+                sessionBridge.sessionCommandPort(),
+                sessionBridge.sessionPresentationStatePort(),
+                sessionBridge.postCommandListenerRegistrar(),
+                sessionBridge.sessionPaymentPort(),
                 sessionBridge.pendingDecisionPopupAdapter(),
                 sessionBridge.pendingDecisionPopupAdapter(),
                 sessionBridge.debtActionDispatcher(),
@@ -161,7 +161,7 @@ public final class GameDesktopAssemblyFactory {
             SessionCommandPort sessionCommandPort,
             SessionPresentationStatePort sessionPresentationStatePort,
             java.util.function.Consumer<Runnable> postCommandListenerRegistrar,
-            GameDesktopShellDependencies.PaymentRequestHandler sessionPaymentRequestHandler,
+            SessionPaymentPort sessionPaymentPort,
             PendingDecisionPopupAdapter pendingDecisionPopupAdapter,
             PropertyPurchaseFlow propertyPurchaseFlow,
             DebtActionDispatcher debtActionDispatcher,

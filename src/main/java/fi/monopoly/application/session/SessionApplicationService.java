@@ -66,7 +66,7 @@ import java.util.function.Supplier;
  * that are already represented in the separated session model but still need to coordinate with
  * legacy runtime objects.</p>
  */
-public final class SessionApplicationService implements SessionCommandPort, SessionPresentationStatePort {
+public final class SessionApplicationService implements SessionCommandPort, SessionPresentationStatePort, SessionPaymentPort {
     private final String sessionId;
     private final Supplier<SessionState> sessionStateSupplier;
     private PendingDecision pendingDecisionOverride;
