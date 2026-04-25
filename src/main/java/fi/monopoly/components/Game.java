@@ -3,8 +3,6 @@ package fi.monopoly.components;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
-import fi.monopoly.application.command.RefreshSessionViewCommand;
-import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.animation.Animations;
@@ -96,7 +94,10 @@ public class Game implements MonopolyEventListener {
     private final GameDesktopPresentationCoordinator gameDesktopPresentationCoordinator;
     private final GameDesktopLifecycleCoordinator gameDesktopLifecycleCoordinator = new GameDesktopLifecycleCoordinator();
     private final GameDesktopShellDependencies shellDependencies;
-    private final SessionApplicationService sessionApplicationService;
+    private final SessionCommandPort sessionCommandPort;
+    private final SessionPresentationStatePort sessionPresentationState;
+    private final java.util.function.Consumer<Runnable> postCommandListenerRegistrar;
+    private final GameDesktopShellDependencies.PaymentRequestHandler sessionPaymentRequestHandler;
     private final DebtActionDispatcher debtActionDispatcher;
     private DebtController debtController;
     private DebugController debugController;
@@ -217,7 +218,10 @@ public class Game implements MonopolyEventListener {
         this.animations = hostContext.animations();
         this.debtController = hostContext.debtController();
         this.debugController = hostContext.debugController();
-        this.sessionApplicationService = hostContext.sessionApplicationService();
+        this.sessionCommandPort = hostContext.sessionCommandPort();
+        this.sessionPresentationState = hostContext.sessionPresentationStatePort();
+        this.postCommandListenerRegistrar = hostContext.postCommandListenerRegistrar();
+        this.sessionPaymentRequestHandler = hostContext.sessionPaymentRequestHandler();
         this.debtActionDispatcher = hostContext.debtActionDispatcher();
         this.gameTurnFlowCoordinator = hostContext.gameTurnFlowCoordinator();
         this.presentationHost = bootstrap.presentationHost();
@@ -236,7 +240,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private SessionState projectedSessionState() {
-        return sessionApplicationService.currentState();
+        return sessionCommandPort.currentState();
     }
 
     private GameSessionState sessionStateRef() {
@@ -244,19 +248,15 @@ public class Game implements MonopolyEventListener {
     }
 
     public SessionState sessionStateForPersistence() {
-        return sessionApplicationService.currentState();
+        return sessionCommandPort.currentState();
     }
 
     public fi.monopoly.application.result.CommandResult submitCommand(fi.monopoly.application.command.SessionCommand command) {
-        return sessionApplicationService.handle(command);
+        return sessionCommandPort.handle(command);
     }
 
     public void showPersistenceNotice(String notice) {
         gameDesktopSessionCoordinator.showPersistenceNotice(sessionState, notice);
-    }
-
-    void refreshProjectedSessionState() {
-        sessionApplicationService.handle(new RefreshSessionViewCommand(LOCAL_SESSION_ID));
     }
 
     private DebtController debtController() {
@@ -299,16 +299,12 @@ public class Game implements MonopolyEventListener {
         return presentationHost.gameSessionQueries();
     }
 
-    private SessionApplicationService sessionApplicationServiceRef() {
-        return sessionApplicationService;
-    }
-
     private SessionCommandPort sessionCommandPortRef() {
-        return sessionApplicationService;
+        return sessionCommandPort;
     }
 
     private SessionPresentationStatePort sessionPresentationStateRef() {
-        return sessionApplicationService;
+        return sessionPresentationState;
     }
 
     private GameView currentGameView() {
@@ -360,7 +356,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public void setPostCommandListener(Runnable listener) {
-        sessionApplicationService.setPostCommandListener(listener);
+        postCommandListenerRegistrar.accept(listener);
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {
@@ -394,7 +390,7 @@ public class Game implements MonopolyEventListener {
 
     private void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
         updateLogTurnContext();
-        sessionApplicationService.handlePaymentRequest(request, continuationState, onResolved);
+        sessionPaymentRequestHandler.handle(request, continuationState, onResolved);
     }
 
     private LayoutMetrics getLayoutMetrics() {
@@ -438,7 +434,7 @@ public class Game implements MonopolyEventListener {
     }
 
     private void updateDebtButtons() {
-        presentationHost.updateDebtButtons(sessionApplicationService != null ? sessionApplicationService.currentState() : null);
+        presentationHost.updateDebtButtons(sessionCommandPort.currentState());
     }
 
     private void updateDebugButtons() {

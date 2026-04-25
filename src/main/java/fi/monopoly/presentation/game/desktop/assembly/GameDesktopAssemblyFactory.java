@@ -1,9 +1,9 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
-import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
-import fi.monopoly.components.MonopolyButton;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -22,6 +22,7 @@ import fi.monopoly.presentation.game.desktop.ui.GameButtonLayoutFactory;
 import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
 import fi.monopoly.presentation.game.desktop.ui.GameUiController;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.ui.GameUiSessionControls;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
@@ -131,6 +132,9 @@ public final class GameDesktopAssemblyFactory {
                 runtimeAssembly.debtController(),
                 runtimeAssembly.debugController(),
                 sessionBridge.sessionApplicationService(),
+                sessionBridge.sessionApplicationService(),
+                sessionBridge.sessionApplicationService()::setPostCommandListener,
+                sessionBridge.sessionApplicationService()::handlePaymentRequest,
                 sessionBridge.pendingDecisionPopupAdapter(),
                 sessionBridge.pendingDecisionPopupAdapter(),
                 sessionBridge.debtActionDispatcher(),
@@ -154,7 +158,10 @@ public final class GameDesktopAssemblyFactory {
             Animations animations,
             DebtController debtController,
             DebugController debugController,
-            SessionApplicationService sessionApplicationService,
+            SessionCommandPort sessionCommandPort,
+            SessionPresentationStatePort sessionPresentationStatePort,
+            java.util.function.Consumer<Runnable> postCommandListenerRegistrar,
+            GameDesktopShellDependencies.PaymentRequestHandler sessionPaymentRequestHandler,
             PendingDecisionPopupAdapter pendingDecisionPopupAdapter,
             PropertyPurchaseFlow propertyPurchaseFlow,
             DebtActionDispatcher debtActionDispatcher,
