@@ -58,6 +58,8 @@ The project does not yet have full backend-ready architecture because:
   - `SessionCommandPort` now defines the transport-neutral command submission and state query seam; presentation-layer session adapters (debt, auction, purchase, trade) depend on `SessionCommandPort` instead of the full `SessionApplicationService`
   - `BotTurnScheduler` no longer imports `DesktopClientSettings` directly; `skipAnimations` is now injected as a `BooleanSupplier` at construction time
   - `GameSessionStateCoordinator.onDebtStateChanged()` no longer takes `SessionApplicationService` directly; `clearDebtOverride` is passed as a `Runnable` callback
+  - `SessionPresentationStatePort` introduced in `application.session` for the legacy override-state operations; `GameDesktopShellDependencies.StateAccess` now uses two narrow typed suppliers (`SessionCommandPort` + `SessionPresentationStatePort`) so shell and session coordinators no longer import `SessionApplicationService`
+  - `GamePresentationFactory.Dependencies` now holds `SessionCommandPort` + narrow callbacks instead of `SessionApplicationService`; `SessionApplicationService` is now only imported at the composition root (`Game`), the assembly tunnel records, and the two factories that create and build it
 - `domain.session`
   - authoritative session records and continuation state
 - `application.session`
@@ -275,14 +277,26 @@ Progress made:
   must satisfy both halves of the client-facing seam
 - presentation-layer adapters already depend on `SessionCommandPort` — they can be rewired to
   the host entry point without behavior change once the assembly is restructured
+- `SessionPresentationStatePort` introduced for the legacy override-state operations
+  (`hasAuctionOverride`, `hasTradeOverride`, `hasPendingDecisionOverride`, `clearActiveDebtOverride`,
+  `restoreFrom`); shell coordinators, `GameSessionStateCoordinator`, and
+  `RestoredSessionReattachmentCoordinator` no longer import `SessionApplicationService`
+- `GameDesktopShellDependencies.StateAccess` now holds two narrow suppliers (`SessionCommandPort`
+  and `SessionPresentationStatePort`) instead of one `SessionApplicationService` supplier
+- `GamePresentationFactory.Dependencies` now holds `SessionCommandPort` + explicit
+  `Consumer<TurnContinuationGateway>` + `Function<String,CommandResult>` instead of the full
+  application service; `GamePresentationFactory` no longer imports `SessionApplicationService`
+- `SessionApplicationService` is now only imported in: `Game` (composition root),
+  `GameDesktopAssemblyFactory`/`GameDesktopHostFactory` (assembly tunnels), `GameSessionBridgeFactory`
+  (where it is created), and `LegacySessionApplicationFactory` (where it is built)
 
 Remaining:
 
 - session host output must become client-facing session state/view state
 - legacy runtime reconstruction must become a client adapter
-- adapters are still assembled inside `Game` and use `SessionApplicationService` directly;
-  they should eventually be assembled at the host level and receive `EmbeddedDesktopSessionHost`
-  as their `SessionCommandPort`
+- adapters are still assembled inside the `Game` assembly chain — they should eventually be
+  assembled at the host level so a remote `SessionCommandPort` implementation can be wired in
+  without changing adapter code
 
 ### Blocker D: no real server package root yet
 
