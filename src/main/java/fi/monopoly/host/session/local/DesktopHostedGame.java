@@ -1,5 +1,7 @@
 package fi.monopoly.host.session.local;
 
+import fi.monopoly.application.command.SessionCommand;
+import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.domain.session.SessionState;
 
 /**
@@ -11,6 +13,8 @@ import fi.monopoly.domain.session.SessionState;
  */
 public interface DesktopHostedGame {
     SessionState sessionStateForPersistence();
+
+    CommandResult submitCommand(SessionCommand command);
 
     void showPersistenceNotice(String notice);
 

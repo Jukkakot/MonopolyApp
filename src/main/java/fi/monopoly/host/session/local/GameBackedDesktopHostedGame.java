@@ -1,5 +1,7 @@
 package fi.monopoly.host.session.local;
 
+import fi.monopoly.application.command.SessionCommand;
+import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 
@@ -28,6 +30,11 @@ public final class GameBackedDesktopHostedGame implements DesktopHostedGame {
     @Override
     public SessionState sessionStateForPersistence() {
         return game.sessionStateForPersistence();
+    }
+
+    @Override
+    public CommandResult submitCommand(SessionCommand command) {
+        return game.submitCommand(command);
     }
 
     @Override

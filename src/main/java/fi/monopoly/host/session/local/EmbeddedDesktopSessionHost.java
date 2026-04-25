@@ -1,10 +1,13 @@
 package fi.monopoly.host.session.local;
 
+import fi.monopoly.application.command.SessionCommand;
+import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCase;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
 import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 
 import java.util.LinkedHashSet;
@@ -19,7 +22,7 @@ import java.util.Set;
  * of letting {@code MonopolyApp} coordinate host concerns directly. That makes the later jump to a
  * real remote host much narrower.</p>
  */
-public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
+public final class EmbeddedDesktopSessionHost implements HostedLocalSession, SessionCommandPort {
     private final DesktopSessionHostCoordinator desktopSessionHostCoordinator;
     private final LocalSessionPersistenceUseCase persistenceUseCase;
     private final Set<ClientSessionListener> listeners = new LinkedHashSet<>();
@@ -81,6 +84,15 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession {
 
     private ClientSessionSnapshot currentSnapshot() {
         return ClientSessionSnapshot.from(currentState(), currentView() != null);
+    }
+
+    @Override
+    public CommandResult handle(SessionCommand command) {
+        DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
+        if (game == null) {
+            throw new IllegalStateException("Cannot submit command: no active hosted game");
+        }
+        return game.submitCommand(command);
     }
 
     @Override

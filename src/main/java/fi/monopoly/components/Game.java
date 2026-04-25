@@ -244,6 +244,10 @@ public class Game implements MonopolyEventListener {
         return sessionApplicationService.currentState();
     }
 
+    public fi.monopoly.application.result.CommandResult submitCommand(fi.monopoly.application.command.SessionCommand command) {
+        return sessionApplicationService.handle(command);
+    }
+
     public void showPersistenceNotice(String notice) {
         gameDesktopSessionCoordinator.showPersistenceNotice(sessionState, notice);
     }
