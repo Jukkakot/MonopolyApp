@@ -251,7 +251,7 @@ class GameDesktopShellCoordinatorTest {
                             () -> null,
                             () -> null,
                             runtime::popupService,
-                            BotTurnScheduler::new
+                            () -> new BotTurnScheduler(() -> false)
                     ),
                     new GameDesktopShellDependencies.ProjectionAccess(
                             player -> null,

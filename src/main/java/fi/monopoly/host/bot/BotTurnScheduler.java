@@ -1,14 +1,19 @@
 package fi.monopoly.host.bot;
 
-import fi.monopoly.client.desktop.DesktopClientSettings;
+import java.util.function.BooleanSupplier;
 
 public final class BotTurnScheduler {
     private static final int NO_ACTION_READY = -1;
 
+    private final BooleanSupplier skipAnimations;
     private int nextReadyAt = NO_ACTION_READY;
 
+    public BotTurnScheduler(BooleanSupplier skipAnimations) {
+        this.skipAnimations = skipAnimations;
+    }
+
     public boolean isWaiting(int now) {
-        return !DesktopClientSettings.skipAnimations() && nextReadyAt != NO_ACTION_READY && now < nextReadyAt;
+        return !skipAnimations.getAsBoolean() && nextReadyAt != NO_ACTION_READY && now < nextReadyAt;
     }
 
     public void schedule(DelayKind delayKind, int now, SpeedMode speedMode, boolean allPlayersComputerControlled) {
@@ -27,14 +32,14 @@ public final class BotTurnScheduler {
             SpeedMode speedMode,
             boolean allPlayersComputerControlled
     ) {
-        if (DesktopClientSettings.skipAnimations() || !animationWasRunning || animationsStillRunning || !currentTurnComputerControlled) {
+        if (skipAnimations.getAsBoolean() || !animationWasRunning || animationsStillRunning || !currentTurnComputerControlled) {
             return;
         }
         schedule(DelayKind.ANIMATION_FINISH, now, speedMode, allPlayersComputerControlled);
     }
 
     private int computeDelayMs(DelayKind delayKind, SpeedMode speedMode, boolean allPlayersComputerControlled) {
-        if (DesktopClientSettings.skipAnimations() || speedMode == SpeedMode.INSTANT) {
+        if (skipAnimations.getAsBoolean() || speedMode == SpeedMode.INSTANT) {
             return 0;
         }
         int baseDelayMs = switch (delayKind) {

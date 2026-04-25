@@ -8,7 +8,7 @@ class BotTurnSchedulerTest {
 
     @Test
     void instantModeNeverWaitsAfterScheduling() {
-        BotTurnScheduler scheduler = new BotTurnScheduler();
+        BotTurnScheduler scheduler = new BotTurnScheduler(() -> false);
 
         scheduler.schedule(BotTurnScheduler.DelayKind.END_TURN, 1000, BotTurnScheduler.SpeedMode.INSTANT, false);
 
@@ -17,7 +17,7 @@ class BotTurnSchedulerTest {
 
     @Test
     void markReadyNowClearsWaitingState() {
-        BotTurnScheduler scheduler = new BotTurnScheduler();
+        BotTurnScheduler scheduler = new BotTurnScheduler(() -> false);
 
         scheduler.schedule(BotTurnScheduler.DelayKind.END_TURN, 1000, BotTurnScheduler.SpeedMode.NORMAL, false);
         scheduler.markReadyNow(1000);
@@ -27,7 +27,7 @@ class BotTurnSchedulerTest {
 
     @Test
     void animationFinishCooldownOnlySchedulesForComputerTurns() {
-        BotTurnScheduler scheduler = new BotTurnScheduler();
+        BotTurnScheduler scheduler = new BotTurnScheduler(() -> false);
 
         scheduler.applyAnimationFinishCooldownIfNeeded(true, false, false, 1000, BotTurnScheduler.SpeedMode.NORMAL, false);
 

@@ -156,7 +156,7 @@ class GameFrameCoordinatorTest {
                 primaryTurnControls,
                 new GameSidebarStateFactory(),
                 new GameSessionStateCoordinator(),
-                new BotTurnScheduler(),
+                new BotTurnScheduler(() -> false),
                 new DebugPerformanceStats(),
                 List.of(
                         endRoundButton,

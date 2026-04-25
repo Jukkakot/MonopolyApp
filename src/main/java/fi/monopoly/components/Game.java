@@ -1,5 +1,6 @@
 package fi.monopoly.components;
 
+import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.application.command.RefreshSessionViewCommand;
@@ -118,7 +119,7 @@ public class Game implements MonopolyEventListener {
     private int goMoneyAmount = 200;
     private Board board;
     private final GameSessionState sessionState = new GameSessionState();
-    private final BotTurnScheduler botTurnScheduler = new BotTurnScheduler();
+    private final BotTurnScheduler botTurnScheduler = new BotTurnScheduler(DesktopClientSettings::skipAnimations);
     private final GameBotTurnDriver botTurnDriver = new GameBotTurnDriver(botTurnScheduler);
     private final DebugPerformanceStats debugPerformanceStats = new DebugPerformanceStats();
     private final GameDesktopPresentationHost presentationHost;

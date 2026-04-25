@@ -30,7 +30,7 @@ class GameBotTurnDriverTest {
 
     @Test
     void debtStepUsesDebtorEvenWhenTurnPointerStillTargetsAnotherPlayer() {
-        GameBotTurnDriver driver = new GameBotTurnDriver(new BotTurnScheduler());
+        GameBotTurnDriver driver = new GameBotTurnDriver(new BotTurnScheduler(() -> false));
         Player turnPlayer = new Player("Creditor", Color.CORNFLOWERBLUE, 1500, 1, ComputerPlayerProfile.HUMAN);
         Player debtor = new Player("Debtor", Color.PINK, 1500, 2, ComputerPlayerProfile.SMOKE_TEST);
         HooksStub hooks = new HooksStub(turnPlayer, debtor, debtSessionState(debtor));
