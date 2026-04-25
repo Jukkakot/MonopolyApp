@@ -1,6 +1,7 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
@@ -102,6 +103,10 @@ public final class GameDesktopShellDependencies {
     }
 
     public SessionApplicationService sessionApplicationService() {
+        return stateAccess.sessionApplicationServiceSupplier().get();
+    }
+
+    public SessionCommandPort sessionCommandPort() {
         return stateAccess.sessionApplicationServiceSupplier().get();
     }
 

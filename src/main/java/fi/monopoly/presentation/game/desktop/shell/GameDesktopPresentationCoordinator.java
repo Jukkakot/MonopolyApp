@@ -313,12 +313,12 @@ public final class GameDesktopPresentationCoordinator {
 
             @Override
             public boolean activeAuctionOpen() {
-                return dependencies.sessionApplicationService().hasActiveAuction();
+                return dependencies.sessionCommandPort().currentState().auctionState() != null;
             }
 
             @Override
             public boolean activeTradeOpen() {
-                return dependencies.sessionApplicationService().hasActiveTrade();
+                return dependencies.sessionCommandPort().currentState().tradeState() != null;
             }
 
             @Override
