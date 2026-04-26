@@ -79,21 +79,14 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
         } else if (pendingDecision != null) {
             turnState = new TurnState(turnState.activePlayerId(), TurnPhase.WAITING_FOR_DECISION, false, false);
         }
-        return new SessionState(
-                baseState.sessionId(),
-                baseState.version(),
-                baseState.status(),
-                baseState.seats(),
-                baseState.players(),
-                baseState.properties(),
-                turnState,
-                pendingDecision,
-                auctionState,
-                activeDebt,
-                tradeState,
-                turnContinuationState,
-                baseState.winnerPlayerId()
-        );
+        return baseState.toBuilder()
+                .turn(turnState)
+                .pendingDecision(pendingDecision)
+                .auctionState(auctionState)
+                .activeDebt(activeDebt)
+                .tradeState(tradeState)
+                .turnContinuationState(turnContinuationState)
+                .build();
     }
 
     public void configureAuctionFlow(AuctionGateway gateway) {

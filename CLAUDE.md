@@ -22,7 +22,7 @@ mvn clean package -DskipTests
 
 ## Architecture Overview
 
-This is a Java 19 / Processing 4 Monopoly board game undergoing incremental extraction toward a backend-ready client/server split. The architecture is layered, with each layer increasingly "clean":
+This is a Java 21 / Processing 4 Monopoly board game undergoing incremental extraction toward a backend-ready client/server split. The architecture is layered, with each layer increasingly "clean":
 
 ```
 domain        → pure immutable state records (SessionState, TurnState)
@@ -33,7 +33,7 @@ components    → legacy Processing-era runtime objects (Game, Players, Board, e
 client        → MonopolyApp (PApplet), desktop shell, frame loop
 ```
 
-**SessionState** (a Java 19 immutable record) is the authoritative game truth. Commands flow in via `SessionApplicationService`, which routes them to typed command handlers (e.g. `PropertyPurchaseCommandHandler`). The resulting new `SessionState` is projected to the UI by `GameSessionStateCoordinator`.
+**SessionState** (a Java 21 immutable record) is the authoritative game truth. Commands flow in via `SessionApplicationService`, which routes them to typed command handlers (e.g. `PropertyPurchaseCommandHandler`). The resulting new `SessionState` is projected to the UI by `GameSessionStateCoordinator`.
 
 **Gateways** bridge the command/state model to legacy runtime objects. For example, `PropertyPurchaseGateway` lets command handlers mutate legacy `Players`/`Game` state without the application layer depending on those classes directly.
 
@@ -109,7 +109,7 @@ Follow the official rules at https://ristiseiska.fi/monopoly/. If a request conf
 
 | | |
 |---|---|
-| Language | Java 19 |
+| Language | Java 21 |
 | UI framework | Processing 4 (via JitPack), ControlP5 |
 | Build | Maven 3.9 |
 | Tests | JUnit 5 |

@@ -1,8 +1,9 @@
 package fi.monopoly.presentation.game.session;
 
 import fi.monopoly.host.bot.BotTurnScheduler;
-
 import fi.monopoly.components.Player;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 /**
  * Mutable desktop session state that still belongs to the local game shell.
@@ -12,6 +13,8 @@ import fi.monopoly.components.Player;
  * bot speed, and short-lived persistence notices. Keeping these fields together makes it easier to
  * move local session hosting behind a backend boundary later.</p>
  */
+@Getter
+@Accessors(fluent = true)
 public final class GameSessionState {
     private boolean paused;
     private boolean gameOver;
@@ -20,44 +23,20 @@ public final class GameSessionState {
     private String persistenceNotice;
     private int persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
 
-    public boolean paused() {
-        return paused;
-    }
-
     public void setPaused(boolean paused) {
         this.paused = paused;
-    }
-
-    public boolean gameOver() {
-        return gameOver;
     }
 
     public void setGameOver(boolean gameOver) {
         this.gameOver = gameOver;
     }
 
-    public Player winner() {
-        return winner;
-    }
-
     public void setWinner(Player winner) {
         this.winner = winner;
     }
 
-    public BotTurnScheduler.SpeedMode botSpeedMode() {
-        return botSpeedMode;
-    }
-
     public void setBotSpeedMode(BotTurnScheduler.SpeedMode botSpeedMode) {
         this.botSpeedMode = botSpeedMode;
-    }
-
-    public String persistenceNotice() {
-        return persistenceNotice;
-    }
-
-    public int persistenceNoticeExpiresAtMillis() {
-        return persistenceNoticeExpiresAtMillis;
     }
 
     public void clearPersistenceNotice() {

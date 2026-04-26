@@ -13,120 +13,100 @@ import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class DebtRemediationCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> sessionStateSupplier;
-    private final DebtRemediationGateway gateway;
     private final Consumer<DebtStateModel> activeDebtUpdater;
     private final Consumer<TurnContinuationState> turnContinuationUpdater;
-
-    public DebtRemediationCommandHandler(
-            String sessionId,
-            Supplier<SessionState> sessionStateSupplier,
-            Consumer<DebtStateModel> activeDebtUpdater,
-            Consumer<TurnContinuationState> turnContinuationUpdater,
-            DebtRemediationGateway gateway
-    ) {
-        this.sessionId = sessionId;
-        this.sessionStateSupplier = sessionStateSupplier;
-        this.activeDebtUpdater = activeDebtUpdater;
-        this.turnContinuationUpdater = turnContinuationUpdater;
-        this.gateway = gateway;
-    }
+    private final DebtRemediationGateway gateway;
 
     public CommandResult handle(SessionCommand command) {
-        if (!(command instanceof PayDebtCommand
-                || command instanceof MortgagePropertyForDebtCommand
-                || command instanceof SellBuildingForDebtCommand
-                || command instanceof SellBuildingRoundsAcrossSetForDebtCommand
-                || command instanceof DeclareBankruptcyCommand)) {
-            return unsupported();
-        }
-
         SessionState state = sessionStateSupplier.get();
         DebtStateModel debt = state.activeDebt();
         if (debt == null) {
             return rejected("NO_ACTIVE_DEBT", "No active debt to remediate");
         }
 
-        if (command instanceof PayDebtCommand payDebtCommand) {
-            if (!validBase(payDebtCommand.sessionId(), payDebtCommand.actorPlayerId(), payDebtCommand.debtId(), debt)) {
-                return rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
+        return switch (command) {
+            case PayDebtCommand cmd -> {
+                if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
+                    yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
+                }
+                if (debt.currentCash() < debt.amountRemaining()) {
+                    yield rejected("DEBT_NOT_PAYABLE", "Current cash does not cover the debt");
+                }
+                turnContinuationUpdater.accept(null);
+                gateway.payDebtNow();
+                yield accepted("DebtResolved");
             }
-            if (debt.currentCash() < debt.amountRemaining()) {
-                return rejected("DEBT_NOT_PAYABLE", "Current cash does not cover the debt");
+            case MortgagePropertyForDebtCommand cmd -> {
+                if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
+                    yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
+                }
+                Property property = gateway.propertyById(cmd.propertyId());
+                if (!isOwnedByDebtor(property, debt.debtorPlayerId()) || property.isMortgaged() || !canMortgage(property)) {
+                    yield rejected("INVALID_MORTGAGE", "Property cannot be mortgaged for the active debt");
+                }
+                if (!gateway.mortgageProperty(cmd.propertyId())) {
+                    yield rejected("MORTGAGE_FAILED", "Property mortgage failed");
+                }
+                refreshDebtState(debt);
+                yield accepted("PropertyMortgaged");
             }
-            turnContinuationUpdater.accept(null);
-            gateway.payDebtNow();
-            return accepted("DebtResolved");
-        }
-
-        if (command instanceof MortgagePropertyForDebtCommand mortgageCommand) {
-            if (!validBase(mortgageCommand.sessionId(), mortgageCommand.actorPlayerId(), mortgageCommand.debtId(), debt)) {
-                return rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
+            case SellBuildingForDebtCommand cmd -> {
+                if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
+                    yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
+                }
+                Property property = gateway.propertyById(cmd.propertyId());
+                if (!(property instanceof StreetProperty streetProperty)
+                        || !isOwnedByDebtor(property, debt.debtorPlayerId())
+                        || !streetProperty.canSellHouses(cmd.count())) {
+                    yield rejected("INVALID_BUILDING_SALE", "Buildings cannot be sold for the active debt");
+                }
+                if (!gateway.sellBuildings(cmd.propertyId(), cmd.count())) {
+                    yield rejected("BUILDING_SALE_FAILED", "Building sale failed");
+                }
+                refreshDebtState(debt);
+                yield accepted("BuildingSold");
             }
-            Property property = gateway.propertyById(mortgageCommand.propertyId());
-            if (!isOwnedByDebtor(property, debt.debtorPlayerId()) || property.isMortgaged() || !canMortgage(property)) {
-                return rejected("INVALID_MORTGAGE", "Property cannot be mortgaged for the active debt");
+            case SellBuildingRoundsAcrossSetForDebtCommand cmd -> {
+                if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
+                    yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
+                }
+                Property property = gateway.propertyById(cmd.propertyId());
+                if (!(property instanceof StreetProperty streetProperty)
+                        || !isOwnedByDebtor(property, debt.debtorPlayerId())
+                        || !streetProperty.canSellBuildingRoundsAcrossSet(cmd.rounds())) {
+                    yield rejected("INVALID_SET_BUILDING_SALE", "Building rounds cannot be sold for the active debt");
+                }
+                if (!gateway.sellBuildingRoundsAcrossSet(cmd.propertyId(), cmd.rounds())) {
+                    yield rejected("SET_BUILDING_SALE_FAILED", "Building round sale failed");
+                }
+                refreshDebtState(debt);
+                yield accepted("BuildingRoundsSold");
             }
-            if (!gateway.mortgageProperty(mortgageCommand.propertyId())) {
-                return rejected("MORTGAGE_FAILED", "Property mortgage failed");
+            case DeclareBankruptcyCommand cmd -> {
+                if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
+                    yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
+                }
+                if (!debt.bankruptcyRisk()) {
+                    yield rejected("BANKRUPTCY_NOT_ALLOWED", "Debt can still be covered by available assets");
+                }
+                activeDebtUpdater.accept(null);
+                turnContinuationUpdater.accept(null);
+                gateway.declareBankruptcy();
+                yield accepted("BankruptcyDeclared");
             }
-            refreshDebtState(debt);
-            return accepted("PropertyMortgaged");
-        }
-
-        if (command instanceof SellBuildingForDebtCommand sellCommand) {
-            if (!validBase(sellCommand.sessionId(), sellCommand.actorPlayerId(), sellCommand.debtId(), debt)) {
-                return rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
-            }
-            Property property = gateway.propertyById(sellCommand.propertyId());
-            if (!(property instanceof StreetProperty streetProperty)
-                    || !isOwnedByDebtor(property, debt.debtorPlayerId())
-                    || !streetProperty.canSellHouses(sellCommand.count())) {
-                return rejected("INVALID_BUILDING_SALE", "Buildings cannot be sold for the active debt");
-            }
-            if (!gateway.sellBuildings(sellCommand.propertyId(), sellCommand.count())) {
-                return rejected("BUILDING_SALE_FAILED", "Building sale failed");
-            }
-            refreshDebtState(debt);
-            return accepted("BuildingSold");
-        }
-
-        if (command instanceof SellBuildingRoundsAcrossSetForDebtCommand sellRoundsCommand) {
-            if (!validBase(sellRoundsCommand.sessionId(), sellRoundsCommand.actorPlayerId(), sellRoundsCommand.debtId(), debt)) {
-                return rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
-            }
-            Property property = gateway.propertyById(sellRoundsCommand.propertyId());
-            if (!(property instanceof StreetProperty streetProperty)
-                    || !isOwnedByDebtor(property, debt.debtorPlayerId())
-                    || !streetProperty.canSellBuildingRoundsAcrossSet(sellRoundsCommand.rounds())) {
-                return rejected("INVALID_SET_BUILDING_SALE", "Building rounds cannot be sold for the active debt");
-            }
-            if (!gateway.sellBuildingRoundsAcrossSet(sellRoundsCommand.propertyId(), sellRoundsCommand.rounds())) {
-                return rejected("SET_BUILDING_SALE_FAILED", "Building round sale failed");
-            }
-            refreshDebtState(debt);
-            return accepted("BuildingRoundsSold");
-        }
-
-        DeclareBankruptcyCommand declareBankruptcyCommand = (DeclareBankruptcyCommand) command;
-        if (!validBase(declareBankruptcyCommand.sessionId(), declareBankruptcyCommand.actorPlayerId(), declareBankruptcyCommand.debtId(), debt)) {
-            return rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
-        }
-        if (!debt.bankruptcyRisk()) {
-            return rejected("BANKRUPTCY_NOT_ALLOWED", "Debt can still be covered by available assets");
-        }
-        activeDebtUpdater.accept(null);
-        turnContinuationUpdater.accept(null);
-        gateway.declareBankruptcy();
-        return accepted("BankruptcyDeclared");
+            default -> unsupported();
+        };
     }
 
     private boolean validBase(String commandSessionId, String actorPlayerId, String debtId, DebtStateModel debt) {
@@ -192,21 +172,11 @@ public final class DebtRemediationCommandHandler {
     private CommandResult accepted(String eventType) {
         SessionState state = sessionStateSupplier.get();
         if (state.activeDebt() == null && state.turn().phase() == TurnPhase.RESOLVING_DEBT) {
-            state = new SessionState(
-                    state.sessionId(),
-                    state.version(),
-                    state.status(),
-                    state.seats(),
-                    state.players(),
-                    state.properties(),
-                    new TurnState(state.turn().activePlayerId(), TurnPhase.WAITING_FOR_END_TURN, false, true),
-                    state.pendingDecision(),
-                    state.auctionState(),
-                    null,
-                    state.tradeState(),
-                    null,
-                    state.winnerPlayerId()
-            );
+            state = state.toBuilder()
+                    .turn(new TurnState(state.turn().activePlayerId(), TurnPhase.WAITING_FOR_END_TURN, false, true))
+                    .activeDebt(null)
+                    .turnContinuationState(null)
+                    .build();
         }
         return new CommandResult(true, state, List.of(new DomainEvent(eventType, state.turn().activePlayerId(), eventType)), List.of(), List.of());
     }

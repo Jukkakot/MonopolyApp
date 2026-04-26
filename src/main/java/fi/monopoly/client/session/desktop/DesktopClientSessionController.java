@@ -2,8 +2,7 @@ package fi.monopoly.client.session.desktop;
 
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionUpdates;
-
-import java.util.Objects;
+import lombok.NonNull;
 
 /**
  * Thin desktop-client orchestrator around the client session seam.
@@ -22,21 +21,21 @@ public final class DesktopClientSessionController implements DesktopClientSessio
     private final ClientSessionFeedbackSink feedbackSink;
 
     public DesktopClientSessionController(
-            ClientSessionUpdates sessionUpdates,
-            DesktopSessionFrameDriver frameDriver,
-            DesktopSessionViewPort viewPort,
-            DesktopClientSessionModel sessionModel,
-            DesktopClientRenderModel renderModel,
-            DesktopLocalSessionControls localSessionControls,
-            ClientSessionFeedbackSink feedbackSink
+            @NonNull ClientSessionUpdates sessionUpdates,
+            @NonNull DesktopSessionFrameDriver frameDriver,
+            @NonNull DesktopSessionViewPort viewPort,
+            @NonNull DesktopClientSessionModel sessionModel,
+            @NonNull DesktopClientRenderModel renderModel,
+            @NonNull DesktopLocalSessionControls localSessionControls,
+            @NonNull ClientSessionFeedbackSink feedbackSink
     ) {
-        this.sessionUpdates = Objects.requireNonNull(sessionUpdates);
-        this.frameDriver = Objects.requireNonNull(frameDriver);
-        this.viewPort = Objects.requireNonNull(viewPort);
-        this.sessionModel = Objects.requireNonNull(sessionModel);
-        this.renderModel = Objects.requireNonNull(renderModel);
-        this.localSessionControls = Objects.requireNonNull(localSessionControls);
-        this.feedbackSink = Objects.requireNonNull(feedbackSink);
+        this.sessionUpdates = sessionUpdates;
+        this.frameDriver = frameDriver;
+        this.viewPort = viewPort;
+        this.sessionModel = sessionModel;
+        this.renderModel = renderModel;
+        this.localSessionControls = localSessionControls;
+        this.feedbackSink = feedbackSink;
         this.sessionUpdates.addListener(this.sessionModel);
         refreshRenderModel();
     }

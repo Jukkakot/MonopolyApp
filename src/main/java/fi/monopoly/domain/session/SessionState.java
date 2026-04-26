@@ -2,9 +2,11 @@ package fi.monopoly.domain.session;
 
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.turn.TurnState;
+import lombok.Builder;
 
 import java.util.List;
 
+@Builder(toBuilder = true)
 public record SessionState(
         String sessionId,
         long version,

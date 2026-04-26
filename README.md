@@ -35,7 +35,7 @@ tests for the main game flow.
 
 ## Tech Stack
 
-- Java 19
+- Java 21
 - Processing 4
 - ControlP5
 - Maven
@@ -46,7 +46,7 @@ tests for the main game flow.
 
 ### Requirements
 
-- Java 19
+- Java 21
 - Maven
 
 ### Start the Game

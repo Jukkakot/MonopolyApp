@@ -42,56 +42,48 @@ public class InteractiveTurnEffectExecutor {
         TurnEffect effect = effects.get(index);
         CallbackAction next = () -> executeNext(effects, index + 1, gameState, onComplete);
 
-        if (effect instanceof ShowMessageEffect showMessageEffect) {
-            popupService.show(showMessageEffect.message(), next::doAction);
-        } else if (effect instanceof AdjustPlayerMoneyEffect adjustPlayerMoneyEffect) {
-            popupService.show(adjustPlayerMoneyEffect.message(), () -> {
-                adjustPlayerMoneyEffect.player().addMoney(adjustPlayerMoneyEffect.amount());
+        switch (effect) {
+            case ShowMessageEffect e -> popupService.show(e.message(), next::doAction);
+            case AdjustPlayerMoneyEffect e -> popupService.show(e.message(), () -> {
+                e.player().addMoney(e.amount());
                 next.doAction();
             });
-        } else if (effect instanceof OfferToBuyPropertyEffect offerToBuyPropertyEffect) {
-            if (gameState.getPropertyPurchaseFlow() == null) {
-                popupService.showPropertyOffer(offerToBuyPropertyEffect.property(), offerToBuyPropertyEffect.message(), () -> {
-                    boolean couldBuy = offerToBuyPropertyEffect.player().buyProperty(offerToBuyPropertyEffect.property());
-                    if (!couldBuy) {
-                        popupService.show(text("property.buy.notEnough", offerToBuyPropertyEffect.property().getDisplayName()), () ->
-                                propertyAuctionResolver.resolve(
-                                        offerToBuyPropertyEffect.player(),
-                                        offerToBuyPropertyEffect.property(),
-                                        PropertyAuctionResolver.AuctionReason.PLAYER_COULD_NOT_PAY,
-                                        next
-                                )
-                        );
-                        return;
-                    }
-                    next.doAction();
-                }, () -> propertyAuctionResolver.resolve(
-                        offerToBuyPropertyEffect.player(),
-                        offerToBuyPropertyEffect.property(),
-                        PropertyAuctionResolver.AuctionReason.PLAYER_DECLINED,
-                        next
-                ));
-                return;
+            case OfferToBuyPropertyEffect e -> {
+                if (gameState.getPropertyPurchaseFlow() == null) {
+                    popupService.showPropertyOffer(e.property(), e.message(), () -> {
+                        boolean couldBuy = e.player().buyProperty(e.property());
+                        if (!couldBuy) {
+                            popupService.show(text("property.buy.notEnough", e.property().getDisplayName()), () ->
+                                    propertyAuctionResolver.resolve(
+                                            e.player(), e.property(),
+                                            PropertyAuctionResolver.AuctionReason.PLAYER_COULD_NOT_PAY, next
+                                    )
+                            );
+                            return;
+                        }
+                        next.doAction();
+                    }, () -> propertyAuctionResolver.resolve(
+                            e.player(), e.property(),
+                            PropertyAuctionResolver.AuctionReason.PLAYER_DECLINED, next
+                    ));
+                    return;
+                }
+                gameState.getPropertyPurchaseFlow().begin(
+                        e.player(), e.property(), e.message(),
+                        propertyPurchaseContinuation(e, index, effects)
+                );
             }
-            gameState.getPropertyPurchaseFlow().begin(
-                    offerToBuyPropertyEffect.player(),
-                    offerToBuyPropertyEffect.property(),
-                    offerToBuyPropertyEffect.message(),
-                    propertyPurchaseContinuation(offerToBuyPropertyEffect, index, effects)
-            );
-        } else if (effect instanceof PayRentEffect payRentEffect) {
-            popupService.show(payRentEffect.message(), () -> gameState.getPaymentHandler().requestPayment(
+            case PayRentEffect e -> popupService.show(e.message(), () -> gameState.getPaymentHandler().requestPayment(
                     new PaymentRequest(
-                            payRentEffect.fromPlayer(),
-                            new PlayerTarget(payRentEffect.toPlayer()),
-                            payRentEffect.amount(),
-                            payRentEffect.message()
+                            e.fromPlayer(),
+                            new PlayerTarget(e.toPlayer()),
+                            e.amount(),
+                            e.message()
                     ),
-                    rentContinuation(payRentEffect, index, effects),
+                    rentContinuation(e, index, effects),
                     next
             ));
-        } else {
-            throw new IllegalStateException("Unhandled interactive turn effect: " + effect.getClass().getSimpleName());
+            default -> throw new IllegalStateException("Unhandled interactive turn effect: " + effect.getClass().getSimpleName());
         }
     }
 

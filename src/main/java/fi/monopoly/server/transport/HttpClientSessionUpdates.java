@@ -52,9 +52,7 @@ public final class HttpClientSessionUpdates implements ClientSessionUpdates {
         if (!running.compareAndSet(false, true)) {
             return;
         }
-        sseThread = new Thread(this::runSseLoop, "session-sse-client");
-        sseThread.setDaemon(true);
-        sseThread.start();
+        sseThread = Thread.ofVirtual().name("session-sse-client").start(this::runSseLoop);
     }
 
     /**

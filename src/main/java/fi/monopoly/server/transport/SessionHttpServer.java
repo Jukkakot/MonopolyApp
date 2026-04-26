@@ -17,7 +17,11 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -86,12 +90,7 @@ public final class SessionHttpServer {
         httpServer.createContext("/snapshot", this::handleSnapshot);
         httpServer.createContext("/events", this::handleEvents);
         httpServer.createContext("/health", this::handleHealth);
-        // Thread pool so that blocking SSE handler threads do not stall other requests.
-        httpServer.setExecutor(Executors.newCachedThreadPool(r -> {
-            Thread t = new Thread(r, "session-http");
-            t.setDaemon(true);
-            return t;
-        }));
+        httpServer.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         sessionUpdates.addListener(sseListener);
         httpServer.start();
         log.info("Session HTTP server started on port {}", port);

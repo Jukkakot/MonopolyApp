@@ -67,21 +67,7 @@ public final class DesktopSessionHostCoordinator implements SessionHost {
         if (restoredState == null || restoredState.status() != SessionStatus.IN_PROGRESS) {
             return restoredState;
         }
-        return new SessionState(
-                restoredState.sessionId(),
-                restoredState.version(),
-                SessionStatus.PAUSED,
-                restoredState.seats(),
-                restoredState.players(),
-                restoredState.properties(),
-                restoredState.turn(),
-                restoredState.pendingDecision(),
-                restoredState.auctionState(),
-                restoredState.activeDebt(),
-                restoredState.tradeState(),
-                restoredState.turnContinuationState(),
-                restoredState.winnerPlayerId()
-        );
+        return restoredState.toBuilder().status(SessionStatus.PAUSED).build();
     }
 
     public interface Hooks {
