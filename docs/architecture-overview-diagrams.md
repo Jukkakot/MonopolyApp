@@ -319,6 +319,11 @@ flowchart TD
 
     HOSTROOT --> EMBHOST[EmbeddedDesktopSessionHost]
     HOSTROOT --> HOSTEDLOCAL[HostedLocalSession]
+
+    SERVERROOT[server.transport]
+    SERVERROOT --> CMDMAPPER[SessionCommandMapper]
+    SERVERROOT --> HTTPSERVER[SessionHttpServer]
+    HTTPSERVER -.->|wraps| CMDPORT
 ```
 
 Useful mental model:
@@ -334,6 +339,7 @@ Useful mental model:
 - `desktop.session`: session bridge and restored-session reattachment
 - `desktop.ui`: controls, layout, frame rendering, input binding, and the extracted desktop presentation host
 - `host.session.local`: `EmbeddedDesktopSessionHost` (single command entry point + snapshot publisher) and `HostedLocalSession` (combines all local host seams)
+- `server.transport`: `SessionCommandMapper` (JSON ↔ `SessionCommand`), `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /health`); activated via `-Dmonopoly.http.port=<port>`
 
 ## 5. Target Backend-Ready Architecture
 
@@ -404,3 +410,4 @@ Current practical status:
 - the five presentation-layer adapters (debt, auction, purchase, trade) already depend only on `SessionCommandPort`, so they are ready to be rewired to either an embedded or remote host without behavioral change
 - the remaining local cleanup means: (1) moving adapter assembly out of `Game` and into host-level wiring so adapters receive `EmbeddedDesktopSessionHost` directly, (2) separating legacy runtime reconstruction from authoritative session execution
 - `F` is the next major architecture milestone, with the main prerequisite being a concrete server-side session host that implements the already-defined `SessionCommandPort` + `ClientSessionUpdates` contract
+- **`server.transport` package now exists** with `SessionCommandMapper` (JSON ↔ `SessionCommand`) and `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /health`); the embedded host is optionally exposed over HTTP via `-Dmonopoly.http.port=<port>`

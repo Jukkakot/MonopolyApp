@@ -318,20 +318,29 @@ Remaining:
 - session host output must become client-facing session state/view state
 - legacy runtime reconstruction must become a client adapter
 
-### Blocker D: no real server package root yet
+### Blocker D: server.transport HTTP MVP — DONE
 
-There is still no concrete:
+`fi.monopoly.server.transport` now exists with:
 
-- `server.session`
-- `server.transport`
+- `SessionCommandMapper` — deserializes JSON (with `"type"` discriminator) to typed
+  `SessionCommand` instances; all 22 command types covered; no Jackson annotations on domain types
+- `SessionHttpServer` — built-in Java `HttpServer` exposing:
+  - `POST /command` → `SessionCommandPort.handle()`, returns `{"accepted":…,"rejections":[…]}`
+  - `GET /snapshot` → serialized `ClientSessionSnapshot` JSON
+  - `GET /health` → `{"status":"ok"}`
 
-The `client.session` package now exists and holds the transport-neutral seam types:
-- `SessionCommandPort` — command submission interface any host implementation must satisfy
-- `ClientSessionUpdates` — snapshot listener interface any host implementation must satisfy
-- `ClientSessionSnapshot` — transport-neutral snapshot payload
+The HTTP server is wired into `EmbeddedLocalDesktopClientBindingFactory` behind
+`-Dmonopoly.http.port=<port>`. When that system property is set, the embedded session host is
+exposed over HTTP on the given port; a JVM shutdown hook stops the server cleanly. When the
+property is absent the app runs in normal embedded-only mode with no behavioral change.
 
-That means the architecture is backend-friendly in shape, and the client-facing contract is now
-explicitly defined. A remote host MVP can now be planned against these interfaces.
+`EmbeddedDesktopSessionHost.currentSnapshot()` is now public so the HTTP server (and other
+transport implementations) can poll it directly.
+
+Remaining for full backend split:
+- `server.session` — server-owned authoritative session host running in a separate process
+- Transport-aware `ClientSessionUpdates` implementation using SSE or WebSocket for push snapshots
+- Client-side `SessionCommandPort` implementation that POSTs to the HTTP server
 
 ## Recommended Immediate Architectural Focus
 
