@@ -291,22 +291,32 @@ Progress made:
   application service; `GamePresentationFactory` no longer imports `SessionApplicationService`
 - `SessionApplicationService` removed from `Game`, `GameDesktopAssembly`, `GameDesktopHostContext`,
   and `GameSessionBridge` record — these now hold only narrow types: `SessionCommandPort`,
-  `SessionPresentationStatePort`, `SessionPaymentPort` (new), `Consumer<Runnable>`
-  (postCommandListenerRegistrar), `Consumer<TurnContinuationGateway>`, `Function<String,CommandResult>`
+  `SessionPresentationStatePort`, `SessionPaymentPort`, `Consumer<TurnContinuationGateway>`,
+  `Function<String,CommandResult>`, and `internalCommandPort` (a `SessionCommandPort` back-channel
+  that `Game.submitCommand()` uses to avoid routing through the proxy)
 - `SessionPaymentPort` introduced in `application.session` for the `handlePaymentRequest` seam;
   `Game` no longer imports `SessionApplicationService` at all
 - `SessionApplicationService` is now only imported in: `GameSessionBridgeFactory` (where it is
   used internally to build the bridge) and `LegacySessionApplicationFactory` (where it is built)
 - no assembly record above the bridge factory level references `SessionApplicationService` by name
+- `ForwardingSessionCommandPort` introduced in `client.session`: a mutable proxy that holds a
+  separate `stateSource` (always points to the local `SessionApplicationService` for projected state)
+  and a `commandDelegate` (initially `SessionApplicationService`, rewired to
+  `EmbeddedDesktopSessionHost` after session start via `setExternalCommandDelegate`)
+- all five presentation-layer adapters (debt, auction, purchase, trade, trade controller) now
+  receive the `ForwardingSessionCommandPort` proxy, not `SessionApplicationService` directly —
+  their command submissions route through `EmbeddedDesktopSessionHost.handle()` transparently
+- `EmbeddedDesktopSessionHost.handle()` now publishes a snapshot directly after each accepted
+  command; `SessionApplicationService.postCommandListener` and `setPostCommandListener()` removed
+- `DesktopHostedGame.setExternalCommandDelegate()` replaces `setPostCommandListener()` — the host
+  calls this after game creation to wire the proxy delegate to itself
+- `EmbeddedDesktopSessionHost` is now the single named command entry point for both embedded and
+  future remote modes; swapping to a remote host only requires changing what the proxy delegates to
 
 Remaining:
 
 - session host output must become client-facing session state/view state
 - legacy runtime reconstruction must become a client adapter
-- adapters are still wired to the locally-created `SessionApplicationService` inside
-  `GameSessionBridgeFactory`; for a remote host, they would need a transport `SessionCommandPort`
-  — routing them through `EmbeddedDesktopSessionHost.handle()` (a late-binding proxy approach)
-  is the remaining structural step before adapter assembly can move fully to the host level
 
 ### Blocker D: no real server package root yet
 
