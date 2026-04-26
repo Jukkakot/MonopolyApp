@@ -337,10 +337,23 @@ property is absent the app runs in normal embedded-only mode with no behavioral 
 `EmbeddedDesktopSessionHost.currentSnapshot()` is now public so the HTTP server (and other
 transport implementations) can poll it directly.
 
+The full transport layer MVP is now in place:
+
+- `SessionCommandSerializer` — serializes `SessionCommand` → JSON (symmetric with `SessionCommandMapper`)
+- `HttpSessionCommandPort` — `SessionCommandPort` that POSTs commands to `/command`
+- `HttpClientSessionUpdates` — `ClientSessionUpdates` that connects to `/events` SSE stream,
+  auto-reconnects on disconnect, and dispatches received snapshots to registered listeners
+
+A remote desktop client can substitute `HttpSessionCommandPort` + `HttpClientSessionUpdates` for the
+embedded host binding without any changes to the five presentation-layer adapters — they only
+see `SessionCommandPort` and `ClientSessionUpdates`.
+
 Remaining for full backend split:
 - `server.session` — server-owned authoritative session host running in a separate process
-- Transport-aware `ClientSessionUpdates` implementation using SSE or WebSocket for push snapshots
-- Client-side `SessionCommandPort` implementation that POSTs to the HTTP server
+  (currently the server and client still share the same JVM)
+- `ClientSessionSnapshot` deserialization needs care around `PendingDecision.payload` (typed as
+  `Object` — currently deserializes to `LinkedHashMap`; sufficient for MVP but needs a typed
+  discriminator for production use)
 
 ## Recommended Immediate Architectural Focus
 
