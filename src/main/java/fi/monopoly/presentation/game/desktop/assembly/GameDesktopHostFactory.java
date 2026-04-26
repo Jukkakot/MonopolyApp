@@ -1,11 +1,10 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
-import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animations;
@@ -16,20 +15,15 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.host.session.local.LocalHostedGameLoopCoordinator;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.host.bot.GameBotTurnDriver;
+import fi.monopoly.host.session.local.LocalHostedGameLoopCoordinator;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopPresentationCoordinator;
-import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
 import fi.monopoly.presentation.game.desktop.shell.GameDesktopSessionCoordinator;
-import fi.monopoly.presentation.game.desktop.ui.GameDesktopControlsFactory;
-import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
-import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
-import fi.monopoly.presentation.game.desktop.ui.GameSidebarPresenter;
-import fi.monopoly.presentation.game.desktop.ui.GameSidebarStateFactory;
-import fi.monopoly.presentation.game.desktop.ui.GameUiController;
+import fi.monopoly.presentation.game.desktop.shell.GameDesktopShellDependencies;
+import fi.monopoly.presentation.game.desktop.ui.*;
 import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
@@ -37,15 +31,11 @@ import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.utils.DebugPerformanceStats;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.BooleanSupplier;
-import java.util.function.Function;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * Builds the desktop host wiring that still lives around the extracted runtime and shell
@@ -56,15 +46,12 @@ import java.util.function.Supplier;
  * That makes it easier to continue shrinking the host class without changing its public surface
  * area yet.</p>
  */
+@RequiredArgsConstructor
 public final class GameDesktopHostFactory {
     private final GameDesktopAssemblyFactory gameDesktopAssemblyFactory;
 
     public GameDesktopHostFactory() {
         this(new GameDesktopAssemblyFactory());
-    }
-
-    GameDesktopHostFactory(GameDesktopAssemblyFactory gameDesktopAssemblyFactory) {
-        this.gameDesktopAssemblyFactory = gameDesktopAssemblyFactory;
     }
 
     public GameDesktopHostContext create(Config config, Hooks hooks) {
@@ -98,7 +85,7 @@ public final class GameDesktopHostFactory {
                         hooks.sessionCommandPortSupplier(),
                         hooks.sessionPresentationStateSupplier(),
                         () -> config.runtime().popupService(),
-                        () -> config.botTurnScheduler()
+                        config::botTurnScheduler
                 ),
                 new GameDesktopShellDependencies.ProjectionAccess(
                         hooks.currentGameViewFactory(),

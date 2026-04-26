@@ -6,13 +6,11 @@ import fi.monopoly.components.Players;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public final class LegacyPropertyPurchaseGateway implements PropertyPurchaseGateway {
     private final Players players;
-
-    public LegacyPropertyPurchaseGateway(fi.monopoly.components.popup.PopupService popupService, Players players) {
-        this.players = players;
-    }
 
     @Override
     public boolean buyProperty(Player player, Property property) {

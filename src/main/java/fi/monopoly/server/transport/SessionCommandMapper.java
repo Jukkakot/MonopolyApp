@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.monopoly.application.command.*;
 import fi.monopoly.domain.session.TradeEditPatch;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 
@@ -11,13 +12,10 @@ import java.io.IOException;
  * Maps JSON (with a {@code "type"} discriminator field) to typed {@link SessionCommand} instances
  * without requiring Jackson annotations on domain types.
  */
+@RequiredArgsConstructor
 public final class SessionCommandMapper {
 
     private final ObjectMapper objectMapper;
-
-    public SessionCommandMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     public SessionCommand fromJson(byte[] json) throws IOException {
         JsonNode node = objectMapper.readTree(json);

@@ -5,6 +5,7 @@ import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -16,13 +17,10 @@ import java.util.List;
  * class even while the runtime is still built around it. The adapter is intentionally thin: all
  * authoritative behavior still lives in the wrapped game instance.</p>
  */
+@RequiredArgsConstructor
 public final class GameBackedDesktopHostedGame implements DesktopHostedGame {
     private final Game game;
     private final DesktopHostedGameView hostedGameView = new HostedGameView();
-
-    public GameBackedDesktopHostedGame(Game game) {
-        this.game = game;
-    }
 
     public Game game() {
         return game;

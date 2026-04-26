@@ -3,14 +3,13 @@ package fi.monopoly.components.turn;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameState;
 import fi.monopoly.components.Players;
-import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PlayerTarget;
 import fi.monopoly.components.popup.PopupService;
-import lombok.extern.slf4j.Slf4j;
 import fi.monopoly.domain.session.TurnContinuationAction;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.session.TurnContinuationType;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -81,18 +80,16 @@ public class InteractiveTurnEffectExecutor {
                     propertyPurchaseContinuation(offerToBuyPropertyEffect, index, effects)
             );
         } else if (effect instanceof PayRentEffect payRentEffect) {
-            popupService.show(payRentEffect.message(), () -> {
-                gameState.getPaymentHandler().requestPayment(
-                        new PaymentRequest(
-                                payRentEffect.fromPlayer(),
-                                new PlayerTarget(payRentEffect.toPlayer()),
-                                payRentEffect.amount(),
-                                payRentEffect.message()
-                        ),
-                        rentContinuation(payRentEffect, index, effects),
-                        next
-                );
-            });
+            popupService.show(payRentEffect.message(), () -> gameState.getPaymentHandler().requestPayment(
+                    new PaymentRequest(
+                            payRentEffect.fromPlayer(),
+                            new PlayerTarget(payRentEffect.toPlayer()),
+                            payRentEffect.amount(),
+                            payRentEffect.message()
+                    ),
+                    rentContinuation(payRentEffect, index, effects),
+                    next
+            ));
         } else {
             throw new IllegalStateException("Unhandled interactive turn effect: " + effect.getClass().getSimpleName());
         }

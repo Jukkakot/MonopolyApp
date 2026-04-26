@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.client.desktop.DesktopClientSettings;
-import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
@@ -10,13 +9,14 @@ import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.presentation.session.trade.TradeController;
-import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.DiceState;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.BooleanSupplier;
 
 @Slf4j
+@RequiredArgsConstructor
 public final class GameUiHooksAdapter implements GameUiController.Hooks {
     private final Board board;
     private final Dices dices;
@@ -30,34 +30,6 @@ public final class GameUiHooksAdapter implements GameUiController.Hooks {
     private final BooleanSupplier gameOverSupplier;
     private final BooleanSupplier popupVisibleSupplier;
     private final BooleanSupplier canEndTurnSupplier;
-
-    public GameUiHooksAdapter(
-            Board board,
-            Dices dices,
-            DebtController debtController,
-            TradeController tradeController,
-            DebugController debugController,
-            GameTurnFlowCoordinator gameTurnFlowCoordinator,
-            Runnable payDebtAction,
-            Runnable declareBankruptcyAction,
-            Runnable finishAllAnimationsAction,
-            BooleanSupplier gameOverSupplier,
-            BooleanSupplier popupVisibleSupplier,
-            BooleanSupplier canEndTurnSupplier
-    ) {
-        this.board = board;
-        this.dices = dices;
-        this.debtController = debtController;
-        this.tradeController = tradeController;
-        this.debugController = debugController;
-        this.gameTurnFlowCoordinator = gameTurnFlowCoordinator;
-        this.payDebtAction = payDebtAction;
-        this.declareBankruptcyAction = declareBankruptcyAction;
-        this.finishAllAnimationsAction = finishAllAnimationsAction;
-        this.gameOverSupplier = gameOverSupplier;
-        this.popupVisibleSupplier = popupVisibleSupplier;
-        this.canEndTurnSupplier = canEndTurnSupplier;
-    }
 
     @Override
     public boolean gameOver() {

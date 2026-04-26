@@ -16,12 +16,14 @@ import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class PropertyPurchaseCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> currentStateSupplier;
@@ -32,26 +34,6 @@ public final class PropertyPurchaseCommandHandler {
     private final PropertyPurchaseGateway gateway;
     private final AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseContext activeContext;
-
-    public PropertyPurchaseCommandHandler(
-            String sessionId,
-            Supplier<SessionState> currentStateSupplier,
-            Consumer<PendingDecision> pendingDecisionSetter,
-            Consumer<AuctionState> auctionStateSetter,
-            Consumer<TurnContinuationState> turnContinuationSetter,
-            Consumer<TurnContinuationState> turnContinuationResolver,
-            PropertyPurchaseGateway gateway,
-            AuctionCommandHandler auctionCommandHandler
-    ) {
-        this.sessionId = sessionId;
-        this.currentStateSupplier = currentStateSupplier;
-        this.pendingDecisionSetter = pendingDecisionSetter;
-        this.auctionStateSetter = auctionStateSetter;
-        this.turnContinuationSetter = turnContinuationSetter;
-        this.turnContinuationResolver = turnContinuationResolver;
-        this.gateway = gateway;
-        this.auctionCommandHandler = auctionCommandHandler;
-    }
 
     public PendingDecision openDecision(
             Player player,

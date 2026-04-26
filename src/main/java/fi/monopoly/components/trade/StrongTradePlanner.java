@@ -10,6 +10,7 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -21,16 +22,13 @@ import java.util.List;
  * utility lets presentation-layer trade orchestration use the same heuristic logic without staying
  * inside the legacy package boundary.</p>
  */
+@RequiredArgsConstructor
 public final class StrongTradePlanner {
     private static final int MIN_TRADE_CASH_STEP = 10;
     private static final int DEFAULT_TRADE_CASH_STEP = 20;
 
     private final TradeOfferEvaluator tradeOfferEvaluator = new TradeOfferEvaluator();
     private final StrongBotConfig config;
-
-    public StrongTradePlanner(StrongBotConfig config) {
-        this.config = config;
-    }
 
     public TradePlan plan(Player proposer, List<Player> players) {
         if (proposer == null || players == null || players.size() < 2) {
@@ -147,8 +145,8 @@ public final class StrongTradePlanner {
         int strategicHeadroom = completesSet
                 ? config.tradeSetCompletionWeight()
                 : deniesLeader
-                ? Math.max(60, (int) Math.round(config.tradeSetCompletionWeight() * 0.4))
-                : 40;
+                  ? Math.max(60, (int) Math.round(config.tradeSetCompletionWeight() * 0.4))
+                  : 40;
         return base + strategicHeadroom;
     }
 

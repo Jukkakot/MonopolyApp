@@ -3,6 +3,7 @@ package fi.monopoly.server.transport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fi.monopoly.application.command.*;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 
@@ -10,13 +11,10 @@ import java.io.IOException;
  * Serializes typed {@link SessionCommand} instances to JSON with a {@code "type"} discriminator
  * field, complementing {@link SessionCommandMapper} which does the reverse.
  */
+@RequiredArgsConstructor
 public final class SessionCommandSerializer {
 
     private final ObjectMapper objectMapper;
-
-    public SessionCommandSerializer(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     public String toJson(SessionCommand command) throws IOException {
         ObjectNode node = objectMapper.createObjectNode();

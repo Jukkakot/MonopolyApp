@@ -9,25 +9,21 @@ import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
-import fi.monopoly.components.properties.PropertyFactory;
-import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.text.UiTexts;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Builds and wires the live desktop runtime objects that still back the legacy game shell.
  */
+@RequiredArgsConstructor
 public final class GameRuntimeAssemblyFactory {
     private final LegacyGameRuntimeBootstrapper legacyGameRuntimeBootstrapper;
 
     public GameRuntimeAssemblyFactory() {
         this(new LegacyGameRuntimeBootstrapper());
-    }
-
-    GameRuntimeAssemblyFactory(LegacyGameRuntimeBootstrapper legacyGameRuntimeBootstrapper) {
-        this.legacyGameRuntimeBootstrapper = legacyGameRuntimeBootstrapper;
     }
 
     public GameRuntimeAssembly create(

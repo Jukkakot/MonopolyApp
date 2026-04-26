@@ -1,14 +1,11 @@
 package fi.monopoly.components.computer;
 
-import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 final class StrongPropertyBuyEvaluator {
     private final StrongBotConfig config;
-
-    StrongPropertyBuyEvaluator(StrongBotConfig config) {
-        this.config = config;
-    }
 
     boolean shouldBuy(GameView gameView, PlayerView self, PropertyView property) {
         return evaluatePurchase(gameView, self, property).action() == ComputerAction.ACCEPT_POPUP;

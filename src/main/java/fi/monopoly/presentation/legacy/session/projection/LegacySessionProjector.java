@@ -16,6 +16,7 @@ import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
@@ -30,6 +31,7 @@ import static fi.monopoly.text.UiTexts.text;
  * runtime objects. The projector lets the newer application layer observe that runtime through a
  * stable session model while the remaining legacy responsibilities are being peeled away.</p>
  */
+@RequiredArgsConstructor
 public final class LegacySessionProjector {
     private final String sessionId;
     private final Supplier<Players> playersSupplier;
@@ -40,28 +42,6 @@ public final class LegacySessionProjector {
     private final Supplier<Player> winnerSupplier;
     private final BooleanSupplier canRollSupplier;
     private final BooleanSupplier canEndTurnSupplier;
-
-    public LegacySessionProjector(
-            String sessionId,
-            Supplier<Players> playersSupplier,
-            Supplier<LegacyPopupSnapshot> popupSupplier,
-            Supplier<DebtState> debtStateSupplier,
-            BooleanSupplier pausedSupplier,
-            BooleanSupplier gameOverSupplier,
-            Supplier<Player> winnerSupplier,
-            BooleanSupplier canRollSupplier,
-            BooleanSupplier canEndTurnSupplier
-    ) {
-        this.sessionId = sessionId;
-        this.playersSupplier = playersSupplier;
-        this.popupSupplier = popupSupplier;
-        this.debtStateSupplier = debtStateSupplier;
-        this.pausedSupplier = pausedSupplier;
-        this.gameOverSupplier = gameOverSupplier;
-        this.winnerSupplier = winnerSupplier;
-        this.canRollSupplier = canRollSupplier;
-        this.canEndTurnSupplier = canEndTurnSupplier;
-    }
 
     public SessionState project() {
         Players players = playersSupplier.get();

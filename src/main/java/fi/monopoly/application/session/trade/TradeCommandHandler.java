@@ -5,6 +5,7 @@ import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
 import fi.monopoly.domain.session.*;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,23 +13,12 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class TradeCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> currentStateSupplier;
     private final Consumer<TradeState> tradeStateSetter;
     private final TradeGateway gateway;
-
-    public TradeCommandHandler(
-            String sessionId,
-            Supplier<SessionState> currentStateSupplier,
-            Consumer<TradeState> tradeStateSetter,
-            TradeGateway gateway
-    ) {
-        this.sessionId = sessionId;
-        this.currentStateSupplier = currentStateSupplier;
-        this.tradeStateSetter = tradeStateSetter;
-        this.gateway = gateway;
-    }
 
     public boolean supports(SessionCommand command) {
         return command instanceof OpenTradeCommand

@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionUpdates;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,9 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>Call {@link #connect()} once to start the background SSE reader thread. Call
  * {@link #disconnect()} to stop it and close the connection.</p>
  */
+@Slf4j
 public final class HttpClientSessionUpdates implements ClientSessionUpdates {
-
-    private static final Logger log = LoggerFactory.getLogger(HttpClientSessionUpdates.class);
 
     private final String baseUrl;
     private final ObjectMapper objectMapper;

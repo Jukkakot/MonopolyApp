@@ -4,17 +4,15 @@ import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
+import fi.monopoly.components.Player;
+import fi.monopoly.components.properties.Property;
+import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.domain.session.DebtAction;
-import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.DebtStateModel;
-import fi.monopoly.domain.session.PaymentObligation;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.properties.Property;
-import fi.monopoly.components.properties.StreetProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -143,9 +141,9 @@ public final class DebtRemediationCommandHandler {
 
     private boolean canMortgage(Property property) {
         if (property instanceof StreetProperty streetProperty) {
-            return !streetProperty.getOwnerPlayer().getOwnedStreetProperties(property.getSpotType().streetType)
+            return streetProperty.getOwnerPlayer().getOwnedStreetProperties(property.getSpotType().streetType)
                     .stream()
-                    .anyMatch(StreetProperty::hasBuildings);
+                    .noneMatch(StreetProperty::hasBuildings);
         }
         return true;
     }

@@ -1,32 +1,24 @@
 package fi.monopoly.presentation.game.turn;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
-import fi.monopoly.components.CallbackAction;
-import fi.monopoly.components.GameState;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.PlayerToken;
-import fi.monopoly.components.Players;
+import fi.monopoly.client.desktop.MonopolyRuntime;
+import fi.monopoly.components.*;
 import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.board.Path;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.dices.Dices;
+import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
-import fi.monopoly.components.turn.EndTurnEffect;
-import fi.monopoly.components.turn.MovePlayerEffect;
-import fi.monopoly.components.turn.ShowDiceEffect;
-import fi.monopoly.components.turn.ShowEndTurnEffect;
-import fi.monopoly.components.turn.TurnEffect;
-import fi.monopoly.components.turn.TurnEngine;
-import fi.monopoly.components.turn.TurnPlan;
+import fi.monopoly.components.turn.*;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.TurnResult;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.IntSupplier;
@@ -34,6 +26,7 @@ import java.util.function.IntSupplier;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+@RequiredArgsConstructor
 public final class GameTurnFlowCoordinator {
     private final MonopolyRuntime runtime;
     private final Players players;
@@ -45,28 +38,6 @@ public final class GameTurnFlowCoordinator {
     private final IntSupplier goMoneyAmountSupplier;
     private final Hooks hooks;
     private TurnResult prevTurnResult;
-
-    public GameTurnFlowCoordinator(
-            MonopolyRuntime runtime,
-            Players players,
-            Dices dices,
-            Board board,
-            Animations animations,
-            TurnEngine turnEngine,
-            PropertyPurchaseFlow propertyPurchaseFlow,
-            IntSupplier goMoneyAmountSupplier,
-            Hooks hooks
-    ) {
-        this.runtime = runtime;
-        this.players = players;
-        this.dices = dices;
-        this.board = board;
-        this.animations = animations;
-        this.turnEngine = turnEngine;
-        this.propertyPurchaseFlow = propertyPurchaseFlow;
-        this.goMoneyAmountSupplier = goMoneyAmountSupplier;
-        this.hooks = hooks;
-    }
 
     public void rollDice() {
         hooks.updateLogTurnContext();
@@ -110,22 +81,17 @@ public final class GameTurnFlowCoordinator {
         if (continuationState == null) {
             return false;
         }
-        return switch (continuationState.completionAction()) {
-            case NONE -> true;
+        switch (continuationState.completionAction()) {
+            case NONE -> {
+            }
             case APPLY_TURN_FOLLOW_UP -> {
                 DiceState diceState = dices.getValue() != null ? dices.getValue().diceState() : DiceState.NOREROLL;
                 doTurnEndEvent(diceState);
-                yield true;
             }
-            case END_TURN_WITH_SWITCH -> {
-                endRound(true);
-                yield true;
-            }
-            case END_TURN_WITHOUT_SWITCH -> {
-                endRound(false);
-                yield true;
-            }
-        };
+            case END_TURN_WITH_SWITCH -> endRound(true);
+            case END_TURN_WITHOUT_SWITCH -> endRound(false);
+        }
+        return true;
     }
 
     private void playRound(DiceValue diceValue) {
@@ -241,12 +207,7 @@ public final class GameTurnFlowCoordinator {
         void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved);
     }
 
-    private static final class GameFlowPaymentHandler implements fi.monopoly.components.payment.PaymentHandler {
-        private final Hooks hooks;
-
-        private GameFlowPaymentHandler(Hooks hooks) {
-            this.hooks = hooks;
-        }
+    private record GameFlowPaymentHandler(Hooks hooks) implements PaymentHandler {
 
         @Override
         public void requestPayment(PaymentRequest request, CallbackAction onResolved) {

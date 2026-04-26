@@ -11,6 +11,7 @@ import fi.monopoly.presentation.game.desktop.ui.GameDesktopPresentationHost;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.utils.DebugPerformanceStats;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Locale;
@@ -23,20 +24,13 @@ import java.util.function.Supplier;
  * can keep its current compatibility surface while delegating more composition work into explicit
  * desktop assembly code.</p>
  */
+@RequiredArgsConstructor
 public final class GameDesktopBootstrapFactory {
     private final GameDesktopControlsFactory gameDesktopControlsFactory;
     private final GameDesktopHostFactory gameDesktopHostFactory;
 
     public GameDesktopBootstrapFactory() {
         this(new GameDesktopControlsFactory(), new GameDesktopHostFactory());
-    }
-
-    GameDesktopBootstrapFactory(
-            GameDesktopControlsFactory gameDesktopControlsFactory,
-            GameDesktopHostFactory gameDesktopHostFactory
-    ) {
-        this.gameDesktopControlsFactory = gameDesktopControlsFactory;
-        this.gameDesktopHostFactory = gameDesktopHostFactory;
     }
 
     public GameDesktopBootstrap create(Config config, GameDesktopHostFactory.Hooks hooks) {

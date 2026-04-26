@@ -14,11 +14,13 @@ import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
 
 import static fi.monopoly.text.UiTexts.text;
 
+@RequiredArgsConstructor
 public final class AuctionViewAdapter {
     private final String sessionId;
     private final SessionCommandPort sessionApplicationService;
@@ -26,18 +28,6 @@ public final class AuctionViewAdapter {
     private final Players players;
     private String renderedAuctionSignature;
     private String renderedResolutionAuctionId;
-
-    public AuctionViewAdapter(
-            String sessionId,
-            SessionCommandPort sessionApplicationService,
-            PopupService popupService,
-            Players players
-    ) {
-        this.sessionId = sessionId;
-        this.sessionApplicationService = sessionApplicationService;
-        this.popupService = popupService;
-        this.players = players;
-    }
 
     public void sync() {
         SessionState state = sessionApplicationService.currentState();

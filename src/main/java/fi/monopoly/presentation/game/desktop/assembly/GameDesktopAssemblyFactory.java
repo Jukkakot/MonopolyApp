@@ -1,9 +1,9 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animations;
@@ -11,19 +11,13 @@ import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.turn.TurnEngine;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnDriver;
-import fi.monopoly.presentation.game.session.GameSessionQueries;
-import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.game.desktop.runtime.DebugController;
 import fi.monopoly.presentation.game.desktop.runtime.GameRuntimeAssemblyFactory;
 import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
-import fi.monopoly.presentation.game.desktop.ui.GameControlLayout;
-import fi.monopoly.presentation.game.desktop.ui.GameButtonLayoutFactory;
-import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
-import fi.monopoly.presentation.game.desktop.ui.GamePresentationSupport;
-import fi.monopoly.presentation.game.desktop.ui.GameUiController;
-import fi.monopoly.presentation.game.desktop.ui.GameUiSessionControls;
+import fi.monopoly.presentation.game.desktop.ui.*;
+import fi.monopoly.presentation.game.session.GameSessionQueries;
+import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
@@ -31,6 +25,7 @@ import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import fi.monopoly.utils.DebugPerformanceStats;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Builds the full desktop gameplay assembly used by the local Processing client.
@@ -41,20 +36,13 @@ import fi.monopoly.utils.DebugPerformanceStats;
  * the remaining client composition root explicit while the app moves toward a backend-driven
  * architecture.</p>
  */
+@RequiredArgsConstructor
 public final class GameDesktopAssemblyFactory {
     private final GameRuntimeAssemblyFactory runtimeAssemblyFactory;
     private final GamePresentationFactory gamePresentationFactory;
 
     public GameDesktopAssemblyFactory() {
         this(new GameRuntimeAssemblyFactory(), new GamePresentationFactory());
-    }
-
-    GameDesktopAssemblyFactory(
-            GameRuntimeAssemblyFactory runtimeAssemblyFactory,
-            GamePresentationFactory gamePresentationFactory
-    ) {
-        this.runtimeAssemblyFactory = runtimeAssemblyFactory;
-        this.gamePresentationFactory = gamePresentationFactory;
     }
 
     public GameDesktopAssembly create(

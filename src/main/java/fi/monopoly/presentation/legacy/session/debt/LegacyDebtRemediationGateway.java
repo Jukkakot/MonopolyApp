@@ -7,13 +7,11 @@ import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class LegacyDebtRemediationGateway implements DebtRemediationGateway {
     private final DebtController debtController;
-
-    public LegacyDebtRemediationGateway(DebtController debtController) {
-        this.debtController = debtController;
-    }
 
     public DebtState activeDebtState() {
         return debtController.debtState();

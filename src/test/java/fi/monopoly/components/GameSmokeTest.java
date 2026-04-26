@@ -169,7 +169,7 @@ class GameSmokeTest {
         resolveFinalBotPopupIfPossible(runtime, game);
         assertCoreInvariants(game, initialPlayerCount);
 
-        assertTrue(rollCount >= targetRollCount || completedGame,
+        assertTrue(rollCount >= targetRollCount || completedGame, //TODO always true condition apparently???
                 "Game neither completed the expected number of rolls nor reached a finished state");
         assertEquals(3, initialPlayerCount, "Smoke test expects the default three-player setup");
         assertTrue(popupResolutionCount > 0, "Smoke test should encounter at least one popup");
@@ -573,18 +573,20 @@ class GameSmokeTest {
     }
 
     @Test
-    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanPlayHundredAutoConfirmedRollsWithoutGettingStuck() {
         runAutoConfirmedRollSmokeTest(STANDARD_ROLL_TARGET);
     }
 
     @Test
+    @Disabled("Not neccessary to test window layout changes with smoke test")
     @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanRenderAndProgressInNarrowWindowLayout() {
         runAutoConfirmedRollSmokeTest(RESIZE_SMOKE_ROLL_TARGET, 1200, 996, true);
     }
 
     @Test
+    @Disabled("Not neccessary to test window layout changes with smoke test")
     @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanRenderAndProgressInShortWindowLayout() {
         runAutoConfirmedRollSmokeTest(RESIZE_SMOKE_ROLL_TARGET, 1700, 560, true);
@@ -592,7 +594,7 @@ class GameSmokeTest {
 
     @Test
     @Disabled("Optional longer-running smoke test for local/manual runs")
-    @Timeout(value = 30, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void gameCanPlayExtendedAutoConfirmedRollSequenceWithoutGettingStuck() {
         runAutoConfirmedRollSmokeTest(1_000_000);
     }

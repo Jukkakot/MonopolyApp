@@ -15,6 +15,7 @@ import fi.monopoly.presentation.legacy.session.projection.LegacySessionProjector
 import fi.monopoly.presentation.legacy.session.purchase.LegacyPropertyPurchaseGateway;
 import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.debt.DebtController;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -28,6 +29,7 @@ import java.util.function.Supplier;
  * Keeping that wiring in one place makes the remaining backend extraction work easier to see and
  * replace incrementally.</p>
  */
+@RequiredArgsConstructor
 public final class LegacySessionApplicationFactory {
     private final String sessionId;
     private final Supplier<Players> playersSupplier;
@@ -39,27 +41,6 @@ public final class LegacySessionApplicationFactory {
     private final BooleanSupplier canRollSupplier;
     private final BooleanSupplier canEndTurnSupplier;
 
-    public LegacySessionApplicationFactory(
-            String sessionId,
-            Supplier<Players> playersSupplier,
-            Supplier<LegacyPopupSnapshot> popupSnapshotSupplier,
-            Supplier<DebtState> debtStateSupplier,
-            BooleanSupplier pausedSupplier,
-            BooleanSupplier gameOverSupplier,
-            Supplier<Player> winnerSupplier,
-            BooleanSupplier canRollSupplier,
-            BooleanSupplier canEndTurnSupplier
-    ) {
-        this.sessionId = sessionId;
-        this.playersSupplier = playersSupplier;
-        this.popupSnapshotSupplier = popupSnapshotSupplier;
-        this.debtStateSupplier = debtStateSupplier;
-        this.pausedSupplier = pausedSupplier;
-        this.gameOverSupplier = gameOverSupplier;
-        this.winnerSupplier = winnerSupplier;
-        this.canRollSupplier = canRollSupplier;
-        this.canEndTurnSupplier = canEndTurnSupplier;
-    }
 
     public SessionApplicationService create(
             PopupService popupService,
@@ -87,7 +68,7 @@ public final class LegacySessionApplicationFactory {
                 new LegacyDebtRemediationGateway(debtController)
         );
         sessionApplicationService.configureAuctionFlow(new LegacyAuctionGateway(popupService, players));
-        sessionApplicationService.configurePropertyPurchaseFlow(new LegacyPropertyPurchaseGateway(popupService, players));
+        sessionApplicationService.configurePropertyPurchaseFlow(new LegacyPropertyPurchaseGateway(players));
         sessionApplicationService.configureTradeFlow(new LegacyTradeGateway(() -> {
             Players currentPlayers = playersSupplier.get();
             return currentPlayers != null ? currentPlayers.getPlayers() : List.of();

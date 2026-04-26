@@ -1,6 +1,5 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
-import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
@@ -11,19 +10,15 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.desktop.assembly.GamePresentationFactory;
 import fi.monopoly.presentation.game.desktop.runtime.GameRuntimeAssemblyFactory;
 import fi.monopoly.presentation.game.desktop.session.SessionViewFacade;
 import fi.monopoly.presentation.game.desktop.ui.GameFrameCoordinator;
-import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.desktop.ui.GameUiSessionControls;
-import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
-import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
-import fi.monopoly.presentation.session.debt.DebtController;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -39,6 +34,7 @@ import static fi.monopoly.text.UiTexts.text;
  * {@link GameDesktopSessionCoordinator}.</p>
  */
 @Slf4j
+@RequiredArgsConstructor
 public final class GameDesktopPresentationCoordinator {
     private final fi.monopoly.client.desktop.MonopolyRuntime runtime;
     private final String sessionId;
@@ -46,22 +42,6 @@ public final class GameDesktopPresentationCoordinator {
     private final LocalSessionActions localSessionActions;
     private final GameSessionStateCoordinator sessionStateCoordinator;
     private final GameBotTurnControlCoordinator botTurnControlCoordinator;
-
-    public GameDesktopPresentationCoordinator(
-            fi.monopoly.client.desktop.MonopolyRuntime runtime,
-            String sessionId,
-            List<Locale> supportedLocales,
-            LocalSessionActions localSessionActions,
-            GameSessionStateCoordinator sessionStateCoordinator,
-            GameBotTurnControlCoordinator botTurnControlCoordinator
-    ) {
-        this.runtime = runtime;
-        this.sessionId = sessionId;
-        this.supportedLocales = supportedLocales;
-        this.localSessionActions = localSessionActions;
-        this.sessionStateCoordinator = sessionStateCoordinator;
-        this.botTurnControlCoordinator = botTurnControlCoordinator;
-    }
 
     public GameRuntimeAssemblyFactory.Hooks createRuntimeAssemblyHooks(GameDesktopShellDependencies dependencies) {
         return new GameRuntimeAssemblyFactory.Hooks() {

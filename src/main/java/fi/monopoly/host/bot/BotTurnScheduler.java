@@ -1,16 +1,15 @@
 package fi.monopoly.host.bot;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.function.BooleanSupplier;
 
+@RequiredArgsConstructor
 public final class BotTurnScheduler {
     private static final int NO_ACTION_READY = -1;
 
     private final BooleanSupplier skipAnimations;
     private int nextReadyAt = NO_ACTION_READY;
-
-    public BotTurnScheduler(BooleanSupplier skipAnimations) {
-        this.skipAnimations = skipAnimations;
-    }
 
     public boolean isWaiting(int now) {
         return !skipAnimations.getAsBoolean() && nextReadyAt != NO_ACTION_READY && now < nextReadyAt;

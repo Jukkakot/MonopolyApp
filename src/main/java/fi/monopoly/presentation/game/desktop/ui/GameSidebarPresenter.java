@@ -8,6 +8,7 @@ import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.UiTokens;
+import lombok.RequiredArgsConstructor;
 import processing.core.PConstants;
 
 import java.util.HashMap;
@@ -17,13 +18,10 @@ import java.util.function.LongConsumer;
 
 import static fi.monopoly.text.UiTexts.text;
 
+@RequiredArgsConstructor
 public final class GameSidebarPresenter {
     private final MonopolyRuntime runtime;
     private final Map<HistoryEntryCacheKey, HistoryEntryLayout> historyLayoutCache = new HashMap<>();
-
-    public GameSidebarPresenter(MonopolyRuntime runtime) {
-        this.runtime = runtime;
-    }
 
     public void drawSidebarPanel(LayoutMetrics layoutMetrics, SidebarState state, LongConsumer historyTimingRecorder) {
         float sidebarX = layoutMetrics.sidebarX();

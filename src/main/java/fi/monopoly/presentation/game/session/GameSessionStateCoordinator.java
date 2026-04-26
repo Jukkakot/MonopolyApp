@@ -5,8 +5,8 @@ import fi.monopoly.components.Player;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachmentCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
+import lombok.RequiredArgsConstructor;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 
@@ -17,6 +17,7 @@ import java.util.function.IntConsumer;
  * winner handling, bot speed, and persistence notices out of {@code Game} so the composition root
  * can gradually shrink toward a backend-hosted architecture.</p>
  */
+@RequiredArgsConstructor
 public final class GameSessionStateCoordinator {
     private static final int PERSISTENCE_NOTICE_DURATION_MILLIS = 5000;
 
@@ -24,10 +25,6 @@ public final class GameSessionStateCoordinator {
 
     public GameSessionStateCoordinator() {
         this(new RestoredSessionReattachmentCoordinator());
-    }
-
-    GameSessionStateCoordinator(RestoredSessionReattachmentCoordinator restoredSessionReattachmentCoordinator) {
-        this.restoredSessionReattachmentCoordinator = restoredSessionReattachmentCoordinator;
     }
 
     public void restoreSessionState(

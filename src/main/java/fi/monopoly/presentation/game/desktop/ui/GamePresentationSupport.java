@@ -8,8 +8,10 @@ import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 
+@RequiredArgsConstructor
 public final class GamePresentationSupport {
     private final MonopolyButton retryDebtButton;
     private final MonopolyButton declareBankruptcyButton;
@@ -17,22 +19,6 @@ public final class GamePresentationSupport {
     private final AuctionViewAdapter auctionViewAdapter;
     private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
     private final TradeViewAdapter tradeViewAdapter;
-
-    public GamePresentationSupport(
-            MonopolyButton retryDebtButton,
-            MonopolyButton declareBankruptcyButton,
-            GameUiController gameUiController,
-            AuctionViewAdapter auctionViewAdapter,
-            PendingDecisionPopupAdapter pendingDecisionPopupAdapter,
-            TradeViewAdapter tradeViewAdapter
-    ) {
-        this.retryDebtButton = retryDebtButton;
-        this.declareBankruptcyButton = declareBankruptcyButton;
-        this.gameUiController = gameUiController;
-        this.auctionViewAdapter = auctionViewAdapter;
-        this.pendingDecisionPopupAdapter = pendingDecisionPopupAdapter;
-        this.tradeViewAdapter = tradeViewAdapter;
-    }
 
     public void updateDebtButtons(DebtState debtState, SessionState sessionState) {
         var activeDebt = sessionState != null ? sessionState.activeDebt() : null;

@@ -6,18 +6,15 @@ import fi.monopoly.components.payment.PaymentResolver;
 import fi.monopoly.components.payment.PaymentResult;
 import fi.monopoly.components.payment.PaymentStatus;
 import fi.monopoly.presentation.session.debt.DebtController;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class LegacyPaymentGateway implements DebtOpeningGateway {
     private final PaymentResolver paymentResolver;
     private final DebtController debtController;
 
     public LegacyPaymentGateway(DebtController debtController) {
         this(new PaymentResolver(), debtController);
-    }
-
-    public LegacyPaymentGateway(PaymentResolver paymentResolver, DebtController debtController) {
-        this.paymentResolver = paymentResolver;
-        this.debtController = debtController;
     }
 
     public PaymentResult tryResolve(PaymentRequest request) {

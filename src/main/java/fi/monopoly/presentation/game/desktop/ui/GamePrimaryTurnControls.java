@@ -3,27 +3,17 @@ package fi.monopoly.presentation.game.desktop.ui;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.Dices;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class GamePrimaryTurnControls {
     private final Dices dices;
     private final MonopolyButton endRoundButton;
     private final Supplier<Boolean> gameOverSupplier;
     private final Supplier<Player> turnPlayerSupplier;
     private State state = State.NONE;
-
-    public GamePrimaryTurnControls(
-            Dices dices,
-            MonopolyButton endRoundButton,
-            Supplier<Boolean> gameOverSupplier,
-            Supplier<Player> turnPlayerSupplier
-    ) {
-        this.dices = dices;
-        this.endRoundButton = endRoundButton;
-        this.gameOverSupplier = gameOverSupplier;
-        this.turnPlayerSupplier = turnPlayerSupplier;
-    }
 
     public void showRollDiceControl() {
         if (gameOverSupplier.get()) {

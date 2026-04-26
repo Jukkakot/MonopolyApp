@@ -2,6 +2,7 @@ package fi.monopoly.application.session.persistence;
 
 import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.domain.session.SessionState;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
@@ -19,6 +20,7 @@ import static fi.monopoly.text.UiTexts.text;
  * that the client can render however it wants. That keeps persistence semantics in the host-side
  * seam while leaving popup/sidebar rendering in the client.</p>
  */
+@RequiredArgsConstructor
 public final class LocalSessionPersistenceUseCase {
     private final SessionPersistenceService sessionPersistenceService;
     private final LocalSessionPathProvider localSessionPathProvider;
@@ -35,18 +37,6 @@ public final class LocalSessionPersistenceUseCase {
                 LocalTime::now,
                 sessionHost
         );
-    }
-
-    LocalSessionPersistenceUseCase(
-            SessionPersistenceService sessionPersistenceService,
-            LocalSessionPathProvider localSessionPathProvider,
-            Supplier<LocalTime> nowSupplier,
-            SessionHost sessionHost
-    ) {
-        this.sessionPersistenceService = sessionPersistenceService;
-        this.localSessionPathProvider = localSessionPathProvider;
-        this.nowSupplier = nowSupplier;
-        this.sessionHost = sessionHost;
     }
 
     public LocalSessionPersistenceResult saveLocalSession() {

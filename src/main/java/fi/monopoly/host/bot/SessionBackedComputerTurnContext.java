@@ -1,17 +1,6 @@
 package fi.monopoly.host.bot;
 
-import fi.monopoly.application.command.BuyBuildingRoundCommand;
-import fi.monopoly.application.command.BuyPropertyCommand;
-import fi.monopoly.application.command.DeclareBankruptcyCommand;
-import fi.monopoly.application.command.DeclinePropertyCommand;
-import fi.monopoly.application.command.EndTurnCommand;
-import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
-import fi.monopoly.application.command.PayDebtCommand;
-import fi.monopoly.application.command.RollDiceCommand;
-import fi.monopoly.application.command.SellBuildingForDebtCommand;
-import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
-import fi.monopoly.application.command.SessionCommand;
-import fi.monopoly.application.command.ToggleMortgageCommand;
+import fi.monopoly.application.command.*;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
@@ -22,11 +11,13 @@ import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Supplier;
 
 @Slf4j
+@RequiredArgsConstructor
 public final class SessionBackedComputerTurnContext implements ComputerTurnContext {
     private final Player player;
     private final SessionCommandPort sessionCommandPort;
@@ -36,21 +27,6 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
     private final Supplier<Boolean> endTurnAvailableSupplier;
     private BotTurnScheduler.DelayKind delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
 
-    public SessionBackedComputerTurnContext(
-            Player player,
-            SessionCommandPort sessionCommandPort,
-            HostBotInteractionAdapter interactionAdapter,
-            Runnable syncPresentationState,
-            Supplier<Boolean> rollDiceAvailableSupplier,
-            Supplier<Boolean> endTurnAvailableSupplier
-    ) {
-        this.player = player;
-        this.sessionCommandPort = sessionCommandPort;
-        this.interactionAdapter = interactionAdapter;
-        this.syncPresentationState = syncPresentationState;
-        this.rollDiceAvailableSupplier = rollDiceAvailableSupplier;
-        this.endTurnAvailableSupplier = endTurnAvailableSupplier;
-    }
 
     public BotTurnScheduler.DelayKind delayKind() {
         return delayKind;

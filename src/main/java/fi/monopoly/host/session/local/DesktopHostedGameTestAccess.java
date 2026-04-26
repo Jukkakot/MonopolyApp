@@ -1,6 +1,7 @@
 package fi.monopoly.host.session.local;
 
 import fi.monopoly.components.Game;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Explicit test-only access seam for the currently hosted desktop game instance.
@@ -8,12 +9,9 @@ import fi.monopoly.components.Game;
  * <p>This keeps fixture injection and host inspection out of the normal desktop session API while
  * still allowing integration tests to replace or inspect the local hosted game when needed.</p>
  */
+@RequiredArgsConstructor
 public final class DesktopHostedGameTestAccess {
     private final HostedGameAccess delegate;
-
-    public DesktopHostedGameTestAccess(HostedGameAccess delegate) {
-        this.delegate = delegate;
-    }
 
     public DesktopHostedGame currentHostedGame() {
         return delegate.currentHostedGame();

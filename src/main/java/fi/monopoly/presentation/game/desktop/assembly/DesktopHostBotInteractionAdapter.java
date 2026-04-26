@@ -6,8 +6,7 @@ import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.host.bot.HostBotInteractionAdapter;
 import fi.monopoly.presentation.session.trade.TradeController;
-
-import java.util.function.Supplier;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Desktop-local implementation of the host bot interaction bridge.
@@ -15,23 +14,12 @@ import java.util.function.Supplier;
  * <p>This adapts popup handling, trade automation, and projected view access from the embedded
  * desktop runtime into the narrow host-bot port used by the embedded local host loop.</p>
  */
+@RequiredArgsConstructor
 public final class DesktopHostBotInteractionAdapter implements HostBotInteractionAdapter {
     private final PopupHooks popupHooks;
     private final TradeController tradeController;
     private final java.util.function.Function<Player, GameView> currentGameViewFactory;
     private final java.util.function.Function<Player, PlayerView> currentPlayerViewFactory;
-
-    public DesktopHostBotInteractionAdapter(
-            PopupHooks popupHooks,
-            TradeController tradeController,
-            java.util.function.Function<Player, GameView> currentGameViewFactory,
-            java.util.function.Function<Player, PlayerView> currentPlayerViewFactory
-    ) {
-        this.popupHooks = popupHooks;
-        this.tradeController = tradeController;
-        this.currentGameViewFactory = currentGameViewFactory;
-        this.currentPlayerViewFactory = currentPlayerViewFactory;
-    }
 
     @Override
     public boolean popupVisible() {

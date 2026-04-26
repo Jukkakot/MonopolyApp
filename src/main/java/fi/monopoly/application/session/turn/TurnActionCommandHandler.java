@@ -1,34 +1,22 @@
 package fi.monopoly.application.session.turn;
 
-import fi.monopoly.application.command.BuyBuildingRoundCommand;
-import fi.monopoly.application.command.EndTurnCommand;
-import fi.monopoly.application.command.RollDiceCommand;
-import fi.monopoly.application.command.SessionCommand;
-import fi.monopoly.application.command.ToggleMortgageCommand;
+import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
-import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.turn.TurnPhase;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class TurnActionCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> currentStateSupplier;
     private final TurnActionGateway gateway;
-
-    public TurnActionCommandHandler(
-            String sessionId,
-            Supplier<SessionState> currentStateSupplier,
-            TurnActionGateway gateway
-    ) {
-        this.sessionId = sessionId;
-        this.currentStateSupplier = currentStateSupplier;
-        this.gateway = gateway;
-    }
 
     public boolean supports(SessionCommand command) {
         return command instanceof RollDiceCommand

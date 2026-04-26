@@ -8,11 +8,13 @@ import fi.monopoly.components.trade.*;
 import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeSelectionState;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class LegacyTradeGateway implements fi.monopoly.application.session.trade.TradeGateway {
     private final Supplier<List<Player>> playersSupplier;
     private final TradeOfferEvaluator tradeOfferEvaluator;
@@ -21,10 +23,6 @@ public final class LegacyTradeGateway implements fi.monopoly.application.session
         this(playersSupplier, new TradeOfferEvaluator());
     }
 
-    public LegacyTradeGateway(Supplier<List<Player>> playersSupplier, TradeOfferEvaluator tradeOfferEvaluator) {
-        this.playersSupplier = playersSupplier;
-        this.tradeOfferEvaluator = tradeOfferEvaluator;
-    }
 
     @Override
     public Player playerById(String playerId) {

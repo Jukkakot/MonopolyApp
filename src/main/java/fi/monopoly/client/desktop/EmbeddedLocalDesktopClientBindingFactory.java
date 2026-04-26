@@ -1,19 +1,14 @@
 package fi.monopoly.client.desktop;
 
 import fi.monopoly.client.session.ClientSessionFeedbackSink;
+import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionUpdates;
-import fi.monopoly.client.session.desktop.DesktopClientRenderModel;
-import fi.monopoly.client.session.desktop.DesktopClientSessionController;
-import fi.monopoly.client.session.desktop.DesktopClientSessionModel;
-import fi.monopoly.client.session.desktop.DesktopClientSessionRuntime;
-import fi.monopoly.client.session.desktop.DesktopClientViewModels;
-import fi.monopoly.client.session.desktop.DesktopLocalSessionControls;
+import fi.monopoly.client.session.desktop.*;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
 import fi.monopoly.server.transport.SessionHttpServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -25,11 +20,12 @@ import java.util.Objects;
  * graph. The app shell receives only the resulting client-side binding so a future remote-backed
  * binding can replace this factory without changing the shell.</p>
  */
+@Slf4j
 public final class EmbeddedLocalDesktopClientBindingFactory implements DesktopClientHostBindingFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(EmbeddedLocalDesktopClientBindingFactory.class);
-
-    /** Set {@code -Dmonopoly.http.port=8080} to expose the session host over HTTP. */
+    /**
+     * Set {@code -Dmonopoly.http.port=8080} to expose the session host over HTTP.
+     */
     private static final String HTTP_PORT_PROPERTY = "monopoly.http.port";
 
     @Override
@@ -50,16 +46,15 @@ public final class EmbeddedLocalDesktopClientBindingFactory implements DesktopCl
         );
         EmbeddedDesktopSessionHost embeddedSessionHost = new EmbeddedDesktopSessionHost(runtimeBridge);
         ClientSessionUpdates sessionUpdates = new LocalClientSessionUpdates(embeddedSessionHost);
-        DesktopLocalSessionControls localSessionControls = embeddedSessionHost;
         ClientSessionFeedbackSink feedbackSink =
-                new LocalSessionPersistenceUiHooks(localSessionControls, runtimeBridge::runtime);
+                new LocalSessionPersistenceUiHooks(embeddedSessionHost, runtimeBridge::runtime);
         DesktopClientSessionRuntime sessionRuntime = new DesktopClientSessionController(
                 sessionUpdates,
                 embeddedSessionHost::advanceHostFrame,
                 embeddedSessionHost,
                 viewModels.sessionModel(),
                 viewModels.renderModel(),
-                localSessionControls,
+                embeddedSessionHost,
                 feedbackSink
         );
         DesktopHostedGameTestAccess testAccess = embeddedSessionHost.testAccess();
@@ -92,20 +87,15 @@ public final class EmbeddedLocalDesktopClientBindingFactory implements DesktopCl
      * Local adapter that exposes only the client-facing session update stream from the embedded
      * host bundle.
      */
-    private static final class LocalClientSessionUpdates implements ClientSessionUpdates {
-        private final EmbeddedDesktopSessionHost hostedSession;
-
-        private LocalClientSessionUpdates(EmbeddedDesktopSessionHost hostedSession) {
-            this.hostedSession = hostedSession;
-        }
+    private record LocalClientSessionUpdates(EmbeddedDesktopSessionHost hostedSession) implements ClientSessionUpdates {
 
         @Override
-        public void addListener(fi.monopoly.client.session.ClientSessionListener listener) {
+        public void addListener(ClientSessionListener listener) {
             hostedSession.addListener(listener);
         }
 
         @Override
-        public void removeListener(fi.monopoly.client.session.ClientSessionListener listener) {
+        public void removeListener(ClientSessionListener listener) {
             hostedSession.removeListener(listener);
         }
     }

@@ -9,15 +9,12 @@ import fi.monopoly.components.spots.Spot;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.types.PlaceType;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public final class GameSessionQueries implements fi.monopoly.host.bot.BotSessionQueries {
     private final Players players;
     private final Board board;
-
-    public GameSessionQueries(Players players, Board board) {
-        this.players = players;
-        this.board = board;
-    }
 
     public Player findPlayerById(String playerId) {
         if (playerId == null) {

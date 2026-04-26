@@ -2,8 +2,8 @@ package fi.monopoly.host.session.local;
 
 import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandResult;
-import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCase;
 import fi.monopoly.application.session.persistence.LocalSessionPersistenceResult;
+import fi.monopoly.application.session.persistence.LocalSessionPersistenceUseCase;
 import fi.monopoly.application.session.persistence.SessionPersistenceService;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;

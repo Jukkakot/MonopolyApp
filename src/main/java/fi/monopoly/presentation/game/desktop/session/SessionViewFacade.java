@@ -2,6 +2,7 @@ package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
+import fi.monopoly.components.board.Board;
 import fi.monopoly.components.computer.*;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
@@ -9,12 +10,10 @@ import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
-import fi.monopoly.components.spots.PropertySpot;
-import fi.monopoly.components.spots.Spot;
-import fi.monopoly.components.board.Board;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,6 +24,7 @@ import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class SessionViewFacade {
     private final PopupService popupService;
     private final Supplier<Players> playersSupplier;
@@ -39,30 +39,6 @@ public final class SessionViewFacade {
 
     private final Map<Integer, CachedPlayerView> playerViewCache = new HashMap<>();
     private CachedGameView cachedGameView;
-
-    public SessionViewFacade(
-            PopupService popupService,
-            Supplier<Players> playersSupplier,
-            Supplier<Board> boardSupplier,
-            Supplier<DebtState> debtStateSupplier,
-            BooleanSupplier retryDebtVisibleSupplier,
-            BooleanSupplier declareBankruptcyVisibleSupplier,
-            Function<Player, Boolean> rollDiceAvailable,
-            Function<Player, Boolean> endTurnAvailable,
-            IntSupplier unownedPropertyCountSupplier,
-            Function<Player, Integer> boardDangerScoreSupplier
-    ) {
-        this.popupService = popupService;
-        this.playersSupplier = playersSupplier;
-        this.boardSupplier = boardSupplier;
-        this.debtStateSupplier = debtStateSupplier;
-        this.retryDebtVisibleSupplier = retryDebtVisibleSupplier;
-        this.declareBankruptcyVisibleSupplier = declareBankruptcyVisibleSupplier;
-        this.rollDiceAvailable = rollDiceAvailable;
-        this.endTurnAvailable = endTurnAvailable;
-        this.unownedPropertyCountSupplier = unownedPropertyCountSupplier;
-        this.boardDangerScoreSupplier = boardDangerScoreSupplier;
-    }
 
     public GameView createGameView(Player currentPlayer) {
         Players players = players();

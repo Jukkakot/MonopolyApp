@@ -7,13 +7,11 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.utils.DebugPerformanceStats;
+import lombok.RequiredArgsConstructor;
 
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
+import java.util.function.*;
 
+@RequiredArgsConstructor
 public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final SessionCommandPort sessionCommandPort;
     private final Function<String, CommandResult> computerAuctionActionHandler;
@@ -32,44 +30,6 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final BooleanSupplier projectedRollDiceAvailableSupplier;
     private final BooleanSupplier projectedEndTurnAvailableSupplier;
     private final BooleanSupplier recoverPrimaryTurnControlsSupplier;
-
-    public GameBotTurnHooksAdapter(
-            SessionCommandPort sessionCommandPort,
-            Function<String, CommandResult> computerAuctionActionHandler,
-            BotSessionQueries sessionQueries,
-            HostBotInteractionAdapter interactionAdapter,
-            DebugPerformanceStats debugPerformanceStats,
-            Supplier<Player> turnPlayerSupplier,
-            Runnable updateLogTurnContextAction,
-            Runnable syncPresentationStateAction,
-            BooleanSupplier gameOverSupplier,
-            BooleanSupplier animationsRunningSupplier,
-            BooleanSupplier pausedSupplier,
-            IntSupplier nowSupplier,
-            Consumer<BotTurnScheduler.DelayKind> scheduleNextActionConsumer,
-            Supplier<String> sessionIdSupplier,
-            BooleanSupplier projectedRollDiceAvailableSupplier,
-            BooleanSupplier projectedEndTurnAvailableSupplier,
-            BooleanSupplier recoverPrimaryTurnControlsSupplier
-    ) {
-        this.sessionCommandPort = sessionCommandPort;
-        this.computerAuctionActionHandler = computerAuctionActionHandler;
-        this.sessionQueries = sessionQueries;
-        this.interactionAdapter = interactionAdapter;
-        this.debugPerformanceStats = debugPerformanceStats;
-        this.turnPlayerSupplier = turnPlayerSupplier;
-        this.updateLogTurnContextAction = updateLogTurnContextAction;
-        this.syncPresentationStateAction = syncPresentationStateAction;
-        this.gameOverSupplier = gameOverSupplier;
-        this.animationsRunningSupplier = animationsRunningSupplier;
-        this.pausedSupplier = pausedSupplier;
-        this.nowSupplier = nowSupplier;
-        this.scheduleNextActionConsumer = scheduleNextActionConsumer;
-        this.sessionIdSupplier = sessionIdSupplier;
-        this.projectedRollDiceAvailableSupplier = projectedRollDiceAvailableSupplier;
-        this.projectedEndTurnAvailableSupplier = projectedEndTurnAvailableSupplier;
-        this.recoverPrimaryTurnControlsSupplier = recoverPrimaryTurnControlsSupplier;
-    }
 
     @Override
     public void updateLogTurnContext() {

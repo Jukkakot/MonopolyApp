@@ -1,5 +1,10 @@
 package fi.monopoly.components.trade;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+@Getter
 public enum BotTradeProfile {
     CAUTIOUS(60, 200, -120),
     BALANCED(20, 160, -140),
@@ -8,22 +13,4 @@ public enum BotTradeProfile {
     private final int acceptThreshold;
     private final int maxCounterAdjustment;
     private final int counterOfferFloor;
-
-    BotTradeProfile(int acceptThreshold, int maxCounterAdjustment, int counterOfferFloor) {
-        this.acceptThreshold = acceptThreshold;
-        this.maxCounterAdjustment = maxCounterAdjustment;
-        this.counterOfferFloor = counterOfferFloor;
-    }
-
-    public int acceptThreshold() {
-        return acceptThreshold;
-    }
-
-    public int maxCounterAdjustment() {
-        return maxCounterAdjustment;
-    }
-
-    public int counterOfferFloor() {
-        return counterOfferFloor;
-    }
 }

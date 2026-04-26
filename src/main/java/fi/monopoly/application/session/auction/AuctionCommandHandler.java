@@ -14,11 +14,13 @@ import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
+import lombok.RequiredArgsConstructor;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class AuctionCommandHandler {
     private final String sessionId;
     private final Supplier<SessionState> currentStateSupplier;
@@ -27,22 +29,6 @@ public final class AuctionCommandHandler {
     private final Consumer<TurnContinuationState> turnContinuationResolver;
     private final AuctionGateway gateway;
     private ActiveAuctionContext activeContext;
-
-    public AuctionCommandHandler(
-            String sessionId,
-            Supplier<SessionState> currentStateSupplier,
-            Consumer<AuctionState> auctionStateSetter,
-            Consumer<TurnContinuationState> turnContinuationSetter,
-            Consumer<TurnContinuationState> turnContinuationResolver,
-            AuctionGateway gateway
-    ) {
-        this.sessionId = sessionId;
-        this.currentStateSupplier = currentStateSupplier;
-        this.auctionStateSetter = auctionStateSetter;
-        this.turnContinuationSetter = turnContinuationSetter;
-        this.turnContinuationResolver = turnContinuationResolver;
-        this.gateway = gateway;
-    }
 
     public AuctionState startAuction(
             Player triggeringPlayer,
@@ -357,9 +343,6 @@ public final class AuctionCommandHandler {
             return null;
         }
         int currentIndex = eligiblePlayerIds.indexOf(currentActorPlayerId);
-        if (currentIndex < 0) {
-            currentIndex = -1;
-        }
         for (int offset = 1; offset <= eligiblePlayerIds.size(); offset++) {
             String candidate = eligiblePlayerIds.get((currentIndex + offset) % eligiblePlayerIds.size());
             if (!passedPlayerIds.contains(candidate)) {

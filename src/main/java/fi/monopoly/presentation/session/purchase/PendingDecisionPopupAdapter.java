@@ -3,8 +3,8 @@ package fi.monopoly.presentation.session.purchase;
 import fi.monopoly.application.command.BuyPropertyCommand;
 import fi.monopoly.application.command.DeclinePropertyCommand;
 import fi.monopoly.application.result.CommandResult;
-import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
@@ -14,10 +14,12 @@ import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
 import java.util.function.Function;
 
+@RequiredArgsConstructor
 public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final String sessionId;
     private final SessionCommandPort sessionApplicationService;
@@ -26,22 +28,6 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final Runnable postHandleSync;
     private final Function<String, Player> playerResolver;
     private String renderedDecisionId;
-
-    public PendingDecisionPopupAdapter(
-            String sessionId,
-            SessionCommandPort sessionApplicationService,
-            PopupService popupService,
-            LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport,
-            Runnable postHandleSync,
-            Function<String, Player> playerResolver
-    ) {
-        this.sessionId = sessionId;
-        this.sessionApplicationService = sessionApplicationService;
-        this.popupService = popupService;
-        this.propertyPurchaseDecisionSupport = propertyPurchaseDecisionSupport;
-        this.postHandleSync = postHandleSync;
-        this.playerResolver = playerResolver;
-    }
 
     @Override
     public void begin(

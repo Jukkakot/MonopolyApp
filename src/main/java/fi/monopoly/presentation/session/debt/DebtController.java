@@ -4,14 +4,10 @@ import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
-import fi.monopoly.components.payment.DebtState;
-import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.payment.PaymentResolver;
-import fi.monopoly.components.payment.PaymentResult;
-import fi.monopoly.components.payment.PaymentStatus;
-import fi.monopoly.components.payment.PlayerTarget;
+import fi.monopoly.components.payment.*;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.turn.PropertyAuctionResolver;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -26,6 +22,7 @@ import static fi.monopoly.text.UiTexts.text;
  * <p>This controller owns popup messaging, asset liquidation, and bankruptcy progression while the
  * payment state itself is gradually moved behind application/session ports.</p>
  */
+@RequiredArgsConstructor
 public final class DebtController {
     private final MonopolyRuntime runtime;
     private final Players players;
@@ -36,22 +33,6 @@ public final class DebtController {
     private final Consumer<Player> declareWinner;
 
     private DebtState debtState;
-
-    public DebtController(
-            MonopolyRuntime runtime,
-            Players players,
-            Runnable hidePrimaryTurnControls,
-            Runnable showRollDiceControl,
-            Runnable onStateChanged,
-            Consumer<Player> declareWinner
-    ) {
-        this.runtime = runtime;
-        this.players = players;
-        this.hidePrimaryTurnControls = hidePrimaryTurnControls;
-        this.showRollDiceControl = showRollDiceControl;
-        this.onStateChanged = onStateChanged;
-        this.declareWinner = declareWinner;
-    }
 
     public DebtState debtState() {
         return debtState;

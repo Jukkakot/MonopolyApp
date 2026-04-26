@@ -4,6 +4,7 @@ import fi.monopoly.application.session.SessionHost;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Owns the active desktop {@link Game} instance and rebuilds it when local session state changes.
@@ -13,14 +14,12 @@ import fi.monopoly.domain.session.SessionStatus;
  * creating the next local game instance. The resulting seam is close to what a future backend-fed
  * desktop client will still need, even after authoritative session ownership moves elsewhere.</p>
  */
+@RequiredArgsConstructor
 public final class DesktopSessionHostCoordinator implements SessionHost {
     private DesktopHostedGame game;
     private final Hooks hooks;
     private final DesktopHostedGameTestAccess testAccess = new DesktopHostedGameTestAccess(new HostedGameAccess());
 
-    public DesktopSessionHostCoordinator(Hooks hooks) {
-        this.hooks = hooks;
-    }
 
     @Override
     public SessionState currentState() {

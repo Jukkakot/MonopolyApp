@@ -1,12 +1,12 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
-import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.components.Player;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
 import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachmentCoordinator;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -18,17 +18,10 @@ import java.util.List;
  * from frame/UI coordination so the desktop shell no longer collapses both concerns into one
  * coordinator.</p>
  */
+@RequiredArgsConstructor
 public final class GameDesktopSessionCoordinator {
     private final fi.monopoly.client.desktop.MonopolyRuntime runtime;
     private final GameSessionStateCoordinator sessionStateCoordinator;
-
-    public GameDesktopSessionCoordinator(
-            fi.monopoly.client.desktop.MonopolyRuntime runtime,
-            GameSessionStateCoordinator sessionStateCoordinator
-    ) {
-        this.runtime = runtime;
-        this.sessionStateCoordinator = sessionStateCoordinator;
-    }
 
     public GameSessionBridgeFactory.Hooks createSessionBridgeHooks(GameDesktopShellDependencies dependencies) {
         return new GameSessionBridgeFactory.Hooks() {

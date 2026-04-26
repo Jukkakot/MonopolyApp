@@ -1,13 +1,12 @@
 package fi.monopoly.client.desktop;
 
 import controlP5.ControlP5;
-import fi.monopoly.client.desktop.MonopolyApp;
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.host.session.local.DesktopHostedGame;
 import fi.monopoly.host.session.local.DesktopSessionHostCoordinator;
 import fi.monopoly.presentation.game.desktop.assembly.DesktopHostedGameFactory;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -18,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * host bootstrap details live here as a dedicated adapter.</p>
  */
 @Slf4j
+@RequiredArgsConstructor
 final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks, DesktopRuntimeAccess {
     private final MonopolyApp app;
     private final Runnable saveLocalSessionAction;
@@ -25,18 +25,6 @@ final class DesktopRuntimeBridge implements DesktopSessionHostCoordinator.Hooks,
     private final DesktopHostedGameFactory desktopHostedGameFactory;
     private MonopolyRuntime runtime;
 
-    DesktopRuntimeBridge(
-            MonopolyApp app,
-            Runnable saveLocalSessionAction,
-            Runnable loadLocalSessionAction,
-            DesktopHostedGameFactory desktopHostedGameFactory
-    ) {
-        this.app = app;
-        this.saveLocalSessionAction = saveLocalSessionAction;
-        this.loadLocalSessionAction = loadLocalSessionAction;
-        this.desktopHostedGameFactory = desktopHostedGameFactory;
-        this.runtime = MonopolyRuntime.peek();
-    }
 
     @Override
     public void shutdownSessionRuntime() {

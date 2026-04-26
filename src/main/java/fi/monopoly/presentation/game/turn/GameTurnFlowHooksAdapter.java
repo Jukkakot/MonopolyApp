@@ -3,10 +3,11 @@ package fi.monopoly.presentation.game.turn;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.domain.session.TurnContinuationState;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 
+@RequiredArgsConstructor
 public final class GameTurnFlowHooksAdapter implements GameTurnFlowCoordinator.Hooks {
     private final Runnable updateLogTurnContextAction;
     private final Runnable hidePrimaryTurnControlsAction;
@@ -15,24 +16,6 @@ public final class GameTurnFlowHooksAdapter implements GameTurnFlowCoordinator.H
     private final BooleanSupplier gameOverSupplier;
     private final BooleanSupplier debtActiveSupplier;
     private final BiCallbackPaymentHandler paymentHandler;
-
-    public GameTurnFlowHooksAdapter(
-            Runnable updateLogTurnContextAction,
-            Runnable hidePrimaryTurnControlsAction,
-            Runnable showRollDiceControlAction,
-            Runnable showEndTurnControlAction,
-            BooleanSupplier gameOverSupplier,
-            BooleanSupplier debtActiveSupplier,
-            BiCallbackPaymentHandler paymentHandler
-    ) {
-        this.updateLogTurnContextAction = updateLogTurnContextAction;
-        this.hidePrimaryTurnControlsAction = hidePrimaryTurnControlsAction;
-        this.showRollDiceControlAction = showRollDiceControlAction;
-        this.showEndTurnControlAction = showEndTurnControlAction;
-        this.gameOverSupplier = gameOverSupplier;
-        this.debtActiveSupplier = debtActiveSupplier;
-        this.paymentHandler = paymentHandler;
-    }
 
     @Override
     public void updateLogTurnContext() {

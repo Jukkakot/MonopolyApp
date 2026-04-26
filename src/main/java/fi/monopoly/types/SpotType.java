@@ -2,17 +2,12 @@ package fi.monopoly.types;
 
 import fi.monopoly.text.UiTexts;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 @ToString(onlyExplicitlyIncluded = true)
+@Slf4j
 public enum SpotType {
     B1(StreetType.BROWN, 1), B2(StreetType.BROWN, 2),
     LB1(StreetType.LIGHT_BLUE, 1), LB2(StreetType.LIGHT_BLUE, 2), LB3(StreetType.LIGHT_BLUE, 3),
@@ -34,12 +29,11 @@ public enum SpotType {
             SpotType.P1, SpotType.U1, SpotType.P2, SpotType.P3, SpotType.RR2, SpotType.O1, SpotType.COMMUNITY2, SpotType.O2, SpotType.O3, SpotType.FREE_PARKING,
             SpotType.R1, SpotType.CHANCE2, SpotType.R2, SpotType.R3, SpotType.RR3, SpotType.Y1, SpotType.Y2, SpotType.U2, SpotType.Y3, SpotType.GO_TO_JAIL,
             SpotType.G1, SpotType.G2, SpotType.COMMUNITY3, SpotType.G3, SpotType.RR4, SpotType.CHANCE3, SpotType.DB1, SpotType.TAX2, SpotType.DB2);
-    private static final Logger log = LoggerFactory.getLogger(SpotType.class);
     private static final String BUNDLE_NAME = SpotType.class.getSimpleName();
     private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
     private static Locale loadedLocale = null;
     private static ResourceBundle bundle;
-    private static ResourceBundle defaultBundle = ResourceBundle.getBundle(BUNDLE_NAME, DEFAULT_LOCALE);
+    private final static ResourceBundle defaultBundle = ResourceBundle.getBundle(BUNDLE_NAME, DEFAULT_LOCALE);
     private static final Map<StreetType, Integer> SPOT_COUNT_BY_STREET = createSpotCountByStreet();
 
     public final StreetType streetType;

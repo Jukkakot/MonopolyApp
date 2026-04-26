@@ -16,9 +16,13 @@ import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import fi.monopoly.utils.DebugPerformanceStats;
 import fi.monopoly.utils.LayoutMetrics;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+@Slf4j
+@RequiredArgsConstructor
 public final class GameFrameCoordinator {
     private final MonopolyRuntime runtime;
     private final GameControlLayout gameControlLayout;
@@ -32,30 +36,6 @@ public final class GameFrameCoordinator {
     private final List<MonopolyButton> buttons;
     private LayoutMetrics frameLayoutMetrics;
     private long lastAnimationUpdateNanos = -1L;
-
-    public GameFrameCoordinator(
-            MonopolyRuntime runtime,
-            GameControlLayout gameControlLayout,
-            GameSidebarPresenter gameSidebarPresenter,
-            GamePresentationSupport gamePresentationSupport,
-            GamePrimaryTurnControls gamePrimaryTurnControls,
-            GameSidebarStateFactory gameSidebarStateFactory,
-            GameSessionStateCoordinator gameSessionStateCoordinator,
-            BotTurnScheduler botTurnScheduler,
-            DebugPerformanceStats debugPerformanceStats,
-            List<MonopolyButton> buttons
-    ) {
-        this.runtime = runtime;
-        this.gameControlLayout = gameControlLayout;
-        this.gameSidebarPresenter = gameSidebarPresenter;
-        this.gamePresentationSupport = gamePresentationSupport;
-        this.gamePrimaryTurnControls = gamePrimaryTurnControls;
-        this.gameSidebarStateFactory = gameSidebarStateFactory;
-        this.gameSessionStateCoordinator = gameSessionStateCoordinator;
-        this.botTurnScheduler = botTurnScheduler;
-        this.debugPerformanceStats = debugPerformanceStats;
-        this.buttons = buttons;
-    }
 
     public void advancePresentationFrame(FrameHooks hooks) {
         updateLogTurnContext(hooks.sessionState().gameOver(), hooks.sessionState().winner(), hooks.turnPlayer());
@@ -187,16 +167,15 @@ public final class GameFrameCoordinator {
         applyComputerActionCooldownIfAnimationJustFinishedInternal(animationWasRunning, hooks);
     }
 
+    private static void logPrimaryTurnControlViolation() {
+        log.warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.");
+    }
+
     public void enforcePrimaryTurnControlInvariant(boolean debtActive) {
         gamePrimaryTurnControls.enforceInvariant(
                 debtActive,
-                () -> GameFrameCoordinator.logPrimaryTurnControlViolation()
+                GameFrameCoordinator::logPrimaryTurnControlViolation
         );
-    }
-
-    private static void logPrimaryTurnControlViolation() {
-        org.slf4j.LoggerFactory.getLogger(GameFrameCoordinator.class)
-                .warn("Primary turn controls were both visible. Hiding roll dice button to keep end-turn state authoritative.");
     }
 
     private float resolveAnimationDeltaSeconds(long nowNanos) {

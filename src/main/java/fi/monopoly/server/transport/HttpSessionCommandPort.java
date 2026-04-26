@@ -7,8 +7,7 @@ import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.domain.session.SessionState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
@@ -32,9 +31,8 @@ import java.util.Map;
  * state reaches the client through the SSE stream ({@code GET /events}) via
  * {@link HttpClientSessionUpdates}, not through a synchronous pull.</p>
  */
+@Slf4j
 public final class HttpSessionCommandPort implements SessionCommandPort {
-
-    private static final Logger log = LoggerFactory.getLogger(HttpSessionCommandPort.class);
 
     private final String baseUrl;
     private final HttpClient httpClient;

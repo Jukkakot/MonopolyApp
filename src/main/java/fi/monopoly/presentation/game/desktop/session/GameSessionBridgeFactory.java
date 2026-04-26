@@ -1,11 +1,11 @@
 package fi.monopoly.presentation.game.desktop.session;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.ForwardingSessionCommandPort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
@@ -22,6 +22,7 @@ import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -31,12 +32,9 @@ import java.util.function.Function;
  * Builds the desktop session bridge objects that sit between the legacy runtime and the
  * authoritative session application service.
  */
+@RequiredArgsConstructor
 public final class GameSessionBridgeFactory {
     private final MonopolyRuntime runtime;
-
-    public GameSessionBridgeFactory(MonopolyRuntime runtime) {
-        this.runtime = runtime;
-    }
 
     public GameSessionBridge create(
             String sessionId,

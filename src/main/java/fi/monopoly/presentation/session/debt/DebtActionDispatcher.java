@@ -1,35 +1,21 @@
 package fi.monopoly.presentation.session.debt;
 
-import fi.monopoly.application.command.DeclareBankruptcyCommand;
-import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
-import fi.monopoly.application.command.PayDebtCommand;
-import fi.monopoly.application.command.SellBuildingForDebtCommand;
-import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
+import fi.monopoly.application.command.*;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class DebtActionDispatcher {
     private final String sessionId;
     private final SessionCommandPort sessionApplicationService;
     private final PopupService popupService;
     private final Supplier<Player> actorSupplier;
-
-    public DebtActionDispatcher(
-            String sessionId,
-            SessionCommandPort sessionApplicationService,
-            PopupService popupService,
-            Supplier<Player> actorSupplier
-    ) {
-        this.sessionId = sessionId;
-        this.sessionApplicationService = sessionApplicationService;
-        this.popupService = popupService;
-        this.actorSupplier = actorSupplier;
-    }
 
     public boolean payDebt() {
         DebtStateModel debt = activeDebt();

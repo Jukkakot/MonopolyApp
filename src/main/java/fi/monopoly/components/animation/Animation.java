@@ -4,7 +4,9 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Drawable;
 import fi.monopoly.utils.Coordinates;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class Animation {
     public static final float REFERENCE_FRAME_SECONDS = 1f / 60f;
     @Getter
@@ -15,12 +17,6 @@ public class Animation {
     private final static float ANIMATION_SPEED = 0.3f;
     private final CallbackAction onAnimationEnd;
     private boolean finished;
-
-    public Animation(Drawable drawable, AnimationPath path, CallbackAction onAnimationEnd) {
-        this.drawable = drawable;
-        this.path = path;
-        this.onAnimationEnd = onAnimationEnd;
-    }
 
     public void finishAnimation() {
         if (finished) {
@@ -89,9 +85,9 @@ public class Animation {
     static Coordinates getNextAnimationCoords(Coordinates currCoords, Coordinates goalCoords, float deltaSeconds) {
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
-        if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
-//            log.warn("No movement?");
-        }
+//        if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
+////            log.warn("No movement?");
+//        }
         float speedFactor = Math.max(0f, deltaSeconds / REFERENCE_FRAME_SECONDS);
         return currCoords.move(dx * ANIMATION_SPEED * speedFactor, dy * ANIMATION_SPEED * speedFactor);
     }

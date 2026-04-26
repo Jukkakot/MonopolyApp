@@ -4,7 +4,6 @@ import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.popup.ButtonAction;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.popup.TradePopupView;
 import fi.monopoly.components.popup.components.ButtonProps;
@@ -16,6 +15,7 @@ import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +23,7 @@ import java.util.function.BooleanSupplier;
 
 import static fi.monopoly.text.UiTexts.text;
 
+@RequiredArgsConstructor
 public final class TradeViewAdapter {
     private final String sessionId;
     private final SessionCommandPort sessionApplicationService;
@@ -32,21 +33,6 @@ public final class TradeViewAdapter {
     private final BooleanSupplier isComputerTurnSupplier;
     private String renderedSignature;
 
-    public TradeViewAdapter(
-            String sessionId,
-            SessionCommandPort sessionApplicationService,
-            PopupService popupService,
-            LegacyTradeGateway legacyTradeGateway,
-            TradeUiBuilder tradeUiBuilder,
-            BooleanSupplier isComputerTurnSupplier
-    ) {
-        this.sessionId = sessionId;
-        this.sessionApplicationService = sessionApplicationService;
-        this.popupService = popupService;
-        this.legacyTradeGateway = legacyTradeGateway;
-        this.tradeUiBuilder = tradeUiBuilder;
-        this.isComputerTurnSupplier = isComputerTurnSupplier;
-    }
 
     public void sync() {
         TradeState tradeState = sessionApplicationService.currentState().tradeState();
@@ -113,7 +99,6 @@ public final class TradeViewAdapter {
     }
 
     private void showReview(TradeState tradeState, TradeOffer offer) {
-        TradeDraft draft = new TradeDraft(offer.proposer(), offer.recipient(), offer.offeredToRecipient(), offer.requestedFromRecipient());
         String subtitle = tradeState.status() == TradeStatus.COUNTERED
                 ? text("trade.review.countered", offer.proposer().getName(), offer.recipient().getName())
                 : text("trade.review", offer.recipient().getName());
@@ -124,7 +109,6 @@ public final class TradeViewAdapter {
                 null,
                 tradeState.decisionRequiredFromPlayerId() != null && isComputerTurnSupplier.getAsBoolean(),
                 () -> {
-                    TradeOfferState reversed = tradeState.currentOffer().reversePerspective();
                     handleResult(sessionApplicationService.handle(new EditTradeOfferCommand(
                             sessionId,
                             tradeState.decisionRequiredFromPlayerId(),
@@ -147,14 +131,12 @@ public final class TradeViewAdapter {
                         tradeState.decisionRequiredFromPlayerId(),
                         tradeState.tradeId()
                 )))),
-                new ButtonProps(text("trade.button.counterOffer"), () -> {
-                    handleResult(sessionApplicationService.handle(new EditTradeOfferCommand(
-                            sessionId,
-                            tradeState.decisionRequiredFromPlayerId(),
-                            tradeState.tradeId(),
-                            new TradeEditPatch(true, true, null, List.of(), List.of(), null)
-                    )));
-                })
+                new ButtonProps(text("trade.button.counterOffer"), () -> handleResult(sessionApplicationService.handle(new EditTradeOfferCommand(
+                        sessionId,
+                        tradeState.decisionRequiredFromPlayerId(),
+                        tradeState.tradeId(),
+                        new TradeEditPatch(true, true, null, List.of(), List.of(), null)
+                ))))
         );
     }
 

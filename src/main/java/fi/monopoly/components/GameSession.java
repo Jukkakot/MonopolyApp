@@ -3,6 +3,7 @@ package fi.monopoly.components;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
@@ -12,6 +13,7 @@ import java.util.function.IntSupplier;
  * {@link Game}. This keeps the state tied to the active runtime instead of the
  * Game type itself.
  */
+@RequiredArgsConstructor
 public final class GameSession {
     private final Players players;
     private final Dices dices;
@@ -20,12 +22,6 @@ public final class GameSession {
     private BooleanSupplier gameOverActiveSupplier = () -> false;
     private IntSupplier goMoneyAmountSupplier = () -> 200;
     private DebtActionDispatcher debtActionDispatcher;
-
-    public GameSession(Players players, Dices dices, Animations animations) {
-        this.players = players;
-        this.dices = dices;
-        this.animations = animations;
-    }
 
     public GameSession withStateSuppliers(
             BooleanSupplier debtResolutionActiveSupplier,

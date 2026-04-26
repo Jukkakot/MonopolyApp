@@ -5,6 +5,7 @@ import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.host.bot.BotTurnScheduler;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import processing.event.Event;
 import processing.event.KeyEvent;
@@ -17,6 +18,7 @@ import static fi.monopoly.text.UiTexts.text;
 import static processing.event.MouseEvent.CLICK;
 
 @Slf4j
+@RequiredArgsConstructor
 public class GameUiController {
     private final MonopolyButton endRoundButton;
     private final MonopolyButton retryDebtButton;
@@ -31,41 +33,13 @@ public class GameUiController {
     private final GameUiSessionControls sessionControls;
     private final Hooks hooks;
 
-    public GameUiController(
-            MonopolyButton endRoundButton,
-            MonopolyButton retryDebtButton,
-            MonopolyButton declareBankruptcyButton,
-            MonopolyButton debugGodModeButton,
-            MonopolyButton pauseButton,
-            MonopolyButton tradeButton,
-            MonopolyButton saveButton,
-            MonopolyButton loadButton,
-            MonopolyButton botSpeedButton,
-            MonopolyButton languageButton,
-            GameUiSessionControls sessionControls,
-            Hooks hooks
-    ) {
-        this.endRoundButton = endRoundButton;
-        this.retryDebtButton = retryDebtButton;
-        this.declareBankruptcyButton = declareBankruptcyButton;
-        this.debugGodModeButton = debugGodModeButton;
-        this.pauseButton = pauseButton;
-        this.tradeButton = tradeButton;
-        this.saveButton = saveButton;
-        this.loadButton = loadButton;
-        this.botSpeedButton = botSpeedButton;
-        this.languageButton = languageButton;
-        this.sessionControls = sessionControls;
-        this.hooks = hooks;
-    }
-
     public void bindButtonActions() {
-        endRoundButton.addListener(() -> hooks.endRound());
-        retryDebtButton.addListener(() -> hooks.payDebt());
-        declareBankruptcyButton.addListener(() -> hooks.declareBankruptcy());
-        debugGodModeButton.addListener(() -> hooks.openGodModeMenu());
+        endRoundButton.addListener(hooks::endRound);
+        retryDebtButton.addListener(hooks::payDebt);
+        declareBankruptcyButton.addListener(hooks::declareBankruptcy);
+        debugGodModeButton.addListener(hooks::openGodModeMenu);
         pauseButton.addListener(sessionControls::togglePause);
-        tradeButton.addListener(() -> hooks.openTradeMenu());
+        tradeButton.addListener(hooks::openTradeMenu);
         saveButton.addListener(sessionControls::saveSession);
         loadButton.addListener(sessionControls::loadSession);
         botSpeedButton.addListener(sessionControls::cycleBotSpeedMode);

@@ -15,17 +15,14 @@ import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.host.bot.BotTurnScheduler;
+import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.game.session.GameSessionQueries;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.turn.GameTurnFlowCoordinator;
-import fi.monopoly.presentation.game.desktop.ui.GamePrimaryTurnControls;
 import fi.monopoly.presentation.session.debt.DebtController;
+import lombok.RequiredArgsConstructor;
 
-import java.util.function.BiConsumer;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * Stable adapter object that exposes the mutable desktop shell collaborators behind supplier-based
@@ -36,23 +33,12 @@ import java.util.function.Supplier;
  * from the monolithic {@code Game} class while still allowing late-bound access to the live
  * runtime objects.</p>
  */
+@RequiredArgsConstructor
 public final class GameDesktopShellDependencies {
     private final StateAccess stateAccess;
     private final ProjectionAccess projectionAccess;
     private final ActionAccess actionAccess;
     private final VisibilityAccess visibilityAccess;
-
-    public GameDesktopShellDependencies(
-            StateAccess stateAccess,
-            ProjectionAccess projectionAccess,
-            ActionAccess actionAccess,
-            VisibilityAccess visibilityAccess
-    ) {
-        this.stateAccess = stateAccess;
-        this.projectionAccess = projectionAccess;
-        this.actionAccess = actionAccess;
-        this.visibilityAccess = visibilityAccess;
-    }
 
     public GameSessionState sessionState() {
         return stateAccess.sessionStateSupplier().get();

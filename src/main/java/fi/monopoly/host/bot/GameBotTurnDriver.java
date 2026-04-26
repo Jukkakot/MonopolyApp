@@ -2,20 +2,15 @@ package fi.monopoly.host.bot;
 
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerStrategies;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
+import lombok.RequiredArgsConstructor;
 
-import java.util.function.LongConsumer;
-
+@RequiredArgsConstructor
 public final class GameBotTurnDriver {
     private final BotTurnScheduler botTurnScheduler;
-
-    public GameBotTurnDriver(BotTurnScheduler botTurnScheduler) {
-        this.botTurnScheduler = botTurnScheduler;
-    }
 
     public void step(Hooks hooks) {
         long stepStart = System.nanoTime();

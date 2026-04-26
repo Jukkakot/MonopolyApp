@@ -11,6 +11,7 @@ import fi.monopoly.types.SpotType;
 
 import java.util.List;
 
+
 public final class LegacyAuctionGateway implements AuctionGateway {
     private final Players players;
     private final PropertyAuctionResolver auctionResolver;

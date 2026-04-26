@@ -6,33 +6,19 @@ import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PaymentResult;
 import fi.monopoly.components.payment.PaymentStatus;
 import fi.monopoly.components.payment.PlayerTarget;
-import fi.monopoly.domain.session.DebtAction;
-import fi.monopoly.domain.session.DebtCreditorType;
-import fi.monopoly.domain.session.DebtStateModel;
-import fi.monopoly.domain.session.PaymentObligation;
-import fi.monopoly.domain.session.TurnContinuationState;
+import fi.monopoly.domain.session.*;
+import lombok.RequiredArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
+@RequiredArgsConstructor
 public final class RentAndDebtOpeningHandler {
     private final Consumer<DebtStateModel> activeDebtUpdater;
     private final Consumer<TurnContinuationState> turnContinuationUpdater;
     private final Consumer<TurnContinuationState> turnContinuationResolver;
     private final DebtOpeningGateway paymentGateway;
-
-    public RentAndDebtOpeningHandler(
-            Consumer<DebtStateModel> activeDebtUpdater,
-            Consumer<TurnContinuationState> turnContinuationUpdater,
-            Consumer<TurnContinuationState> turnContinuationResolver,
-            DebtOpeningGateway paymentGateway
-    ) {
-        this.activeDebtUpdater = Objects.requireNonNull(activeDebtUpdater);
-        this.turnContinuationUpdater = Objects.requireNonNull(turnContinuationUpdater);
-        this.turnContinuationResolver = Objects.requireNonNull(turnContinuationResolver);
-        this.paymentGateway = Objects.requireNonNull(paymentGateway);
-    }
 
     public void handle(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
         PaymentResult result = paymentGateway.tryResolve(request);

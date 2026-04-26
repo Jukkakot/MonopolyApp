@@ -6,7 +6,9 @@ import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.UiTokens;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public final class GameControlLayout {
     private final MonopolyRuntime runtime;
     private final MonopolyButton endRoundButton;
@@ -25,34 +27,6 @@ public final class GameControlLayout {
     private float historyPanelY;
     private float reservedTop;
     private int lastSidebarLayoutHash = Integer.MIN_VALUE;
-
-    public GameControlLayout(
-            MonopolyRuntime runtime,
-            MonopolyButton endRoundButton,
-            MonopolyButton retryDebtButton,
-            MonopolyButton declareBankruptcyButton,
-            MonopolyButton debugGodModeButton,
-            MonopolyButton pauseButton,
-            MonopolyButton tradeButton,
-            MonopolyButton saveButton,
-            MonopolyButton loadButton,
-            MonopolyButton botSpeedButton,
-            MonopolyButton languageButton,
-            Dices dices
-    ) {
-        this.runtime = runtime;
-        this.endRoundButton = endRoundButton;
-        this.retryDebtButton = retryDebtButton;
-        this.declareBankruptcyButton = declareBankruptcyButton;
-        this.debugGodModeButton = debugGodModeButton;
-        this.pauseButton = pauseButton;
-        this.tradeButton = tradeButton;
-        this.saveButton = saveButton;
-        this.loadButton = loadButton;
-        this.botSpeedButton = botSpeedButton;
-        this.languageButton = languageButton;
-        this.dices = dices;
-    }
 
     public LayoutMetrics updateFrameLayoutMetrics() {
         LayoutMetrics frameLayoutMetrics = LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight());

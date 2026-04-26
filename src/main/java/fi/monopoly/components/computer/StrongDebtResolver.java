@@ -6,17 +6,15 @@ import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 
 @Slf4j
+@RequiredArgsConstructor
 final class StrongDebtResolver {
     private final StrongBotConfig config;
-
-    StrongDebtResolver(StrongBotConfig config) {
-        this.config = config;
-    }
 
     boolean resolve(ComputerTurnContext context, GameView view, PlayerView self) {
         int amount = view.debt().amount();

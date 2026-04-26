@@ -1,59 +1,34 @@
 package fi.monopoly.application.session;
 
-import fi.monopoly.application.command.BuyPropertyCommand;
-import fi.monopoly.application.command.BuyBuildingRoundCommand;
-import fi.monopoly.application.command.DeclareBankruptcyCommand;
-import fi.monopoly.application.command.DeclinePropertyCommand;
-import fi.monopoly.application.command.EndTurnCommand;
-import fi.monopoly.application.command.FinishAuctionResolutionCommand;
-import fi.monopoly.application.command.AcceptTradeCommand;
-import fi.monopoly.application.command.CancelTradeCommand;
-import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
-import fi.monopoly.application.command.PayDebtCommand;
-import fi.monopoly.application.command.PassAuctionCommand;
-import fi.monopoly.application.command.PlaceAuctionBidCommand;
-import fi.monopoly.application.command.RefreshSessionViewCommand;
-import fi.monopoly.application.command.RollDiceCommand;
-import fi.monopoly.application.command.CounterTradeCommand;
-import fi.monopoly.application.command.DeclineTradeCommand;
-import fi.monopoly.application.command.EditTradeOfferCommand;
-import fi.monopoly.application.command.OpenTradeCommand;
-import fi.monopoly.application.command.SellBuildingForDebtCommand;
-import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
-import fi.monopoly.application.command.SessionCommand;
-import fi.monopoly.application.command.SubmitTradeOfferCommand;
-import fi.monopoly.application.command.ToggleMortgageCommand;
+import fi.monopoly.application.command.*;
+import fi.monopoly.application.result.CommandRejection;
+import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.auction.AuctionCommandHandler;
 import fi.monopoly.application.session.auction.AuctionGateway;
 import fi.monopoly.application.session.debt.DebtOpeningGateway;
-import fi.monopoly.application.session.debt.DebtRemediationGateway;
 import fi.monopoly.application.session.debt.DebtRemediationCommandHandler;
+import fi.monopoly.application.session.debt.DebtRemediationGateway;
 import fi.monopoly.application.session.debt.RentAndDebtOpeningHandler;
 import fi.monopoly.application.session.purchase.PropertyPurchaseCommandHandler;
 import fi.monopoly.application.session.purchase.PropertyPurchaseGateway;
-import fi.monopoly.application.session.trade.TradeGateway;
 import fi.monopoly.application.session.trade.TradeCommandHandler;
+import fi.monopoly.application.session.trade.TradeGateway;
 import fi.monopoly.application.session.turn.TurnActionCommandHandler;
 import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
-import fi.monopoly.application.result.CommandRejection;
-import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
-import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.decision.PendingDecision;
-import fi.monopoly.domain.session.AuctionState;
-import fi.monopoly.domain.session.DebtStateModel;
-import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.domain.session.TurnContinuationState;
-import fi.monopoly.domain.session.TradeState;
+import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
+import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -66,6 +41,7 @@ import java.util.function.Supplier;
  * that are already represented in the separated session model but still need to coordinate with
  * legacy runtime objects.</p>
  */
+@RequiredArgsConstructor
 public final class SessionApplicationService implements SessionCommandPort, SessionPresentationStatePort, SessionPaymentPort {
     private final String sessionId;
     private final Supplier<SessionState> sessionStateSupplier;
@@ -81,11 +57,6 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     private TradeCommandHandler tradeCommandHandler;
     private TurnActionCommandHandler turnActionCommandHandler;
     private TurnContinuationGateway turnContinuationGateway;
-
-    public SessionApplicationService(String sessionId, Supplier<SessionState> sessionStateSupplier) {
-        this.sessionId = sessionId;
-        this.sessionStateSupplier = sessionStateSupplier;
-    }
 
     public SessionState currentState() {
         SessionState baseState = sessionStateSupplier.get();

@@ -2,12 +2,8 @@ package fi.monopoly.application.session.persistence;
 
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.infrastructure.persistence.session.JsonFileSessionSnapshotStore;
-import fi.monopoly.infrastructure.persistence.session.LegacySessionRuntimeRestorer;
-import fi.monopoly.infrastructure.persistence.session.RestoredLegacySessionRuntime;
-import fi.monopoly.infrastructure.persistence.session.SessionSnapshot;
-import fi.monopoly.infrastructure.persistence.session.SessionSnapshotMapper;
-import fi.monopoly.infrastructure.persistence.session.SessionSnapshotStore;
+import fi.monopoly.infrastructure.persistence.session.*;
+import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 
@@ -18,6 +14,7 @@ import java.nio.file.Path;
  * concrete snapshot store behind {@link SessionSnapshotStore}. It also provides the bridge for
  * rebuilding legacy runtime objects from a restored session when the desktop client needs them.</p>
  */
+@RequiredArgsConstructor
 public final class SessionPersistenceService {
     private final SessionSnapshotMapper sessionSnapshotMapper;
     private final SessionSnapshotStore sessionSnapshotStore;
@@ -25,16 +22,6 @@ public final class SessionPersistenceService {
 
     public SessionPersistenceService() {
         this(new SessionSnapshotMapper(), new JsonFileSessionSnapshotStore(), new LegacySessionRuntimeRestorer());
-    }
-
-    public SessionPersistenceService(
-            SessionSnapshotMapper sessionSnapshotMapper,
-            SessionSnapshotStore sessionSnapshotStore,
-            LegacySessionRuntimeRestorer legacySessionRuntimeRestorer
-    ) {
-        this.sessionSnapshotMapper = sessionSnapshotMapper;
-        this.sessionSnapshotStore = sessionSnapshotStore;
-        this.legacySessionRuntimeRestorer = legacySessionRuntimeRestorer;
     }
 
     public SessionSnapshot save(Path path, SessionState sessionState) {

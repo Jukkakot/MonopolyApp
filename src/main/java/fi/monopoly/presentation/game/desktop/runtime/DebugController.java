@@ -14,15 +14,16 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.components.spots.JailSpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+@RequiredArgsConstructor
 public final class DebugController {
     private final MonopolyRuntime runtime;
     private final Board board;
@@ -31,24 +32,6 @@ public final class DebugController {
     private final Runnable restoreNormalTurnControls;
     private final Runnable retryPendingDebtPayment;
     private final BiConsumer<PaymentRequest, CallbackAction> paymentRequestHandler;
-
-    public DebugController(
-            MonopolyRuntime runtime,
-            Board board,
-            Supplier<Player> currentPlayerSupplier,
-            Runnable resetTurnState,
-            Runnable restoreNormalTurnControls,
-            Runnable retryPendingDebtPayment,
-            BiConsumer<PaymentRequest, CallbackAction> paymentRequestHandler
-    ) {
-        this.runtime = runtime;
-        this.board = board;
-        this.currentPlayerSupplier = currentPlayerSupplier;
-        this.resetTurnState = resetTurnState;
-        this.restoreNormalTurnControls = restoreNormalTurnControls;
-        this.retryPendingDebtPayment = retryPendingDebtPayment;
-        this.paymentRequestHandler = paymentRequestHandler;
-    }
 
     public void initializeDebtDebugScenario() {
         Player turnPlayer = currentPlayerSupplier.get();
@@ -59,7 +42,7 @@ public final class DebugController {
         turnPlayer.addMoney(-(turnPlayer.getMoneyAmount() - 40));
         paymentRequestHandler.accept(
                 new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.tax", 200)),
-                () -> restoreNormalTurnControls.run()
+                restoreNormalTurnControls::run
         );
     }
 
@@ -117,7 +100,7 @@ public final class DebugController {
                 new ButtonProps(text("game.debug.debt.100"), () -> startDebtScenario(100)),
                 new ButtonProps(text("game.debug.debt.200"), () -> startDebtScenario(200)),
                 new ButtonProps(text("game.debug.debt.500"), () -> startDebtScenario(500)),
-                new ButtonProps(text("game.button.retryDebt"), () -> retryPendingDebtPayment.run())
+                new ButtonProps(text("game.button.retryDebt"), retryPendingDebtPayment::run)
         );
     }
 
@@ -137,7 +120,7 @@ public final class DebugController {
                 new ButtonProps(text("game.debug.scenario.brownMonopoly"), this::giveBrownMonopoly),
                 new ButtonProps(text("game.debug.scenario.brownDebt"), this::setupBrownDebtScenario),
                 new ButtonProps(text("game.debug.scenario.railDebt"), this::setupRailroadDebtScenario),
-                new ButtonProps(text("game.debug.scenario.resetUi"), () -> resetTurnState.run())
+                new ButtonProps(text("game.debug.scenario.resetUi"), resetTurnState::run)
         );
     }
 
@@ -192,7 +175,7 @@ public final class DebugController {
         log.debug("Debug action: start custom debt scenario for {} amount={}", turnPlayer.getName(), amount);
         paymentRequestHandler.accept(
                 new PaymentRequest(turnPlayer, BankTarget.INSTANCE, amount, text("game.debug.reason.tax", amount)),
-                () -> restoreNormalTurnControls.run()
+                restoreNormalTurnControls::run
         );
     }
 
@@ -241,7 +224,7 @@ public final class DebugController {
         setCurrentPlayerMoney(50);
         paymentRequestHandler.accept(
                 new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 300, text("game.debug.reason.brownDebt")),
-                () -> restoreNormalTurnControls.run()
+                restoreNormalTurnControls::run
         );
     }
 
@@ -254,7 +237,7 @@ public final class DebugController {
         setCurrentPlayerMoney(40);
         paymentRequestHandler.accept(
                 new PaymentRequest(turnPlayer, BankTarget.INSTANCE, 200, text("game.debug.reason.railDebt")),
-                () -> restoreNormalTurnControls.run()
+                restoreNormalTurnControls::run
         );
     }
 

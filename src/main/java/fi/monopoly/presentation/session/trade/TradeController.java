@@ -1,24 +1,20 @@
 package fi.monopoly.presentation.session.trade;
 
-import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandResult;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.StrongBotConfig;
-import fi.monopoly.components.popup.ButtonAction;
-import fi.monopoly.components.trade.BotTradeProfile;
-import fi.monopoly.components.trade.StrongTradePlanner;
-import fi.monopoly.components.trade.TradeDecision;
-import fi.monopoly.components.trade.TradeOfferEvaluator;
-import fi.monopoly.components.trade.TradeUiBuilder;
+import fi.monopoly.components.trade.*;
 import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeSelectionState;
 import fi.monopoly.domain.session.TradeState;
 import fi.monopoly.domain.session.TradeStatus;
 import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -36,6 +32,7 @@ import static fi.monopoly.text.UiTexts.text;
  * session commands while reusing legacy trade evaluation helpers until that logic is
  * migrated behind pure application/domain ports.</p>
  */
+@RequiredArgsConstructor
 public final class TradeController {
     private static final StrongBotConfig STRONG_CONFIG = StrongBotConfig.defaults();
 
@@ -52,25 +49,6 @@ public final class TradeController {
     private final StrongTradePlanner strongTradePlanner = new StrongTradePlanner(STRONG_CONFIG);
     private Player lastProactiveTradePlayer;
 
-    public TradeController(
-            MonopolyRuntime runtime,
-            String sessionId,
-            SessionCommandPort sessionApplicationService,
-            TradeViewAdapter tradeViewAdapter,
-            LegacyTradeGateway legacyTradeGateway,
-            BooleanSupplier canOpenTrade,
-            Supplier<Player> currentPlayerSupplier,
-            Supplier<List<Player>> playersSupplier
-    ) {
-        this.runtime = runtime;
-        this.sessionId = sessionId;
-        this.sessionApplicationService = sessionApplicationService;
-        this.tradeViewAdapter = tradeViewAdapter;
-        this.legacyTradeGateway = legacyTradeGateway;
-        this.canOpenTrade = canOpenTrade;
-        this.currentPlayerSupplier = currentPlayerSupplier;
-        this.playersSupplier = playersSupplier;
-    }
 
     public void sync() {
         tradeViewAdapter.sync();

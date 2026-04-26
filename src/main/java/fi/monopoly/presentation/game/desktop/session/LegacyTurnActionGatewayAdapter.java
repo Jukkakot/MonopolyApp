@@ -7,19 +7,15 @@ import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.types.SpotType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public final class LegacyTurnActionGatewayAdapter implements TurnActionGateway {
     private final Dices dices;
     private final Supplier<Player> turnPlayerSupplier;
     private final Runnable endTurnAction;
-
-    public LegacyTurnActionGatewayAdapter(Dices dices, Supplier<Player> turnPlayerSupplier, Runnable endTurnAction) {
-        this.dices = dices;
-        this.turnPlayerSupplier = turnPlayerSupplier;
-        this.endTurnAction = endTurnAction;
-    }
 
     @Override
     public boolean rollDice() {

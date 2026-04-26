@@ -8,17 +8,15 @@ import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+@RequiredArgsConstructor
 public class PropertyAuctionResolver {
     public static final int AUCTION_BID_INCREMENT = 10;
     public static final int AUCTION_OPENING_BID = 10;
@@ -28,11 +26,6 @@ public class PropertyAuctionResolver {
 
     private final PopupService popupService;
     private final Players players;
-
-    public PropertyAuctionResolver(PopupService popupService, Players players) {
-        this.popupService = popupService;
-        this.players = players;
-    }
 
     public void resolve(Player triggeringPlayer, Property property, CallbackAction onComplete) {
         resolve(triggeringPlayer, property, AuctionContext.bankAuction(), onComplete);

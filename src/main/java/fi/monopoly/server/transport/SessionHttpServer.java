@@ -10,19 +10,14 @@ import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionSnapshot;
 import fi.monopoly.client.session.ClientSessionUpdates;
 import fi.monopoly.client.session.SessionCommandPort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
@@ -43,9 +38,8 @@ import java.util.function.Supplier;
  * snapshot arrives the server pushes it to all currently-connected SSE clients as a
  * {@code data:} line.</p>
  */
+@Slf4j
 public final class SessionHttpServer {
-
-    private static final Logger log = LoggerFactory.getLogger(SessionHttpServer.class);
 
     private final SessionCommandPort commandPort;
     private final ClientSessionUpdates sessionUpdates;

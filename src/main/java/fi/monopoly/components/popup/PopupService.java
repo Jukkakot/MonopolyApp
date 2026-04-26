@@ -5,6 +5,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -13,6 +14,7 @@ import java.util.function.Supplier;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+@RequiredArgsConstructor
 public class PopupService {
     private static final int MAX_HISTORY_ENTRIES = 12;
     private final MonopolyRuntime runtime;
@@ -20,10 +22,6 @@ public class PopupService {
     private final Queue<PopupRequest> pendingRequests = new ArrayDeque<>();
     private final ArrayDeque<String> popupHistory = new ArrayDeque<>();
     private Popup activePopup;
-
-    public PopupService(MonopolyRuntime runtime) {
-        this.runtime = runtime;
-    }
 
     public boolean isAnyVisible() {
         return activePopup != null;
