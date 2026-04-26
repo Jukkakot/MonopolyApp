@@ -79,7 +79,7 @@ public final class EmbeddedLocalDesktopClientBindingFactory implements DesktopCl
             log.warn("Invalid {}: '{}' — HTTP server not started", HTTP_PORT_PROPERTY, portProp);
             return;
         }
-        SessionHttpServer httpServer = new SessionHttpServer(host, host::currentSnapshot, port);
+        SessionHttpServer httpServer = new SessionHttpServer(host, host, host::currentSnapshot, port);
         try {
             httpServer.start();
             Runtime.getRuntime().addShutdownHook(new Thread(httpServer::stop, "session-http-shutdown"));
