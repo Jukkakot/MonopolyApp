@@ -35,9 +35,10 @@ package fi.monopoly.server.session;
  *       etc.).</li>
  *   <li>Rule logic (rent calculation, movement, jail handling, auction bidding) still lives in
  *       those legacy objects and must be extracted to pure domain/application layer code first.</li>
- *   <li>A {@code SessionCommandPublisher} that wraps {@link fi.monopoly.application.session.SessionApplicationService}
- *       and publishes {@link fi.monopoly.client.session.ClientSessionSnapshot} snapshots after
- *       each accepted command needs to be created in this package.</li>
+ *   <li>{@code PureDomainSessionFactory} — creates a {@link fi.monopoly.application.session.SessionApplicationService}
+ *       wired with pure domain gateway implementations (no Processing runtime objects). The
+ *       {@link SessionCommandPublisher} wrapper already exists and is ready to use once this
+ *       factory is in place.</li>
  * </ol>
  *
  * @see SessionServer
