@@ -377,9 +377,10 @@ standalone server operation:
 2. **Replace legacy gateway adapters** — once rule logic is in the domain, create pure implementations
    of `AuctionGateway`, `DebtRemediationGateway`, `PropertyPurchaseGateway`, `TradeGateway`,
    `TurnActionGateway` that do not depend on `Players`, `Game`, or `PopupService`
-3. **`SessionCommandPublisher`** — create a wrapper in `server.session` that owns a
-   `SessionApplicationService`, publishes snapshots after each accepted command, and implements
-   both `SessionCommandPort` and `ClientSessionUpdates`; this completes `StartSessionServer`
+3. **`SessionCommandPublisher`** — DONE: `SessionCommandPublisher` in `server.session` decorates
+   any `SessionCommandPort`, publishes snapshots to registered `ClientSessionListener`s after each
+   accepted command, and exposes `currentSnapshot()` for use as the snapshot supplier seam;
+   `StartSessionServer` now only needs `PureDomainSessionFactory` before it can run
 4. **Make desktop client render from snapshot** — `Game` and the legacy Processing runtime should
    become a pure client-side rendering projection that reads from received `SessionState` rather
    than computing authoritative values themselves

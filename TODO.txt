@@ -14,3 +14,20 @@ PLAYER SETUP
 [Medium] Add player setup screen for names, player count, and colors
 
 ECONOMY AND PACING
+
+BACKEND EXTRACTION (separation-program)
+[High] Extract rule logic from legacy runtime objects into domain/application layer:
+       - rent calculation (LegacyPaymentGateway / DebtController)
+       - dice rolling + movement + landing effects (Dices.rollDice / GameTurnFlowCoordinator)
+       - jail handling (JailSpot / TurnActionCommandHandler)
+       - auction bidding validation
+       - building purchase/sale: move pure validation out of StreetProperty.buyBuildingRoundsAcrossSet()
+[High] Replace LegacyTurnActionGatewayAdapter, LegacyPropertyPurchaseGateway,
+       LegacyAuctionGateway, LegacyDebtRemediationGateway, LegacyTradeGateway
+       with pure domain implementations once rule logic is extracted
+[High] Create PureDomainSessionFactory in server.session — constructs a
+       SessionApplicationService wired with pure domain gateways; enables StartSessionServer
+[Medium] Make desktop client render from received SessionState snapshot rather than
+         authoritative in-process runtime mutation (Game + legacy runtime become pure
+         client-side rendering projection)
+[Low] Add integration test: round-trip command via HTTP → embedded host → SSE snapshot push

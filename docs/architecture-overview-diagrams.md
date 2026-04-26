@@ -324,6 +324,14 @@ flowchart TD
     SERVERROOT --> CMDMAPPER[SessionCommandMapper]
     SERVERROOT --> HTTPSERVER[SessionHttpServer]
     HTTPSERVER -.->|wraps| CMDPORT
+
+    SERVERSESSION[server.session]
+    SERVERSESSION --> SESSIONSERVER[SessionServer]
+    SERVERSESSION --> PUBLISHER[SessionCommandPublisher]
+    SERVERSESSION --> STARTSERVER[StartSessionServer]
+    SESSIONSERVER --> HTTPSERVER
+    PUBLISHER -.->|implements| CMDPORT
+    PUBLISHER -.->|implements| CLIENTUPDATES
 ```
 
 Useful mental model:
@@ -340,6 +348,7 @@ Useful mental model:
 - `desktop.ui`: controls, layout, frame rendering, input binding, and the extracted desktop presentation host
 - `host.session.local`: `EmbeddedDesktopSessionHost` (single command entry point + snapshot publisher) and `HostedLocalSession` (combines all local host seams)
 - `server.transport`: `SessionCommandMapper` (JSON ↔ `SessionCommand`), `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /health`); activated via `-Dmonopoly.http.port=<port>`
+- `server.session`: `SessionServer` (lifecycle wrapper around `SessionHttpServer`), `SessionCommandPublisher` (snapshot-publishing decorator over any `SessionCommandPort`), `StartSessionServer` (future standalone main with docs on remaining blockers)
 
 ## 5. Target Backend-Ready Architecture
 
@@ -410,4 +419,7 @@ Current practical status:
 - the five presentation-layer adapters (debt, auction, purchase, trade) already depend only on `SessionCommandPort`, so they are ready to be rewired to either an embedded or remote host without behavioral change
 - the remaining local cleanup means: (1) moving adapter assembly out of `Game` and into host-level wiring so adapters receive `EmbeddedDesktopSessionHost` directly, (2) separating legacy runtime reconstruction from authoritative session execution
 - `F` is the next major architecture milestone, with the main prerequisite being a concrete server-side session host that implements the already-defined `SessionCommandPort` + `ClientSessionUpdates` contract
-- **`server.transport` package now exists** with `SessionCommandMapper` (JSON ↔ `SessionCommand`) and `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /health`); the embedded host is optionally exposed over HTTP via `-Dmonopoly.http.port=<port>`
+- **`server.transport` package now exists** with `SessionCommandMapper` (JSON ↔ `SessionCommand`) and `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /events` SSE, `GET /health`); the embedded host is optionally exposed over HTTP via `-Dmonopoly.http.port=<port>`
+- **`server.session` package now exists** with `SessionServer` (lifecycle wrapper), `SessionCommandPublisher` (snapshot-publishing decorator over any `SessionCommandPort` + `ClientSessionUpdates`), and `StartSessionServer` (future standalone main); `SessionCommandPublisher` is ready to use — the remaining blocker before `StartSessionServer` can run is `PureDomainSessionFactory` (pure domain gateway implementations without legacy Processing runtime dependencies)
+- **`domain.decision.DecisionPayload`** sealed interface with `@JsonTypeInfo`/`@JsonSubTypes` ensures `PendingDecision.payload` survives HTTP JSON round-trips without transport-layer MixIns
+- project now runs on **Java 21**: `SessionHttpServer` uses `Executors.newVirtualThreadPerTaskExecutor()`, SSE reader and shutdown hook use `Thread.ofVirtual()`, `SessionCommandSerializer` and `InteractiveTurnEffectExecutor` use Java 21 pattern-matching switch
