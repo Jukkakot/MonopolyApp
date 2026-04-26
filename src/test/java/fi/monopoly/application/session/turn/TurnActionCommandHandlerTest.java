@@ -6,6 +6,7 @@ import fi.monopoly.application.command.RollDiceCommand;
 import fi.monopoly.application.command.ToggleMortgageCommand;
 import fi.monopoly.domain.session.ControlMode;
 import fi.monopoly.domain.session.PlayerSnapshot;
+import fi.monopoly.domain.session.PropertyStateSnapshot;
 import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SeatState;
 import fi.monopoly.domain.session.SessionState;
@@ -78,10 +79,34 @@ class TurnActionCommandHandlerTest {
     @Test
     void togglesMortgageThroughGatewayLookup() {
         FakeGateway gateway = new FakeGateway();
-        TurnActionCommandHandler handler = new TurnActionCommandHandler("local-session", () -> sessionState(TurnPhase.WAITING_FOR_END_TURN), gateway);
+        TurnActionCommandHandler handler = new TurnActionCommandHandler("local-session",
+                () -> sessionStateWithProperty(TurnPhase.WAITING_FOR_END_TURN, SpotType.RR1.name(), false, 1500), gateway);
 
         assertTrue(handler.handle(new ToggleMortgageCommand("local-session", "player-1", SpotType.RR1.name())).accepted());
         assertTrue(gateway.toggledMortgage);
+    }
+
+    @Test
+    void rejectsMortgageToggleForUnownedProperty() {
+        FakeGateway gateway = new FakeGateway();
+        TurnActionCommandHandler handler = new TurnActionCommandHandler("local-session",
+                () -> sessionState(TurnPhase.WAITING_FOR_END_TURN), gateway);
+
+        assertFalse(handler.handle(new ToggleMortgageCommand("local-session", "player-1", SpotType.RR1.name())).accepted());
+        assertFalse(gateway.toggledMortgage);
+    }
+
+    @Test
+    void rejectsUnmortgageWhenInsufficientFunds() {
+        FakeGateway gateway = new FakeGateway();
+        // RR1 price = 200, mortgageValue = 100, unmortgage cost = 110
+        TurnActionCommandHandler handler = new TurnActionCommandHandler("local-session",
+                () -> sessionStateWithProperty(TurnPhase.WAITING_FOR_END_TURN, SpotType.RR1.name(), true, 50), gateway);
+
+        var result = handler.handle(new ToggleMortgageCommand("local-session", "player-1", SpotType.RR1.name()));
+        assertFalse(result.accepted());
+        assertEquals("INSUFFICIENT_FUNDS", result.rejections().getFirst().code());
+        assertFalse(gateway.toggledMortgage);
     }
 
     private SessionState sessionState(TurnPhase phase) {
@@ -92,6 +117,23 @@ class TurnActionCommandHandlerTest {
                 List.of(new SeatState("seat-1", 0, "player-1", SeatKind.BOT, ControlMode.MANUAL, "Bot", "STRONG", "#FFC0CB")),
                 List.of(new PlayerSnapshot("player-1", "seat-1", "Bot", 1500, SpotType.GO_SPOT.ordinal(), false, false, false, 0, 0, List.of())),
                 List.of(),
+                new TurnState("player-1", phase, false, false),
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private SessionState sessionStateWithProperty(TurnPhase phase, String propertyId, boolean mortgaged, int playerCash) {
+        return new SessionState(
+                "local-session",
+                0L,
+                SessionStatus.IN_PROGRESS,
+                List.of(new SeatState("seat-1", 0, "player-1", SeatKind.BOT, ControlMode.MANUAL, "Bot", "STRONG", "#FFC0CB")),
+                List.of(new PlayerSnapshot("player-1", "seat-1", "Bot", playerCash, SpotType.GO_SPOT.ordinal(), false, false, false, 0, 0, List.of())),
+                List.of(new PropertyStateSnapshot(propertyId, "player-1", mortgaged, 0, 0)),
                 new TurnState("player-1", phase, false, false),
                 null,
                 null,

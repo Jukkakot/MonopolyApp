@@ -4,8 +4,11 @@ import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
+import fi.monopoly.domain.session.PlayerSnapshot;
+import fi.monopoly.domain.session.PropertyStateSnapshot;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.turn.TurnPhase;
+import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -79,10 +82,49 @@ public final class TurnActionCommandHandler {
         if (!isCurrentActor(command.sessionId(), command.actorPlayerId())) {
             return rejected("WRONG_TURN_ACTOR", "Only the active player can change mortgages");
         }
+        SessionState state = currentStateSupplier.get();
+        PropertyStateSnapshot property = findPropertyOwnedBy(state, command.propertyId(), command.actorPlayerId());
+        if (property == null) {
+            return rejected("PROPERTY_NOT_OWNED", "Active player does not own the property");
+        }
+        if (property.mortgaged()) {
+            PlayerSnapshot player = findPlayer(state, command.actorPlayerId());
+            if (player != null) {
+                int unmortgageCost = unmortgageCost(command.propertyId());
+                if (player.cash() < unmortgageCost) {
+                    return rejected("INSUFFICIENT_FUNDS",
+                            "Not enough cash to unmortgage: need " + unmortgageCost + ", have " + player.cash());
+                }
+            }
+        }
         if (!gateway.toggleMortgage(command.propertyId())) {
             return rejected("MORTGAGE_TOGGLE_FAILED", "Mortgage action failed");
         }
         return accepted("MortgageToggled", command.propertyId());
+    }
+
+    private static PropertyStateSnapshot findPropertyOwnedBy(SessionState state, String propertyId, String actorPlayerId) {
+        return state.properties().stream()
+                .filter(p -> propertyId.equals(p.propertyId()) && actorPlayerId.equals(p.ownerPlayerId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static PlayerSnapshot findPlayer(SessionState state, String playerId) {
+        return state.players().stream()
+                .filter(p -> playerId.equals(p.playerId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static int unmortgageCost(String propertyId) {
+        try {
+            int price = SpotType.valueOf(propertyId).getIntegerProperty("price");
+            int mortgageValue = price / 2;
+            return mortgageValue + (int) (mortgageValue * 0.1);
+        } catch (IllegalArgumentException ignored) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     private boolean isCurrentActor(String commandSessionId, String actorPlayerId) {
