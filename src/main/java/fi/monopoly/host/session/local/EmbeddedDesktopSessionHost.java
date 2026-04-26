@@ -82,7 +82,7 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession, Ses
         return game != null ? new EmbeddedDesktopRenderView(game.view()) : null;
     }
 
-    private ClientSessionSnapshot currentSnapshot() {
+    public ClientSessionSnapshot currentSnapshot() {
         return ClientSessionSnapshot.from(currentState(), currentView() != null);
     }
 
