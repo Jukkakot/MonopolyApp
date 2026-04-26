@@ -348,23 +348,41 @@ A remote desktop client can substitute `HttpSessionCommandPort` + `HttpClientSes
 embedded host binding without any changes to the five presentation-layer adapters — they only
 see `SessionCommandPort` and `ClientSessionUpdates`.
 
-Remaining for full backend split:
-- `server.session` — server-owned authoritative session host running in a separate process
-  (currently the server and client still share the same JVM)
-- `ClientSessionSnapshot` deserialization needs care around `PendingDecision.payload` (typed as
-  `Object` — currently deserializes to `LinkedHashMap`; sufficient for MVP but needs a typed
-  discriminator for production use)
+Progress since HTTP MVP:
+- `PendingDecision.payload` is now typed as the sealed interface `DecisionPayload` (domain package)
+  with `@JsonTypeInfo` / `@JsonSubTypes` so Jackson round-trips the type through HTTP without
+  transport-layer MixIns; `PropertyPurchaseDecisionPayload implements DecisionPayload`
+- `server.session` package created: `SessionServer` wraps `SessionHttpServer` lifecycle (start,
+  stop, shutdown hook) and is used by `EmbeddedLocalDesktopClientBindingFactory`; `StartSessionServer`
+  documents the future standalone `main()` entry point and the remaining gateway extraction work
+- Java upgraded to 21; `SessionHttpServer` uses `Executors.newVirtualThreadPerTaskExecutor()`;
+  SSE reader uses `Thread.ofVirtual()`; `SessionCommandSerializer` and
+  `InteractiveTurnEffectExecutor` use Java 21 pattern-matching switch statements
+
+Remaining for full backend split (main blocker):
+- `server.session` — standalone server process requires pure domain gateway implementations
+  (currently all gateways in `presentation.legacy.session.*` depend on Processing-era mutable
+  runtime objects: `Players`, `Dices`, `DebtController`, etc.)
+- extracting rule logic (rent, movement, jail, auction bidding, building sale) from legacy
+  runtime objects into the domain/application layer is the prerequisite for standalone operation
 
 ## Recommended Immediate Architectural Focus
 
-If the goal is fastest progress toward backend-ready architecture, the next work should prioritize:
+Blockers A, B (partially), C (partially), and D are resolved. The main remaining work before full
+standalone server operation:
 
-1. introducing a client-facing session host interface
-2. moving bot ownership behind that host interface
-3. separating client-local runtime reconstruction from authoritative session execution
-4. only after that, building embedded host and remote host implementations
-
-That path is faster than continuing endless local `Game` cleanup in isolation.
+1. **Extract rule logic from legacy runtime into domain/application layer** — rent calculation,
+   movement, jail handling, auction bidding, building sale must move to pure Java code before the
+   gateway adapters in `presentation.legacy.session.*` can be replaced
+2. **Replace legacy gateway adapters** — once rule logic is in the domain, create pure implementations
+   of `AuctionGateway`, `DebtRemediationGateway`, `PropertyPurchaseGateway`, `TradeGateway`,
+   `TurnActionGateway` that do not depend on `Players`, `Game`, or `PopupService`
+3. **`SessionCommandPublisher`** — create a wrapper in `server.session` that owns a
+   `SessionApplicationService`, publishes snapshots after each accepted command, and implements
+   both `SessionCommandPort` and `ClientSessionUpdates`; this completes `StartSessionServer`
+4. **Make desktop client render from snapshot** — `Game` and the legacy Processing runtime should
+   become a pure client-side rendering projection that reads from received `SessionState` rather
+   than computing authoritative values themselves
 
 ## Relationship To Older Plan Docs
 

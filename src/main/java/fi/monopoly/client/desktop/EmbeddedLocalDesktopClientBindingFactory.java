@@ -7,7 +7,7 @@ import fi.monopoly.client.session.desktop.*;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
-import fi.monopoly.server.transport.SessionHttpServer;
+import fi.monopoly.server.session.SessionServer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -74,12 +74,12 @@ public final class EmbeddedLocalDesktopClientBindingFactory implements DesktopCl
             log.warn("Invalid {}: '{}' — HTTP server not started", HTTP_PORT_PROPERTY, portProp);
             return;
         }
-        SessionHttpServer httpServer = new SessionHttpServer(host, host, host::currentSnapshot, port);
+        SessionServer server = new SessionServer(host, host, host::currentSnapshot, port);
         try {
-            httpServer.start();
-            Runtime.getRuntime().addShutdownHook(new Thread(httpServer::stop, "session-http-shutdown"));
+            server.start();
+            server.registerShutdownHook();
         } catch (IOException e) {
-            log.error("Failed to start session HTTP server on port {}", port, e);
+            log.error("Failed to start session server on port {}", port, e);
         }
     }
 

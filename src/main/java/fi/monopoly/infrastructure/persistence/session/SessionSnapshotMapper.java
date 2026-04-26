@@ -1,5 +1,6 @@
 package fi.monopoly.infrastructure.persistence.session;
 
+import fi.monopoly.domain.decision.DecisionPayload;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.AuctionState;
@@ -192,7 +193,7 @@ public final class SessionSnapshotMapper {
         );
     }
 
-    private SessionSnapshot.PropertyPurchasePayloadSnapshot toPropertyPurchasePayloadSnapshot(Object payload) {
+    private SessionSnapshot.PropertyPurchasePayloadSnapshot toPropertyPurchasePayloadSnapshot(DecisionPayload payload) {
         if (payload == null) {
             return null;
         }

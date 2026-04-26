@@ -4,5 +4,5 @@ public record PropertyPurchaseDecisionPayload(
         String propertyId,
         String propertyDisplayName,
         int price
-) {
+) implements DecisionPayload {
 }

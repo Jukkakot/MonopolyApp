@@ -8,7 +8,7 @@ public record PendingDecision(
         String actorPlayerId,
         List<DecisionAction> allowedActions,
         String summaryText,
-        Object payload
+        DecisionPayload payload
 ) {
     public PendingDecision {
         allowedActions = List.copyOf(allowedActions);
