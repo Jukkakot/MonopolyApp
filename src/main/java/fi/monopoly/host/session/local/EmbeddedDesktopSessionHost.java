@@ -45,14 +45,14 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession, Ses
     @Override
     public void replaceState(fi.monopoly.domain.session.SessionState restoredState) {
         desktopSessionHostCoordinator.replaceState(restoredState);
-        registerPostCommandListener();
+        registerExternalCommandDelegate();
         publishSnapshot();
     }
 
     @Override
     public void startFreshSession() {
         desktopSessionHostCoordinator.rebuildFreshGame();
-        registerPostCommandListener();
+        registerExternalCommandDelegate();
         publishSnapshot();
     }
 
@@ -92,7 +92,11 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession, Ses
         if (game == null) {
             throw new IllegalStateException("Cannot submit command: no active hosted game");
         }
-        return game.submitCommand(command);
+        CommandResult result = game.submitCommand(command);
+        if (result.accepted()) {
+            publishSnapshot();
+        }
+        return result;
     }
 
     @Override
@@ -119,10 +123,10 @@ public final class EmbeddedDesktopSessionHost implements HostedLocalSession, Ses
         return testAccess;
     }
 
-    private void registerPostCommandListener() {
+    private void registerExternalCommandDelegate() {
         DesktopHostedGame game = desktopSessionHostCoordinator.currentGame();
         if (game != null) {
-            game.setPostCommandListener(this::publishSnapshot);
+            game.setExternalCommandDelegate(this);
         }
     }
 

@@ -81,15 +81,10 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     private TradeCommandHandler tradeCommandHandler;
     private TurnActionCommandHandler turnActionCommandHandler;
     private TurnContinuationGateway turnContinuationGateway;
-    private Runnable postCommandListener = () -> {};
 
     public SessionApplicationService(String sessionId, Supplier<SessionState> sessionStateSupplier) {
         this.sessionId = sessionId;
         this.sessionStateSupplier = sessionStateSupplier;
-    }
-
-    public void setPostCommandListener(Runnable listener) {
-        this.postCommandListener = listener != null ? listener : () -> {};
     }
 
     public SessionState currentState() {
@@ -275,11 +270,7 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     }
 
     public CommandResult handle(SessionCommand command) {
-        CommandResult result = dispatch(command);
-        if (result.accepted()) {
-            postCommandListener.run();
-        }
-        return result;
+        return dispatch(command);
     }
 
     private CommandResult dispatch(SessionCommand command) {

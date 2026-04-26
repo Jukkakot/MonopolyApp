@@ -2,6 +2,7 @@ package fi.monopoly.host.session.local;
 
 import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandResult;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Game;
 import fi.monopoly.domain.session.SessionState;
 
@@ -58,8 +59,8 @@ public final class GameBackedDesktopHostedGame implements DesktopHostedGame {
     }
 
     @Override
-    public void setPostCommandListener(Runnable listener) {
-        game.setPostCommandListener(listener);
+    public void setExternalCommandDelegate(SessionCommandPort delegate) {
+        game.setExternalCommandDelegate(delegate);
     }
 
     private final class HostedGameView implements DesktopHostedGameView {

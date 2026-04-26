@@ -6,6 +6,7 @@ import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
+import fi.monopoly.client.session.ForwardingSessionCommandPort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
@@ -61,22 +62,26 @@ public final class GameSessionBridgeFactory {
                 hooks::endTurn
         );
 
+        // Proxy for adapters: routes handle() through EmbeddedDesktopSessionHost once wired,
+        // while currentState() always returns the locally-projected state.
+        ForwardingSessionCommandPort commandProxy = new ForwardingSessionCommandPort(sessionApplicationService);
+
         DebtActionDispatcher debtActionDispatcher = new DebtActionDispatcher(
                 sessionId,
-                sessionApplicationService,
+                commandProxy,
                 runtime.popupService(),
                 hooks::currentTurnPlayer
         );
         AuctionViewAdapter auctionViewAdapter = new AuctionViewAdapter(
                 sessionId,
-                sessionApplicationService,
+                commandProxy,
                 runtime.popupService(),
                 players
         );
         LegacyTradeGateway legacyTradeGateway = new LegacyTradeGateway(hooks::players);
         TradeViewAdapter tradeViewAdapter = new TradeViewAdapter(
                 sessionId,
-                sessionApplicationService,
+                commandProxy,
                 runtime.popupService(),
                 legacyTradeGateway,
                 new TradeUiBuilder(new TradeOfferEvaluator()),
@@ -84,7 +89,7 @@ public final class GameSessionBridgeFactory {
         );
         PendingDecisionPopupAdapter pendingDecisionPopupAdapter = new PendingDecisionPopupAdapter(
                 sessionId,
-                sessionApplicationService,
+                commandProxy,
                 runtime.popupService(),
                 sessionApplicationService::openPropertyPurchaseDecision,
                 auctionViewAdapter::sync,
@@ -93,7 +98,7 @@ public final class GameSessionBridgeFactory {
         TradeController tradeController = new TradeController(
                 runtime,
                 sessionId,
-                sessionApplicationService,
+                commandProxy,
                 tradeViewAdapter,
                 legacyTradeGateway,
                 hooks::canOpenTrade,
@@ -101,10 +106,10 @@ public final class GameSessionBridgeFactory {
                 hooks::players
         );
         return new GameSessionBridge(
+                commandProxy,
                 sessionApplicationService,
                 sessionApplicationService,
                 sessionApplicationService,
-                sessionApplicationService::setPostCommandListener,
                 sessionApplicationService::configureTurnContinuationFlow,
                 sessionApplicationService::handleComputerAuctionAction,
                 pendingDecisionPopupAdapter,
@@ -143,7 +148,7 @@ public final class GameSessionBridgeFactory {
             SessionCommandPort sessionCommandPort,
             SessionPresentationStatePort sessionPresentationStatePort,
             SessionPaymentPort sessionPaymentPort,
-            Consumer<Runnable> postCommandListenerRegistrar,
+            SessionCommandPort internalCommandPort,
             Consumer<TurnContinuationGateway> turnContinuationConfigurator,
             Function<String, CommandResult> computerAuctionActionHandler,
             PendingDecisionPopupAdapter pendingDecisionPopupAdapter,

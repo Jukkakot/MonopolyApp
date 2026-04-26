@@ -5,6 +5,7 @@ import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
 import fi.monopoly.application.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
+import fi.monopoly.client.session.ForwardingSessionCommandPort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -97,7 +98,7 @@ public class Game implements MonopolyEventListener {
     private final GameDesktopShellDependencies shellDependencies;
     private final SessionCommandPort sessionCommandPort;
     private final SessionPresentationStatePort sessionPresentationState;
-    private final java.util.function.Consumer<Runnable> postCommandListenerRegistrar;
+    private final SessionCommandPort internalCommandPort;
     private final SessionPaymentPort sessionPaymentPort;
     private final DebtActionDispatcher debtActionDispatcher;
     private DebtController debtController;
@@ -221,7 +222,7 @@ public class Game implements MonopolyEventListener {
         this.debugController = hostContext.debugController();
         this.sessionCommandPort = hostContext.sessionCommandPort();
         this.sessionPresentationState = hostContext.sessionPresentationStatePort();
-        this.postCommandListenerRegistrar = hostContext.postCommandListenerRegistrar();
+        this.internalCommandPort = hostContext.internalCommandPort();
         this.sessionPaymentPort = hostContext.sessionPaymentPort();
         this.debtActionDispatcher = hostContext.debtActionDispatcher();
         this.gameTurnFlowCoordinator = hostContext.gameTurnFlowCoordinator();
@@ -253,7 +254,7 @@ public class Game implements MonopolyEventListener {
     }
 
     public fi.monopoly.application.result.CommandResult submitCommand(fi.monopoly.application.command.SessionCommand command) {
-        return sessionCommandPort.handle(command);
+        return internalCommandPort.handle(command);
     }
 
     public void showPersistenceNotice(String notice) {
@@ -356,8 +357,10 @@ public class Game implements MonopolyEventListener {
         hostedGameLoopCoordinator.advanceFrame();
     }
 
-    public void setPostCommandListener(Runnable listener) {
-        postCommandListenerRegistrar.accept(listener);
+    public void setExternalCommandDelegate(SessionCommandPort delegate) {
+        if (sessionCommandPort instanceof ForwardingSessionCommandPort proxy) {
+            proxy.setCommandDelegate(delegate);
+        }
     }
 
     private LayoutMetrics updateFrameLayoutMetrics() {

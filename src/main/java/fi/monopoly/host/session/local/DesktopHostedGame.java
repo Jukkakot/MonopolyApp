@@ -2,6 +2,7 @@ package fi.monopoly.host.session.local;
 
 import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandResult;
+import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.domain.session.SessionState;
 
 /**
@@ -24,5 +25,5 @@ public interface DesktopHostedGame {
 
     void dispose();
 
-    void setPostCommandListener(Runnable listener);
+    void setExternalCommandDelegate(SessionCommandPort delegate);
 }

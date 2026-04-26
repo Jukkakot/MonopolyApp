@@ -41,8 +41,8 @@ import fi.monopoly.utils.DebugPerformanceStats;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
-import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -178,8 +178,8 @@ public final class GameDesktopHostFactory {
                 desktopAssembly.debugController(),
                 desktopAssembly.sessionCommandPort(),
                 desktopAssembly.sessionPresentationStatePort(),
-                desktopAssembly.postCommandListenerRegistrar(),
                 desktopAssembly.sessionPaymentPort(),
+                desktopAssembly.internalCommandPort(),
                 desktopAssembly.debtActionDispatcher(),
                 desktopAssembly.gameControlLayout(),
                 desktopAssembly.gamePrimaryTurnControls(),
@@ -220,8 +220,8 @@ public final class GameDesktopHostFactory {
             DebugController debugController,
             SessionCommandPort sessionCommandPort,
             SessionPresentationStatePort sessionPresentationStatePort,
-            java.util.function.Consumer<Runnable> postCommandListenerRegistrar,
             SessionPaymentPort sessionPaymentPort,
+            SessionCommandPort internalCommandPort,
             DebtActionDispatcher debtActionDispatcher,
             fi.monopoly.presentation.game.desktop.ui.GameControlLayout gameControlLayout,
             GamePrimaryTurnControls gamePrimaryTurnControls,
