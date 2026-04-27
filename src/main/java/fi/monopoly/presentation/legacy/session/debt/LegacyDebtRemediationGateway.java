@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.legacy.session.debt;
 
 import fi.monopoly.application.session.debt.DebtRemediationGateway;
-import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
@@ -12,11 +11,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LegacyDebtRemediationGateway implements DebtRemediationGateway {
     private final DebtController debtController;
-
-    @Override
-    public DebtState activeDebtState() {
-        return debtController.debtState();
-    }
 
     @Override
     public boolean canMortgage(String propertyId, String debtorPlayerId) {

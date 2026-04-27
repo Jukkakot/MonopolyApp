@@ -6,9 +6,6 @@ import fi.monopoly.application.command.PayDebtCommand;
 import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
-import fi.monopoly.components.payment.BankTarget;
-import fi.monopoly.components.payment.DebtState;
-import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
@@ -227,20 +224,6 @@ class DebtRemediationCommandHandlerTest {
         private Runnable onPayDebt = () -> {
         };
         private ActiveDebtSupplier debtSupplier;
-
-        @Override
-        public DebtState activeDebtState() {
-            DebtStateModel debt = debtSupplier.get();
-            if (debt == null) {
-                return null;
-            }
-            Player debtor = debtSupplier.debtor;
-            return new DebtState(
-                    new PaymentRequest(debtor, BankTarget.INSTANCE, debt.amountRemaining(), debt.reason()),
-                    () -> {},
-                    debt.bankruptcyRisk()
-            );
-        }
 
         @Override
         public boolean canMortgage(String propertyId, String debtorPlayerId) {

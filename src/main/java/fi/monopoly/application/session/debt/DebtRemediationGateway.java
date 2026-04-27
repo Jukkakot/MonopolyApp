@@ -1,10 +1,6 @@
 package fi.monopoly.application.session.debt;
 
-import fi.monopoly.components.payment.DebtState;
-
 public interface DebtRemediationGateway {
-    DebtState activeDebtState();
-
     boolean canMortgage(String propertyId, String debtorPlayerId);
 
     boolean mortgageProperty(String propertyId);

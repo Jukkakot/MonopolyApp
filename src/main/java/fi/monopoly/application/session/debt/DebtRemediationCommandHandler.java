@@ -4,12 +4,10 @@ import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
-import fi.monopoly.domain.session.DebtAction;
-import fi.monopoly.domain.session.DebtStateModel;
-import fi.monopoly.domain.session.SessionState;
-import fi.monopoly.domain.session.TurnContinuationState;
+import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -106,14 +104,14 @@ public final class DebtRemediationCommandHandler {
     }
 
     private void refreshDebtState(DebtStateModel debt) {
-        var legacyDebt = gateway.activeDebtState();
-        if (legacyDebt == null || legacyDebt.paymentRequest() == null) {
+        SessionState state = sessionStateSupplier.get();
+        PlayerSnapshot debtor = findPlayer(state, debt.debtorPlayerId());
+        if (debtor == null) {
             activeDebtUpdater.accept(null);
             return;
         }
-        var request = legacyDebt.paymentRequest();
-        int currentCash = request.debtor().getMoneyAmount();
-        int liquidationValue = request.debtor().getTotalLiquidationValue();
+        int currentCash = debtor.cash();
+        int liquidationValue = estimatedLiquidationValue(state, debt.debtorPlayerId());
         boolean bankruptcyRisk = currentCash + liquidationValue < debt.amountRemaining();
         activeDebtUpdater.accept(new DebtStateModel(
                 debt.debtId(),
@@ -127,6 +125,38 @@ public final class DebtRemediationCommandHandler {
                 liquidationValue,
                 allowedActions(bankruptcyRisk)
         ));
+    }
+
+    private static int estimatedLiquidationValue(SessionState state, String playerId) {
+        int total = 0;
+        for (PropertyStateSnapshot prop : state.properties()) {
+            if (!playerId.equals(prop.ownerPlayerId())) {
+                continue;
+            }
+            if (!prop.mortgaged()) {
+                try {
+                    int price = SpotType.valueOf(prop.propertyId()).getIntegerProperty("price");
+                    total += price / 2;
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+            int buildings = prop.houseCount() + prop.hotelCount();
+            if (buildings > 0) {
+                try {
+                    int housePrice = SpotType.valueOf(prop.propertyId()).getIntegerProperty("housePrice");
+                    total += buildings * housePrice / 2;
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+        return total;
+    }
+
+    private static PlayerSnapshot findPlayer(SessionState state, String playerId) {
+        return state.players().stream()
+                .filter(p -> playerId.equals(p.playerId()))
+                .findFirst()
+                .orElse(null);
     }
 
     private List<DebtAction> allowedActions(boolean bankruptcyRisk) {
