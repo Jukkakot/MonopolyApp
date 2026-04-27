@@ -19,13 +19,11 @@ import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
-import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -322,7 +320,10 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
         if (!(pendingDecisionOverride.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
             return false;
         }
-        var property = PropertyFactory.getProperty(SpotType.valueOf(payload.propertyId()));
-        return property == null || property.getOwnerPlayer() != null;
+        return baseState.properties().stream()
+                .filter(p -> payload.propertyId().equals(p.propertyId()))
+                .findFirst()
+                .map(p -> p.ownerPlayerId() != null)
+                .orElse(true);
     }
 }
