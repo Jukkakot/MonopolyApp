@@ -69,7 +69,11 @@ public class InteractiveTurnEffectExecutor {
                     return;
                 }
                 gameState.getPropertyPurchaseFlow().begin(
-                        e.player(), e.property(), e.message(),
+                        "player-" + e.player().getId(),
+                        e.property().getSpotType().name(),
+                        e.property().getDisplayName(),
+                        e.property().getPrice(),
+                        e.message(),
                         propertyPurchaseContinuation(e, index, effects)
                 );
             }

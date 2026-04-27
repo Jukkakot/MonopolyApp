@@ -18,9 +18,7 @@ import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
@@ -157,15 +155,17 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     }
 
     public PendingDecision openPropertyPurchaseDecision(
-            Player player,
-            Property property,
+            String playerId,
+            String propertyId,
+            String displayName,
+            int price,
             String message,
             TurnContinuationState continuationState
     ) {
         if (propertyPurchaseCommandHandler == null) {
             throw new IllegalStateException("Property purchase flow has not been configured");
         }
-        return propertyPurchaseCommandHandler.openDecision(player, property, message, continuationState);
+        return propertyPurchaseCommandHandler.openDecision(playerId, propertyId, displayName, price, message, continuationState);
     }
 
     public void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
@@ -322,7 +322,7 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
         if (!(pendingDecisionOverride.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
             return false;
         }
-        Property property = PropertyFactory.getProperty(SpotType.valueOf(payload.propertyId()));
+        var property = PropertyFactory.getProperty(SpotType.valueOf(payload.propertyId()));
         return property == null || property.getOwnerPlayer() != null;
     }
 }

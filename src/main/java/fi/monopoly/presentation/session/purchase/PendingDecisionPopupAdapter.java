@@ -31,14 +31,16 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
 
     @Override
     public void begin(
-            fi.monopoly.components.Player player,
-            Property property,
+            String playerId,
+            String propertyId,
+            String displayName,
+            int price,
             String message,
             TurnContinuationState continuationState
     ) {
-        PendingDecision pendingDecision = propertyPurchaseDecisionSupport.openDecision(player, property, message, continuationState);
+        PendingDecision pendingDecision = propertyPurchaseDecisionSupport.openDecision(playerId, propertyId, displayName, price, message, continuationState);
         renderedDecisionId = pendingDecision.decisionId();
-        showPropertyOffer(pendingDecision, property);
+        showPropertyOffer(pendingDecision, propertyId);
     }
 
     public void sync() {
@@ -61,16 +63,16 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
                 && "propertyOffer".equals(popupService.activePopupKind())) {
             return;
         }
-        Property property = PropertyFactory.getProperty(SpotType.valueOf(payload.propertyId()));
+        renderedDecisionId = pendingDecision.decisionId();
+        showPropertyOffer(pendingDecision, payload.propertyId());
+    }
+
+    private void showPropertyOffer(PendingDecision pendingDecision, String propertyId) {
+        Property property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
         if (property == null) {
             clearRenderedDecision();
             return;
         }
-        renderedDecisionId = pendingDecision.decisionId();
-        showPropertyOffer(pendingDecision, property);
-    }
-
-    private void showPropertyOffer(PendingDecision pendingDecision, Property property) {
         popupService.showPropertyOffer(
                 property,
                 pendingDecision.summaryText(),
@@ -78,13 +80,13 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
                         sessionId,
                         pendingDecision.actorPlayerId(),
                         pendingDecision.decisionId(),
-                        property.getSpotType().name()
+                        propertyId
                 ))),
                 () -> handleResult(sessionApplicationService.handle(new DeclinePropertyCommand(
                         sessionId,
                         pendingDecision.actorPlayerId(),
                         pendingDecision.decisionId(),
-                        property.getSpotType().name()
+                        propertyId
                 )))
         );
     }
@@ -105,8 +107,10 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
 
     public interface LegacyPropertyPurchaseDecisionSupport {
         PendingDecision openDecision(
-                fi.monopoly.components.Player player,
-                Property property,
+                String playerId,
+                String propertyId,
+                String displayName,
+                int price,
                 String message,
                 TurnContinuationState continuationState
         );

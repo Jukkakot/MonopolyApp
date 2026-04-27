@@ -42,7 +42,7 @@ class PendingDecisionPopupAdapterTest {
                 "local-session",
                 sessionApplicationService,
                 popupService,
-                (player, property, message, continuationState) -> {
+                (playerId, propertyId, displayName, price, message, continuationState) -> {
                     throw new UnsupportedOperationException("Not needed in this test");
                 },
                 () -> {

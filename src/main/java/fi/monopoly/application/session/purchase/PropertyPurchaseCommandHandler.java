@@ -7,8 +7,6 @@ import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
 import fi.monopoly.application.session.auction.AuctionCommandHandler;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.properties.Property;
 import fi.monopoly.domain.decision.DecisionAction;
 import fi.monopoly.domain.decision.DecisionType;
 import fi.monopoly.domain.decision.PendingDecision;
@@ -37,21 +35,20 @@ public final class PropertyPurchaseCommandHandler {
     private PropertyPurchaseContext activeContext;
 
     public PendingDecision openDecision(
-            Player player,
-            Property property,
+            String playerId,
+            String propertyId,
+            String displayName,
+            int price,
             String message,
             TurnContinuationState continuationState
     ) {
-        String playerId = "player-" + player.getId();
-        String propertyId = property.getSpotType().name();
-        String displayName = property.getDisplayName();
         PendingDecision decision = new PendingDecision(
-                "property-purchase:" + player.getId() + ":" + propertyId,
+                "property-purchase:" + playerId + ":" + propertyId,
                 DecisionType.PROPERTY_PURCHASE,
                 playerId,
                 List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
                 message,
-                new PropertyPurchaseDecisionPayload(propertyId, displayName, property.getPrice())
+                new PropertyPurchaseDecisionPayload(propertyId, displayName, price)
         );
         activeContext = new PropertyPurchaseContext(decision.decisionId(), playerId, propertyId, displayName, continuationState);
         auctionStateSetter.accept(null);

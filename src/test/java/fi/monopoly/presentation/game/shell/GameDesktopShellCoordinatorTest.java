@@ -145,7 +145,7 @@ class GameDesktopShellCoordinatorTest {
                 null,
                 animations,
                 new TurnEngine(),
-                (player, property, message, continuationState) -> {
+                (playerId, propertyId, displayName, price, message, continuationState) -> {
                 },
                 () -> 200,
                 new GameTurnFlowCoordinator.Hooks() {

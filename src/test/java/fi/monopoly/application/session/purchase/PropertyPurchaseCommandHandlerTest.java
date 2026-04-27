@@ -45,8 +45,10 @@ class PropertyPurchaseCommandHandlerTest {
         PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, continuationTriggered, gateway);
 
         PendingDecision decision = handler.openDecision(
-                human,
-                property,
+                "player-" + human.getId(),
+                property.getSpotType().name(),
+                property.getDisplayName(),
+                property.getPrice(),
                 "Buy Brown 1?",
                 continuationFor(human, property, TurnContinuationType.RESUME_TURN_FOLLOW_UP)
         );
@@ -70,8 +72,10 @@ class PropertyPurchaseCommandHandlerTest {
         PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, new AtomicBoolean(false), new FakeGateway());
 
         PendingDecision decision = handler.openDecision(
-                human,
-                property,
+                "player-" + human.getId(),
+                property.getSpotType().name(),
+                property.getDisplayName(),
+                property.getPrice(),
                 "Buy Brown 1?",
                 continuationFor(human, property, TurnContinuationType.RESUME_INTERACTIVE_EFFECTS)
         );
@@ -97,8 +101,10 @@ class PropertyPurchaseCommandHandlerTest {
         PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, new AtomicBoolean(false), gateway);
 
         PendingDecision decision = handler.openDecision(
-                human,
-                property,
+                "player-" + human.getId(),
+                property.getSpotType().name(),
+                property.getDisplayName(),
+                property.getPrice(),
                 "Buy Brown 1?",
                 continuationFor(human, property, TurnContinuationType.RESUME_TURN_FOLLOW_UP)
         );
@@ -123,8 +129,10 @@ class PropertyPurchaseCommandHandlerTest {
         PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, new AtomicBoolean(false), gateway);
 
         PendingDecision decision = handler.openDecision(
-                human,
-                property,
+                "player-" + human.getId(),
+                property.getSpotType().name(),
+                property.getDisplayName(),
+                property.getPrice(),
                 "Buy Brown 1?",
                 continuationFor(human, property, TurnContinuationType.RESUME_INTERACTIVE_EFFECTS)
         );
