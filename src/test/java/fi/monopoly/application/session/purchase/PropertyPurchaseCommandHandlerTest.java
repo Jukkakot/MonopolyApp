@@ -8,6 +8,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
+import fi.monopoly.types.SpotType;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
@@ -217,33 +218,24 @@ class PropertyPurchaseCommandHandlerTest {
                         continuation -> continuationTriggered.set(true),
                         new AuctionGateway() {
                             @Override
-                            public List<String> eligibleBidderIds(Player triggeringPlayer, fi.monopoly.components.properties.Property property) {
+                            public List<String> eligibleBidderIds(String triggeringPlayerId, String propertyId) {
                                 return List.of("player-" + human.getId(), "player-2");
                             }
 
                             @Override
-                            public Player playerById(String playerId) {
-                                return ("player-" + human.getId()).equals(playerId) ? human : null;
-                            }
-
-                            @Override
-                            public fi.monopoly.components.properties.Property propertyById(String propertyId) {
-                                return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
-                            }
-
-                            @Override
-                            public int maxBidFor(Player bidder, fi.monopoly.components.properties.Property property) {
+                            public int maxBidFor(String bidderId, String propertyId) {
                                 return 200;
                             }
 
                             @Override
-                            public int nextBidAmount(Player bidder, fi.monopoly.components.properties.Property property, int currentBid) {
+                            public int nextBidAmount(String bidderId, String propertyId, int currentBid) {
                                 return currentBid == 0 ? 10 : currentBid + 10;
                             }
 
                             @Override
-                            public boolean transferWinningProperty(Player winner, fi.monopoly.components.properties.Property property, int amount) {
-                                return winner.buyProperty(property, amount);
+                            public boolean transferWinningProperty(String winnerId, String propertyId, int amount) {
+                                var property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+                                return property != null && human.buyProperty(property, amount);
                             }
                         }
                 )

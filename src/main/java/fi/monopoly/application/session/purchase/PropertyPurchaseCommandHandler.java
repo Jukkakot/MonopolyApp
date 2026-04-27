@@ -80,7 +80,12 @@ public final class PropertyPurchaseCommandHandler {
             pendingDecisionSetter.accept(null);
             activeContext = null;
             if (context.property().getOwnerPlayer() == null) {
-                auctionCommandHandler.startAuction(context.player(), context.property(), context.continuationState());
+                auctionCommandHandler.startAuction(
+                        playerId(context.player()),
+                        context.property().getSpotType().name(),
+                        context.property().getDisplayName(),
+                        context.continuationState()
+                );
                 return new CommandResult(
                         true,
                         currentStateSupplier.get(),
@@ -124,7 +129,12 @@ public final class PropertyPurchaseCommandHandler {
             return reject("INVALID_PROPERTY_PURCHASE", "Property decline command is not valid in the current state");
         }
         pendingDecisionSetter.accept(null);
-        auctionCommandHandler.startAuction(context.player(), context.property(), context.continuationState());
+        auctionCommandHandler.startAuction(
+                playerId(context.player()),
+                context.property().getSpotType().name(),
+                context.property().getDisplayName(),
+                context.continuationState()
+        );
         activeContext = null;
         return new CommandResult(
                 true,

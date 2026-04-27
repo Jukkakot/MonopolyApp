@@ -22,7 +22,12 @@ public final class LegacyAuctionGateway implements AuctionGateway {
     }
 
     @Override
-    public List<String> eligibleBidderIds(Player triggeringPlayer, Property property) {
+    public List<String> eligibleBidderIds(String triggeringPlayerId, String propertyId) {
+        Player triggeringPlayer = playerById(triggeringPlayerId);
+        Property property = propertyById(propertyId);
+        if (property == null) {
+            return List.of();
+        }
         return auctionResolver.orderedBidders(triggeringPlayer).stream()
                 .filter(player -> auctionResolver.maxBidFor(player, property) >= PropertyAuctionResolver.AUCTION_OPENING_BID)
                 .map(player -> "player-" + player.getId())
@@ -30,7 +35,29 @@ public final class LegacyAuctionGateway implements AuctionGateway {
     }
 
     @Override
-    public Player playerById(String playerId) {
+    public int maxBidFor(String bidderId, String propertyId) {
+        Player bidder = playerById(bidderId);
+        Property property = propertyById(propertyId);
+        if (bidder == null || property == null) {
+            return 0;
+        }
+        return auctionResolver.maxBidFor(bidder, property);
+    }
+
+    @Override
+    public int nextBidAmount(String bidderId, String propertyId, int currentBid) {
+        int max = maxBidFor(bidderId, propertyId);
+        return auctionResolver.nextBidAmount(max, currentBid);
+    }
+
+    @Override
+    public boolean transferWinningProperty(String winnerId, String propertyId, int amount) {
+        Player winner = playerById(winnerId);
+        Property property = propertyById(propertyId);
+        return winner != null && property != null && winner.buyProperty(property, amount);
+    }
+
+    private Player playerById(String playerId) {
         if (playerId == null || players == null) {
             return null;
         }
@@ -42,26 +69,14 @@ public final class LegacyAuctionGateway implements AuctionGateway {
         return null;
     }
 
-    @Override
-    public Property propertyById(String propertyId) {
+    private Property propertyById(String propertyId) {
         if (propertyId == null) {
             return null;
         }
-        return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
-    }
-
-    @Override
-    public int maxBidFor(Player bidder, Property property) {
-        return auctionResolver.maxBidFor(bidder, property);
-    }
-
-    @Override
-    public int nextBidAmount(Player bidder, Property property, int currentBid) {
-        return auctionResolver.nextBidAmount(maxBidFor(bidder, property), currentBid);
-    }
-
-    @Override
-    public boolean transferWinningProperty(Player winner, Property property, int amount) {
-        return winner != null && property != null && winner.buyProperty(property, amount);
+        try {
+            return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 }

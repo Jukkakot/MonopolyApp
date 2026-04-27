@@ -7,13 +7,13 @@ import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.turn.PropertyAuctionResolver;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
+import fi.monopoly.types.SpotType;
+import fi.monopoly.utils.MonopolyUtils;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
@@ -31,20 +31,21 @@ public final class AuctionCommandHandler {
     private ActiveAuctionContext activeContext;
 
     public AuctionState startAuction(
-            Player triggeringPlayer,
-            Property property,
+            String triggeringPlayerId,
+            String propertyId,
+            String propertyDisplayName,
             TurnContinuationState continuationState
     ) {
-        List<String> eligibleBidderIds = gateway.eligibleBidderIds(triggeringPlayer, property);
+        List<String> eligibleBidderIds = gateway.eligibleBidderIds(triggeringPlayerId, propertyId);
         if (eligibleBidderIds.isEmpty()) {
             activeContext = null;
             auctionStateSetter.accept(null);
             return null;
         }
         AuctionState state = new AuctionState(
-                "auction:" + property.getSpotType().name() + ":" + (triggeringPlayer == null ? "bank" : triggeringPlayer.getId()),
-                property.getSpotType().name(),
-                playerId(triggeringPlayer),
+                "auction:" + propertyId + ":" + (triggeringPlayerId == null ? "bank" : triggeringPlayerId),
+                propertyId,
+                triggeringPlayerId,
                 eligibleBidderIds.get(0),
                 null,
                 0,
@@ -55,7 +56,7 @@ public final class AuctionCommandHandler {
                 0,
                 null
         );
-        activeContext = new ActiveAuctionContext(state.auctionId(), property, continuationState);
+        activeContext = new ActiveAuctionContext(state.auctionId(), propertyDisplayName, continuationState);
         turnContinuationSetter.accept(continuationState);
         auctionStateSetter.accept(state);
         return state;
@@ -88,16 +89,11 @@ public final class AuctionCommandHandler {
         if (!Objects.equals(state.currentActorPlayerId(), actorPlayerId)) {
             return reject("WRONG_AUCTION_ACTOR", "Computer player is not the current auction actor");
         }
-        Property property = activeProperty(state);
-        Player actor = activePlayer(actorPlayerId);
-        if (property == null || actor == null) {
-            return reject("AUCTION_CONTEXT_MISSING", "Auction context is no longer available");
-        }
-        int maxBid = gateway.maxBidFor(actor, property);
+        int maxBid = gateway.maxBidFor(actorPlayerId, state.propertyId());
         if (maxBid < state.minimumNextBid()) {
             return handle(new PassAuctionCommand(sessionId, actorPlayerId, state.auctionId()));
         }
-        int amount = gateway.nextBidAmount(actor, property, state.currentBid());
+        int amount = gateway.nextBidAmount(actorPlayerId, state.propertyId(), state.currentBid());
         return handle(new PlaceAuctionBidCommand(sessionId, actorPlayerId, state.auctionId(), amount));
     }
 
@@ -118,13 +114,7 @@ public final class AuctionCommandHandler {
         if (command.amount() < state.minimumNextBid()) {
             return reject("BID_TOO_LOW", "Bid is below the minimum next bid");
         }
-
-        Property property = activeProperty(state);
-        Player bidder = activePlayer(command.actorPlayerId());
-        if (property == null || bidder == null) {
-            return reject("AUCTION_CONTEXT_MISSING", "Auction context is no longer available");
-        }
-        int maxBid = gateway.maxBidFor(bidder, property);
+        int maxBid = gateway.maxBidFor(command.actorPlayerId(), state.propertyId());
         if (command.amount() > maxBid) {
             return reject("BID_TOO_HIGH", "Bid exceeds what the player can currently afford");
         }
@@ -163,7 +153,7 @@ public final class AuctionCommandHandler {
         List<DomainEvent> events = new ArrayList<>();
         events.add(new DomainEvent("AuctionBidPlaced", command.actorPlayerId(), "M" + command.amount()));
         if (updated.status() == AuctionStatus.WON_PENDING_RESOLUTION) {
-            events.add(new DomainEvent("AuctionWon", updated.winningPlayerId(), property.getDisplayName()));
+            events.add(new DomainEvent("AuctionWon", updated.winningPlayerId(), activePropertyDisplayName(state)));
         }
         return accepted(events);
     }
@@ -183,12 +173,9 @@ public final class AuctionCommandHandler {
             return reject("ACTOR_ALREADY_PASSED", "Player has already passed this auction");
         }
 
+        String displayName = activePropertyDisplayName(state);
         Set<String> passedPlayerIds = new LinkedHashSet<>(state.passedPlayerIds());
         passedPlayerIds.add(command.actorPlayerId());
-        Property property = activeProperty(state);
-        if (property == null) {
-            return reject("AUCTION_CONTEXT_MISSING", "Auction context is no longer available");
-        }
 
         List<String> remainingActive = remainingActiveBidderIds(state.eligiblePlayerIds(), passedPlayerIds);
         if (remainingActive.isEmpty() && state.leadingPlayerId() == null) {
@@ -201,8 +188,8 @@ public final class AuctionCommandHandler {
                     true,
                     currentStateSupplier.get(),
                     List.of(
-                            new DomainEvent("AuctionPassed", command.actorPlayerId(), property.getDisplayName()),
-                            new DomainEvent("AuctionEndedWithoutWinner", command.actorPlayerId(), property.getDisplayName())
+                            new DomainEvent("AuctionPassed", command.actorPlayerId(), displayName),
+                            new DomainEvent("AuctionEndedWithoutWinner", command.actorPlayerId(), displayName)
                     ),
                     List.of(),
                     List.of()
@@ -243,9 +230,9 @@ public final class AuctionCommandHandler {
         }
         auctionStateSetter.accept(updated);
         List<DomainEvent> events = new ArrayList<>();
-        events.add(new DomainEvent("AuctionPassed", command.actorPlayerId(), property.getDisplayName()));
+        events.add(new DomainEvent("AuctionPassed", command.actorPlayerId(), displayName));
         if (updated.status() == AuctionStatus.WON_PENDING_RESOLUTION) {
-            events.add(new DomainEvent("AuctionWon", updated.winningPlayerId(), property.getDisplayName()));
+            events.add(new DomainEvent("AuctionWon", updated.winningPlayerId(), displayName));
         }
         return accepted(events);
     }
@@ -258,15 +245,9 @@ public final class AuctionCommandHandler {
         if (state.status() != AuctionStatus.WON_PENDING_RESOLUTION) {
             return reject("AUCTION_NOT_READY", "Auction is not waiting for final resolution");
         }
-        Property property = activeProperty(state);
-        Player winner = activePlayer(state.winningPlayerId());
-        if (property == null || winner == null) {
-            return reject("AUCTION_CONTEXT_MISSING", "Auction context is no longer available");
-        }
-        if (!gateway.transferWinningProperty(winner, property, state.winningBid())) {
+        if (!gateway.transferWinningProperty(state.winningPlayerId(), state.propertyId(), state.winningBid())) {
             return reject("AUCTION_TRANSFER_FAILED", "Winning property transfer failed");
         }
-        PropertyAuctionResolver.recordAuctionOutcome(property, state.winningBid());
         ActiveAuctionContext resolvedContext = activeContext;
         activeContext = null;
         auctionStateSetter.accept(null);
@@ -275,7 +256,7 @@ public final class AuctionCommandHandler {
         return new CommandResult(
                 true,
                 currentStateSupplier.get(),
-                List.of(new DomainEvent("AuctionResolved", state.winningPlayerId(), property.getDisplayName())),
+                List.of(new DomainEvent("AuctionResolved", state.winningPlayerId(), activePropertyDisplayName(state))),
                 List.of(),
                 List.of()
         );
@@ -302,26 +283,28 @@ public final class AuctionCommandHandler {
     }
 
     private ActiveAuctionContext restoreContextFrom(SessionState currentState, AuctionState state) {
-        Property property = gateway.propertyById(state.propertyId());
-        if (property == null) {
-            return null;
-        }
         return new ActiveAuctionContext(
                 state.auctionId(),
-                property,
+                resolveDisplayName(state.propertyId()),
                 currentState.turnContinuationState()
         );
     }
 
-    private Property activeProperty(AuctionState state) {
-        if (activeContext != null && Objects.equals(activeContext.auctionId(), state.auctionId())) {
-            return activeContext.property();
+    private String activePropertyDisplayName(AuctionState state) {
+        if (activeContext != null) {
+            return activeContext.propertyDisplayName();
         }
-        return gateway.propertyById(state.propertyId());
+        return resolveDisplayName(state.propertyId());
     }
 
-    private Player activePlayer(String playerId) {
-        return playerId == null ? null : gateway.playerById(playerId);
+    private static String resolveDisplayName(String propertyId) {
+        try {
+            SpotType spotType = SpotType.valueOf(propertyId);
+            String name = spotType.getStringProperty("name");
+            return name.isBlank() ? propertyId : MonopolyUtils.parseIllegalCharacters(name);
+        } catch (IllegalArgumentException ignored) {
+            return propertyId;
+        }
     }
 
     private List<String> remainingActiveBidderIds(AuctionState state) {
@@ -360,14 +343,9 @@ public final class AuctionCommandHandler {
         return new CommandResult(false, currentStateSupplier.get(), List.of(), List.of(new CommandRejection(code, message)), List.of());
     }
 
-    private String playerId(Player player) {
-        return player == null ? null : "player-" + player.getId();
-    }
-
     private record ActiveAuctionContext(
             String auctionId,
-            Property property,
+            String propertyDisplayName,
             TurnContinuationState continuationState
-    ) {
-    }
+    ) {}
 }

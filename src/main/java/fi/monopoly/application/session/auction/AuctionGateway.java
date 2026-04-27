@@ -1,20 +1,13 @@
 package fi.monopoly.application.session.auction;
 
-import fi.monopoly.components.Player;
-import fi.monopoly.components.properties.Property;
-
 import java.util.List;
 
 public interface AuctionGateway {
-    List<String> eligibleBidderIds(Player triggeringPlayer, Property property);
+    List<String> eligibleBidderIds(String triggeringPlayerId, String propertyId);
 
-    Player playerById(String playerId);
+    int maxBidFor(String bidderId, String propertyId);
 
-    Property propertyById(String propertyId);
+    int nextBidAmount(String bidderId, String propertyId, int currentBid);
 
-    int maxBidFor(Player bidder, Property property);
-
-    int nextBidAmount(Player bidder, Property property, int currentBid);
-
-    boolean transferWinningProperty(Player winner, Property property, int amount);
+    boolean transferWinningProperty(String winnerId, String propertyId, int amount);
 }

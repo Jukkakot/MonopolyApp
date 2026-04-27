@@ -5,7 +5,6 @@ import fi.monopoly.application.command.PassAuctionCommand;
 import fi.monopoly.application.command.PlaceAuctionBidCommand;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
-import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.domain.session.*;
@@ -38,7 +37,7 @@ class AuctionCommandHandlerTest {
         AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
+        AuctionState state = handler.startAuction(players.triggeringPlayerId(), property.getSpotType().name(), property.getDisplayName(), continuation(players, property));
 
         var result = handler.handle(new PlaceAuctionBidCommand("local-session", players.secondActorId(), state.auctionId(), 10));
 
@@ -54,7 +53,7 @@ class AuctionCommandHandlerTest {
         AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
+        AuctionState state = handler.startAuction(players.triggeringPlayerId(), property.getSpotType().name(), property.getDisplayName(), continuation(players, property));
 
         var result = handler.handle(new PlaceAuctionBidCommand("local-session", state.currentActorPlayerId(), state.auctionId(), 5));
 
@@ -70,7 +69,7 @@ class AuctionCommandHandlerTest {
         AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
+        AuctionState state = handler.startAuction(players.triggeringPlayerId(), property.getSpotType().name(), property.getDisplayName(), continuation(players, property));
 
         var result = handler.handle(new PassAuctionCommand("local-session", state.currentActorPlayerId(), state.auctionId()));
 
@@ -87,7 +86,7 @@ class AuctionCommandHandlerTest {
         AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, new AtomicBoolean(false));
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
+        AuctionState state = handler.startAuction(players.triggeringPlayerId(), property.getSpotType().name(), property.getDisplayName(), continuation(players, property));
         assertTrue(handler.handle(new PlaceAuctionBidCommand("local-session", state.currentActorPlayerId(), state.auctionId(), 10)).accepted());
         AuctionState afterBid = auctionStateRef.get();
 
@@ -108,7 +107,7 @@ class AuctionCommandHandlerTest {
         AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, completed);
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
+        AuctionState state = handler.startAuction(players.triggeringPlayerId(), property.getSpotType().name(), property.getDisplayName(), continuation(players, property));
         assertTrue(handler.handle(new PassAuctionCommand("local-session", state.currentActorPlayerId(), state.auctionId())).accepted());
         AuctionState afterFirstPass = auctionStateRef.get();
 
@@ -129,7 +128,7 @@ class AuctionCommandHandlerTest {
         AuctionCommandHandler handler = newHandler(players, auctionStateRef, continuationRef, completed);
         StreetProperty property = new StreetProperty(SpotType.B1);
 
-        AuctionState state = handler.startAuction(players.triggeringPlayer(), property, continuation(players, property));
+        AuctionState state = handler.startAuction(players.triggeringPlayerId(), property.getSpotType().name(), property.getDisplayName(), continuation(players, property));
         assertTrue(handler.handle(new PlaceAuctionBidCommand("local-session", state.currentActorPlayerId(), state.auctionId(), 10)).accepted());
         AuctionState afterBid = auctionStateRef.get();
         assertTrue(handler.handle(new PassAuctionCommand("local-session", afterBid.currentActorPlayerId(), afterBid.auctionId())).accepted());
@@ -139,7 +138,7 @@ class AuctionCommandHandlerTest {
         var result = handler.handle(new FinishAuctionResolutionCommand("local-session", wonState.auctionId()));
 
         assertTrue(result.accepted());
-        assertEquals(players.firstBidder(), property.getOwnerPlayer());
+        assertEquals(players.firstBidder(), PropertyFactory.getProperty(SpotType.B1).getOwnerPlayer());
         assertNull(auctionStateRef.get());
         assertNull(continuationRef.get());
         assertTrue(completed.get());
@@ -264,42 +263,32 @@ class AuctionCommandHandlerTest {
     private record FakeAuctionGateway(TestPlayers players) implements AuctionGateway {
 
         @Override
-            public List<String> eligibleBidderIds(Player triggeringPlayer, Property property) {
-                return List.of(players.firstBidderId(), players.secondActorId());
-            }
-
-            @Override
-            public Player playerById(String playerId) {
-                if (players.triggeringPlayerId().equals(playerId)) {
-                    return players.triggeringPlayer();
-                }
-                if (players.firstBidderId().equals(playerId)) {
-                    return players.firstBidder();
-                }
-                if (players.secondActorId().equals(playerId)) {
-                    return players.secondBidder();
-                }
-                return null;
-            }
-
-            @Override
-            public Property propertyById(String propertyId) {
-                return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
-            }
-
-            @Override
-            public int maxBidFor(Player bidder, Property property) {
-                return 200;
-            }
-
-            @Override
-            public int nextBidAmount(Player bidder, Property property, int currentBid) {
-                return currentBid == 0 ? 10 : currentBid + 10;
-            }
-
-            @Override
-            public boolean transferWinningProperty(Player winner, Property property, int amount) {
-                return winner.buyProperty(property, amount);
-            }
+        public List<String> eligibleBidderIds(String triggeringPlayerId, String propertyId) {
+            return List.of(players.firstBidderId(), players.secondActorId());
         }
+
+        @Override
+        public int maxBidFor(String bidderId, String propertyId) {
+            return 200;
+        }
+
+        @Override
+        public int nextBidAmount(String bidderId, String propertyId, int currentBid) {
+            return currentBid == 0 ? 10 : currentBid + 10;
+        }
+
+        @Override
+        public boolean transferWinningProperty(String winnerId, String propertyId, int amount) {
+            Player winner = resolvePlayer(winnerId);
+            var property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return winner != null && property != null && winner.buyProperty(property, amount);
+        }
+
+        private Player resolvePlayer(String playerId) {
+            if (players.triggeringPlayerId().equals(playerId)) return players.triggeringPlayer();
+            if (players.firstBidderId().equals(playerId)) return players.firstBidder();
+            if (players.secondActorId().equals(playerId)) return players.secondBidder();
+            return null;
+        }
+    }
 }

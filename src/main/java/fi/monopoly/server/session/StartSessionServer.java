@@ -1,5 +1,7 @@
 package fi.monopoly.server.session;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Entry point for a future standalone session server process.
  *
@@ -44,22 +46,23 @@ package fi.monopoly.server.session;
  * @see SessionServer
  * @see fi.monopoly.server.transport.SessionHttpServer
  */
+@Slf4j
 public final class StartSessionServer {
 
     private StartSessionServer() {}
 
     public static void main(String[] args) {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
-        System.err.println("""
+        log.info("""
                 Standalone session server is not yet available.
-
+                
                 Pure domain gateway implementations are required before the session host
                 can run without the Processing desktop runtime.
-
+                
                 Current workaround: run the desktop app from IntelliJ with
-                  -Dmonopoly.http.port=%d
+                  -Dmonopoly.http.port={}
                 The embedded host exposes the same HTTP API on that port.
-                """.formatted(port));
+                """, port);
         System.exit(1);
     }
 }
