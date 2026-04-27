@@ -229,11 +229,6 @@ class DebtRemediationCommandHandlerTest {
         private ActiveDebtSupplier debtSupplier;
 
         @Override
-        public Property propertyById(String propertyId) {
-            return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
-        }
-
-        @Override
         public DebtState activeDebtState() {
             DebtStateModel debt = debtSupplier.get();
             if (debt == null) {
@@ -242,26 +237,45 @@ class DebtRemediationCommandHandlerTest {
             Player debtor = debtSupplier.debtor;
             return new DebtState(
                     new PaymentRequest(debtor, BankTarget.INSTANCE, debt.amountRemaining(), debt.reason()),
-                    () -> {
-                    },
+                    () -> {},
                     debt.bankruptcyRisk()
             );
         }
 
         @Override
+        public boolean canMortgage(String propertyId, String debtorPlayerId) {
+            Property property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return property != null && !property.isMortgaged() && isOwnedByDebtor(property, debtorPlayerId);
+        }
+
+        @Override
         public boolean mortgageProperty(String propertyId) {
-            return propertyById(propertyId).handleMortgaging();
+            Property property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return property != null && property.handleMortgaging();
+        }
+
+        @Override
+        public boolean canSellBuildings(String propertyId, int count, String debtorPlayerId) {
+            Property property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return property instanceof StreetProperty sp && isOwnedByDebtor(property, debtorPlayerId) && sp.canSellHouses(count);
         }
 
         @Override
         public boolean sellBuildings(String propertyId, int count) {
-            return propertyById(propertyId) instanceof StreetProperty streetProperty && streetProperty.sellHouses(count);
+            Property property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return property instanceof StreetProperty sp && sp.sellHouses(count);
+        }
+
+        @Override
+        public boolean canSellBuildingRoundsAcrossSet(String propertyId, int rounds, String debtorPlayerId) {
+            Property property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return property instanceof StreetProperty sp && isOwnedByDebtor(property, debtorPlayerId) && sp.canSellBuildingRoundsAcrossSet(rounds);
         }
 
         @Override
         public boolean sellBuildingRoundsAcrossSet(String propertyId, int rounds) {
-            return propertyById(propertyId) instanceof StreetProperty streetProperty
-                    && streetProperty.sellBuildingRoundsAcrossSet(rounds);
+            Property property = PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return property instanceof StreetProperty sp && sp.sellBuildingRoundsAcrossSet(rounds);
         }
 
         @Override
@@ -272,6 +286,10 @@ class DebtRemediationCommandHandlerTest {
 
         @Override
         public void declareBankruptcy() {
+        }
+
+        private static boolean isOwnedByDebtor(Property property, String debtorPlayerId) {
+            return property.getOwnerPlayer() != null && ("player-" + property.getOwnerPlayer().getId()).equals(debtorPlayerId);
         }
     }
 }

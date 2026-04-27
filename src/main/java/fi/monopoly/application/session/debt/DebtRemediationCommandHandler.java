@@ -4,9 +4,6 @@ import fi.monopoly.application.command.*;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.properties.Property;
-import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.domain.session.DebtAction;
 import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.domain.session.SessionState;
@@ -51,8 +48,7 @@ public final class DebtRemediationCommandHandler {
                 if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
                     yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
                 }
-                Property property = gateway.propertyById(cmd.propertyId());
-                if (!isOwnedByDebtor(property, debt.debtorPlayerId()) || property.isMortgaged() || !canMortgage(property)) {
+                if (!gateway.canMortgage(cmd.propertyId(), debt.debtorPlayerId())) {
                     yield rejected("INVALID_MORTGAGE", "Property cannot be mortgaged for the active debt");
                 }
                 if (!gateway.mortgageProperty(cmd.propertyId())) {
@@ -65,10 +61,7 @@ public final class DebtRemediationCommandHandler {
                 if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
                     yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
                 }
-                Property property = gateway.propertyById(cmd.propertyId());
-                if (!(property instanceof StreetProperty streetProperty)
-                        || !isOwnedByDebtor(property, debt.debtorPlayerId())
-                        || !streetProperty.canSellHouses(cmd.count())) {
+                if (!gateway.canSellBuildings(cmd.propertyId(), cmd.count(), debt.debtorPlayerId())) {
                     yield rejected("INVALID_BUILDING_SALE", "Buildings cannot be sold for the active debt");
                 }
                 if (!gateway.sellBuildings(cmd.propertyId(), cmd.count())) {
@@ -81,10 +74,7 @@ public final class DebtRemediationCommandHandler {
                 if (!validBase(cmd.sessionId(), cmd.actorPlayerId(), cmd.debtId(), debt)) {
                     yield rejected("INVALID_DEBT_ACTION", "Debt action does not match the active debt");
                 }
-                Property property = gateway.propertyById(cmd.propertyId());
-                if (!(property instanceof StreetProperty streetProperty)
-                        || !isOwnedByDebtor(property, debt.debtorPlayerId())
-                        || !streetProperty.canSellBuildingRoundsAcrossSet(cmd.rounds())) {
+                if (!gateway.canSellBuildingRoundsAcrossSet(cmd.propertyId(), cmd.rounds(), debt.debtorPlayerId())) {
                     yield rejected("INVALID_SET_BUILDING_SALE", "Building rounds cannot be sold for the active debt");
                 }
                 if (!gateway.sellBuildingRoundsAcrossSet(cmd.propertyId(), cmd.rounds())) {
@@ -113,23 +103,6 @@ public final class DebtRemediationCommandHandler {
         return sessionId.equals(commandSessionId)
                 && debt.debtorPlayerId().equals(actorPlayerId)
                 && debt.debtId().equals(debtId);
-    }
-
-    private boolean isOwnedByDebtor(Property property, String debtorPlayerId) {
-        return property.getOwnerPlayer() != null && playerId(property.getOwnerPlayer()).equals(debtorPlayerId);
-    }
-
-    private boolean canMortgage(Property property) {
-        if (property instanceof StreetProperty streetProperty) {
-            return streetProperty.getOwnerPlayer().getOwnedStreetProperties(property.getSpotType().streetType)
-                    .stream()
-                    .noneMatch(StreetProperty::hasBuildings);
-        }
-        return true;
-    }
-
-    private String playerId(Player player) {
-        return player == null ? null : "player-" + player.getId();
     }
 
     private void refreshDebtState(DebtStateModel debt) {
