@@ -4,6 +4,8 @@ import fi.monopoly.application.session.InMemorySessionState;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.auction.DomainAuctionGateway;
 import fi.monopoly.application.session.purchase.DomainPropertyPurchaseGateway;
+import fi.monopoly.application.session.turn.DomainTurnActionGateway;
+import fi.monopoly.application.session.turn.DomainTurnContinuationGateway;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
@@ -41,6 +43,17 @@ public final class PureDomainSessionFactory {
         SessionApplicationService service = new SessionApplicationService(sessionId, store::get);
         service.configureAuctionFlow(new DomainAuctionGateway(store));
         service.configurePropertyPurchaseFlow(new DomainPropertyPurchaseGateway(store));
+
+        DomainTurnContinuationGateway continuationGateway = new DomainTurnContinuationGateway(store);
+        service.configureTurnContinuationFlow(continuationGateway);
+
+        DomainTurnActionGateway turnActionGateway = new DomainTurnActionGateway(
+                store,
+                (playerId, propertyId, displayName, price, message, continuation) ->
+                        service.openPropertyPurchaseDecision(playerId, propertyId, displayName, price, message, continuation)
+        );
+        service.configureTurnActionFlow(turnActionGateway);
+
         return service;
     }
 
