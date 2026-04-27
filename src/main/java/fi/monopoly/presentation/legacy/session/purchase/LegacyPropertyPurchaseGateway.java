@@ -13,23 +13,30 @@ public final class LegacyPropertyPurchaseGateway implements PropertyPurchaseGate
     private final Players players;
 
     @Override
-    public boolean buyProperty(Player player, Property property) {
+    public boolean buyProperty(String playerId, String propertyId) {
+        Player player = playerById(playerId);
+        Property property = propertyById(propertyId);
         return player != null && property != null && player.buyProperty(property);
     }
 
-    @Override
-    public Player playerById(String playerId) {
+    private Player playerById(String playerId) {
         if (playerId == null || players == null) {
             return null;
         }
         return players.getPlayers().stream()
-                .filter(player -> playerId.equals("player-" + player.getId()))
+                .filter(p -> playerId.equals("player-" + p.getId()))
                 .findFirst()
                 .orElse(null);
     }
 
-    @Override
-    public Property propertyById(String propertyId) {
-        return propertyId == null ? null : PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+    private Property propertyById(String propertyId) {
+        if (propertyId == null) {
+            return null;
+        }
+        try {
+            return PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 }

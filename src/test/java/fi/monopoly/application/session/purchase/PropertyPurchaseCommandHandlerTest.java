@@ -40,6 +40,8 @@ class PropertyPurchaseCommandHandlerTest {
         var continuationRef = new AtomicReference<TurnContinuationState>();
         var continuationTriggered = new AtomicBoolean(false);
         FakeGateway gateway = new FakeGateway();
+        gateway.player = human;
+        gateway.property = property;
         PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, continuationTriggered, gateway);
 
         PendingDecision decision = handler.openDecision(
@@ -90,6 +92,8 @@ class PropertyPurchaseCommandHandlerTest {
         var auctionStateRef = new AtomicReference<AuctionState>();
         var continuationRef = new AtomicReference<TurnContinuationState>();
         FakeGateway gateway = new FakeGateway();
+        gateway.player = human;
+        gateway.property = property;
         PropertyPurchaseCommandHandler handler = newHandler(human, pendingDecisionRef, auctionStateRef, continuationRef, new AtomicBoolean(false), gateway);
 
         PendingDecision decision = handler.openDecision(
@@ -254,22 +258,18 @@ class PropertyPurchaseCommandHandlerTest {
     }
 
     private static final class FakeGateway implements PropertyPurchaseGateway {
-        private Player player;
-        private fi.monopoly.components.properties.Property property;
+        Player player;
+        fi.monopoly.components.properties.Property property;
 
         @Override
-        public boolean buyProperty(Player player, fi.monopoly.components.properties.Property property) {
-            return player.buyProperty(property);
-        }
-
-        @Override
-        public Player playerById(String playerId) {
-            return playerId != null && player != null && playerId.equals("player-" + player.getId()) ? player : null;
-        }
-
-        @Override
-        public fi.monopoly.components.properties.Property propertyById(String propertyId) {
-            return property != null && property.getSpotType().name().equals(propertyId) ? property : null;
+        public boolean buyProperty(String playerId, String propertyId) {
+            if (player == null || !("player-" + player.getId()).equals(playerId)) {
+                return false;
+            }
+            fi.monopoly.components.properties.Property target = property != null && property.getSpotType().name().equals(propertyId)
+                    ? property
+                    : PropertyFactory.getProperty(SpotType.valueOf(propertyId));
+            return target != null && player.buyProperty(target);
         }
     }
 }

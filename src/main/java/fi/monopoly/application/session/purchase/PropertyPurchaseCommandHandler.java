@@ -16,6 +16,7 @@ import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
+import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -41,16 +42,18 @@ public final class PropertyPurchaseCommandHandler {
             String message,
             TurnContinuationState continuationState
     ) {
+        String playerId = "player-" + player.getId();
         String propertyId = property.getSpotType().name();
+        String displayName = property.getDisplayName();
         PendingDecision decision = new PendingDecision(
                 "property-purchase:" + player.getId() + ":" + propertyId,
                 DecisionType.PROPERTY_PURCHASE,
-                playerId(player),
+                playerId,
                 List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
                 message,
-                new PropertyPurchaseDecisionPayload(propertyId, property.getDisplayName(), property.getPrice())
+                new PropertyPurchaseDecisionPayload(propertyId, displayName, property.getPrice())
         );
-        activeContext = new PropertyPurchaseContext(decision.decisionId(), player, property, continuationState);
+        activeContext = new PropertyPurchaseContext(decision.decisionId(), playerId, propertyId, displayName, continuationState);
         auctionStateSetter.accept(null);
         turnContinuationSetter.accept(continuationState);
         pendingDecisionSetter.accept(decision);
@@ -76,22 +79,22 @@ public final class PropertyPurchaseCommandHandler {
         if (context == null) {
             return reject("INVALID_PROPERTY_PURCHASE", "Property purchase command is not valid in the current state");
         }
-        if (!gateway.buyProperty(context.player(), context.property())) {
+        if (!gateway.buyProperty(context.playerId(), context.propertyId())) {
             pendingDecisionSetter.accept(null);
             activeContext = null;
-            if (context.property().getOwnerPlayer() == null) {
+            if (!isAlreadyOwned(context.propertyId())) {
                 auctionCommandHandler.startAuction(
-                        playerId(context.player()),
-                        context.property().getSpotType().name(),
-                        context.property().getDisplayName(),
+                        context.playerId(),
+                        context.propertyId(),
+                        context.displayName(),
                         context.continuationState()
                 );
                 return new CommandResult(
                         true,
                         currentStateSupplier.get(),
                         List.of(
-                                new DomainEvent("PropertyPurchaseFailed", playerId(context.player()), context.property().getDisplayName()),
-                                new DomainEvent("AuctionStarted", playerId(context.player()), context.property().getDisplayName())
+                                new DomainEvent("PropertyPurchaseFailed", context.playerId(), context.displayName()),
+                                new DomainEvent("AuctionStarted", context.playerId(), context.displayName())
                         ),
                         List.of(),
                         List.of()
@@ -103,7 +106,7 @@ public final class PropertyPurchaseCommandHandler {
             return new CommandResult(
                     true,
                     currentStateSupplier.get(),
-                    List.of(new DomainEvent("PropertyPurchaseExpired", playerId(context.player()), context.property().getDisplayName())),
+                    List.of(new DomainEvent("PropertyPurchaseExpired", context.playerId(), context.displayName())),
                     List.of(),
                     List.of()
             );
@@ -117,7 +120,7 @@ public final class PropertyPurchaseCommandHandler {
         return new CommandResult(
                 true,
                 currentStateSupplier.get(),
-                List.of(new DomainEvent("PropertyBought", playerId(context.player()), context.property().getDisplayName())),
+                List.of(new DomainEvent("PropertyBought", context.playerId(), context.displayName())),
                 List.of(),
                 List.of()
         );
@@ -130,9 +133,9 @@ public final class PropertyPurchaseCommandHandler {
         }
         pendingDecisionSetter.accept(null);
         auctionCommandHandler.startAuction(
-                playerId(context.player()),
-                context.property().getSpotType().name(),
-                context.property().getDisplayName(),
+                context.playerId(),
+                context.propertyId(),
+                context.displayName(),
                 context.continuationState()
         );
         activeContext = null;
@@ -140,8 +143,8 @@ public final class PropertyPurchaseCommandHandler {
                 true,
                 currentStateSupplier.get(),
                 List.of(
-                        new DomainEvent("PropertyDeclined", playerId(context.player()), context.property().getDisplayName()),
-                        new DomainEvent("AuctionStarted", playerId(context.player()), context.property().getDisplayName())
+                        new DomainEvent("PropertyDeclined", context.playerId(), context.displayName()),
+                        new DomainEvent("AuctionStarted", context.playerId(), context.displayName())
                 ),
                 List.of(),
                 List.of()
@@ -172,8 +175,8 @@ public final class PropertyPurchaseCommandHandler {
             return null;
         }
         if (!Objects.equals(activeContext.decisionId(), decisionId)
-                || !Objects.equals(activeContext.property().getSpotType().name(), propertyId)
-                || !Objects.equals(playerId(activeContext.player()), actorPlayerId)) {
+                || !Objects.equals(activeContext.propertyId(), propertyId)
+                || !Objects.equals(activeContext.playerId(), actorPlayerId)) {
             return null;
         }
         return activeContext;
@@ -183,32 +186,34 @@ public final class PropertyPurchaseCommandHandler {
         if (!(pendingDecision.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
             return null;
         }
-        Player player = gateway.playerById(pendingDecision.actorPlayerId());
-        Property property = gateway.propertyById(payload.propertyId());
-        if (player == null || property == null) {
-            return null;
-        }
         return new PropertyPurchaseContext(
                 pendingDecision.decisionId(),
-                player,
-                property,
+                pendingDecision.actorPlayerId(),
+                payload.propertyId(),
+                payload.propertyDisplayName(),
                 currentState.turnContinuationState()
         );
+    }
+
+    private boolean isAlreadyOwned(String propertyId) {
+        try {
+            SpotType spotType = SpotType.valueOf(propertyId);
+            var property = fi.monopoly.components.properties.PropertyFactory.getProperty(spotType);
+            return property != null && property.getOwnerPlayer() != null;
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
     }
 
     private CommandResult reject(String code, String message) {
         return new CommandResult(false, currentStateSupplier.get(), List.of(), List.of(new CommandRejection(code, message)), List.of());
     }
 
-    private String playerId(Player player) {
-        return player == null ? null : "player-" + player.getId();
-    }
-
     private record PropertyPurchaseContext(
             String decisionId,
-            Player player,
-            Property property,
+            String playerId,
+            String propertyId,
+            String displayName,
             TurnContinuationState continuationState
-    ) {
-    }
+    ) {}
 }
