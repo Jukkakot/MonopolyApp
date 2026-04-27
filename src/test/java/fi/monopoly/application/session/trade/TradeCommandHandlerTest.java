@@ -237,12 +237,10 @@ class TradeCommandHandlerTest {
             return offer != null && offer.apply();
         }
 
-        @Override
         public TradeDecision evaluateForRecipient(TradeOfferState offerState, BotTradeProfile profile, fi.monopoly.components.computer.StrongBotConfig strongConfig) {
             return new TradeDecision(true, 1.0, "ok");
         }
 
-        @Override
         public TradeOfferState proposeCounterOffer(TradeOfferState offerState, BotTradeProfile profile, fi.monopoly.components.computer.StrongBotConfig strongConfig) {
             TradeOffer offer = toLegacyOffer(offerState);
             return offer == null ? null : toState(offer.reversePerspective().withOfferedToRecipient(offer.reversePerspective().offeredToRecipient().withMoneyAmount(80)));

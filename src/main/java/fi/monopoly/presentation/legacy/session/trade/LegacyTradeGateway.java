@@ -67,13 +67,11 @@ public final class LegacyTradeGateway implements fi.monopoly.application.session
         return offer != null && offer.apply();
     }
 
-    @Override
     public TradeDecision evaluateForRecipient(TradeOfferState offerState, BotTradeProfile profile, StrongBotConfig strongConfig) {
         TradeOffer offer = toLegacyOffer(offerState);
         return offer == null ? new TradeDecision(false, Double.NEGATIVE_INFINITY, "Trade offer could not be resolved") : tradeOfferEvaluator.evaluateForRecipient(offer, profile, strongConfig);
     }
 
-    @Override
     public TradeOfferState proposeCounterOffer(TradeOfferState offerState, BotTradeProfile profile, StrongBotConfig strongConfig) {
         TradeOffer offer = toLegacyOffer(offerState);
         if (offer == null) {
