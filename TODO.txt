@@ -25,11 +25,13 @@ BACKEND EXTRACTION (separation-program)
 [High] Implement pure domain TurnActionGateway (dice rolling, movement, landing effects)
        so PureDomainSessionFactory can handle RollDiceCommand and EndTurnCommand without
        Processing runtime objects. Blocked by: turn logic still in Dices/GameTurnFlowCoordinator.
-[High] Purify DebtOpeningGateway and DebtRemediationGateway — currently use legacy
-       PaymentRequest/DebtState types. Requires extracting debt-opening logic to domain layer
-       before PureDomainSessionFactory can handle debt flows.
-[High] Purify TradeGateway — currently uses TradeOffer/TradeDecision/BotTradeProfile legacy
-       types. Required for PureDomainSessionFactory to handle trade commands.
+[High] Purify DebtOpeningGateway and SessionPaymentPort — use legacy PaymentRequest type.
+       Requires replacing PaymentRequest with a domain-level debt-opening event type before
+       PureDomainSessionFactory can handle rent/debt-opening flows without Processing runtime.
+       (DebtRemediationGateway.activeDebtState() already removed)
+[High] Purify TradeGateway — isValidOffer/applyOffer still use legacy TradeOffer internally
+       in LegacyTradeGateway. Required for PureDomainSessionFactory to handle trade commands.
+       (evaluateForRecipient/proposeCounterOffer/toLegacyOffer already removed from interface)
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)
