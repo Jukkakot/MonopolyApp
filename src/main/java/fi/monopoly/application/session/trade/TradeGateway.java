@@ -9,8 +9,6 @@ import fi.monopoly.domain.session.TradeOfferState;
 public interface TradeGateway {
     boolean playerExists(String playerId);
 
-    TradeOffer toLegacyOffer(TradeOfferState offerState);
-
     boolean isValidOffer(TradeOfferState offerState);
 
     boolean applyOffer(TradeOfferState offerState);

@@ -202,7 +202,6 @@ class TradeCommandHandlerTest {
             return null;
         }
 
-        @Override
         public TradeOffer toLegacyOffer(TradeOfferState offerState) {
             Player mappedProposer = playerById(offerState.proposerPlayerId());
             Player mappedRecipient = playerById(offerState.recipientPlayerId());

@@ -41,7 +41,6 @@ public final class LegacyTradeGateway implements fi.monopoly.application.session
         return null;
     }
 
-    @Override
     public TradeOffer toLegacyOffer(TradeOfferState offerState) {
         Player proposer = playerById(offerState.proposerPlayerId());
         Player recipient = playerById(offerState.recipientPlayerId());
