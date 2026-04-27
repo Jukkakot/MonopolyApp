@@ -65,7 +65,7 @@ public final class TradeCommandHandler {
         if (Objects.equals(command.actorPlayerId(), command.recipientPlayerId())) {
             return reject("INVALID_TRADE_TARGET", "Trade recipient must be another player");
         }
-        if (gateway.playerById(command.actorPlayerId()) == null || gateway.playerById(command.recipientPlayerId()) == null) {
+        if (!gateway.playerExists(command.actorPlayerId()) || !gateway.playerExists(command.recipientPlayerId())) {
             return reject("UNKNOWN_TRADE_PLAYER", "Trade participants are not available");
         }
         TradeState tradeState = new TradeState(

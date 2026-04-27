@@ -188,7 +188,11 @@ class TradeCommandHandlerTest {
         }
 
         @Override
-        public Player playerById(String playerId) {
+        public boolean playerExists(String playerId) {
+            return playerById(playerId) != null;
+        }
+
+        private Player playerById(String playerId) {
             if (playerId(playerId, proposer)) {
                 return proposer;
             }

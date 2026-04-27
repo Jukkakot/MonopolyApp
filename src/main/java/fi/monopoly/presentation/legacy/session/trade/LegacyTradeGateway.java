@@ -25,6 +25,10 @@ public final class LegacyTradeGateway implements fi.monopoly.application.session
 
 
     @Override
+    public boolean playerExists(String playerId) {
+        return playerById(playerId) != null;
+    }
+
     public Player playerById(String playerId) {
         if (playerId == null) {
             return null;
