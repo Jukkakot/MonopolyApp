@@ -7,7 +7,6 @@ import fi.monopoly.application.command.SessionCommand;
 import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.result.DomainEvent;
-import fi.monopoly.components.turn.PropertyAuctionResolver;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
@@ -49,7 +48,7 @@ public final class AuctionCommandHandler {
                 eligibleBidderIds.get(0),
                 null,
                 0,
-                PropertyAuctionResolver.AUCTION_OPENING_BID,
+                AuctionGateway.OPENING_BID,
                 Set.of(),
                 eligibleBidderIds,
                 AuctionStatus.ACTIVE,
@@ -126,7 +125,7 @@ public final class AuctionCommandHandler {
                 nextEligibleActor(state.eligiblePlayerIds(), state.passedPlayerIds(), command.actorPlayerId()),
                 command.actorPlayerId(),
                 command.amount(),
-                command.amount() + PropertyAuctionResolver.AUCTION_BID_INCREMENT,
+                command.amount() + AuctionGateway.BID_INCREMENT,
                 state.passedPlayerIds(),
                 state.eligiblePlayerIds(),
                 AuctionStatus.ACTIVE,
