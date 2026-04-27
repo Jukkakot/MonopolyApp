@@ -20,13 +20,16 @@ BACKEND EXTRACTION (separation-program)
        - rent calculation (LegacyPaymentGateway / DebtController)
        - dice rolling + movement + landing effects (Dices.rollDice / GameTurnFlowCoordinator)
        - jail handling (JailSpot / TurnActionCommandHandler)
-       - auction bidding validation
+       - auction bidding validation (done in DomainAuctionGateway — simplified bot strategy)
        - building purchase/sale: move pure validation out of StreetProperty.buyBuildingRoundsAcrossSet()
-[High] Replace LegacyTurnActionGatewayAdapter, LegacyPropertyPurchaseGateway,
-       LegacyAuctionGateway, LegacyDebtRemediationGateway, LegacyTradeGateway
-       with pure domain implementations once rule logic is extracted
-[High] Create PureDomainSessionFactory in server.session — constructs a
-       SessionApplicationService wired with pure domain gateways; enables StartSessionServer
+[High] Implement pure domain TurnActionGateway (dice rolling, movement, landing effects)
+       so PureDomainSessionFactory can handle RollDiceCommand and EndTurnCommand without
+       Processing runtime objects. Blocked by: turn logic still in Dices/GameTurnFlowCoordinator.
+[High] Purify DebtOpeningGateway and DebtRemediationGateway — currently use legacy
+       PaymentRequest/DebtState types. Requires extracting debt-opening logic to domain layer
+       before PureDomainSessionFactory can handle debt flows.
+[High] Purify TradeGateway — currently uses TradeOffer/TradeDecision/BotTradeProfile legacy
+       types. Required for PureDomainSessionFactory to handle trade commands.
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)
