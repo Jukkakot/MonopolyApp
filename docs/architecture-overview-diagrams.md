@@ -428,3 +428,8 @@ Current practical status:
   - `TurnState` gained `consecutiveDoubles` for re-roll tracking
 - **`domain.decision.DecisionPayload`** sealed interface with `@JsonTypeInfo`/`@JsonSubTypes` ensures `PendingDecision.payload` survives HTTP JSON round-trips without transport-layer MixIns
 - project now runs on **Java 21**: `SessionHttpServer` uses `Executors.newVirtualThreadPerTaskExecutor()`, SSE reader and shutdown hook use `Thread.ofVirtual()`, `SessionCommandSerializer` and `InteractiveTurnEffectExecutor` use Java 21 pattern-matching switch
+- **`fi.monopoly.application` layer is now clean** — no `fi.monopoly.components.*` imports remain in any application-layer class; legacy-specific code moved to `presentation.legacy`:
+  - `DebtOpeningGateway` and `RentAndDebtOpeningHandler` moved to `presentation.legacy.session.debt`
+  - `LegacySessionPaymentPort` (new) implements `SessionPaymentPort` via `RentAndDebtOpeningHandler`; wired in `GameSessionBridgeFactory`
+  - `SessionPaymentPort` moved to `client.session` (alongside `SessionCommandPort`)
+  - `PropertyPurchaseCommandHandler.isAlreadyOwned()` now uses `SessionState.properties()` (pure domain) instead of legacy `PropertyFactory` FQCN
