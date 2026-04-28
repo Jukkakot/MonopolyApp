@@ -56,8 +56,8 @@ class DomainTurnActionGatewayTest {
 
     @Test
     void rollDiceSetsWaitingForEndTurnOnNonPropertySpot() {
-        // Player at index 4 (TAX1), move 3 → index 7 = CHANCE1 (not a property → no decision)
-        InMemorySessionState store = storeWith(player(PLAYER_1, 4, 1500));
+        // Player at index 7 (CHANCE1), move 3 → index 10 = JAIL (visiting corner → end turn)
+        InMemorySessionState store = storeWith(player(PLAYER_1, 7, 1500));
         DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1); // sum=3, not doubles
 
         gateway.rollDice();
@@ -598,5 +598,152 @@ class DomainTurnActionGatewayTest {
         return state.properties().stream()
                 .filter(p -> propertyId.equals(p.propertyId()))
                 .findFirst().orElseThrow();
+    }
+
+    // -------------------------------------------------------------------------
+    // Card effects — Chance / Community
+    // -------------------------------------------------------------------------
+
+    // Board: index 4=TAX1, index 7=CHANCE1; roll 2+1=3 from index 4 lands on CHANCE1.
+    private static final int CHANCE1_INDEX = 7;
+    private static final int COMMUNITY1_INDEX = 2;
+
+    @Test
+    void chanceCardMoneyCollectGivesCash() {
+        // MONEY:0 in chance deck = "Your building loan matures. Collect M150" → +150
+        InMemorySessionState store = storeWithChanceDeck(player(PLAYER_1, 4, 1500), List.of("MONEY:0"));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1); // sum=3 → index 7 = CHANCE1
+
+        gateway.rollDice();
+
+        assertEquals(1650, playerById(store.get(), PLAYER_1).cash());
+        assertEquals(TurnPhase.WAITING_FOR_END_TURN, store.get().turn().phase());
+    }
+
+    @Test
+    void chanceCardMoneyPayDeductsCash() {
+        // MONEY:2 in chance deck = "Speeding fine M15" → -15
+        InMemorySessionState store = storeWithChanceDeck(player(PLAYER_1, 4, 1500), List.of("MONEY:2"));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1);
+
+        gateway.rollDice();
+
+        assertEquals(1485, playerById(store.get(), PLAYER_1).cash());
+    }
+
+    @Test
+    void chanceCardGoJailSendsToJail() {
+        InMemorySessionState store = storeWithChanceDeck(player(PLAYER_1, 4, 1500), List.of("GO_JAIL:0"));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1);
+
+        gateway.rollDice();
+
+        PlayerSnapshot updated = playerById(store.get(), PLAYER_1);
+        assertTrue(updated.inJail());
+        assertEquals(JAIL_INDEX, updated.boardIndex());
+    }
+
+    @Test
+    void chanceCardOutOfJailAddsCard() {
+        InMemorySessionState store = storeWithChanceDeck(player(PLAYER_1, 4, 1500), List.of("OUT_OF_JAIL:0"));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1);
+
+        gateway.rollDice();
+
+        assertEquals(1, playerById(store.get(), PLAYER_1).getOutOfJailCards());
+        assertEquals(TurnPhase.WAITING_FOR_END_TURN, store.get().turn().phase());
+    }
+
+    @Test
+    void chanceCardMoveToGoCollectsGoBonus() {
+        // MOVE:1 = "Advance to Go (Collect M200)" → target=GO_SPOT
+        InMemorySessionState store = storeWithChanceDeck(player(PLAYER_1, 4, 1500), List.of("MOVE:1"));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1);
+
+        gateway.rollDice();
+
+        PlayerSnapshot updated = playerById(store.get(), PLAYER_1);
+        assertEquals(GO_INDEX, updated.boardIndex());
+        assertEquals(1700, updated.cash()); // 1500 + 200 GO bonus
+    }
+
+    @Test
+    void chanceCardMoveNearestRailroadMovesForward() {
+        // MOVE_NEAREST:0 = nearest RAILROAD; player at index 4 (TAX1), lands at CHANCE1 (7)
+        // nearest railroad from CHANCE1 (7) is RR2 (index 15)
+        InMemorySessionState store = storeWithChanceDeck(player(PLAYER_1, 4, 1500), List.of("MOVE_NEAREST:0"));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1);
+
+        gateway.rollDice();
+
+        PlayerSnapshot updated = playerById(store.get(), PLAYER_1);
+        SpotType landed = SpotType.SPOT_TYPES.get(updated.boardIndex());
+        assertEquals(fi.monopoly.types.PlaceType.RAILROAD, landed.streetType.placeType);
+    }
+
+    @Test
+    void chanceCardRepairPropertiesChargesForHouses() {
+        // REPAIR_PROPERTIES:0 in chance = houseCost=25, hotelCost=100
+        // Player owns B1 with 2 houses → repair cost = 2 * 25 = 50
+        PropertyStateSnapshot b1 = new PropertyStateSnapshot("B1", PLAYER_1, false, 2, 0);
+        InMemorySessionState store = storeWithChanceDeckAndProps(
+                player(PLAYER_1, 4, 1500), List.of("REPAIR_PROPERTIES:0"), List.of(b1));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 2, 1);
+
+        gateway.rollDice();
+
+        assertEquals(1450, playerById(store.get(), PLAYER_1).cash()); // 1500 - 50
+    }
+
+    @Test
+    void communityCardAllPlayersMoneyCommunityCollects() {
+        // ALL_PLAYERS_MONEY:0 in community = value=10 (birthday: collect M10 from each)
+        // Two players: active player (PLAYER_1) collects 10 from PLAYER_2 → +10
+        InMemorySessionState store = storeWithCommunityDeckTwoPlayers(
+                player(PLAYER_1, 0, 1500), player(PLAYER_2, 0, 1000),
+                List.of("ALL_PLAYERS_MONEY:0")); // player at 0 + dice 2 → COMMUNITY1 (index 2)
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 1, 1); // sum=2, doubles
+
+        gateway.rollDice();
+
+        assertEquals(1510, playerById(store.get(), PLAYER_1).cash()); // +10
+        assertEquals(990, playerById(store.get(), PLAYER_2).cash());   // -10
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers for card tests
+    // -------------------------------------------------------------------------
+
+    private static InMemorySessionState storeWithChanceDeck(PlayerSnapshot player, List<String> chanceDeck) {
+        return storeWithChanceDeckAndProps(player, chanceDeck, List.of());
+    }
+
+    private static InMemorySessionState storeWithChanceDeckAndProps(PlayerSnapshot player,
+                                                                     List<String> chanceDeck,
+                                                                     List<PropertyStateSnapshot> props) {
+        SeatState seat = new SeatState("seat-0", 0, player.playerId(),
+                SeatKind.HUMAN, ControlMode.MANUAL, player.name(), "HUMAN", "#000000");
+        SessionState state = SessionState.builder()
+                .sessionId(SESSION_ID).version(0L).status(SessionStatus.IN_PROGRESS)
+                .seats(List.of(seat)).players(List.of(player)).properties(props)
+                .turn(new TurnState(player.playerId(), TurnPhase.WAITING_FOR_ROLL, true, false, 0))
+                .chanceDeck(chanceDeck).communityDeck(List.of())
+                .build();
+        return new InMemorySessionState(state);
+    }
+
+    private static InMemorySessionState storeWithCommunityDeckTwoPlayers(PlayerSnapshot p1, PlayerSnapshot p2,
+                                                                           List<String> communityDeck) {
+        List<SeatState> seats = List.of(
+                new SeatState("seat-0", 0, p1.playerId(), SeatKind.HUMAN, ControlMode.MANUAL, p1.name(), "HUMAN", "#000000"),
+                new SeatState("seat-1", 1, p2.playerId(), SeatKind.HUMAN, ControlMode.MANUAL, p2.name(), "HUMAN", "#FFFFFF")
+        );
+        SessionState state = SessionState.builder()
+                .sessionId(SESSION_ID).version(0L).status(SessionStatus.IN_PROGRESS)
+                .seats(seats).players(List.of(p1, p2)).properties(List.of())
+                .turn(new TurnState(p1.playerId(), TurnPhase.WAITING_FOR_ROLL, true, false, 0))
+                .chanceDeck(List.of()).communityDeck(communityDeck)
+                .build();
+        return new InMemorySessionState(state);
     }
 }

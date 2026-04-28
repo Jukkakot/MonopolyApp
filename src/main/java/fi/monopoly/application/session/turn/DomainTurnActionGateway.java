@@ -5,6 +5,7 @@ import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.types.CardType;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
@@ -321,8 +322,269 @@ public final class DomainTurnActionGateway implements TurnActionGateway {
             return;
         }
 
-        // CORNER (GO / JAIL visiting / FREE_PARKING) and PICK_CARD → advance turn
+        if (placeType == PlaceType.PICK_CARD) {
+            applyPickCard(playerId, landedSpot, isDoubles, consecutiveDoubles, diceTotal);
+            return;
+        }
+
+        // CORNER (GO / JAIL visiting / FREE_PARKING) → advance turn
         store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers: card effects
+    // -------------------------------------------------------------------------
+
+    private void applyPickCard(String playerId, SpotType landedSpot, boolean isDoubles, int consecutiveDoubles, int diceTotal) {
+        boolean isChance = landedSpot.streetType == StreetType.CHANCE;
+        String bundleName = isChance ? "chance" : "community";
+
+        ensureDecksInitialized();
+
+        SessionState state = store.get();
+        List<String> deck = isChance ? state.chanceDeck() : state.communityDeck();
+        if (deck == null || deck.isEmpty()) {
+            store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+            return;
+        }
+
+        // Draw top card, rotate to bottom (standard Monopoly draw cycle)
+        String cardKey = deck.get(0);
+        List<String> rotatedDeck = new ArrayList<>(deck.subList(1, deck.size()));
+        rotatedDeck.add(cardKey);
+        final List<String> finalDeck = List.copyOf(rotatedDeck);
+
+        if (isChance) {
+            store.update(s -> s.toBuilder().chanceDeck(finalDeck).build());
+        } else {
+            store.update(s -> s.toBuilder().communityDeck(finalDeck).build());
+        }
+
+        String[] parts = cardKey.split(":", 2);
+        CardType cardType;
+        try {
+            cardType = CardType.valueOf(parts[0]);
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown card type in key: {}", cardKey);
+            store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+            return;
+        }
+        List<String> values = CardDeckLoader.cardValues(bundleName, cardKey);
+        log.info("Player {} drew {} card [{}] values={}", playerId, bundleName, cardKey, values);
+
+        applyCardEffect(playerId, cardType, values, isDoubles, consecutiveDoubles, diceTotal);
+    }
+
+    private void ensureDecksInitialized() {
+        store.update(s -> {
+            if (s.chanceDeck() != null && s.communityDeck() != null) return s;
+            Random rng = ThreadLocalRandom.current();
+            List<String> chance = s.chanceDeck() != null ? s.chanceDeck() : CardDeckLoader.buildDeck("chance", rng);
+            List<String> community = s.communityDeck() != null ? s.communityDeck() : CardDeckLoader.buildDeck("community", rng);
+            return s.toBuilder().chanceDeck(chance).communityDeck(community).build();
+        });
+    }
+
+    private void applyCardEffect(String playerId, CardType cardType, List<String> values,
+                                  boolean isDoubles, int consecutiveDoubles, int diceTotal) {
+        switch (cardType) {
+            case MONEY -> {
+                int amount = values.isEmpty() ? 0 : parseIntSafe(values.get(0));
+                applyCardMoney(playerId, amount, isDoubles, consecutiveDoubles);
+            }
+            case MOVE -> {
+                String target = values.isEmpty() ? null : values.get(0).trim();
+                applyCardMove(playerId, target, isDoubles, consecutiveDoubles, diceTotal);
+            }
+            case MOVE_NEAREST -> {
+                String typeStr = values.isEmpty() ? null : values.get(0).trim();
+                applyCardMoveNearest(playerId, typeStr, isDoubles, consecutiveDoubles, diceTotal);
+            }
+            case MOVE_BACK_3 -> applyCardMoveBack(playerId, 3, isDoubles, consecutiveDoubles, diceTotal);
+            case GO_JAIL -> store.update(s -> applyGoToJail(s, playerId));
+            case OUT_OF_JAIL -> {
+                store.update(s -> {
+                    List<PlayerSnapshot> updated = s.players().stream()
+                            .map(p -> playerId.equals(p.playerId())
+                                    ? new PlayerSnapshot(p.playerId(), p.seatId(), p.name(), p.cash(),
+                                            p.boardIndex(), p.bankrupt(), p.eliminated(), p.inJail(),
+                                            p.jailRoundsRemaining(), p.getOutOfJailCards() + 1, p.ownedPropertyIds())
+                                    : p)
+                            .toList();
+                    return s.toBuilder()
+                            .players(updated)
+                            .turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles))
+                            .build();
+                });
+            }
+            case REPAIR_PROPERTIES -> {
+                int houseCost = values.size() > 0 ? parseIntSafe(values.get(0)) : 0;
+                int hotelCost = values.size() > 1 ? parseIntSafe(values.get(1)) : 0;
+                applyCardRepair(playerId, houseCost, hotelCost, isDoubles, consecutiveDoubles);
+            }
+            case ALL_PLAYERS_MONEY -> {
+                int amountPerPlayer = values.isEmpty() ? 0 : parseIntSafe(values.get(0));
+                applyCardAllPlayersMoney(playerId, amountPerPlayer, isDoubles, consecutiveDoubles);
+            }
+        }
+    }
+
+    private void applyCardMoney(String playerId, int amount, boolean isDoubles, int consecutiveDoubles) {
+        if (amount >= 0) {
+            store.update(s -> s.toBuilder()
+                    .players(updateCash(s.players(), playerId, amount))
+                    .turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles))
+                    .build());
+        } else {
+            SessionState current = store.get();
+            applyRentOrDebt(current, playerId, null, -amount, isDoubles, consecutiveDoubles, "Card payment");
+        }
+    }
+
+    private void applyCardMove(String playerId, String target, boolean isDoubles, int consecutiveDoubles, int diceTotal) {
+        if (target == null) {
+            store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+            return;
+        }
+        SpotType targetSpot;
+        try {
+            targetSpot = SpotType.valueOf(target.trim());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown MOVE card target: {}", target);
+            store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+            return;
+        }
+
+        int targetIndex = SpotType.SPOT_TYPES.indexOf(targetSpot);
+        SessionState current = store.get();
+        PlayerSnapshot player = findPlayer(current, playerId);
+        if (player == null) return;
+
+        // Player always moves forward; if target is behind or is GO, they pass/land on GO
+        boolean passedGo = targetIndex < player.boardIndex() || targetSpot == SpotType.GO_SPOT;
+        int goBonus = passedGo ? GO_REWARD : 0;
+
+        store.update(s -> s.toBuilder()
+                .players(updatePosition(s.players(), playerId, targetIndex, goBonus))
+                .build());
+        applyLandingEffects(playerId, targetSpot, isDoubles, consecutiveDoubles, diceTotal);
+    }
+
+    private void applyCardMoveNearest(String playerId, String typeStr, boolean isDoubles, int consecutiveDoubles, int diceTotal) {
+        PlaceType targetType = "RAILROAD".equals(typeStr) ? PlaceType.RAILROAD : PlaceType.UTILITY;
+
+        SessionState current = store.get();
+        PlayerSnapshot player = findPlayer(current, playerId);
+        if (player == null) return;
+
+        int currentIndex = player.boardIndex();
+        SpotType nearestSpot = null;
+        int nearestIndex = -1;
+
+        for (int offset = 1; offset <= BOARD_SIZE; offset++) {
+            int checkIndex = (currentIndex + offset) % BOARD_SIZE;
+            SpotType spot = SpotType.SPOT_TYPES.get(checkIndex);
+            if (spot.streetType.placeType == targetType) {
+                nearestSpot = spot;
+                nearestIndex = checkIndex;
+                break;
+            }
+        }
+
+        if (nearestSpot == null) {
+            store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+            return;
+        }
+
+        // Nearest spot is always ahead or wraps — passes GO only if wrapped
+        boolean passedGo = nearestIndex < currentIndex;
+        int goBonus = passedGo ? GO_REWARD : 0;
+
+        final int finalNearestIndex = nearestIndex;
+        final SpotType finalNearestSpot = nearestSpot;
+        store.update(s -> s.toBuilder()
+                .players(updatePosition(s.players(), playerId, finalNearestIndex, goBonus))
+                .build());
+        applyLandingEffects(playerId, finalNearestSpot, isDoubles, consecutiveDoubles, diceTotal);
+    }
+
+    private void applyCardMoveBack(String playerId, int spaces, boolean isDoubles, int consecutiveDoubles, int diceTotal) {
+        SessionState current = store.get();
+        PlayerSnapshot player = findPlayer(current, playerId);
+        if (player == null) return;
+
+        int newIndex = (player.boardIndex() - spaces + BOARD_SIZE) % BOARD_SIZE;
+        SpotType landedSpot = SpotType.SPOT_TYPES.get(newIndex);
+
+        // Moving backward does not cross GO — no GO bonus
+        store.update(s -> s.toBuilder()
+                .players(updatePosition(s.players(), playerId, newIndex, 0))
+                .build());
+        applyLandingEffects(playerId, landedSpot, isDoubles, consecutiveDoubles, diceTotal);
+    }
+
+    private void applyCardRepair(String playerId, int houseCost, int hotelCost, boolean isDoubles, int consecutiveDoubles) {
+        SessionState current = store.get();
+        int houses = current.properties().stream()
+                .filter(p -> playerId.equals(p.ownerPlayerId()))
+                .mapToInt(PropertyStateSnapshot::houseCount)
+                .sum();
+        int hotels = current.properties().stream()
+                .filter(p -> playerId.equals(p.ownerPlayerId()))
+                .mapToInt(PropertyStateSnapshot::hotelCount)
+                .sum();
+        int totalCost = houses * houseCost + hotels * hotelCost;
+
+        if (totalCost == 0) {
+            store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+            return;
+        }
+        applyRentOrDebt(current, playerId, null, totalCost, isDoubles, consecutiveDoubles, "Card repairs");
+    }
+
+    private void applyCardAllPlayersMoney(String playerId, int amountPerPlayer, boolean isDoubles, int consecutiveDoubles) {
+        SessionState current = store.get();
+        List<PlayerSnapshot> others = current.players().stream()
+                .filter(p -> !playerId.equals(p.playerId()) && !p.eliminated())
+                .toList();
+
+        if (others.isEmpty() || amountPerPlayer == 0) {
+            store.update(s -> s.toBuilder().turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles)).build());
+            return;
+        }
+
+        // amountPerPlayer > 0: active player collects from others; < 0: active player pays others
+        int activeDelta = amountPerPlayer * others.size();
+
+        store.update(s -> {
+            List<PlayerSnapshot> updated = s.players().stream()
+                    .map(p -> {
+                        if (playerId.equals(p.playerId())) {
+                            return new PlayerSnapshot(p.playerId(), p.seatId(), p.name(), p.cash() + activeDelta,
+                                    p.boardIndex(), p.bankrupt(), p.eliminated(), p.inJail(),
+                                    p.jailRoundsRemaining(), p.getOutOfJailCards(), p.ownedPropertyIds());
+                        }
+                        if (!p.eliminated()) {
+                            return new PlayerSnapshot(p.playerId(), p.seatId(), p.name(), p.cash() - amountPerPlayer,
+                                    p.boardIndex(), p.bankrupt(), p.eliminated(), p.inJail(),
+                                    p.jailRoundsRemaining(), p.getOutOfJailCards(), p.ownedPropertyIds());
+                        }
+                        return p;
+                    })
+                    .toList();
+            return s.toBuilder()
+                    .players(updated)
+                    .turn(postMovePhase(s.turn().activePlayerId(), isDoubles, consecutiveDoubles))
+                    .build();
+        });
+    }
+
+    private static int parseIntSafe(String s) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void openPropertyDecision(SessionState state, String playerId, SpotType spot,

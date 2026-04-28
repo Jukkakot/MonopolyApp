@@ -8,6 +8,7 @@ import fi.monopoly.application.session.purchase.DomainPropertyPurchaseGateway;
 import fi.monopoly.application.session.trade.DomainTradeGateway;
 import fi.monopoly.application.session.turn.DomainTurnActionGateway;
 import fi.monopoly.application.session.turn.DomainTurnContinuationGateway;
+import fi.monopoly.application.session.turn.CardDeckLoader;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
@@ -15,6 +16,7 @@ import fi.monopoly.types.SpotType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Creates a {@link SessionApplicationService} wired with pure domain gateway implementations.
@@ -93,12 +95,20 @@ public final class PureDomainSessionFactory {
         }
 
         String firstPlayerId = players.get(0).playerId();
-        return new SessionState(
-                sessionId, 0L, SessionStatus.IN_PROGRESS,
-                seats, players, properties,
-                new TurnState(firstPlayerId, TurnPhase.WAITING_FOR_ROLL, true, false, 0),
-                null, null, null, null, null, null
-        );
+        Random rng = new Random();
+        List<String> chanceDeck = CardDeckLoader.buildDeck("chance", rng);
+        List<String> communityDeck = CardDeckLoader.buildDeck("community", rng);
+        return SessionState.builder()
+                .sessionId(sessionId)
+                .version(0L)
+                .status(SessionStatus.IN_PROGRESS)
+                .seats(seats)
+                .players(players)
+                .properties(properties)
+                .turn(new TurnState(firstPlayerId, TurnPhase.WAITING_FOR_ROLL, true, false, 0))
+                .chanceDeck(chanceDeck)
+                .communityDeck(communityDeck)
+                .build();
     }
 
     /**
