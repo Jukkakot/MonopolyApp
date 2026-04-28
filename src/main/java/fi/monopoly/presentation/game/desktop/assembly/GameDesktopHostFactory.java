@@ -1,6 +1,6 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
-import fi.monopoly.application.session.SessionPaymentPort;
+import fi.monopoly.client.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.SessionCommandPort;

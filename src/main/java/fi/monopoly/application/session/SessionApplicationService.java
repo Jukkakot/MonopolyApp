@@ -5,10 +5,8 @@ import fi.monopoly.application.result.CommandRejection;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.auction.AuctionCommandHandler;
 import fi.monopoly.application.session.auction.AuctionGateway;
-import fi.monopoly.application.session.debt.DebtOpeningGateway;
 import fi.monopoly.application.session.debt.DebtRemediationCommandHandler;
 import fi.monopoly.application.session.debt.DebtRemediationGateway;
-import fi.monopoly.application.session.debt.RentAndDebtOpeningHandler;
 import fi.monopoly.application.session.purchase.PropertyPurchaseCommandHandler;
 import fi.monopoly.application.session.purchase.PropertyPurchaseGateway;
 import fi.monopoly.application.session.trade.TradeCommandHandler;
@@ -17,8 +15,6 @@ import fi.monopoly.application.session.turn.TurnActionCommandHandler;
 import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.client.session.SessionCommandPort;
-import fi.monopoly.components.CallbackAction;
-import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.domain.decision.PendingDecision;
 import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.*;
@@ -38,7 +34,7 @@ import java.util.function.Supplier;
  * legacy runtime objects.</p>
  */
 @RequiredArgsConstructor
-public final class SessionApplicationService implements SessionCommandPort, SessionPresentationStatePort, SessionPaymentPort {
+public final class SessionApplicationService implements SessionCommandPort, SessionPresentationStatePort {
     private final String sessionId;
     private final Supplier<SessionState> sessionStateSupplier;
     private PendingDecision pendingDecisionOverride;
@@ -48,7 +44,6 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     private TurnContinuationState turnContinuationOverride;
     private AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseCommandHandler propertyPurchaseCommandHandler;
-    private RentAndDebtOpeningHandler rentAndDebtOpeningHandler;
     private DebtRemediationCommandHandler debtRemediationCommandHandler;
     private TradeCommandHandler tradeCommandHandler;
     private TurnActionCommandHandler turnActionCommandHandler;
@@ -112,26 +107,6 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
         );
     }
 
-    public void configureRentAndDebtFlow(
-            DebtOpeningGateway debtOpeningGateway,
-            DebtRemediationGateway debtRemediationGateway
-    ) {
-        rentAndDebtOpeningHandler = new RentAndDebtOpeningHandler(
-                this::setActiveDebtOverride,
-                this::setTurnContinuationOverride,
-                this::resumeContinuation,
-                debtOpeningGateway
-        );
-        debtRemediationCommandHandler = new DebtRemediationCommandHandler(
-                sessionId,
-                this::currentState,
-                this::setActiveDebtOverride,
-                this::setTurnContinuationOverride,
-                debtRemediationGateway
-        );
-    }
-
-    /** Configures only the debt remediation handler; use when debt opening is handled by the turn gateway. */
     public void configureDebtRemediationFlow(DebtRemediationGateway debtRemediationGateway) {
         debtRemediationCommandHandler = new DebtRemediationCommandHandler(
                 sessionId,
@@ -175,13 +150,6 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
             throw new IllegalStateException("Property purchase flow has not been configured");
         }
         return propertyPurchaseCommandHandler.openDecision(playerId, propertyId, displayName, price, message, continuationState);
-    }
-
-    public void handlePaymentRequest(PaymentRequest request, TurnContinuationState continuationState, CallbackAction onResolved) {
-        if (rentAndDebtOpeningHandler == null) {
-            throw new IllegalStateException("Rent and debt flow has not been configured");
-        }
-        rentAndDebtOpeningHandler.handle(request, continuationState, onResolved);
     }
 
     public void clearActiveDebtOverride() {
@@ -228,7 +196,7 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
         this.turnContinuationOverride = turnContinuationState;
     }
 
-    private void resumeContinuation(TurnContinuationState continuationState) {
+    public void resumeContinuation(TurnContinuationState continuationState) {
         if (continuationState == null || turnContinuationGateway == null) {
             return;
         }
@@ -307,7 +275,7 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
         this.auctionStateOverride = auctionState;
     }
 
-    private void setActiveDebtOverride(DebtStateModel activeDebt) {
+    public void setActiveDebtOverride(DebtStateModel activeDebt) {
         this.activeDebtOverride = activeDebt;
     }
 

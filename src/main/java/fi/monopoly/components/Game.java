@@ -3,7 +3,7 @@ package fi.monopoly.components;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
-import fi.monopoly.application.session.SessionPaymentPort;
+import fi.monopoly.client.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.ForwardingSessionCommandPort;
 import fi.monopoly.client.session.SessionCommandPort;

@@ -2,7 +2,7 @@ package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.SessionApplicationService;
-import fi.monopoly.application.session.SessionPaymentPort;
+import fi.monopoly.client.session.SessionPaymentPort;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.client.desktop.MonopolyRuntime;
@@ -14,6 +14,8 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeUiBuilder;
 import fi.monopoly.presentation.legacy.session.LegacySessionApplicationFactory;
+import fi.monopoly.presentation.legacy.session.LegacySessionPaymentPort;
+import fi.monopoly.presentation.legacy.session.debt.LegacyPaymentGateway;
 import fi.monopoly.presentation.legacy.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.legacy.session.trade.LegacyTradeGateway;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
@@ -59,6 +61,9 @@ public final class GameSessionBridgeFactory {
                 dices,
                 hooks::endTurn
         );
+
+        LegacySessionPaymentPort legacySessionPaymentPort = new LegacySessionPaymentPort(
+                sessionApplicationService, new LegacyPaymentGateway(debtController));
 
         // Proxy for adapters: routes handle() through EmbeddedDesktopSessionHost once wired,
         // while currentState() always returns the locally-projected state.
@@ -106,7 +111,7 @@ public final class GameSessionBridgeFactory {
         return new GameSessionBridge(
                 commandProxy,
                 sessionApplicationService,
-                sessionApplicationService,
+                legacySessionPaymentPort,
                 sessionApplicationService,
                 sessionApplicationService::configureTurnContinuationFlow,
                 sessionApplicationService::handleComputerAuctionAction,

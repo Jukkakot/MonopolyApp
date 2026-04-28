@@ -1,6 +1,5 @@
 package fi.monopoly.presentation.legacy.session.debt;
 
-import fi.monopoly.application.session.debt.DebtOpeningGateway;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.components.payment.PaymentResolver;
 import fi.monopoly.components.payment.PaymentResult;

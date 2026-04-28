@@ -1,4 +1,4 @@
-package fi.monopoly.application.session.debt;
+package fi.monopoly.presentation.legacy.session.debt;
 
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;

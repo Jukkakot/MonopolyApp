@@ -14,7 +14,6 @@ import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TurnContinuationState;
-import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -193,13 +192,8 @@ public final class PropertyPurchaseCommandHandler {
     }
 
     private boolean isAlreadyOwned(String propertyId) {
-        try {
-            SpotType spotType = SpotType.valueOf(propertyId);
-            var property = fi.monopoly.components.properties.PropertyFactory.getProperty(spotType);
-            return property != null && property.getOwnerPlayer() != null;
-        } catch (IllegalArgumentException ignored) {
-            return false;
-        }
+        return currentStateSupplier.get().properties().stream()
+                .anyMatch(p -> propertyId.equals(p.propertyId()) && p.ownerPlayerId() != null);
     }
 
     private CommandResult reject(String code, String message) {

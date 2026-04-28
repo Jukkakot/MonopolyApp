@@ -9,7 +9,6 @@ import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.presentation.game.desktop.session.LegacyTurnActionGatewayAdapter;
 import fi.monopoly.presentation.legacy.session.auction.LegacyAuctionGateway;
 import fi.monopoly.presentation.legacy.session.debt.LegacyDebtRemediationGateway;
-import fi.monopoly.presentation.legacy.session.debt.LegacyPaymentGateway;
 import fi.monopoly.presentation.legacy.session.projection.LegacyPopupSnapshot;
 import fi.monopoly.presentation.legacy.session.projection.LegacySessionProjector;
 import fi.monopoly.presentation.legacy.session.purchase.LegacyPropertyPurchaseGateway;
@@ -63,10 +62,7 @@ public final class LegacySessionApplicationFactory {
                 )::project
         );
         Players players = playersSupplier.get();
-        sessionApplicationService.configureRentAndDebtFlow(
-                new LegacyPaymentGateway(debtController),
-                new LegacyDebtRemediationGateway(debtController)
-        );
+        sessionApplicationService.configureDebtRemediationFlow(new LegacyDebtRemediationGateway(debtController));
         sessionApplicationService.configureAuctionFlow(new LegacyAuctionGateway(popupService, players));
         sessionApplicationService.configurePropertyPurchaseFlow(new LegacyPropertyPurchaseGateway(players));
         sessionApplicationService.configureTradeFlow(new LegacyTradeGateway(() -> {
