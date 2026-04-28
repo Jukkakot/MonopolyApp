@@ -16,11 +16,7 @@ import fi.monopoly.application.session.turn.TurnActionGateway;
 import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.domain.decision.PendingDecision;
-import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
 import fi.monopoly.domain.session.*;
-import fi.monopoly.domain.turn.TurnPhase;
-import fi.monopoly.domain.turn.TurnState;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -28,20 +24,15 @@ import java.util.function.Supplier;
 /**
  * Application-layer entry point for command handling around a single Monopoly session.
  *
- * <p>This service exposes the projected authoritative {@link SessionState}, routes incoming
- * session commands to the relevant subsystem handlers, and keeps temporary overrides for flows
- * that are already represented in the separated session model but still need to coordinate with
- * legacy runtime objects.</p>
+ * <p>This service exposes the projected authoritative {@link SessionState} via
+ * {@link #currentState()}, routes incoming session commands to the relevant subsystem handlers,
+ * and delegates flow-state overrides (auction, debt, trade, pending decision, turn continuation)
+ * to an {@link OverlaySessionStateStore}.</p>
  */
-@RequiredArgsConstructor
 public final class SessionApplicationService implements SessionCommandPort, SessionPresentationStatePort {
+
     private final String sessionId;
-    private final Supplier<SessionState> sessionStateSupplier;
-    private PendingDecision pendingDecisionOverride;
-    private AuctionState auctionStateOverride;
-    private DebtStateModel activeDebtOverride;
-    private TradeState tradeStateOverride;
-    private TurnContinuationState turnContinuationOverride;
+    private final OverlaySessionStateStore overlay;
     private AuctionCommandHandler auctionCommandHandler;
     private PropertyPurchaseCommandHandler propertyPurchaseCommandHandler;
     private DebtRemediationCommandHandler debtRemediationCommandHandler;
@@ -49,35 +40,17 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     private TurnActionCommandHandler turnActionCommandHandler;
     private TurnContinuationGateway turnContinuationGateway;
 
+    public SessionApplicationService(String sessionId, Supplier<SessionState> stateSupplier) {
+        this(sessionId, new OverlaySessionStateStore(stateSupplier));
+    }
+
+    public SessionApplicationService(String sessionId, OverlaySessionStateStore overlay) {
+        this.sessionId = sessionId;
+        this.overlay = overlay;
+    }
+
     public SessionState currentState() {
-        SessionState baseState = sessionStateSupplier.get();
-        PendingDecision pendingDecision = pendingDecisionOverride != null ? pendingDecisionOverride : baseState.pendingDecision();
-        AuctionState auctionState = auctionStateOverride != null ? auctionStateOverride : baseState.auctionState();
-        DebtStateModel activeDebt = activeDebtOverride != null ? activeDebtOverride : baseState.activeDebt();
-        TradeState tradeState = tradeStateOverride != null ? tradeStateOverride : baseState.tradeState();
-        TurnContinuationState turnContinuationState = turnContinuationOverride != null ? turnContinuationOverride : baseState.turnContinuationState();
-        if (shouldClearStalePendingDecisionOverride(baseState, auctionState, activeDebt, tradeState)) {
-            pendingDecisionOverride = null;
-            pendingDecision = null;
-        }
-        TurnState turnState = baseState.turn();
-        if (activeDebt != null) {
-            turnState = new TurnState(turnState.activePlayerId(), TurnPhase.RESOLVING_DEBT, false, false);
-        } else if (auctionState != null) {
-            turnState = new TurnState(turnState.activePlayerId(), TurnPhase.WAITING_FOR_AUCTION, false, false);
-        } else if (tradeState != null) {
-            turnState = new TurnState(turnState.activePlayerId(), TurnPhase.WAITING_FOR_DECISION, false, false);
-        } else if (pendingDecision != null) {
-            turnState = new TurnState(turnState.activePlayerId(), TurnPhase.WAITING_FOR_DECISION, false, false);
-        }
-        return baseState.toBuilder()
-                .turn(turnState)
-                .pendingDecision(pendingDecision)
-                .auctionState(auctionState)
-                .activeDebt(activeDebt)
-                .tradeState(tradeState)
-                .turnContinuationState(turnContinuationState)
-                .build();
+        return overlay.get();
     }
 
     public void configureAuctionFlow(AuctionGateway gateway) {
@@ -153,7 +126,7 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     }
 
     public void clearActiveDebtOverride() {
-        activeDebtOverride = null;
+        overlay.setActiveDebt(null);
     }
 
     public boolean hasActiveAuction() {
@@ -165,35 +138,23 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     }
 
     public boolean hasAuctionOverride() {
-        return auctionStateOverride != null;
+        return overlay.hasAuctionState();
     }
 
     public boolean hasTradeOverride() {
-        return tradeStateOverride != null;
+        return overlay.hasTradeState();
     }
 
     public boolean hasPendingDecisionOverride() {
-        return pendingDecisionOverride != null;
+        return overlay.hasPendingDecision();
     }
 
     public void restoreFrom(SessionState restoredState) {
-        if (restoredState == null) {
-            pendingDecisionOverride = null;
-            auctionStateOverride = null;
-            activeDebtOverride = null;
-            tradeStateOverride = null;
-            turnContinuationOverride = null;
-            return;
-        }
-        pendingDecisionOverride = restoredState.pendingDecision();
-        auctionStateOverride = restoredState.auctionState();
-        activeDebtOverride = restoredState.activeDebt();
-        tradeStateOverride = restoredState.tradeState();
-        turnContinuationOverride = restoredState.turnContinuationState();
+        overlay.restoreFrom(restoredState);
     }
 
     public void setTurnContinuationOverride(TurnContinuationState turnContinuationState) {
-        this.turnContinuationOverride = turnContinuationState;
+        overlay.setTurnContinuation(turnContinuationState);
     }
 
     public void resumeContinuation(TurnContinuationState continuationState) {
@@ -268,41 +229,18 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
     }
 
     private void setPendingDecisionOverride(PendingDecision pendingDecision) {
-        this.pendingDecisionOverride = pendingDecision;
+        overlay.setPendingDecision(pendingDecision);
     }
 
     private void setAuctionStateOverride(AuctionState auctionState) {
-        this.auctionStateOverride = auctionState;
+        overlay.setAuctionState(auctionState);
     }
 
     public void setActiveDebtOverride(DebtStateModel activeDebt) {
-        this.activeDebtOverride = activeDebt;
+        overlay.setActiveDebt(activeDebt);
     }
 
     private void setTradeStateOverride(TradeState tradeState) {
-        this.tradeStateOverride = tradeState;
-    }
-
-    private boolean shouldClearStalePendingDecisionOverride(
-            SessionState baseState,
-            AuctionState auctionState,
-            DebtStateModel activeDebt,
-            TradeState tradeState
-    ) {
-        if (pendingDecisionOverride == null
-                || baseState.pendingDecision() != null
-                || auctionState != null
-                || activeDebt != null
-                || tradeState != null) {
-            return false;
-        }
-        if (!(pendingDecisionOverride.payload() instanceof PropertyPurchaseDecisionPayload payload)) {
-            return false;
-        }
-        return baseState.properties().stream()
-                .filter(p -> payload.propertyId().equals(p.propertyId()))
-                .findFirst()
-                .map(p -> p.ownerPlayerId() != null)
-                .orElse(true);
+        overlay.setTradeState(tradeState);
     }
 }

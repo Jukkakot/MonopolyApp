@@ -1,6 +1,7 @@
 package fi.monopoly.server.session;
 
 import fi.monopoly.application.session.InMemorySessionState;
+import fi.monopoly.application.session.OverlaySessionStateStore;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.auction.DomainAuctionGateway;
 import fi.monopoly.application.session.debt.DomainDebtRemediationGateway;
@@ -44,8 +45,9 @@ public final class PureDomainSessionFactory {
      */
     public static SessionApplicationService create(String sessionId, SessionState initialState) {
         InMemorySessionState store = new InMemorySessionState(initialState);
+        OverlaySessionStateStore overlay = new OverlaySessionStateStore(store::get);
 
-        SessionApplicationService service = new SessionApplicationService(sessionId, store::get);
+        SessionApplicationService service = new SessionApplicationService(sessionId, overlay);
         service.configureAuctionFlow(new DomainAuctionGateway(store));
         service.configurePropertyPurchaseFlow(new DomainPropertyPurchaseGateway(store));
 

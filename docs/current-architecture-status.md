@@ -270,6 +270,18 @@ Backend-ready target:
 
 ### Blocker C: legacy bridge still sits between app and runtime in the same process
 
+Progress since last update:
+- `OverlaySessionStateStore` introduced in `application.session`: encapsulates the five mutable
+  flow-state fields (`pendingDecision`, `auctionState`, `activeDebt`, `tradeState`,
+  `turnContinuationState`) that previously lived as instance variables on `SessionApplicationService`
+- `SessionApplicationService.currentState()` is now a plain `overlay.get()` call — turn phase
+  derivation and stale pending-decision clearing happen inside the store's `get()` method
+- `SessionApplicationService` keeps its convenience `Supplier<SessionState>` constructor, so
+  `LegacySessionApplicationFactory` and existing tests need no changes; the overlay store is
+  created internally from the supplier
+
+
+
 This is the biggest structural bridge still left.
 
 Progress made:

@@ -237,6 +237,11 @@ What is important here:
 - `GameDesktopShellDependencies.sessionCommandPort()` now exposes the narrower `SessionCommandPort` type alongside `sessionApplicationService()`, and the two bot coordinator hooks for active auction/trade state use it instead of the full service wrapper methods
 - `GameSessionStateCoordinator.onDebtStateChanged()` no longer takes `SessionApplicationService`; the `clearDebtOverride` behavior is now passed as a `Runnable` callback, removing the application-service dependency from the presentation-session coordinator
 - the legacy bridge is still present because the Processing desktop client still runs on legacy runtime objects
+- `OverlaySessionStateStore` in `application.session` now holds the five mutable flow-state
+  fields (auction, debt, trade, pending decision, turn continuation) that previously lived
+  as instance variables on `SessionApplicationService`; `currentState()` is now a plain
+  `overlay.get()` call — turn phase derivation and stale pending-decision clearing happen inside
+  the store's `get()` method
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 
 ## 3. Current Practical Runtime Shape
