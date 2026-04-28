@@ -3,6 +3,7 @@ package fi.monopoly.server.session;
 import fi.monopoly.application.session.InMemorySessionState;
 import fi.monopoly.application.session.SessionApplicationService;
 import fi.monopoly.application.session.auction.DomainAuctionGateway;
+import fi.monopoly.application.session.debt.DomainDebtRemediationGateway;
 import fi.monopoly.application.session.purchase.DomainPropertyPurchaseGateway;
 import fi.monopoly.application.session.turn.DomainTurnActionGateway;
 import fi.monopoly.application.session.turn.DomainTurnContinuationGateway;
@@ -20,9 +21,8 @@ import java.util.List;
  *
  * <h2>Current limitations</h2>
  * <ul>
- *   <li>Debt remediation, trade, and turn-action flows are not yet configured — those gateways
- *       still depend on legacy types ({@code DebtState}, {@code TradeOffer}, etc.) and must be
- *       extracted before the factory can wire them.</li>
+ *   <li>Trade flow is not yet configured — {@code TradeGateway.isValidOffer/applyOffer} still
+ *       use legacy {@code TradeOffer} internally and must be extracted first.</li>
  *   <li>Bot bidding strategy is simplified (max bid = cash) vs. the legacy strategy which
  *       applies property-valuation multipliers and per-bot reserves.</li>
  * </ul>
@@ -53,6 +53,8 @@ public final class PureDomainSessionFactory {
                         service.openPropertyPurchaseDecision(playerId, propertyId, displayName, price, message, continuation)
         );
         service.configureTurnActionFlow(turnActionGateway);
+
+        service.configureDebtRemediationFlow(new DomainDebtRemediationGateway(store));
 
         return service;
     }

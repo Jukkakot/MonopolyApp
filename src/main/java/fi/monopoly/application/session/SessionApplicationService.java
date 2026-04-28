@@ -131,6 +131,17 @@ public final class SessionApplicationService implements SessionCommandPort, Sess
         );
     }
 
+    /** Configures only the debt remediation handler; use when debt opening is handled by the turn gateway. */
+    public void configureDebtRemediationFlow(DebtRemediationGateway debtRemediationGateway) {
+        debtRemediationCommandHandler = new DebtRemediationCommandHandler(
+                sessionId,
+                this::currentState,
+                this::setActiveDebtOverride,
+                this::setTurnContinuationOverride,
+                debtRemediationGateway
+        );
+    }
+
     public void configureTradeFlow(TradeGateway gateway) {
         tradeCommandHandler = new TradeCommandHandler(
                 sessionId,

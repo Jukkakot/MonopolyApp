@@ -38,6 +38,7 @@ public final class DebtRemediationCommandHandler {
                 if (debt.currentCash() < debt.amountRemaining()) {
                     yield rejected("DEBT_NOT_PAYABLE", "Current cash does not cover the debt");
                 }
+                activeDebtUpdater.accept(null);
                 turnContinuationUpdater.accept(null);
                 gateway.payDebtNow();
                 yield accepted("DebtResolved");
