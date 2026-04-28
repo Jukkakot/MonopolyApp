@@ -22,9 +22,6 @@ BACKEND EXTRACTION (separation-program)
        - jail handling — done in DomainTurnActionGateway (doubles escape, last-round fine)
        - auction bidding validation (done in DomainAuctionGateway — simplified bot strategy)
        - building purchase/sale: move pure validation out of StreetProperty.buyBuildingRoundsAcrossSet()
-[High] Purify DebtRemediationGateway — payDebtNow/mortgageProperty/sellBuildings still use
-       legacy Player/Property objects. Required so PureDomainSessionFactory can resolve debt
-       opened by DomainTurnActionGateway (DebtStateModel is already set in SessionState).
 [High] Purify DebtOpeningGateway and SessionPaymentPort — use legacy PaymentRequest type.
        Requires replacing PaymentRequest with a domain-level debt-opening event type before
        PureDomainSessionFactory can handle rent/debt-opening flows without Processing runtime.
