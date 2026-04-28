@@ -378,6 +378,14 @@ Remaining for full backend split (main blocker):
 - extracting rule logic (rent, movement, jail, auction bidding, building sale) from legacy
   runtime objects into the domain/application layer is the prerequisite for standalone operation
 
+Progress since last update (building purchase validation):
+- `DomainTurnActionGateway.buyBuildingRound()` now includes full validation:
+  - Mortgaged property in color set prevents building (standard rules)
+  - Bank house supply (max 32) and hotel supply (max 12) enforced
+  - Method now returns `false` on any failed pre-condition instead of silently
+    no-oping and returning `true`, matching the contract expected by
+    `TurnActionCommandHandler`
+
 ## Recommended Immediate Architectural Focus
 
 Blockers A, B (partially), C (partially), and D are resolved. The main remaining work before full
