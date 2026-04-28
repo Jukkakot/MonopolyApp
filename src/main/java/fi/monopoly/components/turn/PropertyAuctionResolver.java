@@ -8,31 +8,24 @@ import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+@RequiredArgsConstructor
 public class PropertyAuctionResolver {
-    private static final int AUCTION_BID_INCREMENT = 10;
-    private static final int AUCTION_OPENING_BID = 10;
+    public static final int AUCTION_BID_INCREMENT = 10;
+    public static final int AUCTION_OPENING_BID = 10;
     private static final int DEFAULT_RESERVE = 100;
     private static AuctionMetrics metrics = new AuctionMetrics(0, 0, 0);
     private static final StrongBotConfig STRONG_CONFIG = StrongBotConfig.defaults();
 
     private final PopupService popupService;
     private final Players players;
-
-    public PropertyAuctionResolver(PopupService popupService, Players players) {
-        this.popupService = popupService;
-        this.players = players;
-    }
 
     public void resolve(Player triggeringPlayer, Property property, CallbackAction onComplete) {
         resolve(triggeringPlayer, property, AuctionContext.bankAuction(), onComplete);
@@ -200,7 +193,7 @@ public class PropertyAuctionResolver {
         return null;
     }
 
-    private int nextBidAmount(int maxBid, int currentBid) {
+    public int nextBidAmount(int maxBid, int currentBid) {
         int minBid = currentBid == 0 ? AUCTION_OPENING_BID : currentBid + AUCTION_BID_INCREMENT;
         if (maxBid <= minBid) {
             return minBid;
@@ -213,7 +206,7 @@ public class PropertyAuctionResolver {
         return Math.min(maxBid, minBid + extraStep);
     }
 
-    private List<Player> orderedBidders(Player triggeringPlayer) {
+    public List<Player> orderedBidders(Player triggeringPlayer) {
         List<Player> sortedPlayers = players.getPlayers().stream()
                 .sorted(Comparator.comparingInt(Player::getTurnNumber))
                 .toList();
@@ -231,7 +224,7 @@ public class PropertyAuctionResolver {
         return ordered;
     }
 
-    private int maxBidFor(Player bidder, Property property) {
+    public int maxBidFor(Player bidder, Property property) {
         int cashLimit = bidder.getComputerProfile() == ComputerPlayerProfile.HUMAN
                 ? bidder.getMoneyAmount()
                 : bidder.getMoneyAmount() - reserveFor(bidder);
@@ -310,7 +303,7 @@ public class PropertyAuctionResolver {
         return Math.max(AUCTION_OPENING_BID, (amount / AUCTION_BID_INCREMENT) * AUCTION_BID_INCREMENT);
     }
 
-    private static synchronized void recordAuctionOutcome(Property property, int winningBid) {
+    public static synchronized void recordAuctionOutcome(Property property, int winningBid) {
         metrics = new AuctionMetrics(
                 metrics.completedAuctions() + 1,
                 metrics.totalMarketPrice() + property.getPrice(),

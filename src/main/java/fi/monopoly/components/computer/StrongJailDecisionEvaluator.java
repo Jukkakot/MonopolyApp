@@ -1,13 +1,12 @@
 package fi.monopoly.components.computer;
 
+import lombok.RequiredArgsConstructor;
+
 import static fi.monopoly.text.UiTexts.text;
 
+@RequiredArgsConstructor
 final class StrongJailDecisionEvaluator {
     private final StrongBotConfig config;
-
-    StrongJailDecisionEvaluator(StrongBotConfig config) {
-        this.config = config;
-    }
 
     boolean shouldAvoidJail(GameView view, PlayerView self, PopupView popup) {
         return evaluateJailDecision(view, self, popup).action() == ComputerAction.ACCEPT_POPUP;

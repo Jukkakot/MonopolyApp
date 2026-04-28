@@ -10,22 +10,27 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.EnumSet;
 import java.util.List;
 
-final class StrongTradePlanner {
+/**
+ * Plans proactive property trade offers for the stronger bot profile.
+ *
+ * <p>The planner still depends on legacy player/property models, but exposing it as a small public
+ * utility lets presentation-layer trade orchestration use the same heuristic logic without staying
+ * inside the legacy package boundary.</p>
+ */
+@RequiredArgsConstructor
+public final class StrongTradePlanner {
     private static final int MIN_TRADE_CASH_STEP = 10;
     private static final int DEFAULT_TRADE_CASH_STEP = 20;
 
     private final TradeOfferEvaluator tradeOfferEvaluator = new TradeOfferEvaluator();
     private final StrongBotConfig config;
 
-    StrongTradePlanner(StrongBotConfig config) {
-        this.config = config;
-    }
-
-    TradePlan plan(Player proposer, List<Player> players) {
+    public TradePlan plan(Player proposer, List<Player> players) {
         if (proposer == null || players == null || players.size() < 2) {
             return null;
         }
@@ -140,8 +145,8 @@ final class StrongTradePlanner {
         int strategicHeadroom = completesSet
                 ? config.tradeSetCompletionWeight()
                 : deniesLeader
-                ? Math.max(60, (int) Math.round(config.tradeSetCompletionWeight() * 0.4))
-                : 40;
+                  ? Math.max(60, (int) Math.round(config.tradeSetCompletionWeight() * 0.4))
+                  : 40;
         return base + strategicHeadroom;
     }
 
@@ -252,6 +257,6 @@ final class StrongTradePlanner {
         return Math.round(value * 10.0) / 10.0;
     }
 
-    record TradePlan(TradeOffer offer, ComputerDecision decision) {
+    public record TradePlan(TradeOffer offer, ComputerDecision decision) {
     }
 }

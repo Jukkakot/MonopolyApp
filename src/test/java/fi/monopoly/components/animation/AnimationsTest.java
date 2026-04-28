@@ -6,9 +6,9 @@ import fi.monopoly.utils.Coordinates;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AnimationsTest {
 
@@ -79,6 +79,31 @@ class AnimationsTest {
 
         animations.finishAllAnimations();
 
+        assertTrue(animations.isRunning());
+    }
+
+    @Test
+    void finishAllAnimationsDoesNotReenterSameDrawableCallback() {
+        Animations animations = new Animations();
+        TestDrawable drawable = new TestDrawable(new Coordinates(0, 0));
+        AtomicInteger callbackCalls = new AtomicInteger();
+
+        animations.addAnimation(new Animation(
+                drawable,
+                new FixedPath(List.of(new Coordinates(10, 0)), new Coordinates(10, 0)),
+                () -> {
+                    callbackCalls.incrementAndGet();
+                    animations.addAnimation(new Animation(
+                            drawable,
+                            new FixedPath(List.of(new Coordinates(20, 0)), new Coordinates(20, 0)),
+                            null
+                    ));
+                }
+        ));
+
+        animations.finishAllAnimations();
+
+        assertEquals(1, callbackCalls.get());
         assertTrue(animations.isRunning());
     }
 

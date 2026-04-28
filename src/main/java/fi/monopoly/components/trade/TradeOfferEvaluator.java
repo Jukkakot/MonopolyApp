@@ -29,9 +29,9 @@ public final class TradeOfferEvaluator {
             lossScore *= strongConfig.opponentLeaderPressure();
         }
         double score = gainScore - lossScore;
-        int acceptThreshold = profile.acceptThreshold() - (strongConfig == null ? 0 : strongConfig.tradeFairnessTolerance());
+        int acceptThreshold = profile.getAcceptThreshold() - (strongConfig == null ? 0 : strongConfig.tradeFairnessTolerance());
         boolean accept = score >= acceptThreshold;
-        boolean tooFarForCounter = score < profile.counterOfferFloor();
+        boolean tooFarForCounter = score < profile.getCounterOfferFloor();
         return new TradeDecision(
                 accept,
                 score,
@@ -53,11 +53,11 @@ public final class TradeOfferEvaluator {
         if (currentDecision.accept()) {
             return null;
         }
-        if (currentDecision.score() < profile.counterOfferFloor()) {
+        if (currentDecision.score() < profile.getCounterOfferFloor()) {
             return null;
         }
-        int acceptThreshold = profile.acceptThreshold() - (strongConfig == null ? 0 : strongConfig.tradeFairnessTolerance());
-        int adjustment = Math.min(profile.maxCounterAdjustment(), roundUpToNearestTen(acceptThreshold - currentDecision.score()));
+        int acceptThreshold = profile.getAcceptThreshold() - (strongConfig == null ? 0 : strongConfig.tradeFairnessTolerance());
+        int adjustment = Math.min(profile.getMaxCounterAdjustment(), roundUpToNearestTen(acceptThreshold - currentDecision.score()));
         if (adjustment <= 0) {
             return null;
         }

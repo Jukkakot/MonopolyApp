@@ -104,14 +104,28 @@ public class StreetPropertySpot extends PropertySpot {
         for (int i = 0; i < intMaxHousesToSell; i++) {
             final int finalI = i + 1;
             int totalReturn = finalI * getHouseSellValue();
-            buttonProps[i] = new ButtonProps(text("format.countMoneyOption", finalI, totalReturn), () -> property.sellHouses(finalI));
+            buttonProps[i] = new ButtonProps(text("format.countMoneyOption", finalI, totalReturn), () -> {
+                GameSession session = runtime.gameSessionOrNull();
+                if (session != null && session.isDebtResolutionActive() && session.debtActionDispatcher() != null) {
+                    session.debtActionDispatcher().sellBuilding(spotType, finalI);
+                    return;
+                }
+                property.sellHouses(finalI);
+            });
         }
         for (int i = 0; i < maxSetRounds; i++) {
             final int finalI = i + 1;
             int totalReturn = property.getStreetSetRoundCost(finalI) / 2;
             buttonProps[intMaxHousesToSell + i] = new ButtonProps(
                     text("streetProperty.sell.setOption", finalI, totalReturn),
-                    () -> property.sellBuildingRoundsAcrossSet(finalI));
+                    () -> {
+                        GameSession session = runtime.gameSessionOrNull();
+                        if (session != null && session.isDebtResolutionActive() && session.debtActionDispatcher() != null) {
+                            session.debtActionDispatcher().sellBuildingRoundsAcrossSet(spotType, finalI);
+                            return;
+                        }
+                        property.sellBuildingRoundsAcrossSet(finalI);
+                    });
         }
         return buttonProps;
     }

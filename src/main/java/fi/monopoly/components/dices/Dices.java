@@ -1,7 +1,7 @@
 package fi.monopoly.components.dices;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.event.MonopolyEventListener;
@@ -54,7 +54,7 @@ public class Dices implements MonopolyEventListener {
         SpotProps sp1 = new SpotProps((int) defaultInlineFirstCenterX, (int) defaultButtonCenterY, diceSideLength, diceSideLength);
         SpotProps sp2 = new SpotProps((int) defaultInlineSecondCenterX, sp1.y(), sp1.w(), sp1.h());
         dices = new Pair<>(new Dice(runtime, sp1), new Dice(runtime, sp2));
-        updateLayout(LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height));
+        updateLayout(LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight()));
 
         rollDiceButton.addListener(e -> rollDice());
     }
@@ -207,5 +207,10 @@ public class Dices implements MonopolyEventListener {
             return true;
         }
         return false;
+    }
+
+    public void dispose() {
+        runtime.eventBus().removeListener(this);
+        rollDiceButton.dispose();
     }
 }

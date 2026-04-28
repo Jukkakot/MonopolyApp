@@ -1,8 +1,9 @@
 package fi.monopoly.components;
 
 import controlP5.Button;
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.spots.JailSpot;
@@ -87,7 +88,7 @@ public class Players {
         playerButtons.put("" + p.getId(), new MonopolyButton(runtime, "" + p.getId())
                 .setValue(p.getId())
                 .addListener(e -> selectPlayer(playerList.get(playerList.indexOf(p))))
-                .setImages(MonopolyApp.getImage("BigToken.png", p.getColor()), MonopolyApp.getImage("BigTokenHover.png", p.getColor()), MonopolyApp.getImage("BigTokenPressed.png", p.getColor()))
+                .setImages(DesktopImageCatalog.getImage("BigToken.png", p.getColor()), DesktopImageCatalog.getImage("BigTokenHover.png", p.getColor()), DesktopImageCatalog.getImage("BigTokenPressed.png", p.getColor()))
                 .setSize(PLAYER_LIST_BUTTON_DIAMETER, PLAYER_LIST_BUTTON_DIAMETER)
         );
     }
@@ -207,6 +208,14 @@ public class Players {
             log.error("Turn player not found");
         }
         return fallbackTurn;
+    }
+
+    public void restoreTurn(Player player) {
+        if (player == null) {
+            return;
+        }
+        turnNum = player.getTurnNumber();
+        selectPlayer(player);
     }
 
     /**
@@ -499,7 +508,7 @@ public class Players {
         if (runtime == null) {
             return LayoutMetrics.defaultWindow().sidebarWidth();
         }
-        return LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height).sidebarWidth();
+        return LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight()).sidebarWidth();
     }
 
     private float getSidebarContentWidth() {
@@ -512,6 +521,24 @@ public class Players {
 
     private int getTextInfoHeight() {
         return useCompactSummaryLayout() ? COMPACT_TEXT_INFO_HEIGHT : TEXT_INFO_HEIGHT;
+    }
+
+    public void dispose() {
+        if (previousDeedsButton != null) {
+            previousDeedsButton.dispose();
+        }
+        if (nextDeedsButton != null) {
+            nextDeedsButton.dispose();
+        }
+        playerButtons.values().forEach(button -> {
+            if (button instanceof MonopolyButton monopolyButton) {
+                monopolyButton.dispose();
+                return;
+            }
+            button.hide();
+            button.remove();
+        });
+        playerButtons.clear();
     }
 
     private void translate(Coordinates c) {

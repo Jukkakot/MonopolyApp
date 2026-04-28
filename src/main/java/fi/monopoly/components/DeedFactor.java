@@ -1,6 +1,6 @@
 package fi.monopoly.components;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.images.Deed;
 import lombok.experimental.UtilityClass;

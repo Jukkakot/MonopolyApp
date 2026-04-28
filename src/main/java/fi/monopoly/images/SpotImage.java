@@ -1,7 +1,9 @@
 package fi.monopoly.images;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopClientSettings;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
@@ -42,7 +44,7 @@ public class SpotImage extends Image {
     }
 
     private void drawDebugSpot() {
-        if (!MonopolyApp.DEBUG_MODE) {
+        if (!DesktopClientSettings.debugMode()) {
             return;
         }
         MonopolyApp p = runtime.app();
@@ -96,7 +98,7 @@ public class SpotImage extends Image {
 
     private void drawIconSpot() {
         MonopolyApp p = runtime.app();
-        PImage img = MonopolyApp.getImage(spotType);
+        PImage img = DesktopImageCatalog.getImage(spotType);
         if (img != null) {
             p.push();
 

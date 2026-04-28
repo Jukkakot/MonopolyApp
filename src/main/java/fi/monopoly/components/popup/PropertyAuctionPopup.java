@@ -1,16 +1,15 @@
 package fi.monopoly.components.popup;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.utils.UiTokens;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
 import static fi.monopoly.text.UiTexts.text;
-import static processing.core.PConstants.CENTER;
-import static processing.core.PConstants.CORNER;
-import static processing.core.PConstants.TOP;
+import static processing.core.PConstants.*;
 
 public class PropertyAuctionPopup extends PropertyOfferPopup {
     private int currentBidAmount;
@@ -27,6 +26,11 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
     public void setAuctionInfo(Player currentLeader, int currentBidAmount) {
         this.currentLeader = currentLeader;
         this.currentBidAmount = currentBidAmount;
+    }
+
+    @Override
+    public String getPopupKind() {
+        return "propertyAuction";
     }
 
     @Override
@@ -89,7 +93,7 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
             return;
         }
 
-        PImage token = MonopolyApp.getImage("BigToken.png", currentLeader.getColor());
+        PImage token = DesktopImageCatalog.getImage("BigToken.png", currentLeader.getColor());
         if (token != null) {
             float tokenSize = 28f;
             p.imageMode(CORNER);

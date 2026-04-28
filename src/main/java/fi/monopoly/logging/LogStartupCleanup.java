@@ -12,9 +12,13 @@ public final class LogStartupCleanup {
 
     public static void deleteTodayAppLogs() {
         String today = LocalDate.now().toString();
-        Path logDir = Path.of(System.getProperty("user.dir"), "logs", "app");
-        deleteIfExists(logDir.resolve("monopoly." + today + ".log"));
-        deleteIfExists(logDir.resolve("ERROR-monopoly." + today + ".log"));
+        deleteTodayLogsInDirectory(Path.of(System.getProperty("user.dir"), "logs", "app"), today, "monopoly");
+        deleteTodayLogsInDirectory(Path.of(System.getProperty("user.dir"), "logs", "test"), today, "monopoly-test");
+    }
+
+    private static void deleteTodayLogsInDirectory(Path logDir, String today, String baseFileName) {
+        deleteIfExists(logDir.resolve(baseFileName + "." + today + ".log"));
+        deleteIfExists(logDir.resolve("ERROR-" + baseFileName + "." + today + ".log"));
     }
 
     private static void deleteIfExists(Path path) {

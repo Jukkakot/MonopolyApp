@@ -1,7 +1,9 @@
 package fi.monopoly.support;
 
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
+import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.properties.Properties;
 import fi.monopoly.components.properties.Property;
 import javafx.scene.paint.Color;
@@ -14,6 +16,11 @@ public final class TestObjectFactory {
 
     public static Player player(String name, int money, int turnNumber) {
         return new Player(name, Color.BLACK, money, turnNumber);
+    }
+
+    public static Player player(MonopolyRuntime runtime, String name, int money, int turnNumber) {
+        return Player.restore(runtime, name, Color.BLACK, (Spot) null, fi.monopoly.components.computer.ComputerPlayerProfile.HUMAN,
+                turnNumber - 1, money, turnNumber, 0);
     }
 
     public static void giveProperty(Player player, Property property) {

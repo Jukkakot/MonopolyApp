@@ -1,14 +1,13 @@
 package fi.monopoly.components.spots;
 
-import controlP5.ControlP5;
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.*;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.dices.DiceValue;
 import fi.monopoly.components.payment.PaymentHandler;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.images.SpotImage;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.support.TestObjectFactory;
 import fi.monopoly.text.UiTexts;
 import fi.monopoly.types.DiceState;
@@ -18,8 +17,6 @@ import fi.monopoly.utils.Coordinates;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 import processing.event.KeyEvent;
 
 import java.util.Locale;
@@ -33,19 +30,7 @@ class JailSpotTest {
     private JailSpot jailSpot;
 
     private static MonopolyRuntime initHeadlessRuntime() {
-        MonopolyApp app = new MonopolyApp();
-        app.width = 1700;
-        app.height = 996;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create().runtime();
     }
 
     @BeforeEach

@@ -1,11 +1,12 @@
 package fi.monopoly.components.board;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.spots.CornerSpot;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.images.SpotImage;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.utils.Coordinates;
 import javafx.scene.paint.Color;
@@ -24,8 +25,7 @@ class PathTest {
 
     @Test
     void getNextAndGetLastUseCurrentAndLastSpotTokenCoordinates() {
-        new MonopolyApp();
-        MonopolyRuntime runtime = MonopolyRuntime.get();
+        MonopolyRuntime runtime = TestDesktopRuntimeFactory.create().runtime();
         Player player = new Player("Player", Color.BLACK, 1500, 1);
         Spot first = spot(runtime, SpotType.GO_SPOT, new Coordinates(10, 20, 0));
         Spot last = spot(runtime, SpotType.JAIL, new Coordinates(30, 40, 0));
@@ -37,8 +37,7 @@ class PathTest {
 
     @Test
     void removePreviousDropsFirstStepAndEventuallyEmptiesPath() {
-        new MonopolyApp();
-        MonopolyRuntime runtime = MonopolyRuntime.get();
+        MonopolyRuntime runtime = TestDesktopRuntimeFactory.create().runtime();
         Player player = new Player("Player", Color.BLACK, 1500, 1);
         Spot first = spot(runtime, SpotType.GO_SPOT, new Coordinates(10, 20, 0));
         Spot second = spot(runtime, SpotType.JAIL, new Coordinates(30, 40, 0));
@@ -57,8 +56,7 @@ class PathTest {
 
     @Test
     void passesGoSpotReturnsTrueOnlyWhenGoIsIncludedInPath() {
-        new MonopolyApp();
-        MonopolyRuntime runtime = MonopolyRuntime.get();
+        MonopolyRuntime runtime = TestDesktopRuntimeFactory.create().runtime();
         Player player = new Player("Player", Color.BLACK, 1500, 1);
         Path withGo = new Path(new ArrayList<>(List.of(
                 spot(runtime, SpotType.B1, new Coordinates(10, 20, 0)),

@@ -1,5 +1,30 @@
 package fi.monopoly.components.computer;
 
+import fi.monopoly.application.command.BuyPropertyCommand;
+import fi.monopoly.application.command.BuyBuildingRoundCommand;
+import fi.monopoly.application.command.DeclareBankruptcyCommand;
+import fi.monopoly.application.command.DeclinePropertyCommand;
+import fi.monopoly.application.command.EndTurnCommand;
+import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
+import fi.monopoly.application.command.PayDebtCommand;
+import fi.monopoly.application.command.RollDiceCommand;
+import fi.monopoly.application.command.SellBuildingForDebtCommand;
+import fi.monopoly.application.command.SellBuildingRoundsAcrossSetForDebtCommand;
+import fi.monopoly.application.command.SessionCommand;
+import fi.monopoly.application.command.ToggleMortgageCommand;
+import fi.monopoly.domain.decision.DecisionAction;
+import fi.monopoly.domain.decision.DecisionType;
+import fi.monopoly.domain.decision.PendingDecision;
+import fi.monopoly.domain.session.ControlMode;
+import fi.monopoly.domain.session.DebtCreditorType;
+import fi.monopoly.domain.session.DebtStateModel;
+import fi.monopoly.domain.session.PlayerSnapshot;
+import fi.monopoly.domain.session.SeatKind;
+import fi.monopoly.domain.session.SeatState;
+import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.SessionStatus;
+import fi.monopoly.domain.turn.TurnPhase;
+import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.types.SpotType;
 import org.junit.jupiter.api.Test;
 
@@ -552,6 +577,95 @@ class StrongComputerStrategyTest {
         }
 
         @Override
+        public SessionState sessionState() {
+            PendingDecision pendingDecision = popup != null && popup.offeredProperty() != null
+                    ? new PendingDecision(
+                    "decision-1",
+                    DecisionType.PROPERTY_PURCHASE,
+                    "player-" + self.id(),
+                    List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
+                    popup.message(),
+                    null
+            )
+                    : null;
+            DebtStateModel activeDebt = debt == null
+                    ? null
+                    : new DebtStateModel(
+                    "debt-1",
+                    "player-" + self.id(),
+                    DebtCreditorType.BANK,
+                    null,
+                    debt.amount(),
+                    debt.reason(),
+                    debt.bankruptcyRisk(),
+                    self.moneyAmount(),
+                    self.totalLiquidationValue(),
+                    List.of()
+            );
+            return new SessionState(
+                    "local-session",
+                    0L,
+                    SessionStatus.IN_PROGRESS,
+                    List.of(new SeatState("seat-0", 0, "player-" + self.id(), SeatKind.BOT, ControlMode.MANUAL, self.name(), self.computerProfile().name(), "#000000")),
+                    List.of(new PlayerSnapshot("player-" + self.id(), "seat-0", self.name(), self.moneyAmount(), -1, false, false, self.inJail(), 0, self.getOutOfJailCardCount(), List.of())),
+                    List.of(),
+                    new TurnState("player-" + self.id(), activeDebt == null ? TurnPhase.WAITING_FOR_DECISION : TurnPhase.RESOLVING_DEBT, false, false),
+                    pendingDecision,
+                    null,
+                    activeDebt,
+                    null,
+                    null
+            );
+        }
+
+        @Override
+        public boolean submit(SessionCommand command) {
+            if (command instanceof BuyPropertyCommand) {
+                accepted = true;
+                operations.add("accept");
+                return true;
+            }
+            if (command instanceof DeclinePropertyCommand) {
+                declined = true;
+                operations.add("decline");
+                return true;
+            }
+            if (command instanceof SellBuildingForDebtCommand sellBuildingForDebtCommand) {
+                return sellBuilding(SpotType.valueOf(sellBuildingForDebtCommand.propertyId()), sellBuildingForDebtCommand.count());
+            }
+            if (command instanceof SellBuildingRoundsAcrossSetForDebtCommand sellBuildingRoundsAcrossSetForDebtCommand) {
+                return sellBuilding(SpotType.valueOf(sellBuildingRoundsAcrossSetForDebtCommand.propertyId()), sellBuildingRoundsAcrossSetForDebtCommand.rounds());
+            }
+            if (command instanceof MortgagePropertyForDebtCommand mortgagePropertyForDebtCommand) {
+                return toggleMortgage(SpotType.valueOf(mortgagePropertyForDebtCommand.propertyId()));
+            }
+            if (command instanceof BuyBuildingRoundCommand buyBuildingRoundCommand) {
+                return buyBuildingRound(SpotType.valueOf(buyBuildingRoundCommand.propertyId()));
+            }
+            if (command instanceof ToggleMortgageCommand toggleMortgageCommand) {
+                return toggleMortgage(SpotType.valueOf(toggleMortgageCommand.propertyId()));
+            }
+            if (command instanceof PayDebtCommand) {
+                operations.add("retry");
+                return true;
+            }
+            if (command instanceof DeclareBankruptcyCommand) {
+                bankrupt = true;
+                operations.add("bankrupt");
+                return true;
+            }
+            if (command instanceof RollDiceCommand) {
+                operations.add("rollDice");
+                return true;
+            }
+            if (command instanceof EndTurnCommand) {
+                operations.add("endTurn");
+                return true;
+            }
+            return false;
+        }
+
+        @Override
         public boolean resolveActivePopup() {
             accepted = true;
             return true;
@@ -571,8 +685,7 @@ class StrongComputerStrategyTest {
             return true;
         }
 
-        @Override
-        public boolean sellBuilding(SpotType spotType, int count) {
+        private boolean sellBuilding(SpotType spotType, int count) {
             PropertyView property = findProperty(spotType);
             if (property == null || property.buildingLevel() < count) {
                 return false;
@@ -617,8 +730,7 @@ class StrongComputerStrategyTest {
             return true;
         }
 
-        @Override
-        public boolean buyBuildingRound(SpotType spotType) {
+        private boolean buyBuildingRound(SpotType spotType) {
             PropertyView property = findProperty(spotType);
             if (property == null) {
                 return false;
@@ -669,8 +781,7 @@ class StrongComputerStrategyTest {
             return true;
         }
 
-        @Override
-        public boolean toggleMortgage(SpotType spotType) {
+        private boolean toggleMortgage(SpotType spotType) {
             PropertyView property = findProperty(spotType);
             if (property == null) {
                 return false;
@@ -761,26 +872,6 @@ class StrongComputerStrategyTest {
             }
             operations.add("trade");
             return tradeDecision;
-        }
-
-        @Override
-        public void retryPendingDebtPayment() {
-            operations.add("retry");
-        }
-
-        @Override
-        public void declareBankruptcy() {
-            bankrupt = true;
-            operations.add("bankrupt");
-        }
-
-        @Override
-        public void rollDice() {
-        }
-
-        @Override
-        public void endTurn() {
-            operations.add("endTurn");
         }
 
         private PropertyView findProperty(SpotType spotType) {

@@ -3,16 +3,14 @@ package fi.monopoly.components.computer;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Comparator;
 import java.util.List;
 
+@RequiredArgsConstructor
 final class StrongBuildingEvaluator {
     private final StrongBotConfig config;
-
-    StrongBuildingEvaluator(StrongBotConfig config) {
-        this.config = config;
-    }
 
     PropertyView selectBuildTarget(GameView view, PlayerView self) {
         BuildPlan plan = evaluateBuild(view, self);

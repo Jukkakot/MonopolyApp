@@ -18,6 +18,21 @@ The docs folder is now organized around one main program:
 - then move toward persistence and later server extraction
 
 The main local-separation wave is already specified through PR1-PR8 design notes.
+Persistence/server follow-up is now specified through PR9-PR12 notes.
+
+Current implementation reality:
+
+- the original PR-plan documents are still useful, but they are no longer the exact status tracker
+- the most accurate current-state docs are now:
+  - [current-architecture-status.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/current-architecture-status.md)
+  - [architecture-overview-diagrams.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-overview-diagrams.md)
+  - [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
+
+Folder convention:
+
+- implemented historical plan slices now live under
+  [completed-plans](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans)
+- still-active forward-looking plan docs remain in the top-level `docs` folder
 
 ## Read Order
 
@@ -26,12 +41,18 @@ If starting fresh, read in this order.
 ### 1. High-level direction
 
 - [architecture-separation-and-server-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-separation-and-server-plan.md)
+- [architecture-overview-diagrams.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-overview-diagrams.md)
+- [current-architecture-status.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/current-architecture-status.md)
+- [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
 
 Read this first to understand:
 
 - why the work starts locally instead of from a server
 - what the target architecture is
-- what the large migration phases are
+- what the large migration phases were originally
+- what has already actually been implemented
+- what the fastest remaining path to backend-ready architecture is
+- and, if you want the fast visual version, the high-level diagrams
 
 ### 2. Authoritative model
 
@@ -68,34 +89,38 @@ Read this to understand:
 
 - [separation-program-index.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/separation-program-index.md)
 
-Use this as the master backlog/index:
+Use this as the original migration-program index:
 
 - which PRs exist
 - which documents define them
-- which phases are already implementation-ready
+- which phases were originally planned
+- how the old PR-wave maps to current status
 
 ### 6. PR design notes
 
 Then read the PR notes in order:
 
-- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
-- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr2-design-note-property-purchase-slice.md)
-- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr3-design-note-rent-and-debt-opening.md)
-- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr4-design-note-debt-remediation.md)
-- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr5-design-note-auction-flow.md)
-- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr6-design-note-trade-flow.md)
-- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr7-design-note-bot-command-unification.md)
-- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr1-design-note-session-state-seam.md)
+- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr2-design-note-property-purchase-slice.md)
+- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr3-design-note-rent-and-debt-opening.md)
+- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr4-design-note-debt-remediation.md)
+- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr5-design-note-auction-flow.md)
+- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr6-design-note-trade-flow.md)
+- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr7-design-note-bot-command-unification.md)
+- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr9-design-note-persistence-ready-session.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr9-design-note-persistence-ready-session.md)
+- [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
+- [pr11-design-note-turn-continuation-state.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr11-design-note-turn-continuation-state.md)
+- [pr12-design-note-local-load-reattachment.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr12-design-note-local-load-reattachment.md)
 
 ## Short Version
 
 If you do not want to reread everything every time, the minimum useful set is:
 
-1. [separation-program-index.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/separation-program-index.md)
-2. the next PR note that is about to be implemented
-3.
-optionally [migration-map-local-separation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/migration-map-local-separation.md)
-if touching `Game`, popup flow, or controllers
+1. [current-architecture-status.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/current-architecture-status.md)
+2. [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
+3. [architecture-overview-diagrams.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-overview-diagrams.md)
+4. optionally [migration-map-local-separation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/migration-map-local-separation.md) if touching `Game`, desktop shell, popup flow, or controllers
 
 ## How To Continue This Plan
 
@@ -107,6 +132,15 @@ When continuing later, the right shorthand is:
 - `plan the next PR after PR6`
 
 That should be enough context together with this docs set.
+
+Useful later shorthands:
+
+- `continue from PR9`
+- `continue from PR11`
+- `start the persistence wave`
+- `continue from the server MVP plan`
+- `continue toward backend-ready architecture`
+- `follow the fast-track backend plan`
 
 ## Implementation Rule
 
@@ -133,10 +167,9 @@ Reason:
 
 The documentation is now in a state where the next sensible move is:
 
-- start implementation
-  from [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
+- use [current-architecture-status.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/current-architecture-status.md) as the truth source for what is already done
+- use [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md) as the default path forward if the goal is to reach the backend-ready target as fast as possible
 
-If more planning is still desired before coding, the next topic should be:
+After that:
 
-- persistence/save-load design after PR8
-- then server extraction specifics
+- continue using the older PR docs as subsystem references, not as the live status tracker

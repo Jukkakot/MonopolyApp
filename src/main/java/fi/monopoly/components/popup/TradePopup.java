@@ -1,10 +1,10 @@
 package fi.monopoly.components.popup;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.Player;
-import fi.monopoly.components.PlayerToken;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.spots.Spot;
@@ -13,7 +13,6 @@ import fi.monopoly.types.StreetType;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.MonopolyUtils;
 import fi.monopoly.utils.UiTokens;
-import javafx.scene.paint.Color;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.event.MouseEvent;
@@ -22,10 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static fi.monopoly.text.UiTexts.text;
-import static processing.core.PConstants.CENTER;
-import static processing.core.PConstants.CORNER;
-import static processing.core.PConstants.LEFT;
-import static processing.core.PConstants.TOP;
+import static processing.core.PConstants.*;
 import static processing.event.MouseEvent.CLICK;
 import static processing.event.MouseEvent.MOVE;
 
@@ -92,20 +88,25 @@ public class TradePopup extends Popup {
     }
 
     @Override
+    public String getPopupKind() {
+        return "trade";
+    }
+
+    @Override
     protected int getPopupWidth() {
-        int availableWidth = Math.round(runtime.app().width) - UiTokens.popupWindowMargin() * 2;
+        int availableWidth = runtime.windowWidth() - UiTokens.popupWindowMargin() * 2;
         return Math.max(UiTokens.tradePopupMinWidth(), Math.min(UiTokens.tradePopupPreferredWidth(), availableWidth));
     }
 
     @Override
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - UiTokens.popupWindowMargin() * 2;
+        int availableHeight = runtime.windowHeight() - UiTokens.popupWindowMargin() * 2;
         return Math.max(UiTokens.tradePopupMinHeight(), Math.min(UiTokens.tradePopupPreferredHeight(), availableHeight));
     }
 
     @Override
     protected fi.monopoly.utils.Coordinates getPopupCenter() {
-        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.app().width, runtime.app().height);
+        LayoutMetrics layoutMetrics = LayoutMetrics.fromWindow(runtime.windowWidth(), runtime.windowHeight());
         return fi.monopoly.utils.Coordinates.of(layoutMetrics.boardWidth() / 2f, getPopupTop() + getPopupHeight() / 2f);
     }
 
@@ -133,7 +134,7 @@ public class TradePopup extends Popup {
         clickableRegions.clear();
         drawBackground(p);
         drawTradePanels(p);
-        hoveredItemKey = resolveHoveredItemKey(runtime.app().mouseX, runtime.app().mouseY);
+        hoveredItemKey = resolveHoveredItemKey(runtime.mouseX(), runtime.mouseY());
     }
 
     private void drawBackground(PGraphics p) {
@@ -297,7 +298,7 @@ public class TradePopup extends Popup {
         int stripeColor = resolveTradePropertyStripeColor(item.property());
         drawCardStripe(p, x, y, width, stripeColor);
 
-        PImage image = MonopolyApp.getImage(item.property().getSpotType());
+        PImage image = DesktopImageCatalog.getImage(item.property().getSpotType());
         if (image != null) {
             p.imageMode(CORNER);
             p.image(image, x + 8f, y + 8f + UiTokens.tradePropertyColorStripeHeight(), width - 16f, height - (showLabel ? 42f : 16f) - UiTokens.tradePropertyColorStripeHeight());
@@ -310,7 +311,7 @@ public class TradePopup extends Popup {
     }
 
     private void drawJailCardItem(PGraphics p, TradePopupItem item, float x, float y, float width, float height) {
-        PImage image = MonopolyApp.getImage("GetOutOfJail.png");
+        PImage image = DesktopImageCatalog.getImage("GetOutOfJail.png");
         if (image != null) {
             p.imageMode(CORNER);
             p.image(image, x + 8f, y + 8f, width - 16f, height - 40f);
@@ -351,7 +352,7 @@ public class TradePopup extends Popup {
     }
 
     private void drawPlayerToken(PGraphics p, Player player, float centerX, float centerY, float size) {
-        PImage tokenImage = MonopolyApp.getImage("Token.png", player.getColor());
+        PImage tokenImage = DesktopImageCatalog.getImage("Token.png", player.getColor());
         if (tokenImage != null) {
             p.imageMode(CENTER);
             p.image(tokenImage, centerX, centerY, size, size);

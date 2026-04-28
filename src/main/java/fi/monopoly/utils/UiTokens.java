@@ -1,6 +1,6 @@
 package fi.monopoly.utils;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 
 /**
  * Centralized static UI design tokens shared across screens and components.

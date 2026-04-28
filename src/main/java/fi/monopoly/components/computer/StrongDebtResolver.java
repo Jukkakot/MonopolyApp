@@ -1,18 +1,20 @@
 package fi.monopoly.components.computer;
 
+import fi.monopoly.application.command.DeclareBankruptcyCommand;
+import fi.monopoly.application.command.MortgagePropertyForDebtCommand;
+import fi.monopoly.application.command.PayDebtCommand;
+import fi.monopoly.application.command.SellBuildingForDebtCommand;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 
 @Slf4j
+@RequiredArgsConstructor
 final class StrongDebtResolver {
     private final StrongBotConfig config;
-
-    StrongDebtResolver(StrongBotConfig config) {
-        this.config = config;
-    }
 
     boolean resolve(ComputerTurnContext context, GameView view, PlayerView self) {
         int amount = view.debt().amount();
@@ -25,8 +27,11 @@ final class StrongDebtResolver {
                     0,
                     "Retry debt payment after raising cash to M" + context.currentPlayerView().moneyAmount()
             ));
-            context.retryPendingDebtPayment();
-            return true;
+            return context.submit(new PayDebtCommand(
+                    context.sessionState().sessionId(),
+                    playerId(context.currentPlayerView()),
+                    context.sessionState().activeDebt().debtId()
+            ));
         }
         if (view.debt().bankruptcyRisk()) {
             logDebtDecision(context.currentPlayerView(), new ComputerDecision(
@@ -34,8 +39,11 @@ final class StrongDebtResolver {
                     -1000,
                     "Declare bankruptcy: no liquidation path covers debt M" + amount
             ));
-            context.declareBankruptcy();
-            return true;
+            return context.submit(new DeclareBankruptcyCommand(
+                    context.sessionState().sessionId(),
+                    playerId(context.currentPlayerView()),
+                    context.sessionState().activeDebt().debtId()
+            ));
         }
         return false;
     }
@@ -44,12 +52,23 @@ final class StrongDebtResolver {
         while (context.currentPlayerView().moneyAmount() < targetAmount) {
             PlayerView current = context.currentPlayerView();
             DebtStep buildingSale = selectBuildingSale(current);
-            if (buildingSale != null && context.sellBuilding(buildingSale.property().spotType(), 1)) {
+            if (buildingSale != null && context.submit(new SellBuildingForDebtCommand(
+                    context.sessionState().sessionId(),
+                    playerId(current),
+                    context.sessionState().activeDebt().debtId(),
+                    buildingSale.property().spotType().name(),
+                    1
+            ))) {
                 logDebtDecision(current, buildingSale.decision());
                 continue;
             }
             DebtStep mortgage = selectMortgage(current);
-            if (mortgage != null && context.toggleMortgage(mortgage.property().spotType())) {
+            if (mortgage != null && context.submit(new MortgagePropertyForDebtCommand(
+                    context.sessionState().sessionId(),
+                    playerId(current),
+                    context.sessionState().activeDebt().debtId(),
+                    mortgage.property().spotType().name()
+            ))) {
                 logDebtDecision(current, mortgage.decision());
                 continue;
             }
@@ -183,6 +202,10 @@ final class StrongDebtResolver {
 
     private double round(double value) {
         return Math.round(value * 10.0) / 10.0;
+    }
+
+    private String playerId(PlayerView player) {
+        return "player-" + player.id();
     }
 
     private record DebtStep(

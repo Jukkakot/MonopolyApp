@@ -1,7 +1,8 @@
 package fi.monopoly.components.popup;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
@@ -13,9 +14,7 @@ import processing.core.PImage;
 
 import java.util.List;
 
-import static processing.core.PConstants.CENTER;
-import static processing.core.PConstants.CORNER;
-import static processing.core.PConstants.TOP;
+import static processing.core.PConstants.*;
 
 public class PropertyOfferPopup extends ChoicePopup {
     private static final int CARD_BASE_R = 205;
@@ -40,14 +39,19 @@ public class PropertyOfferPopup extends ChoicePopup {
     }
 
     @Override
+    public String getPopupKind() {
+        return "propertyOffer";
+    }
+
+    @Override
     protected int getPopupWidth() {
-        int availableWidth = Math.round(runtime.app().width) - UiTokens.popupWindowMargin() * 2;
+        int availableWidth = runtime.windowWidth() - UiTokens.popupWindowMargin() * 2;
         return Math.max(420, Math.min(640, availableWidth));
     }
 
     @Override
     protected int getPopupHeight() {
-        int availableHeight = runtime.app().height - UiTokens.popupWindowMargin() * 2;
+        int availableHeight = runtime.windowHeight() - UiTokens.popupWindowMargin() * 2;
         return Math.max(360, Math.min(540, availableHeight));
     }
 
@@ -128,7 +132,7 @@ public class PropertyOfferPopup extends ChoicePopup {
         if (hasStripe) {
             drawStripe(p, x, y, width);
         }
-        PImage image = MonopolyApp.getImage(offeredProperty.getSpotType());
+        PImage image = DesktopImageCatalog.getImage(offeredProperty.getSpotType());
         if (image != null) {
             p.imageMode(CORNER);
             float imageTopInset = hasStripe ? 8f + UiTokens.tradePropertyColorStripeHeight() : 8f;
