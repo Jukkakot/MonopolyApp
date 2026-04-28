@@ -23,13 +23,12 @@ BACKEND EXTRACTION (separation-program)
        - auction bidding validation (done in DomainAuctionGateway — simplified bot strategy)
        - building purchase/sale: move pure validation out of StreetProperty.buyBuildingRoundsAcrossSet()
 [High] Purify DebtOpeningGateway and SessionPaymentPort — use legacy PaymentRequest type.
-       Requires replacing PaymentRequest with a domain-level debt-opening event type before
-       PureDomainSessionFactory can handle rent/debt-opening flows without Processing runtime.
-       (DebtRemediationGateway.activeDebtState() already removed)
-[High] Purify TradeGateway — isValidOffer/applyOffer still use legacy TradeOffer internally
-       in LegacyTradeGateway. Required for PureDomainSessionFactory to handle trade commands.
-       (evaluateForRecipient/proposeCounterOffer/toLegacyOffer already removed from interface)
+       These are only on the legacy desktop path; PureDomainSessionFactory does not use them
+       (DomainTurnActionGateway opens debt directly in SessionState). Required before the
+       application layer can be fully free of Processing imports.
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)
+[Medium] Add integration test for StartSessionServer: start server, send RollDiceCommand via
+         HTTP, verify snapshot reflects new board position (end-to-end pure domain round-trip)
 [Low] Add integration test: round-trip command via HTTP → embedded host → SSE snapshot push
