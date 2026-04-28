@@ -21,7 +21,7 @@ BACKEND EXTRACTION (separation-program)
        - dice rolling + movement + landing effects — done in DomainTurnActionGateway
        - jail handling — done in DomainTurnActionGateway (doubles escape, last-round fine)
        - auction bidding validation (done in DomainAuctionGateway — simplified bot strategy)
-       - building purchase/sale: move pure validation out of StreetProperty.buyBuildingRoundsAcrossSet()
+       - building purchase/sale: done in DomainTurnActionGateway (bank supply, mortgaged set, even-build)
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)

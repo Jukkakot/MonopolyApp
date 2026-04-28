@@ -45,6 +45,8 @@ public final class DomainTurnActionGateway implements TurnActionGateway {
     private static final int GO_REWARD = 200;
     private static final int GET_OUT_OF_JAIL_FEE = 50;
     private static final int INITIAL_JAIL_ROUNDS = 3;
+    static final int BANK_HOUSE_SUPPLY = 32;
+    static final int BANK_HOTEL_SUPPLY = 12;
 
     private final SessionStateStore store;
     private final PropertyPurchaseFlow propertyPurchaseFlow;
@@ -142,47 +144,64 @@ public final class DomainTurnActionGateway implements TurnActionGateway {
         }
         if (spotType.streetType.placeType != PlaceType.STREET) return false;
 
-        store.update(state -> {
-            String activePlayerId = state.turn().activePlayerId();
-            if (activePlayerId == null) return state;
+        SessionState state = store.get();
+        String activePlayerId = state.turn().activePlayerId();
+        if (activePlayerId == null) return false;
 
-            List<SpotType> colorSet = spotsOfType(spotType.streetType);
+        List<SpotType> colorSet = spotsOfType(spotType.streetType);
 
-            boolean ownsAll = colorSet.stream()
-                    .allMatch(s -> activePlayerId.equals(ownerOf(state, s.name())));
-            if (!ownsAll) return state;
+        if (!colorSet.stream().allMatch(s -> activePlayerId.equals(ownerOf(state, s.name())))) {
+            return false;
+        }
+        if (colorSet.stream().anyMatch(s -> {
+            PropertyStateSnapshot p = findProperty(state, s.name());
+            return p != null && p.mortgaged();
+        })) {
+            return false;
+        }
 
-            PropertyStateSnapshot targetProp = findProperty(state, propertyId);
-            if (targetProp == null || targetProp.hotelCount() > 0) return state;
+        PropertyStateSnapshot targetProp = findProperty(state, propertyId);
+        if (targetProp == null || targetProp.hotelCount() > 0) return false;
 
-            // Even building rule: must not be more than 1 house ahead of the set minimum
-            int targetLevel = targetProp.houseCount();
-            int minLevelInSet = colorSet.stream()
-                    .mapToInt(s -> {
-                        PropertyStateSnapshot p = findProperty(state, s.name());
-                        if (p == null) return 0;
-                        return p.hotelCount() > 0 ? 5 : p.houseCount();
-                    })
-                    .min().orElse(0);
-            if (targetLevel > minLevelInSet) return state;
+        // Even building rule: this property must not be above the set minimum level
+        int targetLevel = targetProp.houseCount();
+        int minLevelInSet = colorSet.stream()
+                .mapToInt(s -> {
+                    PropertyStateSnapshot p = findProperty(state, s.name());
+                    return (p == null) ? 0 : (p.hotelCount() > 0 ? 5 : p.houseCount());
+                })
+                .min().orElse(0);
+        if (targetLevel > minLevelInSet) return false;
 
-            int housePrice = spotType.getIntegerProperty("housePrice");
-            if (housePrice <= 0) return state;
+        int housePrice = spotType.getIntegerProperty("housePrice");
+        if (housePrice <= 0) return false;
 
-            PlayerSnapshot player = findPlayer(state, activePlayerId);
-            if (player == null || player.cash() < housePrice) return state;
+        PlayerSnapshot player = findPlayer(state, activePlayerId);
+        if (player == null || player.cash() < housePrice) return false;
 
-            int newHouseCount = targetProp.houseCount() + 1;
-            boolean becomesHotel = newHouseCount >= 5;
+        boolean becomesHotel = targetProp.houseCount() + 1 >= 5;
 
-            List<PropertyStateSnapshot> updatedProps = state.properties().stream()
+        // Bank supply check
+        int totalHouses = state.properties().stream().mapToInt(PropertyStateSnapshot::houseCount).sum();
+        int totalHotels = state.properties().stream().mapToInt(PropertyStateSnapshot::hotelCount).sum();
+        if (becomesHotel) {
+            if (totalHotels >= BANK_HOTEL_SUPPLY) return false;
+        } else {
+            if (totalHouses >= BANK_HOUSE_SUPPLY) return false;
+        }
+
+        int newHouseCount = targetProp.houseCount() + 1;
+        store.update(s -> {
+            List<PropertyStateSnapshot> updatedProps = s.properties().stream()
                     .map(p -> p.propertyId().equals(propertyId)
                             ? new PropertyStateSnapshot(p.propertyId(), p.ownerPlayerId(), p.mortgaged(),
                                     becomesHotel ? 0 : newHouseCount, becomesHotel ? 1 : 0)
                             : p)
                     .toList();
-            List<PlayerSnapshot> updatedPlayers = updateCash(state.players(), activePlayerId, -housePrice);
-            return state.toBuilder().properties(updatedProps).players(updatedPlayers).build();
+            return s.toBuilder()
+                    .properties(updatedProps)
+                    .players(updateCash(s.players(), activePlayerId, -housePrice))
+                    .build();
         });
         return true;
     }

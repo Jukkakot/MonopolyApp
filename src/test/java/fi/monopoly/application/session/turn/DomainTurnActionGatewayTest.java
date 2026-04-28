@@ -432,9 +432,86 @@ class DomainTurnActionGatewayTest {
                 ));
         DomainTurnActionGateway gateway = gatewayWithDice(store, 1, 2);
 
-        gateway.buyBuildingRound("B1"); // housePrice=50 but player only has 10
+        assertFalse(gateway.buyBuildingRound("B1")); // housePrice=50 but player only has 10
 
         assertEquals(0, propertyById(store.get(), "B1").houseCount());
+    }
+
+    @Test
+    void buyBuildingRoundRejectedIfMortgagedPropertyInSet() {
+        InMemorySessionState store = storeWithProperties(player(PLAYER_1, GO_INDEX, 1500),
+                List.of(
+                        new PropertyStateSnapshot("B1", PLAYER_1, false, 0, 0),
+                        new PropertyStateSnapshot("B2", PLAYER_1, true, 0, 0) // mortgaged
+                ));
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 1, 2);
+
+        assertFalse(gateway.buyBuildingRound("B1"));
+
+        assertEquals(0, propertyById(store.get(), "B1").houseCount());
+    }
+
+    @Test
+    void buyBuildingRoundRejectedIfNoBankHousesLeft() {
+        // Fill the bank supply: 32 houses on other properties (use dark blue set with 4 houses each — 2 props × 4 = 8)
+        // and add more via many properties. Easiest: create 32 properties each with 1 house
+        // but board only has real SpotType names. Use 8 properties × 4 houses = 32 total.
+        // Dark blue (DB): DB1 and DB2 (2 spots). Orange (O): O1, O2, O3 (3 spots). Green (G): G1, G2, G3. Red (R): R1, R2, R3.
+        // Total sets to max 32: e.g., 3 properties × 4 = 12, another 3 × 4 = 12, etc.
+        // Simplest: use 8 "other" properties (all valid SpotTypes) each with houseCount=4 = 32 houses.
+        List<PropertyStateSnapshot> props = new ArrayList<>();
+        // Use 8 distinct street properties owned by PLAYER_2 to fill the bank
+        List<String> fillerIds = List.of("O1", "O2", "O3", "LG1", "LG2", "LG3", "LG4", "R1");
+        for (String id : fillerIds) {
+            props.add(new PropertyStateSnapshot(id, PLAYER_2, false, 4, 0)); // 8 × 4 = 32 houses
+        }
+        // Target property: PLAYER_1 owns B1 + B2
+        props.add(new PropertyStateSnapshot("B1", PLAYER_1, false, 0, 0));
+        props.add(new PropertyStateSnapshot("B2", PLAYER_1, false, 0, 0));
+
+        SeatState seat1 = new SeatState("seat-0", 0, PLAYER_1, SeatKind.HUMAN, ControlMode.MANUAL, PLAYER_1, "HUMAN", "#000000");
+        SeatState seat2 = new SeatState("seat-1", 1, PLAYER_2, SeatKind.HUMAN, ControlMode.MANUAL, PLAYER_2, "HUMAN", "#FFFFFF");
+        PlayerSnapshot p1 = player(PLAYER_1, GO_INDEX, 1500);
+        PlayerSnapshot p2 = player(PLAYER_2, GO_INDEX, 1500);
+        SessionState state = new SessionState(SESSION_ID, 0L, SessionStatus.IN_PROGRESS,
+                List.of(seat1, seat2), List.of(p1, p2), props,
+                new TurnState(PLAYER_1, TurnPhase.WAITING_FOR_END_TURN, false, true, 0),
+                null, null, null, null, null);
+        InMemorySessionState store = new InMemorySessionState(state);
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 1, 2);
+
+        assertFalse(gateway.buyBuildingRound("B1")); // 32 houses already out — bank is empty
+
+        assertEquals(0, propertyById(store.get(), "B1").houseCount());
+    }
+
+    @Test
+    void buyBuildingRoundRejectedIfNoBankHotelsLeft() {
+        // Fill 12 hotels on other properties then try to upgrade B1 from 4 houses to hotel
+        List<PropertyStateSnapshot> props = new ArrayList<>();
+        List<String> hotelIds = List.of("O1", "O2", "O3", "LG1", "LG2", "LG3", "LG4", "R1", "R2", "R3", "DB1", "DB2");
+        for (String id : hotelIds) {
+            props.add(new PropertyStateSnapshot(id, PLAYER_2, false, 0, 1)); // 12 hotels
+        }
+        // B1 at 4 houses (one step from hotel), B2 at 4 houses
+        props.add(new PropertyStateSnapshot("B1", PLAYER_1, false, 4, 0));
+        props.add(new PropertyStateSnapshot("B2", PLAYER_1, false, 4, 0));
+
+        SeatState seat1 = new SeatState("seat-0", 0, PLAYER_1, SeatKind.HUMAN, ControlMode.MANUAL, PLAYER_1, "HUMAN", "#000000");
+        SeatState seat2 = new SeatState("seat-1", 1, PLAYER_2, SeatKind.HUMAN, ControlMode.MANUAL, PLAYER_2, "HUMAN", "#FFFFFF");
+        PlayerSnapshot p1 = player(PLAYER_1, GO_INDEX, 1500);
+        PlayerSnapshot p2 = player(PLAYER_2, GO_INDEX, 1500);
+        SessionState state = new SessionState(SESSION_ID, 0L, SessionStatus.IN_PROGRESS,
+                List.of(seat1, seat2), List.of(p1, p2), props,
+                new TurnState(PLAYER_1, TurnPhase.WAITING_FOR_END_TURN, false, true, 0),
+                null, null, null, null, null);
+        InMemorySessionState store = new InMemorySessionState(state);
+        DomainTurnActionGateway gateway = gatewayWithDice(store, 1, 2);
+
+        assertFalse(gateway.buyBuildingRound("B1")); // 12 hotels already out — bank is empty
+
+        assertEquals(4, propertyById(store.get(), "B1").houseCount()); // unchanged
+        assertEquals(0, propertyById(store.get(), "B1").hotelCount());
     }
 
     // -------------------------------------------------------------------------
