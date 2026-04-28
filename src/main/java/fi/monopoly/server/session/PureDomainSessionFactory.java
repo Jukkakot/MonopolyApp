@@ -11,7 +11,9 @@ import fi.monopoly.application.session.turn.DomainTurnContinuationGateway;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.types.SpotType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -62,25 +64,54 @@ public final class PureDomainSessionFactory {
     }
 
     /**
+     * Builds a playable initial game state for the given player names.
+     *
+     * <p>Each player receives €1500 starting cash and a seat in the order provided.
+     * All purchasable board properties start unowned. The first player's turn begins at GO.</p>
+     *
+     * @param sessionId   the session identifier
+     * @param playerNames ordered list of player display names (2–4 players)
+     * @param colors      ordered list of player colour hex strings (e.g. "#FF0000")
+     */
+    public static SessionState initialGameState(String sessionId, List<String> playerNames, List<String> colors) {
+        if (playerNames.isEmpty()) throw new IllegalArgumentException("At least one player is required");
+
+        List<PropertyStateSnapshot> properties = SpotType.SPOT_TYPES.stream()
+                .filter(s -> s.isProperty)
+                .map(s -> new PropertyStateSnapshot(s.name(), null, false, 0, 0))
+                .toList();
+
+        List<SeatState> seats = new ArrayList<>();
+        List<PlayerSnapshot> players = new ArrayList<>();
+        for (int i = 0; i < playerNames.size(); i++) {
+            String name = playerNames.get(i);
+            String color = i < colors.size() ? colors.get(i) : "#AAAAAA";
+            String playerId = "player-" + (i + 1);
+            String seatId = "seat-" + i;
+            seats.add(new SeatState(seatId, i, playerId, SeatKind.HUMAN, ControlMode.MANUAL, name, "HUMAN", color));
+            players.add(new PlayerSnapshot(playerId, seatId, name, 1500, 0, false, false, false, 0, 0, List.of()));
+        }
+
+        String firstPlayerId = players.get(0).playerId();
+        return new SessionState(
+                sessionId, 0L, SessionStatus.IN_PROGRESS,
+                seats, players, properties,
+                new TurnState(firstPlayerId, TurnPhase.WAITING_FOR_ROLL, true, false, 0),
+                null, null, null, null, null, null
+        );
+    }
+
+    /**
      * Builds a minimal valid starting state for a session with no players and no properties.
      *
-     * <p>Suitable for tests and smoke runs. A real game start requires seats, player snapshots,
-     * and property snapshots populated from the board setup.</p>
+     * <p>Suitable for tests and smoke runs.</p>
      */
     public static SessionState emptyInitialState(String sessionId) {
         return new SessionState(
-                sessionId,
-                0L,
-                SessionStatus.IN_PROGRESS,
-                List.of(),
-                List.of(),
-                List.of(),
-                new TurnState(null, TurnPhase.WAITING_FOR_ROLL, false, false),
-                null,
-                null,
-                null,
-                null,
-                null
+                sessionId, 0L, SessionStatus.IN_PROGRESS,
+                List.of(), List.of(), List.of(),
+                new TurnState(null, TurnPhase.WAITING_FOR_ROLL, false, false, 0),
+                null, null, null, null, null, null
         );
     }
 }
