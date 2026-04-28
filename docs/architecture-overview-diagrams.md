@@ -348,7 +348,7 @@ Useful mental model:
 - `desktop.ui`: controls, layout, frame rendering, input binding, and the extracted desktop presentation host
 - `host.session.local`: `EmbeddedDesktopSessionHost` (single command entry point + snapshot publisher) and `HostedLocalSession` (combines all local host seams)
 - `server.transport`: `SessionCommandMapper` (JSON ↔ `SessionCommand`), `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /health`); activated via `-Dmonopoly.http.port=<port>`
-- `server.session`: `SessionServer` (lifecycle wrapper around `SessionHttpServer`), `SessionCommandPublisher` (snapshot-publishing decorator over any `SessionCommandPort`), `StartSessionServer` (future standalone main with docs on remaining blockers)
+- `server.session`: `SessionServer` (lifecycle wrapper around `SessionHttpServer`), `SessionCommandPublisher` (snapshot-publishing decorator over any `SessionCommandPort`), `StartSessionServer` (standalone server main — fully functional; starts a real game session over HTTP without Processing runtime)
 
 ## 5. Target Backend-Ready Architecture
 
@@ -420,7 +420,10 @@ Current practical status:
 - the remaining local cleanup means: (1) moving adapter assembly out of `Game` and into host-level wiring so adapters receive `EmbeddedDesktopSessionHost` directly, (2) separating legacy runtime reconstruction from authoritative session execution
 - `F` is the next major architecture milestone, with the main prerequisite being a concrete server-side session host that implements the already-defined `SessionCommandPort` + `ClientSessionUpdates` contract
 - **`server.transport` package now exists** with `SessionCommandMapper` (JSON ↔ `SessionCommand`) and `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /events` SSE, `GET /health`); the embedded host is optionally exposed over HTTP via `-Dmonopoly.http.port=<port>`
-- **`server.session` package now exists** with `SessionServer` (lifecycle wrapper), `SessionCommandPublisher` (snapshot-publishing decorator over any `SessionCommandPort` + `ClientSessionUpdates`), and `StartSessionServer` (future standalone main); `SessionCommandPublisher` is ready to use — the remaining blocker before `StartSessionServer` can run is a pure `DebtRemediationGateway` (the last major legacy dependency; all other gateways in `PureDomainSessionFactory` are now pure domain)
-- **`PureDomainSessionFactory`** now wires auction, property-purchase, turn-action, and continuation flows with pure domain implementations: `DomainAuctionGateway`, `DomainPropertyPurchaseGateway`, `DomainTurnActionGateway` (dice rolling, movement, GO bonus, GO_TO_JAIL, rent, tax, jail handling, building purchase, mortgage), and `DomainTurnContinuationGateway`; `TurnState` gained a `consecutiveDoubles` field for tracking re-roll state
+- **`server.session` package now exists** with `SessionServer` (lifecycle wrapper), `SessionCommandPublisher` (snapshot-publishing decorator over any `SessionCommandPort` + `ClientSessionUpdates`), and `StartSessionServer` (standalone server main — **fully functional, no Processing runtime required**); tested end-to-end with `StartSessionServerIntegrationTest`
+- **`PureDomainSessionFactory`** wires all six gateway interfaces with pure domain implementations — no legacy runtime objects:
+  - `DomainAuctionGateway`, `DomainPropertyPurchaseGateway`, `DomainTurnActionGateway` (dice rolling, movement, GO bonus, GO_TO_JAIL, rent, tax, jail, building purchase, mortgage), `DomainTurnContinuationGateway`, `DomainDebtRemediationGateway` (pay/mortgage/sell/bankruptcy), `DomainTradeGateway` (validate + apply trade offers)
+  - `initialGameState(sessionId, playerNames, colors)` creates a ready-to-play `SessionState` (all properties unowned, €1500 per player)
+  - `TurnState` gained `consecutiveDoubles` for re-roll tracking
 - **`domain.decision.DecisionPayload`** sealed interface with `@JsonTypeInfo`/`@JsonSubTypes` ensures `PendingDecision.payload` survives HTTP JSON round-trips without transport-layer MixIns
 - project now runs on **Java 21**: `SessionHttpServer` uses `Executors.newVirtualThreadPerTaskExecutor()`, SSE reader and shutdown hook use `Thread.ofVirtual()`, `SessionCommandSerializer` and `InteractiveTurnEffectExecutor` use Java 21 pattern-matching switch
