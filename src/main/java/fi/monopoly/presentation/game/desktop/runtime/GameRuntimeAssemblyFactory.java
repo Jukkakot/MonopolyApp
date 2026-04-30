@@ -1,5 +1,6 @@
 package fi.monopoly.presentation.game.desktop.runtime;
 
+import fi.monopoly.application.session.StartingOrderDeterminer;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.GameSession;
@@ -14,6 +15,10 @@ import fi.monopoly.presentation.session.debt.DebtActionDispatcher;
 import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.text.UiTexts;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
 
 /**
  * Builds and wires the live desktop runtime objects that still back the legacy game shell.
@@ -43,6 +48,7 @@ public final class GameRuntimeAssemblyFactory {
         Players players = runtimeState.players();
         if (!runtimeState.restoredSession()) {
             hooks.setupDefaultGameState(board, players);
+            applyDiceRollStartOrder(players);
         }
 
         DebtController debtController = new DebtController(
@@ -72,6 +78,16 @@ public final class GameRuntimeAssemblyFactory {
                 debugController,
                 runtimeState.restoredSession()
         );
+    }
+
+    private static void applyDiceRollStartOrder(Players players) {
+        List<Player> playerList = players != null ? players.getPlayers() : List.of();
+        if (playerList.size() <= 1) {
+            return;
+        }
+        List<Integer> indices = IntStream.range(0, playerList.size()).boxed().toList();
+        List<Integer> ordered = StartingOrderDeterminer.determineStartOrder(indices, new Random());
+        players.restoreTurn(playerList.get(ordered.get(0)));
     }
 
     public void registerGameSession(

@@ -3,6 +3,7 @@ package fi.monopoly.server.session;
 import fi.monopoly.application.session.InMemorySessionState;
 import fi.monopoly.application.session.OverlaySessionStateStore;
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.application.session.StartingOrderDeterminer;
 import fi.monopoly.application.session.auction.DomainAuctionGateway;
 import fi.monopoly.application.session.debt.DomainDebtRemediationGateway;
 import fi.monopoly.application.session.purchase.DomainPropertyPurchaseGateway;
@@ -16,10 +17,7 @@ import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.types.SpotType;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -141,24 +139,7 @@ public final class PureDomainSessionFactory {
      * total ordering — the first element goes first in the game.</p>
      */
     static List<Integer> determineStartOrder(List<Integer> candidates, Random rng) {
-        if (candidates.size() <= 1) return List.copyOf(candidates);
-
-        Map<Integer, Integer> rolls = new LinkedHashMap<>();
-        for (int c : candidates) {
-            rolls.put(c, (1 + rng.nextInt(6)) + (1 + rng.nextInt(6)));
-        }
-
-        // Group candidates by roll value; resolve ties per group (re-roll only within tied group).
-        Map<Integer, List<Integer>> byRoll = new java.util.TreeMap<>(Comparator.reverseOrder());
-        for (int c : candidates) {
-            byRoll.computeIfAbsent(rolls.get(c), k -> new ArrayList<>()).add(c);
-        }
-
-        List<Integer> ordered = new ArrayList<>();
-        for (List<Integer> group : byRoll.values()) {
-            ordered.addAll(group.size() == 1 ? group : determineStartOrder(group, rng));
-        }
-        return ordered;
+        return StartingOrderDeterminer.determineStartOrder(candidates, rng);
     }
 
     /**
