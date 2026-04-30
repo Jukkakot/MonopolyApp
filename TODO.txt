@@ -1,7 +1,6 @@
 BACKLOG
 
 RULES AND GAME START
-[High] Add starting order by dice roll (done in PureDomainSessionFactory; legacy desktop path still uses input order)
 [Low] Remove random starting deeds from normal game setup
 
 TRADING
@@ -19,4 +18,3 @@ BACKEND EXTRACTION (separation-program)
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)
-[Low] Legacy desktop starting order still uses input order (LegacySessionApplicationFactory / Game)
