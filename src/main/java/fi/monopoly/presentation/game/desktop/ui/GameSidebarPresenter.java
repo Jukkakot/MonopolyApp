@@ -58,12 +58,15 @@ public final class GameSidebarPresenter {
         app.fill(46, 72, 63);
         float currentPlayerValueX = sidebarX + UiTokens.sidebarValueX();
         float currentPlayerValueY = layoutMetrics.sidebarHeaderRow1Y();
-        app.text(turnPlayer != null ? turnPlayer.getName() : text("sidebar.none"), currentPlayerValueX, currentPlayerValueY);
-        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
-            drawComputerBadge(app, currentPlayerValueX + app.textWidth(turnPlayer.getName()) + 12, currentPlayerValueY - 14);
+        String activePlayerName = turnPlayer != null ? turnPlayer.getName() : text("sidebar.none");
+        app.text(activePlayerName, currentPlayerValueX, currentPlayerValueY);
+        if (state.activePlayerIsComputer()) {
+            drawComputerBadge(app, currentPlayerValueX + app.textWidth(activePlayerName) + 12, currentPlayerValueY - 14);
         }
         app.text(state.currentTurnPhase(), sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow2Y());
-        app.text(turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"), sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow3Y());
+        String spotName = state.activePlayerSpotName() != null ? state.activePlayerSpotName()
+                : (turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"));
+        app.text(spotName, sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow3Y());
         drawPersistenceNotice(app, layoutMetrics, state.persistenceNotice());
         drawPopupHistoryPanel(app, layoutMetrics, state, historyTimingRecorder);
         app.pop();
@@ -289,8 +292,25 @@ public final class GameSidebarPresenter {
             String persistenceNotice,
             float historyPanelY,
             float historyHeight,
-            float reservedTop
+            float reservedTop,
+            String activePlayerSpotName,
+            boolean activePlayerIsComputer
     ) {
+        public SidebarState(
+                Player turnPlayer,
+                String currentTurnPhase,
+                List<Player> players,
+                List<String> recentMessages,
+                DebtState debtState,
+                String persistenceNotice,
+                float historyPanelY,
+                float historyHeight,
+                float reservedTop
+        ) {
+            this(turnPlayer, currentTurnPhase, players, recentMessages, debtState,
+                    persistenceNotice, historyPanelY, historyHeight, reservedTop,
+                    null, turnPlayer != null && turnPlayer.isComputerControlled());
+        }
     }
 
     private record HistoryEntryLayout(

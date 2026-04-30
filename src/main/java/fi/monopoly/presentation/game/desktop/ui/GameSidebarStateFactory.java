@@ -2,8 +2,11 @@ package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;
+import fi.monopoly.domain.session.PlayerSnapshot;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.turn.TurnPhase;
+import fi.monopoly.types.SpotType;
+import fi.monopoly.utils.MonopolyUtils;
 
 import java.util.List;
 
@@ -26,6 +29,9 @@ public final class GameSidebarStateFactory {
             float historyHeight,
             float reservedTop
     ) {
+        String activePlayerSpotName = resolveActivePlayerSpotName(authoritativeSessionState);
+        boolean activePlayerIsComputer = resolveActivePlayerIsComputer(authoritativeSessionState,
+                turnPlayer != null && turnPlayer.isComputerControlled());
         return new GameSidebarPresenter.SidebarState(
                 turnPlayer,
                 resolveCurrentTurnPhase(gameOver, debtState, popupVisible, animationsRunning,
@@ -36,8 +42,44 @@ public final class GameSidebarStateFactory {
                 persistenceNotice,
                 historyPanelY,
                 historyHeight,
-                reservedTop
+                reservedTop,
+                activePlayerSpotName,
+                activePlayerIsComputer
         );
+    }
+
+    private static String resolveActivePlayerSpotName(SessionState state) {
+        if (state == null || state.turn() == null || state.turn().activePlayerId() == null) {
+            return null;
+        }
+        String activeId = state.turn().activePlayerId();
+        return state.players().stream()
+                .filter(p -> activeId.equals(p.playerId()))
+                .findFirst()
+                .map(p -> spotName(p.boardIndex()))
+                .orElse(null);
+    }
+
+    private static boolean resolveActivePlayerIsComputer(SessionState state, boolean legacyFallback) {
+        if (state == null || state.turn() == null || state.turn().activePlayerId() == null) {
+            return legacyFallback;
+        }
+        String activeId = state.turn().activePlayerId();
+        return state.seats().stream()
+                .filter(s -> activeId.equals(s.playerId()))
+                .findFirst()
+                .map(s -> s.seatKind() == fi.monopoly.domain.session.SeatKind.BOT)
+                .orElse(legacyFallback);
+    }
+
+    private static String spotName(int boardIndex) {
+        List<SpotType> spots = SpotType.SPOT_TYPES;
+        if (boardIndex < 0 || boardIndex >= spots.size()) {
+            return null;
+        }
+        SpotType spotType = spots.get(boardIndex);
+        String name = spotType.getStringProperty("name");
+        return name.isBlank() ? spotType.name() : MonopolyUtils.parseIllegalCharacters(name);
     }
 
     public String resolveCurrentTurnPhase(
