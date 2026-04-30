@@ -851,8 +851,9 @@ public final class DomainTurnActionGateway implements TurnActionGateway {
     private static String ownerOf(SessionState state, String propertyId) {
         return state.properties().stream()
                 .filter(p -> propertyId.equals(p.propertyId()))
+                .findFirst()
                 .map(PropertyStateSnapshot::ownerPlayerId)
-                .findFirst().orElse(null);
+                .orElse(null);
     }
 
     private static PlayerSnapshot findPlayer(SessionState state, String playerId) {

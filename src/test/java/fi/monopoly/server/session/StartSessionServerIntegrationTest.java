@@ -6,13 +6,24 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,8 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class StartSessionServerIntegrationTest {
 
     private static final String SESSION_ID = "e2e-session";
-    private static final String PLAYER_1 = "player-1";
-    private static final String PLAYER_2 = "player-2";
+    private static final Pattern ACTIVE_PLAYER_PATTERN = Pattern.compile("\"activePlayerId\":\"([^\"]+)\"");
 
     private SessionServer server;
     private int port;
@@ -65,9 +75,10 @@ class StartSessionServerIntegrationTest {
 
     @Test
     void rollDiceCommandIsAccepted() throws Exception {
+        String activePlayerId = activePlayerId(get("/snapshot"));
         String rollJson = """
                 {"type":"RollDice","sessionId":"%s","actorPlayerId":"%s"}
-                """.formatted(SESSION_ID, PLAYER_1).strip();
+                """.formatted(SESSION_ID, activePlayerId).strip();
 
         HttpResponse<String> response = post("/command", rollJson);
 
@@ -78,19 +89,16 @@ class StartSessionServerIntegrationTest {
 
     @Test
     void rollDiceMovesActivePlayerOnBoard() throws Exception {
+        String activePlayerId = activePlayerId(get("/snapshot"));
         String rollJson = """
                 {"type":"RollDice","sessionId":"%s","actorPlayerId":"%s"}
-                """.formatted(SESSION_ID, PLAYER_1).strip();
+                """.formatted(SESSION_ID, activePlayerId).strip();
 
         post("/command", rollJson);
 
         String snapshot = get("/snapshot");
-        // Player should have moved from position 0; boardIndex must change
-        // We can't predict the dice value, but the turn phase should advance
         assertTrue(snapshot.contains("\"sessionId\":\"" + SESSION_ID + "\""),
                 "Snapshot should still be valid after roll");
-        // The active player's boardIndex should now be non-zero (dice ≥ 2 always moves)
-        // We cannot assert exact position, but we can assert the snapshot reflects state
         assertFalse(snapshot.isEmpty());
     }
 
@@ -100,9 +108,64 @@ class StartSessionServerIntegrationTest {
         assertTrue(body.contains("ok"));
     }
 
+    @Test
+    void sseStreamPushesUpdatedSnapshotAfterRollDice() throws Exception {
+        BlockingQueue<String> events = new LinkedBlockingQueue<>();
+
+        // Read SSE lines on a virtual thread. setReadTimeout ensures the thread cannot hang
+        // forever: if no data arrives within 8 s the socket throws SocketTimeoutException and
+        // the thread exits. A local counter breaks the read loop after exactly 2 data events so
+        // the thread never blocks waiting for a third event that will never come.
+        Thread sseThread = Thread.ofVirtual().start(() -> {
+            int received = 0;
+            try {
+                HttpURLConnection conn = (HttpURLConnection)
+                        new URL("http://localhost:" + port + "/events").openConnection();
+                conn.setReadTimeout(8_000);
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("data: ")) {
+                            events.offer(line.substring(6));
+                            if (++received >= 2) break;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        });
+
+        // Initial snapshot is pushed by the server immediately on connect
+        String initial = events.poll(5, TimeUnit.SECONDS);
+        assertNotNull(initial, "Should receive initial SSE snapshot within 5 s");
+        assertTrue(initial.contains("\"sessionId\":\"" + SESSION_ID + "\""),
+                "Initial SSE snapshot must contain sessionId");
+
+        String activePlayerId = activePlayerId(initial);
+        String rollJson = """
+                {"type":"RollDice","sessionId":"%s","actorPlayerId":"%s"}
+                """.formatted(SESSION_ID, activePlayerId).strip();
+        HttpResponse<String> cmdResp = post("/command", rollJson);
+        assertEquals(200, cmdResp.statusCode(), "RollDice must be accepted before SSE push fires");
+
+        String updated = events.poll(5, TimeUnit.SECONDS);
+        assertNotNull(updated, "Should receive SSE snapshot push after accepted RollDice within 5 s");
+        assertTrue(updated.contains("\"sessionId\":\"" + SESSION_ID + "\""),
+                "Updated SSE snapshot must contain sessionId");
+        assertNotEquals(initial, updated, "SSE snapshot must differ after RollDice");
+
+        sseThread.join(2_000);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private String activePlayerId(String snapshotJson) {
+        Matcher m = ACTIVE_PLAYER_PATTERN.matcher(snapshotJson);
+        assertTrue(m.find(), "Could not find activePlayerId in snapshot JSON");
+        return m.group(1);
+    }
 
     private String get(String path) throws Exception {
         HttpClient client = HttpClient.newHttpClient();

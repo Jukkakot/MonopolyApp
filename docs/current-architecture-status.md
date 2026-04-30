@@ -371,39 +371,27 @@ Progress since HTTP MVP:
   SSE reader uses `Thread.ofVirtual()`; `SessionCommandSerializer` and
   `InteractiveTurnEffectExecutor` use Java 21 pattern-matching switch statements
 
-Remaining for full backend split (main blocker):
-- `server.session` — standalone server process requires pure domain gateway implementations
-  (currently all gateways in `presentation.legacy.session.*` depend on Processing-era mutable
-  runtime objects: `Players`, `Dices`, `DebtController`, etc.)
-- extracting rule logic (rent, movement, jail, auction bidding, building sale) from legacy
-  runtime objects into the domain/application layer is the prerequisite for standalone operation
-
-Progress since last update (building purchase validation):
-- `DomainTurnActionGateway.buyBuildingRound()` now includes full validation:
-  - Mortgaged property in color set prevents building (standard rules)
-  - Bank house supply (max 32) and hotel supply (max 12) enforced
-  - Method now returns `false` on any failed pre-condition instead of silently
-    no-oping and returning `true`, matching the contract expected by
-    `TurnActionCommandHandler`
+Progress since last update (starting order + domain extraction complete):
+- All six gateway implementations are now fully pure-domain: `DomainAuctionGateway`,
+  `DomainPropertyPurchaseGateway`, `DomainTurnActionGateway`, `DomainTurnContinuationGateway`,
+  `DomainDebtRemediationGateway`, `DomainTradeGateway`
+- `StartSessionServer` is fully operational as a standalone server with no Processing dependency
+- `PureDomainSessionFactory.initialGameState()` now determines seat/turn order by simulated dice
+  roll (standard Finnish Monopoly starting-order rule); ties among highest-rollers are resolved by
+  recursive re-roll of only the tied group; tested with 50-seed sweep and RepeatedTest coverage
+- 542 tests green
 
 ## Recommended Immediate Architectural Focus
 
-Blockers A, B (partially), C (partially), and D are resolved. The main remaining work before full
-standalone server operation:
+Blockers A, B (partially), C (partially), and D are fully resolved. The standalone server
+(`StartSessionServer`) is operational. The main remaining work:
 
-1. **Extract rule logic from legacy runtime into domain/application layer** — rent calculation,
-   movement, jail handling, auction bidding, building sale must move to pure Java code before the
-   gateway adapters in `presentation.legacy.session.*` can be replaced
-2. **Replace legacy gateway adapters** — once rule logic is in the domain, create pure implementations
-   of `AuctionGateway`, `DebtRemediationGateway`, `PropertyPurchaseGateway`, `TradeGateway`,
-   `TurnActionGateway` that do not depend on `Players`, `Game`, or `PopupService`
-3. **`SessionCommandPublisher`** — DONE: `SessionCommandPublisher` in `server.session` decorates
-   any `SessionCommandPort`, publishes snapshots to registered `ClientSessionListener`s after each
-   accepted command, and exposes `currentSnapshot()` for use as the snapshot supplier seam;
-   `StartSessionServer` now only needs `PureDomainSessionFactory` before it can run
-4. **Make desktop client render from snapshot** — `Game` and the legacy Processing runtime should
+1. **Make desktop client render from snapshot** — `Game` and the legacy Processing runtime should
    become a pure client-side rendering projection that reads from received `SessionState` rather
-   than computing authoritative values themselves
+   than computing authoritative values themselves. This is the biggest remaining structural bridge.
+2. **Legacy desktop starting order** — `PureDomainSessionFactory` now rolls dice for start order,
+   but the legacy desktop game still starts players in input order. The desktop startup path
+   (`LegacySessionApplicationFactory` / `Game`) needs the same rule applied.
 
 ## Relationship To Older Plan Docs
 

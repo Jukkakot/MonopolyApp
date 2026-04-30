@@ -1,7 +1,7 @@
 BACKLOG
 
 RULES AND GAME START
-[High] Add starting order by dice roll
+[High] Add starting order by dice roll (done in PureDomainSessionFactory; legacy desktop path still uses input order)
 [Low] Remove random starting deeds from normal game setup
 
 TRADING
@@ -16,13 +16,7 @@ PLAYER SETUP
 ECONOMY AND PACING
 
 BACKEND EXTRACTION (separation-program)
-[High] Extract rule logic from legacy runtime objects into domain/application layer:
-       - rent calculation (LegacyPaymentGateway / DebtController) — now handled in DomainTurnActionGateway
-       - dice rolling + movement + landing effects — done in DomainTurnActionGateway
-       - jail handling — done in DomainTurnActionGateway (doubles escape, last-round fine)
-       - auction bidding validation (done in DomainAuctionGateway — simplified bot strategy)
-       - building purchase/sale: done in DomainTurnActionGateway (bank supply, mortgaged set, even-build)
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)
-[Low] Add integration test: round-trip command via HTTP → embedded host → SSE snapshot push
+[Low] Legacy desktop starting order still uses input order (LegacySessionApplicationFactory / Game)

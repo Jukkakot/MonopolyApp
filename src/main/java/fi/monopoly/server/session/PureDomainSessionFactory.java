@@ -16,7 +16,10 @@ import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.types.SpotType;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -70,14 +73,21 @@ public final class PureDomainSessionFactory {
     /**
      * Builds a playable initial game state for the given player names.
      *
-     * <p>Each player receives €1500 starting cash and a seat in the order provided.
-     * All purchasable board properties start unowned. The first player's turn begins at GO.</p>
+     * <p>Each player receives €1500 starting cash. Seat order (= turn order) is determined by a
+     * simulated dice roll: the highest roller becomes seat 0 and goes first. Ties among the
+     * top-rolling players are resolved by re-rolling only the tied group, recursively. This matches
+     * the standard Finnish Monopoly starting-order rule.</p>
      *
      * @param sessionId   the session identifier
      * @param playerNames ordered list of player display names (2–4 players)
      * @param colors      ordered list of player colour hex strings (e.g. "#FF0000")
      */
     public static SessionState initialGameState(String sessionId, List<String> playerNames, List<String> colors) {
+        return initialGameState(sessionId, playerNames, colors, new Random());
+    }
+
+    /** Package-private variant used in tests to pass a seeded {@link Random}. */
+    static SessionState initialGameState(String sessionId, List<String> playerNames, List<String> colors, Random rng) {
         if (playerNames.isEmpty()) throw new IllegalArgumentException("At least one player is required");
 
         List<PropertyStateSnapshot> properties = SpotType.SPOT_TYPES.stream()
@@ -85,19 +95,24 @@ public final class PureDomainSessionFactory {
                 .map(s -> new PropertyStateSnapshot(s.name(), null, false, 0, 0))
                 .toList();
 
+        // Determine turn order by dice roll (standard Monopoly starting-order rule).
+        List<Integer> inputIndices = new ArrayList<>();
+        for (int i = 0; i < playerNames.size(); i++) inputIndices.add(i);
+        List<Integer> turnOrder = determineStartOrder(inputIndices, rng);
+
         List<SeatState> seats = new ArrayList<>();
         List<PlayerSnapshot> players = new ArrayList<>();
-        for (int i = 0; i < playerNames.size(); i++) {
-            String name = playerNames.get(i);
-            String color = i < colors.size() ? colors.get(i) : "#AAAAAA";
-            String playerId = "player-" + (i + 1);
-            String seatId = "seat-" + i;
-            seats.add(new SeatState(seatId, i, playerId, SeatKind.HUMAN, ControlMode.MANUAL, name, "HUMAN", color));
+        for (int seatIndex = 0; seatIndex < turnOrder.size(); seatIndex++) {
+            int originalIndex = turnOrder.get(seatIndex);
+            String name = playerNames.get(originalIndex);
+            String color = originalIndex < colors.size() ? colors.get(originalIndex) : "#AAAAAA";
+            String playerId = "player-" + (originalIndex + 1);
+            String seatId = "seat-" + seatIndex;
+            seats.add(new SeatState(seatId, seatIndex, playerId, SeatKind.HUMAN, ControlMode.MANUAL, name, "HUMAN", color));
             players.add(new PlayerSnapshot(playerId, seatId, name, 1500, 0, false, false, false, 0, 0, List.of()));
         }
 
         String firstPlayerId = players.get(0).playerId();
-        Random rng = new Random();
         List<String> chanceDeck = CardDeckLoader.buildDeck("chance", rng);
         List<String> communityDeck = CardDeckLoader.buildDeck("community", rng);
         return SessionState.builder()
@@ -111,6 +126,39 @@ public final class PureDomainSessionFactory {
                 .chanceDeck(chanceDeck)
                 .communityDeck(communityDeck)
                 .build();
+    }
+
+    // -------------------------------------------------------------------------
+    // Private: starting order determination
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns {@code candidates} sorted from highest dice roll to lowest.
+     *
+     * <p>Each candidate rolls two dice (1–6 each). Players with different rolls are ordered by
+     * their roll value (highest first). Any subset of candidates that tied on the same value is
+     * resolved by a recursive re-roll of only those tied candidates. The resulting list is a
+     * total ordering — the first element goes first in the game.</p>
+     */
+    static List<Integer> determineStartOrder(List<Integer> candidates, Random rng) {
+        if (candidates.size() <= 1) return List.copyOf(candidates);
+
+        Map<Integer, Integer> rolls = new LinkedHashMap<>();
+        for (int c : candidates) {
+            rolls.put(c, (1 + rng.nextInt(6)) + (1 + rng.nextInt(6)));
+        }
+
+        // Group candidates by roll value; resolve ties per group (re-roll only within tied group).
+        Map<Integer, List<Integer>> byRoll = new java.util.TreeMap<>(Comparator.reverseOrder());
+        for (int c : candidates) {
+            byRoll.computeIfAbsent(rolls.get(c), k -> new ArrayList<>()).add(c);
+        }
+
+        List<Integer> ordered = new ArrayList<>();
+        for (List<Integer> group : byRoll.values()) {
+            ordered.addAll(group.size() == 1 ? group : determineStartOrder(group, rng));
+        }
+        return ordered;
     }
 
     /**
