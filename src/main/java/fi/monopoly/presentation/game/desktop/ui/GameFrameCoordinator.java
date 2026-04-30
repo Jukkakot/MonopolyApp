@@ -130,6 +130,7 @@ public final class GameFrameCoordinator {
                 hooks.animations().isRunning(),
                 hooks.endRoundVisible(),
                 hooks.rollDiceVisible(),
+                hooks.authoritativeSessionState(),
                 getSidebarHistoryPanelY(),
                 getSidebarHistoryHeight(),
                 getSidebarReservedTop()
@@ -202,6 +203,8 @@ public final class GameFrameCoordinator {
 
     public interface FrameHooks {
         GameSessionState sessionState();
+
+        SessionState authoritativeSessionState();
 
         Board board();
 

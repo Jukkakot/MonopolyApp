@@ -359,6 +359,11 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
+            public fi.monopoly.domain.session.SessionState authoritativeSessionState() {
+                return dependencies.sessionCommandPort().currentState();
+            }
+
+            @Override
             public Board board() {
                 return dependencies.board();
             }

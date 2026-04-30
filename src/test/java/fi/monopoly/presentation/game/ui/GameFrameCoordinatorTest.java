@@ -201,6 +201,11 @@ class GameFrameCoordinatorTest {
         }
 
         @Override
+        public fi.monopoly.domain.session.SessionState authoritativeSessionState() {
+            return null;
+        }
+
+        @Override
         public fi.monopoly.components.board.Board board() {
             return null;
         }
