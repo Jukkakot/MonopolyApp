@@ -10,6 +10,10 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.BankTarget;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.SessionStatus;
+import fi.monopoly.domain.turn.TurnPhase;
+import fi.monopoly.domain.turn.TurnState;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
@@ -45,9 +49,18 @@ class GameFrameCoordinatorTest {
         TestContext context = createContext(1700, 996);
         GameSessionState sessionState = new GameSessionState();
         sessionState.setPersistenceNotice("Saved", -1);
+        SessionState authState = SessionState.builder()
+                .sessionId("test")
+                .version(1L)
+                .status(SessionStatus.IN_PROGRESS)
+                .turn(new TurnState("p1", TurnPhase.WAITING_FOR_ROLL, true, false))
+                .seats(List.of())
+                .players(List.of())
+                .properties(List.of())
+                .build();
 
         GameSidebarPresenter.SidebarState sidebarState = context.coordinator.createSidebarState(
-                new TestFrameHooks(context, sessionState, null, true, false)
+                new TestFrameHooks(context, sessionState, null, authState)
         );
 
         assertNull(sessionState.persistenceNotice());
@@ -62,7 +75,7 @@ class GameFrameCoordinatorTest {
 
         context.coordinator.updateFrameLayoutMetrics();
         float contentTop = context.coordinator.getSidebarContentTop(
-                new TestFrameHooks(context, sessionState, null, true, false)
+                new TestFrameHooks(context, sessionState, null, null)
         );
         float historyY = context.coordinator.getSidebarHistoryPanelY();
 
@@ -82,9 +95,18 @@ class GameFrameCoordinatorTest {
                 },
                 true
         );
+        SessionState authState = SessionState.builder()
+                .sessionId("test")
+                .version(1L)
+                .status(SessionStatus.IN_PROGRESS)
+                .turn(new TurnState("p1", TurnPhase.RESOLVING_DEBT, false, false))
+                .seats(List.of())
+                .players(List.of())
+                .properties(List.of())
+                .build();
 
         GameSidebarPresenter.SidebarState sidebarState = context.coordinator.createSidebarState(
-                new TestFrameHooks(context, sessionState, debtState, false, false)
+                new TestFrameHooks(context, sessionState, debtState, authState)
         );
 
         assertEquals(fi.monopoly.text.UiTexts.text("sidebar.phase.debt"), sidebarState.currentTurnPhase());
@@ -191,8 +213,7 @@ class GameFrameCoordinatorTest {
             TestContext context,
             GameSessionState sessionState,
             DebtState debtState,
-            boolean rollDiceVisible,
-            boolean endRoundVisible
+            SessionState authoritativeState
     ) implements GameFrameCoordinator.FrameHooks {
 
         @Override
@@ -201,8 +222,8 @@ class GameFrameCoordinatorTest {
         }
 
         @Override
-        public fi.monopoly.domain.session.SessionState authoritativeSessionState() {
-            return null;
+        public SessionState authoritativeSessionState() {
+            return authoritativeState;
         }
 
         @Override
@@ -257,12 +278,12 @@ class GameFrameCoordinatorTest {
 
         @Override
         public boolean endRoundVisible() {
-            return endRoundVisible;
+            return false;
         }
 
         @Override
         public boolean rollDiceVisible() {
-            return rollDiceVisible;
+            return false;
         }
 
         @Override

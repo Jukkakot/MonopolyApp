@@ -19,11 +19,7 @@ public final class GameSidebarStateFactory {
             List<String> recentMessages,
             DebtState debtState,
             String persistenceNotice,
-            boolean gameOver,
-            boolean popupVisible,
             boolean animationsRunning,
-            boolean endRoundVisible,
-            boolean rollDiceVisible,
             SessionState authoritativeSessionState,
             float historyPanelY,
             float historyHeight,
@@ -36,8 +32,7 @@ public final class GameSidebarStateFactory {
                 turnPlayer != null ? turnPlayer.getName() : null);
         return new GameSidebarPresenter.SidebarState(
                 turnPlayer,
-                resolveCurrentTurnPhase(gameOver, debtState, popupVisible, animationsRunning,
-                        endRoundVisible, rollDiceVisible, authoritativeSessionState),
+                resolveCurrentTurnPhase(animationsRunning, authoritativeSessionState),
                 players,
                 recentMessages,
                 debtState,
@@ -97,22 +92,10 @@ public final class GameSidebarStateFactory {
         return name.isBlank() ? spotType.name() : MonopolyUtils.parseIllegalCharacters(name);
     }
 
-    public String resolveCurrentTurnPhase(
-            boolean gameOver,
-            DebtState debtState,
-            boolean popupVisible,
-            boolean animationsRunning,
-            boolean endRoundVisible,
-            boolean rollDiceVisible,
-            SessionState authoritativeSessionState
-    ) {
-        if (gameOver) {
-            return text("sidebar.phase.gameOver");
-        }
+    public String resolveCurrentTurnPhase(boolean animationsRunning, SessionState authoritativeSessionState) {
         if (animationsRunning) {
             return text("sidebar.phase.animation");
         }
-        // Prefer the authoritative domain phase when available; fall back to heuristics
         if (authoritativeSessionState != null && authoritativeSessionState.turn() != null) {
             TurnPhase phase = authoritativeSessionState.turn().phase();
             return switch (phase) {
@@ -124,19 +107,6 @@ public final class GameSidebarStateFactory {
                 case GAME_OVER -> text("sidebar.phase.gameOver");
                 default -> text("sidebar.phase.resolving");
             };
-        }
-        // Legacy heuristic fallback
-        if (debtState != null) {
-            return text("sidebar.phase.debt");
-        }
-        if (popupVisible) {
-            return text("sidebar.phase.popup");
-        }
-        if (endRoundVisible) {
-            return text("sidebar.phase.endTurn");
-        }
-        if (rollDiceVisible) {
-            return text("sidebar.phase.roll");
         }
         return text("sidebar.phase.resolving");
     }
