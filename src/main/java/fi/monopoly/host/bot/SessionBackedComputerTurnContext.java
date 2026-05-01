@@ -14,7 +14,6 @@ import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.function.Supplier;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -23,8 +22,6 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
     private final SessionCommandPort sessionCommandPort;
     private final HostBotInteractionAdapter interactionAdapter;
     private final Runnable syncPresentationState;
-    private final Supplier<Boolean> rollDiceAvailableSupplier;
-    private final Supplier<Boolean> endTurnAvailableSupplier;
     private BotTurnScheduler.DelayKind delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
 
 
@@ -65,8 +62,8 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
                     state.auctionState() != null,
                     state.tradeState() != null,
                     state.activeDebt() != null,
-                    rollDiceAvailableSupplier.get(),
-                    endTurnAvailableSupplier.get());
+                    state.turn().canRoll(),
+                    state.turn().canEndTurn());
             return false;
         }
         delayKind = delayKindForCommand(command);

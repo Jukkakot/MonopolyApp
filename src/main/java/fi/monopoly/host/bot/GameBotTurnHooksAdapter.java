@@ -27,8 +27,6 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final IntSupplier nowSupplier;
     private final Consumer<BotTurnScheduler.DelayKind> scheduleNextActionConsumer;
     private final Supplier<String> sessionIdSupplier;
-    private final BooleanSupplier projectedRollDiceAvailableSupplier;
-    private final BooleanSupplier projectedEndTurnAvailableSupplier;
     private final BooleanSupplier recoverPrimaryTurnControlsSupplier;
 
     @Override
@@ -112,9 +110,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
                 turnPlayer,
                 sessionCommandPort,
                 interactionAdapter,
-                syncPresentationStateAction,
-                projectedRollDiceAvailableSupplier::getAsBoolean,
-                projectedEndTurnAvailableSupplier::getAsBoolean
+                syncPresentationStateAction
         );
     }
 

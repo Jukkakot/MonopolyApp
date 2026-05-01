@@ -214,16 +214,6 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public boolean projectedRollDiceActionAvailable() {
-                return isProjectedRollDiceActionAvailable(dependencies);
-            }
-
-            @Override
-            public boolean projectedEndTurnActionAvailable() {
-                return isProjectedEndTurnActionAvailable(dependencies);
-            }
-
-            @Override
             public boolean restoreBotTurnControlsIfNeeded() {
                 return GameDesktopPresentationCoordinator.this.restoreBotTurnControlsIfNeeded(dependencies);
             }
@@ -574,14 +564,6 @@ public final class GameDesktopPresentationCoordinator {
         }
         return botTurnControlCoordinator.projectedAction(createBotTurnControlHooks(dependencies), currentPlayer)
                 == GameBotTurnControlCoordinator.BotPrimaryAction.END_TURN;
-    }
-
-    public boolean isProjectedRollDiceActionAvailable(GameDesktopShellDependencies dependencies) {
-        return isRollDiceActionAvailable(dependencies, dependencies.currentTurnPlayer());
-    }
-
-    public boolean isProjectedEndTurnActionAvailable(GameDesktopShellDependencies dependencies) {
-        return isEndTurnActionAvailable(dependencies, dependencies.currentTurnPlayer());
     }
 
     public boolean restoreBotTurnControlsIfNeeded(GameDesktopShellDependencies dependencies) {

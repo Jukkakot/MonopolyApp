@@ -169,8 +169,6 @@ public final class GamePresentationFactory {
                 hooks::nowMillis,
                 hooks::scheduleNextComputerAction,
                 hooks::sessionId,
-                hooks::projectedRollDiceActionAvailable,
-                hooks::projectedEndTurnActionAvailable,
                 hooks::restoreBotTurnControlsIfNeeded
         );
         return new GamePresentationBundle(
@@ -255,10 +253,6 @@ public final class GamePresentationFactory {
         void handlePaymentRequest(fi.monopoly.components.payment.PaymentRequest request,
                                   fi.monopoly.domain.session.TurnContinuationState continuationState,
                                   CallbackAction onResolved);
-
-        boolean projectedRollDiceActionAvailable();
-
-        boolean projectedEndTurnActionAvailable();
 
         boolean restoreBotTurnControlsIfNeeded();
 
