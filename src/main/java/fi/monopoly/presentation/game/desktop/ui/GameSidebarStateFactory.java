@@ -1,6 +1,5 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
-import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.PlayerSnapshot;
 import fi.monopoly.domain.session.SessionState;
@@ -15,7 +14,6 @@ import static fi.monopoly.text.UiTexts.text;
 
 public final class GameSidebarStateFactory {
     public GameSidebarPresenter.SidebarState createSidebarState(
-            List<Player> legacyPlayers,
             List<String> recentMessages,
             DebtState debtState,
             String persistenceNotice,
@@ -28,7 +26,7 @@ public final class GameSidebarStateFactory {
         String activePlayerSpotName = resolveActivePlayerSpotName(authoritativeSessionState);
         boolean activePlayerIsComputer = resolveActivePlayerIsComputer(authoritativeSessionState);
         String activePlayerName = resolveActivePlayerName(authoritativeSessionState);
-        Map<String, int[]> playerColors = resolvePlayerColors(authoritativeSessionState, legacyPlayers);
+        Map<String, int[]> playerColors = resolvePlayerColors(authoritativeSessionState);
         return new GameSidebarPresenter.SidebarState(
                 resolveCurrentTurnPhase(animationsRunning, authoritativeSessionState),
                 playerColors,
@@ -44,37 +42,21 @@ public final class GameSidebarStateFactory {
         );
     }
 
-    private static Map<String, int[]> resolvePlayerColors(SessionState state, List<Player> legacyFallback) {
-        if (state != null && !state.seats().isEmpty()) {
-            Map<String, int[]> result = new java.util.LinkedHashMap<>();
-            for (fi.monopoly.domain.session.SeatState seat : state.seats()) {
-                String hex = seat.tokenColorHex();
-                if (hex != null && hex.length() == 7 && hex.startsWith("#")) {
-                    try {
-                        int r = Integer.parseInt(hex.substring(1, 3), 16);
-                        int g = Integer.parseInt(hex.substring(3, 5), 16);
-                        int b = Integer.parseInt(hex.substring(5, 7), 16);
-                        result.put(seat.displayName(), new int[]{r, g, b});
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-            if (!result.isEmpty()) {
-                return result;
-            }
-        }
-        if (legacyFallback == null) {
+    private static Map<String, int[]> resolvePlayerColors(SessionState state) {
+        if (state == null || state.seats().isEmpty()) {
             return Map.of();
         }
         Map<String, int[]> result = new java.util.LinkedHashMap<>();
-        for (Player p : legacyFallback) {
-            javafx.scene.paint.Color c = p.getColor();
-            if (c != null) {
-                result.put(p.getName(), new int[]{
-                        (int) Math.round(c.getRed() * 255),
-                        (int) Math.round(c.getGreen() * 255),
-                        (int) Math.round(c.getBlue() * 255)
-                });
+        for (fi.monopoly.domain.session.SeatState seat : state.seats()) {
+            String hex = seat.tokenColorHex();
+            if (hex != null && hex.length() == 7 && hex.startsWith("#")) {
+                try {
+                    int r = Integer.parseInt(hex.substring(1, 3), 16);
+                    int g = Integer.parseInt(hex.substring(3, 5), 16);
+                    int b = Integer.parseInt(hex.substring(5, 7), 16);
+                    result.put(seat.displayName(), new int[]{r, g, b});
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
         return result;
