@@ -15,6 +15,8 @@ PLAYER SETUP
 ECONOMY AND PACING
 
 BACKEND EXTRACTION (separation-program)
+[Low] Remove SidebarState.turnPlayer (last legacy Player field in sidebar) — spot name
+      fallback is already covered by activePlayerSpotName from SessionState
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)
