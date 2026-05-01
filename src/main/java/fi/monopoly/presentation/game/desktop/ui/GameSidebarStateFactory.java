@@ -32,6 +32,8 @@ public final class GameSidebarStateFactory {
         String activePlayerSpotName = resolveActivePlayerSpotName(authoritativeSessionState);
         boolean activePlayerIsComputer = resolveActivePlayerIsComputer(authoritativeSessionState,
                 turnPlayer != null && turnPlayer.isComputerControlled());
+        String activePlayerName = resolveActivePlayerName(authoritativeSessionState,
+                turnPlayer != null ? turnPlayer.getName() : null);
         return new GameSidebarPresenter.SidebarState(
                 turnPlayer,
                 resolveCurrentTurnPhase(gameOver, debtState, popupVisible, animationsRunning,
@@ -44,7 +46,8 @@ public final class GameSidebarStateFactory {
                 historyHeight,
                 reservedTop,
                 activePlayerSpotName,
-                activePlayerIsComputer
+                activePlayerIsComputer,
+                activePlayerName
         );
     }
 
@@ -58,6 +61,18 @@ public final class GameSidebarStateFactory {
                 .findFirst()
                 .map(p -> spotName(p.boardIndex()))
                 .orElse(null);
+    }
+
+    private static String resolveActivePlayerName(SessionState state, String legacyFallback) {
+        if (state == null || state.turn() == null || state.turn().activePlayerId() == null) {
+            return legacyFallback;
+        }
+        String activeId = state.turn().activePlayerId();
+        return state.players().stream()
+                .filter(p -> activeId.equals(p.playerId()))
+                .findFirst()
+                .map(PlayerSnapshot::name)
+                .orElse(legacyFallback);
     }
 
     private static boolean resolveActivePlayerIsComputer(SessionState state, boolean legacyFallback) {

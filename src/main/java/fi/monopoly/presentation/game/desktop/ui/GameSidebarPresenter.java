@@ -58,7 +58,7 @@ public final class GameSidebarPresenter {
         app.fill(46, 72, 63);
         float currentPlayerValueX = sidebarX + UiTokens.sidebarValueX();
         float currentPlayerValueY = layoutMetrics.sidebarHeaderRow1Y();
-        String activePlayerName = turnPlayer != null ? turnPlayer.getName() : text("sidebar.none");
+        String activePlayerName = state.activePlayerName() != null ? state.activePlayerName() : text("sidebar.none");
         app.text(activePlayerName, currentPlayerValueX, currentPlayerValueY);
         if (state.activePlayerIsComputer()) {
             drawComputerBadge(app, currentPlayerValueX + app.textWidth(activePlayerName) + 12, currentPlayerValueY - 14);
@@ -294,7 +294,8 @@ public final class GameSidebarPresenter {
             float historyHeight,
             float reservedTop,
             String activePlayerSpotName,
-            boolean activePlayerIsComputer
+            boolean activePlayerIsComputer,
+            String activePlayerName
     ) {
         public SidebarState(
                 Player turnPlayer,
@@ -309,7 +310,8 @@ public final class GameSidebarPresenter {
         ) {
             this(turnPlayer, currentTurnPhase, players, recentMessages, debtState,
                     persistenceNotice, historyPanelY, historyHeight, reservedTop,
-                    null, turnPlayer != null && turnPlayer.isComputerControlled());
+                    null, turnPlayer != null && turnPlayer.isComputerControlled(),
+                    turnPlayer != null ? turnPlayer.getName() : null);
         }
     }
 
