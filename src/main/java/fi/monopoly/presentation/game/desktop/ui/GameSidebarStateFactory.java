@@ -15,7 +15,6 @@ import static fi.monopoly.text.UiTexts.text;
 
 public final class GameSidebarStateFactory {
     public GameSidebarPresenter.SidebarState createSidebarState(
-            Player turnPlayer,
             List<Player> legacyPlayers,
             List<String> recentMessages,
             DebtState debtState,
@@ -27,13 +26,10 @@ public final class GameSidebarStateFactory {
             float reservedTop
     ) {
         String activePlayerSpotName = resolveActivePlayerSpotName(authoritativeSessionState);
-        boolean activePlayerIsComputer = resolveActivePlayerIsComputer(authoritativeSessionState,
-                turnPlayer != null && turnPlayer.isComputerControlled());
-        String activePlayerName = resolveActivePlayerName(authoritativeSessionState,
-                turnPlayer != null ? turnPlayer.getName() : null);
+        boolean activePlayerIsComputer = resolveActivePlayerIsComputer(authoritativeSessionState);
+        String activePlayerName = resolveActivePlayerName(authoritativeSessionState);
         Map<String, int[]> playerColors = resolvePlayerColors(authoritativeSessionState, legacyPlayers);
         return new GameSidebarPresenter.SidebarState(
-                turnPlayer,
                 resolveCurrentTurnPhase(animationsRunning, authoritativeSessionState),
                 playerColors,
                 recentMessages,
@@ -96,28 +92,28 @@ public final class GameSidebarStateFactory {
                 .orElse(null);
     }
 
-    private static String resolveActivePlayerName(SessionState state, String legacyFallback) {
+    private static String resolveActivePlayerName(SessionState state) {
         if (state == null || state.turn() == null || state.turn().activePlayerId() == null) {
-            return legacyFallback;
+            return null;
         }
         String activeId = state.turn().activePlayerId();
         return state.players().stream()
                 .filter(p -> activeId.equals(p.playerId()))
                 .findFirst()
                 .map(PlayerSnapshot::name)
-                .orElse(legacyFallback);
+                .orElse(null);
     }
 
-    private static boolean resolveActivePlayerIsComputer(SessionState state, boolean legacyFallback) {
+    private static boolean resolveActivePlayerIsComputer(SessionState state) {
         if (state == null || state.turn() == null || state.turn().activePlayerId() == null) {
-            return legacyFallback;
+            return false;
         }
         String activeId = state.turn().activePlayerId();
         return state.seats().stream()
                 .filter(s -> activeId.equals(s.playerId()))
                 .findFirst()
                 .map(s -> s.seatKind() == fi.monopoly.domain.session.SeatKind.BOT)
-                .orElse(legacyFallback);
+                .orElse(false);
     }
 
     private static String spotName(int boardIndex) {

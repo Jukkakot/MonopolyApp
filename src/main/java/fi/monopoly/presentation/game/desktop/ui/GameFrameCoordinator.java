@@ -120,7 +120,6 @@ public final class GameFrameCoordinator {
     public GameSidebarPresenter.SidebarState createSidebarState(FrameHooks hooks) {
         gameSessionStateCoordinator.clearExpiredPersistenceNoticeIfNeeded(hooks.sessionState(), runtime.millis());
         return gameSidebarStateFactory.createSidebarState(
-                hooks.turnPlayer(),
                 hooks.players().getPlayers(),
                 hooks.recentPopupMessages(),
                 hooks.debtState(),

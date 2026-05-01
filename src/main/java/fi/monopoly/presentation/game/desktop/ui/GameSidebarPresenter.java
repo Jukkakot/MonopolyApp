@@ -2,7 +2,6 @@ package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.utils.LayoutMetrics;
@@ -43,7 +42,6 @@ public final class GameSidebarPresenter {
             app.line(sidebarX + UiTokens.spacingMd(), debtSectionBottom(layoutMetrics, state.debtState()), sidebarX + sidebarWidth - UiTokens.spacingMd(), debtSectionBottom(layoutMetrics, state.debtState()));
         }
 
-        Player turnPlayer = state.turnPlayer();
         app.fill(46, 72, 63);
         app.textAlign(PConstants.LEFT);
         app.textFont(runtime.font30());
@@ -64,8 +62,7 @@ public final class GameSidebarPresenter {
             drawComputerBadge(app, currentPlayerValueX + app.textWidth(activePlayerName) + 12, currentPlayerValueY - 14);
         }
         app.text(state.currentTurnPhase(), sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow2Y());
-        String spotName = state.activePlayerSpotName() != null ? state.activePlayerSpotName()
-                : (turnPlayer != null && turnPlayer.getSpot() != null ? turnPlayer.getSpot().getName() : text("sidebar.none"));
+        String spotName = state.activePlayerSpotName() != null ? state.activePlayerSpotName() : text("sidebar.none");
         app.text(spotName, sidebarX + UiTokens.sidebarValueX(), layoutMetrics.sidebarHeaderRow3Y());
         drawPersistenceNotice(app, layoutMetrics, state.persistenceNotice());
         drawPopupHistoryPanel(app, layoutMetrics, state, historyTimingRecorder);
@@ -267,7 +264,6 @@ public final class GameSidebarPresenter {
     }
 
     public record SidebarState(
-            Player turnPlayer,
             String currentTurnPhase,
             Map<String, int[]> playerColors,
             List<String> recentMessages,
@@ -280,40 +276,6 @@ public final class GameSidebarPresenter {
             boolean activePlayerIsComputer,
             String activePlayerName
     ) {
-        public SidebarState(
-                Player turnPlayer,
-                String currentTurnPhase,
-                List<Player> players,
-                List<String> recentMessages,
-                DebtState debtState,
-                String persistenceNotice,
-                float historyPanelY,
-                float historyHeight,
-                float reservedTop
-        ) {
-            this(turnPlayer, currentTurnPhase, toPlayerColors(players), recentMessages, debtState,
-                    persistenceNotice, historyPanelY, historyHeight, reservedTop,
-                    null, turnPlayer != null && turnPlayer.isComputerControlled(),
-                    turnPlayer != null ? turnPlayer.getName() : null);
-        }
-
-        private static Map<String, int[]> toPlayerColors(List<Player> players) {
-            if (players == null) {
-                return Map.of();
-            }
-            Map<String, int[]> result = new java.util.LinkedHashMap<>();
-            for (Player p : players) {
-                javafx.scene.paint.Color c = p.getColor();
-                if (c != null) {
-                    result.put(p.getName(), new int[]{
-                            (int) Math.round(c.getRed() * 255),
-                            (int) Math.round(c.getGreen() * 255),
-                            (int) Math.round(c.getBlue() * 255)
-                    });
-                }
-            }
-            return result;
-        }
     }
 
     private record HistoryEntryLayout(

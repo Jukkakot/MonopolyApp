@@ -65,7 +65,6 @@ class GameFrameCoordinatorTest {
 
         assertNull(sessionState.persistenceNotice());
         assertEquals(fi.monopoly.text.UiTexts.text("sidebar.phase.roll"), sidebarState.currentTurnPhase());
-        assertSame(context.players.getTurn(), sidebarState.turnPlayer());
     }
 
     @Test
