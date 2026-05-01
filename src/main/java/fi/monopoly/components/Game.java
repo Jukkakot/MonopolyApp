@@ -191,8 +191,6 @@ public class Game implements MonopolyEventListener {
                         this::goMoneyAmountRef,
                         this::retryDebtVisible,
                         this::declareBankruptcyVisible,
-                        this::endRoundVisible,
-                        this::rollDiceVisible,
                         () -> this,
                         () -> isRollDiceActionAvailable(currentTurnPlayer()),
                         () -> isEndTurnActionAvailable(currentTurnPlayer())
@@ -335,14 +333,6 @@ public class Game implements MonopolyEventListener {
 
     private boolean declareBankruptcyVisible() {
         return declareBankruptcyButton.isVisible();
-    }
-
-    private boolean endRoundVisible() {
-        return endRoundButton.isVisible();
-    }
-
-    private boolean rollDiceVisible() {
-        return dices != null && dices.isVisible();
     }
 
     private int goMoneyAmountRef() {

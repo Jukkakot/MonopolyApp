@@ -291,8 +291,6 @@ class GameDesktopShellCoordinatorTest {
                             () -> 200,
                             () -> false,
                             () -> false,
-                            () -> false,
-                            () -> false,
                             () -> event -> false,
                             () -> false,
                             () -> false

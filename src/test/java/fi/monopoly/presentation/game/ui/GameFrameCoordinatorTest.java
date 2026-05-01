@@ -277,16 +277,6 @@ class GameFrameCoordinatorTest {
         }
 
         @Override
-        public boolean endRoundVisible() {
-            return false;
-        }
-
-        @Override
-        public boolean rollDiceVisible() {
-            return false;
-        }
-
-        @Override
         public void focusPlayer(Player player) {
         }
 

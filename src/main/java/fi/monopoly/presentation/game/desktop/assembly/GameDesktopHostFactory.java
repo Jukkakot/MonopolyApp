@@ -112,8 +112,6 @@ public final class GameDesktopHostFactory {
                         hooks.goMoneyAmountSupplier(),
                         hooks.retryDebtVisibleSupplier(),
                         hooks.declareBankruptcyVisibleSupplier(),
-                        hooks.endRoundVisibleSupplier(),
-                        hooks.rollDiceVisibleSupplier(),
                         hooks.eventListenerSupplier(),
                         hooks.projectedRollDiceActionAvailableSupplier(),
                         hooks.projectedEndTurnActionAvailableSupplier()
@@ -257,8 +255,6 @@ public final class GameDesktopHostFactory {
                 IntSupplier goMoneyAmountSupplier,
                 BooleanSupplier retryDebtVisibleSupplier,
                 BooleanSupplier declareBankruptcyVisibleSupplier,
-                BooleanSupplier endRoundVisibleSupplier,
-                BooleanSupplier rollDiceVisibleSupplier,
                 Supplier<MonopolyEventListener> eventListenerSupplier,
                 BooleanSupplier projectedRollDiceActionAvailableSupplier,
                 BooleanSupplier projectedEndTurnActionAvailableSupplier
@@ -298,8 +294,6 @@ public final class GameDesktopHostFactory {
                     goMoneyAmountSupplier,
                     retryDebtVisibleSupplier,
                     declareBankruptcyVisibleSupplier,
-                    endRoundVisibleSupplier,
-                    rollDiceVisibleSupplier,
                     eventListenerSupplier,
                     projectedRollDiceActionAvailableSupplier,
                     projectedEndTurnActionAvailableSupplier
@@ -374,10 +368,6 @@ public final class GameDesktopHostFactory {
 
         BooleanSupplier declareBankruptcyVisibleSupplier();
 
-        BooleanSupplier endRoundVisibleSupplier();
-
-        BooleanSupplier rollDiceVisibleSupplier();
-
         Supplier<MonopolyEventListener> eventListenerSupplier();
 
         BooleanSupplier projectedRollDiceActionAvailableSupplier();
@@ -420,8 +410,6 @@ public final class GameDesktopHostFactory {
             IntSupplier goMoneyAmountSupplier,
             BooleanSupplier retryDebtVisibleSupplier,
             BooleanSupplier declareBankruptcyVisibleSupplier,
-            BooleanSupplier endRoundVisibleSupplier,
-            BooleanSupplier rollDiceVisibleSupplier,
             Supplier<MonopolyEventListener> eventListenerSupplier,
             BooleanSupplier projectedRollDiceActionAvailableSupplier,
             BooleanSupplier projectedEndTurnActionAvailableSupplier

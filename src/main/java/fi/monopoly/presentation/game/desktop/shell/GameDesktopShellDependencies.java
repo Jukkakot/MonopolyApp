@@ -188,14 +188,6 @@ public final class GameDesktopShellDependencies {
         return visibilityAccess.declareBankruptcyVisibleSupplier().getAsBoolean();
     }
 
-    public boolean endRoundVisible() {
-        return visibilityAccess.endRoundVisibleSupplier().getAsBoolean();
-    }
-
-    public boolean rollDiceVisible() {
-        return visibilityAccess.rollDiceVisibleSupplier().getAsBoolean();
-    }
-
     public MonopolyEventListener eventListener() {
         return visibilityAccess.eventListenerSupplier().get();
     }
@@ -257,8 +249,6 @@ public final class GameDesktopShellDependencies {
             IntSupplier goMoneyAmountSupplier,
             BooleanSupplier retryDebtVisibleSupplier,
             BooleanSupplier declareBankruptcyVisibleSupplier,
-            BooleanSupplier endRoundVisibleSupplier,
-            BooleanSupplier rollDiceVisibleSupplier,
             Supplier<MonopolyEventListener> eventListenerSupplier,
             BooleanSupplier projectedRollDiceActionAvailableSupplier,
             BooleanSupplier projectedEndTurnActionAvailableSupplier

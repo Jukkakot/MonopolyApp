@@ -414,16 +414,6 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public boolean endRoundVisible() {
-                return dependencies.endRoundVisible();
-            }
-
-            @Override
-            public boolean rollDiceVisible() {
-                return dependencies.rollDiceVisible();
-            }
-
-            @Override
             public void focusPlayer(Player player) {
                 dependencies.focusPlayer(player);
             }

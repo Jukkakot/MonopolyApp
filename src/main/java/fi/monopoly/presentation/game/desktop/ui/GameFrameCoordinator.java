@@ -222,10 +222,6 @@ public final class GameFrameCoordinator {
 
         boolean debtSidebarMode();
 
-        boolean endRoundVisible();
-
-        boolean rollDiceVisible();
-
         void focusPlayer(Player player);
 
         void restoreBotTurnControlsIfNeeded();
