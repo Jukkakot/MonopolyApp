@@ -171,7 +171,7 @@ public final class GameSidebarPresenter {
         float maxTextWidth = panelW - UiTokens.sidebarHistoryTextInset() * 2;
         float currentBottomY = state.historyPanelY() + state.historyHeight() - 20;
         for (String message : state.recentMessages()) {
-            HistoryEntryLayout layout = buildHistoryEntryLayout(app, message, maxTextWidth, state.players());
+            HistoryEntryLayout layout = buildHistoryEntryLayout(app, message, maxTextWidth, state.playerColors());
             if (layout == null) {
                 continue;
             }
@@ -185,7 +185,7 @@ public final class GameSidebarPresenter {
         historyTimingRecorder.accept(System.nanoTime() - historyStart);
     }
 
-    private HistoryEntryLayout buildHistoryEntryLayout(MonopolyApp app, String message, float maxTextWidth, List<Player> players) {
+    private HistoryEntryLayout buildHistoryEntryLayout(MonopolyApp app, String message, float maxTextWidth, Map<String, int[]> playerColors) {
         String condensedMessage = condenseHistoryMessage(message);
         if (condensedMessage.isEmpty()) {
             return null;
@@ -205,8 +205,8 @@ public final class GameSidebarPresenter {
 
         String playerName = condensedMessage.substring(0, separatorIndex).trim();
         String body = condensedMessage.substring(separatorIndex + 2).trim();
-        Player messagePlayer = findPlayerByName(players, playerName);
-        if (messagePlayer == null) {
+        int[] color = playerColors != null ? playerColors.get(playerName) : null;
+        if (color == null) {
             List<String> lines = TextWrapUtils.wrapText(app.g, "- " + condensedMessage, maxTextWidth, "history.generic");
             HistoryEntryLayout layout = new HistoryEntryLayout(null, null, lines, lines.size() * 22f);
             historyLayoutCache.put(cacheKey, layout);
@@ -219,20 +219,19 @@ public final class GameSidebarPresenter {
         if (wrappedBodyLines.isEmpty()) {
             wrappedBodyLines = List.of("");
         }
-        HistoryEntryLayout layout = new HistoryEntryLayout(messagePlayer, prefix, wrappedBodyLines, wrappedBodyLines.size() * 22f);
+        HistoryEntryLayout layout = new HistoryEntryLayout(color, prefix, wrappedBodyLines, wrappedBodyLines.size() * 22f);
         historyLayoutCache.put(cacheKey, layout);
         return layout;
     }
 
     private void drawHistoryEntry(MonopolyApp app, HistoryEntryLayout layout, float startX, float startY) {
-        if (layout.player() == null || layout.prefix() == null) {
+        if (layout.playerColor() == null || layout.prefix() == null) {
             drawWrappedHistoryLines(app, layout.lines(), startX, startY);
             return;
         }
+        int[] c = layout.playerColor();
         float prefixWidth = app.textWidth(layout.prefix() + " ");
-        app.fill(colorComponent(layout.player().getColor().getRed()),
-                colorComponent(layout.player().getColor().getGreen()),
-                colorComponent(layout.player().getColor().getBlue()));
+        app.fill(c[0], c[1], c[2]);
         app.text(layout.prefix(), startX, startY);
 
         app.fill(0);
@@ -256,22 +255,6 @@ public final class GameSidebarPresenter {
         return message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
     }
 
-    private Player findPlayerByName(List<Player> players, String playerName) {
-        if (players == null || playerName == null || playerName.isBlank()) {
-            return null;
-        }
-        for (Player player : players) {
-            if (player.getName().equals(playerName)) {
-                return player;
-            }
-        }
-        return null;
-    }
-
-    private int colorComponent(double component) {
-        return (int) Math.round(component * 255);
-    }
-
     private String buildDebtSidebarText(PaymentRequest request) {
         return text(
                 "sidebar.debt.summary",
@@ -286,7 +269,7 @@ public final class GameSidebarPresenter {
     public record SidebarState(
             Player turnPlayer,
             String currentTurnPhase,
-            List<Player> players,
+            Map<String, int[]> playerColors,
             List<String> recentMessages,
             DebtState debtState,
             String persistenceNotice,
@@ -308,15 +291,33 @@ public final class GameSidebarPresenter {
                 float historyHeight,
                 float reservedTop
         ) {
-            this(turnPlayer, currentTurnPhase, players, recentMessages, debtState,
+            this(turnPlayer, currentTurnPhase, toPlayerColors(players), recentMessages, debtState,
                     persistenceNotice, historyPanelY, historyHeight, reservedTop,
                     null, turnPlayer != null && turnPlayer.isComputerControlled(),
                     turnPlayer != null ? turnPlayer.getName() : null);
         }
+
+        private static Map<String, int[]> toPlayerColors(List<Player> players) {
+            if (players == null) {
+                return Map.of();
+            }
+            Map<String, int[]> result = new java.util.LinkedHashMap<>();
+            for (Player p : players) {
+                javafx.scene.paint.Color c = p.getColor();
+                if (c != null) {
+                    result.put(p.getName(), new int[]{
+                            (int) Math.round(c.getRed() * 255),
+                            (int) Math.round(c.getGreen() * 255),
+                            (int) Math.round(c.getBlue() * 255)
+                    });
+                }
+            }
+            return result;
+        }
     }
 
     private record HistoryEntryLayout(
-            Player player,
+            int[] playerColor,
             String prefix,
             List<String> lines,
             float height
