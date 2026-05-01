@@ -389,9 +389,18 @@ Blockers A, B (partially), C (partially), and D are fully resolved. The standalo
 1. **Make desktop client render from snapshot** — `Game` and the legacy Processing runtime should
    become a pure client-side rendering projection that reads from received `SessionState` rather
    than computing authoritative values themselves. This is the biggest remaining structural bridge.
-2. **Legacy desktop starting order** — `PureDomainSessionFactory` now rolls dice for start order,
-   but the legacy desktop game still starts players in input order. The desktop startup path
-   (`LegacySessionApplicationFactory` / `Game`) needs the same rule applied.
+
+Progress since last update:
+- `GameSidebarPresenter.SidebarState` fully migrated: no `Player` fields remain; player colors
+  derive from `SeatState.tokenColorHex`, active player name/spot/computer-badge from `SessionState`
+- `GameSidebarStateFactory` simplified: sidebar phase display derives from `SessionState.turn().phase()`;
+  removed legacy boolean flags (`gameOver`, `popupVisible`, `endRoundVisible`, `rollDiceVisible`)
+- `GameFrameCoordinator.FrameHooks` trimmed: removed `endRoundVisible()` and `rollDiceVisible()`
+- `projectedRollDiceAvailableSupplier`/`projectedEndTurnAvailableSupplier` removed from
+  `GameBotTurnHooksAdapter` and `SessionBackedComputerTurnContext`; debug log now reads
+  `state.turn().canRoll()` / `canEndTurn()` directly from the authoritative snapshot
+- Legacy desktop starting order now uses `StartingOrderDeterminer` (dice-roll-based), matching
+  `PureDomainSessionFactory`; `GameRuntimeAssemblyFactory` applies this at game setup
 
 ## Relationship To Older Plan Docs
 
