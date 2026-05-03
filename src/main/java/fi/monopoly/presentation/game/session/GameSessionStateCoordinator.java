@@ -134,7 +134,7 @@ public final class GameSessionStateCoordinator {
         hooks.hidePrimaryTurnControls();
         hooks.refreshLabels();
         if (winningPlayer != null) {
-            hooks.focusWinner(winningPlayer);
+            hooks.focusWinner(sessionState.winnerPlayerId());
         }
         hooks.updateLogTurnContext();
         hooks.showVictoryPopup(winningPlayer != null ? winningPlayer.getName() : null);
@@ -167,7 +167,7 @@ public final class GameSessionStateCoordinator {
 
         void refreshLabels();
 
-        void focusWinner(Player winner);
+        void focusWinner(String winnerPlayerId);
 
         void updateLogTurnContext();
 

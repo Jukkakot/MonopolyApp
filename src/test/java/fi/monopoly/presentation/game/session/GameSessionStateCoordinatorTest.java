@@ -84,7 +84,7 @@ class GameSessionStateCoordinatorTest {
         AtomicInteger hideControlsCalls = new AtomicInteger();
         AtomicInteger refreshCalls = new AtomicInteger();
         AtomicInteger updateLogCalls = new AtomicInteger();
-        AtomicReference<Player> focusedWinner = new AtomicReference<>();
+        AtomicReference<String> focusedWinnerId = new AtomicReference<>();
         AtomicReference<String> popupWinnerName = new AtomicReference<>();
 
         coordinator.declareWinner(sessionState, winner, new GameSessionStateCoordinator.WinnerHooks() {
@@ -114,8 +114,8 @@ class GameSessionStateCoordinatorTest {
             }
 
             @Override
-            public void focusWinner(Player winner) {
-                focusedWinner.set(winner);
+            public void focusWinner(String winnerPlayerId) {
+                focusedWinnerId.set(winnerPlayerId);
             }
 
             @Override
@@ -138,7 +138,7 @@ class GameSessionStateCoordinatorTest {
         assertEquals(1, hideControlsCalls.get());
         assertEquals(1, refreshCalls.get());
         assertEquals(1, updateLogCalls.get());
-        assertSame(winner, focusedWinner.get());
+        assertEquals(sessionState.winnerPlayerId(), focusedWinnerId.get());
         assertEquals(winner.getName(), popupWinnerName.get());
     }
 

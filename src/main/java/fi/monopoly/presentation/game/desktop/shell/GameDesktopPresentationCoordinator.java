@@ -82,7 +82,8 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public void declareWinner(Player winner) {
+            public void declareWinner(String winnerPlayerId) {
+                Player winner = winnerPlayerId != null ? dependencies.playerById(winnerPlayerId) : null;
                 GameDesktopPresentationCoordinator.this.declareWinner(dependencies, winner);
             }
 
@@ -514,8 +515,9 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public void focusWinner(Player winner) {
-                if (winner.getSpot() != null) {
+            public void focusWinner(String winnerPlayerId) {
+                Player winner = winnerPlayerId != null ? dependencies.playerById(winnerPlayerId) : null;
+                if (winner != null && winner.getSpot() != null) {
                     winner.setCoords(winner.getSpot().getTokenCoords(winner));
                     dependencies.focusPlayer(winner);
                 }

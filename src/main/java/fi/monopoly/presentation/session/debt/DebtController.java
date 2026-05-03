@@ -30,7 +30,7 @@ public final class DebtController {
     private final Runnable hidePrimaryTurnControls;
     private final Runnable showRollDiceControl;
     private final Runnable onStateChanged;
-    private final Consumer<Player> declareWinner;
+    private final Consumer<String> declareWinner;
 
     private DebtState debtState;
 
@@ -158,7 +158,8 @@ public final class DebtController {
 
     private void completeBankruptcyFlow(PaymentRequest request) {
         if (players.count() <= 1) {
-            declareWinner.accept(players.getPlayers().stream().findFirst().orElse(null));
+            Player lastPlayer = players.getPlayers().stream().findFirst().orElse(null);
+            declareWinner.accept(lastPlayer != null ? "player-" + lastPlayer.getId() : null);
             return;
         }
 

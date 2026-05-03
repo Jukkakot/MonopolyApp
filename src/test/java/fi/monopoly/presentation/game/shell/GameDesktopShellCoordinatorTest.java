@@ -135,7 +135,7 @@ class GameDesktopShellCoordinatorTest {
                 },
                 () -> {
                 },
-                winner -> {
+                winnerPlayerId -> {
                 }
         );
         GameTurnFlowCoordinator gameTurnFlowCoordinator = new GameTurnFlowCoordinator(

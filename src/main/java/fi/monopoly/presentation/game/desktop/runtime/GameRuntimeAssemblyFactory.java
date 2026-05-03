@@ -120,7 +120,7 @@ public final class GameRuntimeAssemblyFactory {
 
         void onDebtStateChanged();
 
-        void declareWinner(Player winner);
+        void declareWinner(String winnerPlayerId);
 
         void debugResetTurnState();
 
