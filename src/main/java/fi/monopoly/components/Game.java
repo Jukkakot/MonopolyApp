@@ -192,8 +192,8 @@ public class Game implements MonopolyEventListener {
                         this::retryDebtVisible,
                         this::declareBankruptcyVisible,
                         () -> this,
-                        () -> isRollDiceActionAvailable(currentTurnPlayer()),
-                        () -> isEndTurnActionAvailable(currentTurnPlayer())
+                        () -> isRollDiceActionAvailable(),
+                        () -> isEndTurnActionAvailable()
                 )
         );
         var desktopControls = bootstrap.desktopControls();
@@ -527,12 +527,12 @@ public class Game implements MonopolyEventListener {
         presentationHost.enforcePrimaryTurnControlInvariant();
     }
 
-    private boolean isRollDiceActionAvailable(Player currentPlayer) {
-        return gameDesktopPresentationCoordinator.isRollDiceActionAvailable(shellDependencies, currentPlayer);
+    private boolean isRollDiceActionAvailable() {
+        return gameDesktopPresentationCoordinator.isRollDiceActionAvailable(shellDependencies);
     }
 
-    private boolean isEndTurnActionAvailable(Player currentPlayer) {
-        return gameDesktopPresentationCoordinator.isEndTurnActionAvailable(shellDependencies, currentPlayer);
+    private boolean isEndTurnActionAvailable() {
+        return gameDesktopPresentationCoordinator.isEndTurnActionAvailable(shellDependencies);
     }
 
     public void dispose() {

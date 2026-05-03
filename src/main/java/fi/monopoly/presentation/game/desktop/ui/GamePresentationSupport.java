@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.components.MonopolyButton;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.host.bot.BotTurnScheduler;
@@ -43,12 +42,12 @@ public final class GamePresentationSupport {
         gameUiController.refreshLabels(paused, botSpeedMode);
     }
 
-    public void updateLogTurnContext(boolean gameOver, Player winner, Player turnPlayer) {
-        if (gameOver && winner != null) {
-            MDC.put("turnPlayer", winner.getName());
+    public void updateLogTurnContext(boolean gameOver, String winnerName, String turnPlayerName) {
+        if (gameOver && winnerName != null) {
+            MDC.put("turnPlayer", winnerName);
             return;
         }
-        MDC.put("turnPlayer", turnPlayer != null ? turnPlayer.getName() : "none");
+        MDC.put("turnPlayer", turnPlayerName != null ? turnPlayerName : "none");
     }
 
     public void syncTransientPresentationState() {

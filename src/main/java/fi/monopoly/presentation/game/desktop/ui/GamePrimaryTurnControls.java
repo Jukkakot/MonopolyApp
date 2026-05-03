@@ -1,10 +1,10 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.components.MonopolyButton;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.Dices;
 import lombok.RequiredArgsConstructor;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 @RequiredArgsConstructor
@@ -12,7 +12,7 @@ public final class GamePrimaryTurnControls {
     private final Dices dices;
     private final MonopolyButton endRoundButton;
     private final Supplier<Boolean> gameOverSupplier;
-    private final Supplier<Player> turnPlayerSupplier;
+    private final BooleanSupplier isComputerControlledSupplier;
     private State state = State.NONE;
 
     public void showRollDiceControl() {
@@ -22,8 +22,7 @@ public final class GamePrimaryTurnControls {
         }
         state = State.ROLL_DICE;
         dices.reset();
-        Player turnPlayer = turnPlayerSupplier.get();
-        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+        if (isComputerControlledSupplier.getAsBoolean()) {
             dices.hide();
             endRoundButton.hide();
             return;
@@ -38,8 +37,7 @@ public final class GamePrimaryTurnControls {
             return;
         }
         state = State.END_TURN;
-        Player turnPlayer = turnPlayerSupplier.get();
-        if (turnPlayer != null && turnPlayer.isComputerControlled()) {
+        if (isComputerControlledSupplier.getAsBoolean()) {
             dices.hide();
             endRoundButton.hide();
             return;
@@ -54,15 +52,15 @@ public final class GamePrimaryTurnControls {
         endRoundButton.hide();
     }
 
-    public boolean isRollDiceActionAvailable(boolean popupVisible, boolean debtActive, Player currentPlayer) {
-        if (currentPlayer == null || popupVisible || debtActive) {
+    public boolean isRollDiceActionAvailable(boolean popupVisible, boolean debtActive, boolean playerPresent) {
+        if (!playerPresent || popupVisible || debtActive) {
             return false;
         }
         return state == State.ROLL_DICE;
     }
 
-    public boolean isEndTurnActionAvailable(boolean popupVisible, boolean debtActive, Player currentPlayer) {
-        if (currentPlayer == null || popupVisible || debtActive) {
+    public boolean isEndTurnActionAvailable(boolean popupVisible, boolean debtActive, boolean playerPresent) {
+        if (!playerPresent || popupVisible || debtActive) {
             return false;
         }
         return state == State.END_TURN;

@@ -62,8 +62,10 @@ public final class GameDesktopSessionCoordinator {
 
             @Override
             public boolean computerTurn() {
-                Player turnPlayer = dependencies.currentTurnPlayer();
-                return turnPlayer != null && turnPlayer.isComputerControlled();
+                fi.monopoly.domain.session.SessionState state = dependencies.sessionCommandPort().currentState();
+                if (state == null || state.turn() == null || state.turn().activePlayerId() == null) return false;
+                String activeId = state.turn().activePlayerId();
+                return state.seats().stream().anyMatch(s -> activeId.equals(s.playerId()) && s.seatKind() == fi.monopoly.domain.session.SeatKind.BOT);
             }
 
             @Override

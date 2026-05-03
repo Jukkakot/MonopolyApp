@@ -124,7 +124,7 @@ class GameDesktopShellCoordinatorTest {
                 dices,
                 new MonopolyButton(runtime, "endRound"),
                 () -> false,
-                players::getTurn
+                () -> currentTurnPlayer.isComputerControlled()
         );
         DebtController debtController = new DebtController(
                 runtime,

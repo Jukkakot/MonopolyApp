@@ -10,6 +10,8 @@ import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.DebtState;
+import fi.monopoly.domain.session.PlayerSnapshot;
+import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.session.GameSessionState;
@@ -38,7 +40,12 @@ public final class GameFrameCoordinator {
     private long lastAnimationUpdateNanos = -1L;
 
     public void advancePresentationFrame(FrameHooks hooks) {
-        updateLogTurnContext(hooks.sessionState().gameOver(), hooks.sessionState().winner(), hooks.turnPlayer());
+        SessionState auth = hooks.authoritativeSessionState();
+        updateLogTurnContext(
+                hooks.sessionState().gameOver(),
+                resolvePlayerName(auth, auth != null ? auth.winnerPlayerId() : null),
+                resolvePlayerName(auth, auth != null && auth.turn() != null ? auth.turn().activePlayerId() : null)
+        );
         boolean animationWasRunning = hooks.animations().isRunning();
         float animationDeltaSeconds = resolveAnimationDeltaSeconds(System.nanoTime());
         if (DesktopClientSettings.skipAnimations()) {
@@ -149,8 +156,16 @@ public final class GameFrameCoordinator {
         gamePresentationSupport.refreshLabels(paused, botSpeedMode);
     }
 
-    public void updateLogTurnContext(boolean gameOver, Player winner, Player turnPlayer) {
-        gamePresentationSupport.updateLogTurnContext(gameOver, winner, turnPlayer);
+    public void updateLogTurnContext(boolean gameOver, String winnerName, String turnPlayerName) {
+        gamePresentationSupport.updateLogTurnContext(gameOver, winnerName, turnPlayerName);
+    }
+
+    private static String resolvePlayerName(SessionState state, String playerId) {
+        if (state == null || playerId == null) return null;
+        return state.players().stream()
+                .filter(p -> playerId.equals(p.playerId()))
+                .map(PlayerSnapshot::name)
+                .findFirst().orElse(null);
     }
 
     public void syncTransientPresentationState(Runnable restoreBotTurnControlsIfNeeded) {
@@ -184,14 +199,18 @@ public final class GameFrameCoordinator {
     }
 
     private void applyComputerActionCooldownIfAnimationJustFinishedInternal(boolean animationWasRunning, FrameHooks hooks) {
-        Player turnPlayer = hooks.turnPlayer();
+        SessionState auth = hooks.authoritativeSessionState();
+        boolean isComputerTurn = auth != null && auth.turn() != null && auth.turn().activePlayerId() != null
+                && auth.seats().stream().anyMatch(s -> auth.turn().activePlayerId().equals(s.playerId()) && s.seatKind() == SeatKind.BOT);
+        boolean allComputer = auth != null && !auth.seats().isEmpty()
+                && auth.seats().stream().allMatch(s -> s.seatKind() == SeatKind.BOT);
         botTurnScheduler.applyAnimationFinishCooldownIfNeeded(
                 animationWasRunning,
                 hooks.animations().isRunning(),
-                turnPlayer != null && turnPlayer.isComputerControlled(),
+                isComputerTurn,
                 runtime.millis(),
                 hooks.sessionState().botSpeedMode(),
-                hooks.players().getPlayers().stream().allMatch(Player::isComputerControlled)
+                allComputer
         );
     }
 
@@ -207,8 +226,6 @@ public final class GameFrameCoordinator {
         Dices dices();
 
         Animations animations();
-
-        Player turnPlayer();
 
         List<String> recentPopupMessages();
 

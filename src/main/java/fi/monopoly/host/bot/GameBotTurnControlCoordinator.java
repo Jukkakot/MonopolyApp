@@ -1,6 +1,5 @@
 package fi.monopoly.host.bot;
 
-import fi.monopoly.components.Player;
 import fi.monopoly.types.DiceState;
 
 /**
@@ -12,9 +11,9 @@ import fi.monopoly.types.DiceState;
  */
 public final class GameBotTurnControlCoordinator {
 
-    public BotPrimaryAction projectedAction(Hooks hooks, Player currentPlayer) {
-        if (currentPlayer == null
-                || !currentPlayer.isComputerControlled()
+    public BotPrimaryAction projectedAction(Hooks hooks, boolean playerPresent, boolean isComputer) {
+        if (!playerPresent
+                || !isComputer
                 || hooks.popupVisible()
                 || hooks.debtActive()
                 || hooks.auctionOverrideActive()
@@ -28,8 +27,8 @@ public final class GameBotTurnControlCoordinator {
         return BotPrimaryAction.END_TURN;
     }
 
-    public boolean restoreControlsIfNeeded(Hooks hooks, Player currentPlayer) {
-        if (currentPlayer == null || !currentPlayer.isComputerControlled()) {
+    public boolean restoreControlsIfNeeded(Hooks hooks, boolean playerPresent, boolean isComputer) {
+        if (!playerPresent || !isComputer) {
             return false;
         }
         if (hooks.gameOver()
@@ -43,7 +42,7 @@ public final class GameBotTurnControlCoordinator {
         if (hooks.rollDiceActionAlreadyAvailable() || hooks.endTurnActionAlreadyAvailable()) {
             return false;
         }
-        BotPrimaryAction projectedAction = projectedAction(hooks, currentPlayer);
+        BotPrimaryAction projectedAction = projectedAction(hooks, true, true);
         if (projectedAction == BotPrimaryAction.ROLL_DICE) {
             hooks.showRollDiceControl();
             return true;

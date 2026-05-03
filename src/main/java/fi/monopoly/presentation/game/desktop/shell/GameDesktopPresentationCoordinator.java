@@ -10,6 +10,7 @@ import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.event.MonopolyEventListener;
 import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.components.payment.PaymentRequest;
+import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.host.bot.GameBotTurnControlCoordinator;
 import fi.monopoly.presentation.game.desktop.assembly.GamePresentationFactory;
@@ -316,7 +317,7 @@ public final class GameDesktopPresentationCoordinator {
                 return dependencies.gamePrimaryTurnControls().isRollDiceActionAvailable(
                         dependencies.popupService().isAnyVisible(),
                         dependencies.debtState() != null,
-                        dependencies.currentTurnPlayer()
+                        hasActivePlayer(dependencies)
                 );
             }
 
@@ -325,7 +326,7 @@ public final class GameDesktopPresentationCoordinator {
                 return dependencies.gamePrimaryTurnControls().isEndTurnActionAvailable(
                         dependencies.popupService().isAnyVisible(),
                         dependencies.debtState() != null,
-                        dependencies.currentTurnPlayer()
+                        hasActivePlayer(dependencies)
                 );
             }
 
@@ -371,11 +372,6 @@ public final class GameDesktopPresentationCoordinator {
             @Override
             public Animations animations() {
                 return dependencies.animations();
-            }
-
-            @Override
-            public Player turnPlayer() {
-                return dependencies.currentTurnPlayer();
             }
 
             @Override
@@ -542,35 +538,49 @@ public final class GameDesktopPresentationCoordinator {
         });
     }
 
-    public boolean isRollDiceActionAvailable(GameDesktopShellDependencies dependencies, Player currentPlayer) {
+    public boolean isRollDiceActionAvailable(GameDesktopShellDependencies dependencies) {
+        boolean playerPresent = hasActivePlayer(dependencies);
         if (dependencies.gamePrimaryTurnControls().isRollDiceActionAvailable(
                 dependencies.popupService().isAnyVisible(),
                 dependencies.debtState() != null,
-                currentPlayer
+                playerPresent
         )) {
             return true;
         }
-        return botTurnControlCoordinator.projectedAction(createBotTurnControlHooks(dependencies), currentPlayer)
+        return botTurnControlCoordinator.projectedAction(
+                createBotTurnControlHooks(dependencies), playerPresent, isCurrentPlayerComputer(dependencies))
                 == GameBotTurnControlCoordinator.BotPrimaryAction.ROLL_DICE;
     }
 
-    public boolean isEndTurnActionAvailable(GameDesktopShellDependencies dependencies, Player currentPlayer) {
+    public boolean isEndTurnActionAvailable(GameDesktopShellDependencies dependencies) {
+        boolean playerPresent = hasActivePlayer(dependencies);
         if (dependencies.gamePrimaryTurnControls().isEndTurnActionAvailable(
                 dependencies.popupService().isAnyVisible(),
                 dependencies.debtState() != null,
-                currentPlayer
+                playerPresent
         )) {
             return true;
         }
-        return botTurnControlCoordinator.projectedAction(createBotTurnControlHooks(dependencies), currentPlayer)
+        return botTurnControlCoordinator.projectedAction(
+                createBotTurnControlHooks(dependencies), playerPresent, isCurrentPlayerComputer(dependencies))
                 == GameBotTurnControlCoordinator.BotPrimaryAction.END_TURN;
     }
 
     public boolean restoreBotTurnControlsIfNeeded(GameDesktopShellDependencies dependencies) {
         return botTurnControlCoordinator.restoreControlsIfNeeded(
                 createBotTurnControlHooks(dependencies),
-                dependencies.currentTurnPlayer()
+                hasActivePlayer(dependencies),
+                isCurrentPlayerComputer(dependencies)
         );
+    }
+
+    private boolean hasActivePlayer(GameDesktopShellDependencies dependencies) {
+        return dependencies.currentTurnPlayer() != null;
+    }
+
+    private boolean isCurrentPlayerComputer(GameDesktopShellDependencies dependencies) {
+        Player player = dependencies.currentTurnPlayer();
+        return player != null && player.isComputerControlled();
     }
 
     public SessionViewFacade createSessionViewFacade(GameDesktopShellDependencies dependencies) {
@@ -581,8 +591,8 @@ public final class GameDesktopPresentationCoordinator {
                 dependencies::debtState,
                 dependencies::retryDebtVisible,
                 dependencies::declareBankruptcyVisible,
-                player -> isRollDiceActionAvailable(dependencies, player),
-                player -> isEndTurnActionAvailable(dependencies, player),
+                player -> isRollDiceActionAvailable(dependencies),
+                player -> isEndTurnActionAvailable(dependencies),
                 () -> dependencies.gameSessionQueries().countUnownedProperties(),
                 player -> dependencies.gameSessionQueries().calculateBoardDangerScore(player)
         );

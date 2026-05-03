@@ -167,7 +167,7 @@ class GameFrameCoordinatorTest {
                 dices,
                 endRoundButton,
                 () -> false,
-                players::getTurn
+                () -> false
         );
         GameFrameCoordinator coordinator = new GameFrameCoordinator(
                 runtime,
@@ -243,11 +243,6 @@ class GameFrameCoordinatorTest {
         @Override
         public Animations animations() {
             return context.animations();
-        }
-
-        @Override
-        public Player turnPlayer() {
-            return context.players().getTurn();
         }
 
         @Override

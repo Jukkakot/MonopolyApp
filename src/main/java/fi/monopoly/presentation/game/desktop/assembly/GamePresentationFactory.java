@@ -68,7 +68,10 @@ public final class GamePresentationFactory {
                 dependencies.dices(),
                 buttons.endRoundButton(),
                 hooks::gameOver,
-                hooks::currentTurnPlayer
+                () -> {
+                    Player p = hooks.currentTurnPlayer();
+                    return p != null && p.isComputerControlled();
+                }
         );
         GameSessionQueries gameSessionQueries = new GameSessionQueries(dependencies.players(), dependencies.board());
         GameTurnFlowCoordinator gameTurnFlowCoordinator = new GameTurnFlowCoordinator(
