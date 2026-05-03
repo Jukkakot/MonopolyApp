@@ -527,10 +527,10 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public void showVictoryPopup(Player winner) {
-                String winnerName = winner != null ? winner.getName() : text("game.bankruptcy.noWinner");
-                log.info("Game over. winner={}", winnerName);
-                dependencies.popupService().show(text("game.victory.popup", winnerName), () -> {
+            public void showVictoryPopup(String winnerName) {
+                String displayName = winnerName != null ? winnerName : text("game.bankruptcy.noWinner");
+                log.info("Game over. winner={}", displayName);
+                dependencies.popupService().show(text("game.victory.popup", displayName), () -> {
                 });
             }
         });

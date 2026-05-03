@@ -85,7 +85,7 @@ class GameSessionStateCoordinatorTest {
         AtomicInteger refreshCalls = new AtomicInteger();
         AtomicInteger updateLogCalls = new AtomicInteger();
         AtomicReference<Player> focusedWinner = new AtomicReference<>();
-        AtomicReference<Player> popupWinner = new AtomicReference<>();
+        AtomicReference<String> popupWinnerName = new AtomicReference<>();
 
         coordinator.declareWinner(sessionState, winner, new GameSessionStateCoordinator.WinnerHooks() {
             @Override
@@ -124,8 +124,8 @@ class GameSessionStateCoordinatorTest {
             }
 
             @Override
-            public void showVictoryPopup(Player winner) {
-                popupWinner.set(winner);
+            public void showVictoryPopup(String winnerName) {
+                popupWinnerName.set(winnerName);
             }
         });
 
@@ -139,7 +139,7 @@ class GameSessionStateCoordinatorTest {
         assertEquals(1, refreshCalls.get());
         assertEquals(1, updateLogCalls.get());
         assertSame(winner, focusedWinner.get());
-        assertSame(winner, popupWinner.get());
+        assertEquals(winner.getName(), popupWinnerName.get());
     }
 
     @Test

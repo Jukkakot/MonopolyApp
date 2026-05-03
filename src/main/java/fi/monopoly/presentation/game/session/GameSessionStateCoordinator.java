@@ -138,7 +138,7 @@ public final class GameSessionStateCoordinator {
             hooks.focusWinner(winningPlayer);
         }
         hooks.updateLogTurnContext();
-        hooks.showVictoryPopup(winningPlayer);
+        hooks.showVictoryPopup(winningPlayer != null ? winningPlayer.getName() : null);
     }
 
     public interface DebugResetHooks {
@@ -172,6 +172,6 @@ public final class GameSessionStateCoordinator {
 
         void updateLogTurnContext();
 
-        void showVictoryPopup(Player winner);
+        void showVictoryPopup(String winnerName);
     }
 }
