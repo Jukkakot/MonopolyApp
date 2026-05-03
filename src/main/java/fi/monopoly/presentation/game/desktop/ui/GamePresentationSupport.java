@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.components.MonopolyButton;
-import fi.monopoly.components.payment.DebtState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.session.auction.AuctionViewAdapter;
@@ -19,9 +18,9 @@ public final class GamePresentationSupport {
     private final PendingDecisionPopupAdapter pendingDecisionPopupAdapter;
     private final TradeViewAdapter tradeViewAdapter;
 
-    public void updateDebtButtons(DebtState debtState, SessionState sessionState) {
+    public void updateDebtButtons(boolean debtActive, SessionState sessionState) {
         var activeDebt = sessionState != null ? sessionState.activeDebt() : null;
-        if (debtState == null || activeDebt == null) {
+        if (!debtActive || activeDebt == null) {
             retryDebtButton.hide();
             declareBankruptcyButton.hide();
             return;

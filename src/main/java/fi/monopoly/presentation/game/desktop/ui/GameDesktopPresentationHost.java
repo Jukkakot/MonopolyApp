@@ -122,7 +122,7 @@ public final class GameDesktopPresentationHost {
     }
 
     public void updateDebtButtons(SessionState projectedSessionState) {
-        gameFrameCoordinator.updateDebtButtons(shellDependencies.debtState(), projectedSessionState);
+        gameFrameCoordinator.updateDebtButtons(shellDependencies.debtState() != null, projectedSessionState);
     }
 
     public void updateDebugButtons() {

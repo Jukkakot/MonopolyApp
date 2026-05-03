@@ -138,8 +138,8 @@ public final class GameFrameCoordinator {
         );
     }
 
-    public void updateDebtButtons(DebtState debtState, SessionState sessionState) {
-        gamePresentationSupport.updateDebtButtons(debtState, sessionState);
+    public void updateDebtButtons(boolean debtActive, SessionState sessionState) {
+        gamePresentationSupport.updateDebtButtons(debtActive, sessionState);
     }
 
     public void updatePersistentButtons(boolean gameOver) {
