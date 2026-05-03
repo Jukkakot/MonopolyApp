@@ -3,7 +3,6 @@ package fi.monopoly.presentation.game.desktop.ui;
 import fi.monopoly.client.desktop.DesktopClientSettings;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animation;
 import fi.monopoly.components.animation.Animations;
@@ -74,8 +73,8 @@ public final class GameFrameCoordinator {
         if (!hooks.debtSidebarMode()) {
             hooks.dices().draw(null);
         }
-        if (hasSidebarSpace && hooks.debtSidebarMode() && hooks.debtDebtor() != null) {
-            hooks.focusPlayer(hooks.debtDebtor());
+        if (hasSidebarSpace && hooks.debtSidebarMode()) {
+            hooks.focusDebtDebtor();
         }
         if (hasSidebarSpace) {
             hooks.players().draw(
@@ -231,13 +230,11 @@ public final class GameFrameCoordinator {
 
         DebtState debtState();
 
-        Player debtDebtor();
-
         boolean popupVisible();
 
         boolean debtSidebarMode();
 
-        void focusPlayer(Player player);
+        void focusDebtDebtor();
 
         void restoreBotTurnControlsIfNeeded();
     }

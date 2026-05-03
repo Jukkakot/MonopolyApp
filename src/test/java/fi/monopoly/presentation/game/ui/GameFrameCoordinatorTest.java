@@ -256,11 +256,6 @@ class GameFrameCoordinatorTest {
         }
 
         @Override
-        public Player debtDebtor() {
-            return debtState != null ? debtState.paymentRequest().debtor() : null;
-        }
-
-        @Override
         public boolean popupVisible() {
             return false;
         }
@@ -271,7 +266,7 @@ class GameFrameCoordinatorTest {
         }
 
         @Override
-        public void focusPlayer(Player player) {
+        public void focusDebtDebtor() {
         }
 
         @Override

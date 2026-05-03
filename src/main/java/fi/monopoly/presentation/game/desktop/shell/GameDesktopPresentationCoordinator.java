@@ -385,11 +385,6 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public Player debtDebtor() {
-                return dependencies.debtState() != null ? dependencies.debtState().paymentRequest().debtor() : null;
-            }
-
-            @Override
             public boolean popupVisible() {
                 return dependencies.popupService().isAnyVisible();
             }
@@ -400,8 +395,11 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public void focusPlayer(Player player) {
-                dependencies.focusPlayer(player);
+            public void focusDebtDebtor() {
+                DebtState debt = dependencies.debtState();
+                if (debt != null) {
+                    dependencies.focusPlayer(debt.paymentRequest().debtor());
+                }
             }
 
             @Override
