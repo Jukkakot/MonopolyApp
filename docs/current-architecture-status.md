@@ -427,12 +427,26 @@ More Player removal (session 8 continued):
   actor validity checked via `pendingDecision.actorPlayerId() != null` — five-arg constructor, no Player
 - `GameSessionBridgeFactory.Hooks.playerById()` removed entirely (was only used by PopupAdapter)
 
+More Player removal (session 9):
+- `AuctionViewAdapter` — `Players players` dependency removed; actor computer check and name now
+  come from `SessionState.seats` (`SeatKind.BOT` / `displayName()`); leader name+color passed to
+  `PopupService.showPropertyAuction` as `String leaderName, Color leaderColor`
+- `PopupService.showPropertyAuction` signature changed from `Player currentLeader` to
+  `String leaderName, Color leaderColor`; `PropertyAuctionPopup` stores `String + Color` instead of `Player`
+- `PropertyAuctionResolver` legacy callsite updated to extract `leader.getName()` / `leader.getColor()`
+  at the call site (Player still used in that legacy class)
+- `GameSessionBridgeFactory.Hooks.currentTurnPlayer()/players()` — removed from Hooks interface;
+  `players::getPlayers` passed directly to `LegacyTradeGateway` and `TradeController` (Players is
+  already a `create()` parameter); `currentTurnPlayer` derived internally via SessionState
+  `turn().activePlayerId()` + Players lookup (`currentTurnPlayerSupplier` private helper)
+- `RestoredSessionReattachmentCoordinator.restoreAuthoritativeState` — `Function<String, Player>
+  playerById` parameter removed; `RestoredGameState` now carries `(boolean paused, boolean gameOver)`
+  only — no `Player winner`; `winnerPlayerId` is read directly from `SessionState` by callers
+
 Remaining `Player` dependencies in presentation layer (deferred — require larger refactoring):
 - `WinnerHooks.focusWinner(Player)` — needs actual Player for screen coordinates
-- `GameSessionBridgeFactory.Hooks.currentTurnPlayer()/players()` — used by TradeController and
-  LegacyTradeGateway; trade logic deeply tied to legacy Player objects
-- `RestoredSessionReattachmentCoordinator` — looks up debtor/creditor Player objects for session restore
-- `AuctionViewAdapter` — passes Player to PopupService for auction UI rendering (leader name/color)
+- `RestoredSessionReattachmentCoordinator.Hooks.playerById` — still needed for debt restore
+  (PaymentRequest/PlayerTarget take Player objects)
 - `TradeController` — full Player objects needed for trade partner selection and AI trade logic
 - `GameRuntimeAssemblyFactory.Hooks.declareWinner(Player)` — assembly-layer hook
 

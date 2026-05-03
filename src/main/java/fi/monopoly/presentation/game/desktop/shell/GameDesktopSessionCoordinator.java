@@ -8,8 +8,6 @@ import fi.monopoly.presentation.game.session.GameSessionState;
 import fi.monopoly.presentation.game.session.GameSessionStateCoordinator;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-
 /**
  * Session/restore coordinator for the desktop-local shell.
  *
@@ -69,16 +67,6 @@ public final class GameDesktopSessionCoordinator {
                         && !dependencies.popupService().isAnyVisible()
                         && dependencies.debtState() == null;
             }
-
-            @Override
-            public Player currentTurnPlayer() {
-                return dependencies.currentTurnPlayer();
-            }
-
-            @Override
-            public List<Player> players() {
-                return dependencies.players() != null ? dependencies.players().getPlayers() : List.of();
-            }
         };
     }
 
@@ -137,8 +125,7 @@ public final class GameDesktopSessionCoordinator {
         sessionStateCoordinator.restoreSessionState(
                 dependencies.sessionState(),
                 restoredSessionState,
-                dependencies.sessionPresentationState(),
-                dependencies::playerById
+                dependencies.sessionPresentationState()
         );
     }
 

@@ -5,6 +5,7 @@ import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
+import javafx.scene.paint.Color;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,7 +73,8 @@ public class PopupService {
     public void showPropertyAuction(
             Property property,
             String title,
-            Player currentLeader,
+            String leaderName,
+            Color leaderColor,
             int currentBidAmount,
             String primaryLabel,
             String secondaryLabel,
@@ -87,7 +89,7 @@ public class PopupService {
             PropertyAuctionPopup propertyAuctionPopup = getInstance(PropertyAuctionPopup.class);
             propertyAuctionPopup.setPopupText(adaptPopupText(title));
             propertyAuctionPopup.setOfferedProperty(property);
-            propertyAuctionPopup.setAuctionInfo(currentLeader, currentBidAmount);
+            propertyAuctionPopup.setAuctionInfo(leaderName, leaderColor, currentBidAmount);
             propertyAuctionPopup.setOnAcceptAction(onAccept);
             propertyAuctionPopup.setOnDeclineAction(onDecline);
             propertyAuctionPopup.setButtonLabels(primaryLabel, secondaryLabel);

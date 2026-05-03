@@ -154,10 +154,12 @@ public class PropertyAuctionResolver {
         }
 
         int maxBid = nextParticipant.maxBid();
+        Player leader = state.currentWinner();
         popupService.showPropertyAuction(
                 property,
                 text("property.auction.prompt", nextParticipant.player().getName(), property.getDisplayName()),
-                state.currentWinner(),
+                leader != null ? leader.getName() : null,
+                leader != null ? leader.getColor() : null,
                 state.currentBid(),
                 text("property.auction.bid", minBid),
                 text("property.auction.pass"),

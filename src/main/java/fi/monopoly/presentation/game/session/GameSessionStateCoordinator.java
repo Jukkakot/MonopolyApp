@@ -7,7 +7,6 @@ import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachment
 import fi.monopoly.presentation.session.debt.DebtController;
 import lombok.RequiredArgsConstructor;
 
-import java.util.function.Function;
 import java.util.function.IntConsumer;
 
 /**
@@ -30,18 +29,15 @@ public final class GameSessionStateCoordinator {
     public void restoreSessionState(
             GameSessionState sessionState,
             fi.monopoly.domain.session.SessionState restoredSessionState,
-            SessionPresentationStatePort sessionPresentationState,
-            Function<String, Player> playerById
+            SessionPresentationStatePort sessionPresentationState
     ) {
         RestoredSessionReattachmentCoordinator.RestoredGameState restoredGameState =
                 restoredSessionReattachmentCoordinator.restoreAuthoritativeState(
                         restoredSessionState,
-                        sessionPresentationState,
-                        playerById
+                        sessionPresentationState
                 );
         sessionState.setPaused(restoredGameState.paused());
         sessionState.setGameOver(restoredGameState.gameOver());
-        sessionState.setWinner(restoredGameState.winner());
         if (restoredSessionState != null) {
             sessionState.setWinnerPlayerId(restoredSessionState.winnerPlayerId());
         }

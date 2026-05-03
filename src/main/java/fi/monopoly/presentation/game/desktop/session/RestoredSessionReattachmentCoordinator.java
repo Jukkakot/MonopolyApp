@@ -25,20 +25,16 @@ public final class RestoredSessionReattachmentCoordinator {
 
     public RestoredGameState restoreAuthoritativeState(
             SessionState restoredSessionState,
-            SessionPresentationStatePort sessionPresentationState,
-            Function<String, Player> playerById
+            SessionPresentationStatePort sessionPresentationState
     ) {
         if (restoredSessionState == null) {
-            return new RestoredGameState(false, false, null);
+            return new RestoredGameState(false, false);
         }
         sessionPresentationState.restoreFrom(restoredSessionState);
         boolean paused = restoredSessionState.status() == SessionStatus.PAUSED;
         boolean gameOver = restoredSessionState.status() == SessionStatus.GAME_OVER
                 || restoredSessionState.winnerPlayerId() != null;
-        Player winner = restoredSessionState.winnerPlayerId() == null
-                ? null
-                : playerById.apply(restoredSessionState.winnerPlayerId());
-        return new RestoredGameState(paused, gameOver, winner);
+        return new RestoredGameState(paused, gameOver);
     }
 
     public void restorePresentation(
@@ -149,6 +145,6 @@ public final class RestoredSessionReattachmentCoordinator {
         void resumeContinuation(fi.monopoly.domain.session.TurnContinuationState continuationState);
     }
 
-    public record RestoredGameState(boolean paused, boolean gameOver, Player winner) {
+    public record RestoredGameState(boolean paused, boolean gameOver) {
     }
 }

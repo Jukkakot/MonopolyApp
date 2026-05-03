@@ -13,6 +13,7 @@ import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeUiBuilder;
+import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.legacy.session.LegacySessionApplicationFactory;
 import fi.monopoly.presentation.legacy.session.LegacySessionPaymentPort;
 import fi.monopoly.presentation.legacy.session.debt.LegacyPaymentGateway;
@@ -26,7 +27,6 @@ import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -77,10 +77,9 @@ public final class GameSessionBridgeFactory {
         AuctionViewAdapter auctionViewAdapter = new AuctionViewAdapter(
                 sessionId,
                 commandProxy,
-                runtime.popupService(),
-                players
+                runtime.popupService()
         );
-        LegacyTradeGateway legacyTradeGateway = new LegacyTradeGateway(hooks::players);
+        LegacyTradeGateway legacyTradeGateway = new LegacyTradeGateway(players::getPlayers);
         TradeViewAdapter tradeViewAdapter = new TradeViewAdapter(
                 sessionId,
                 commandProxy,
@@ -103,8 +102,8 @@ public final class GameSessionBridgeFactory {
                 tradeViewAdapter,
                 legacyTradeGateway,
                 hooks::canOpenTrade,
-                hooks::currentTurnPlayer,
-                hooks::players
+                currentTurnPlayerSupplier(sessionApplicationService, players),
+                players::getPlayers
         );
         return new GameSessionBridge(
                 commandProxy,
@@ -119,6 +118,23 @@ public final class GameSessionBridgeFactory {
                 tradeViewAdapter,
                 tradeController
         );
+    }
+
+    private static java.util.function.Supplier<Player> currentTurnPlayerSupplier(
+            SessionApplicationService sessionApplicationService,
+            Players players
+    ) {
+        return () -> {
+            SessionState state = sessionApplicationService.currentState();
+            if (state == null || state.turn() == null || state.turn().activePlayerId() == null) {
+                return null;
+            }
+            String activeId = state.turn().activePlayerId();
+            return players.getPlayers().stream()
+                    .filter(p -> activeId.equals("player-" + p.getId()))
+                    .findFirst()
+                    .orElse(null);
+        };
     }
 
     public interface Hooks {
@@ -137,10 +153,6 @@ public final class GameSessionBridgeFactory {
         boolean computerTurn();
 
         boolean canOpenTrade();
-
-        Player currentTurnPlayer();
-
-        List<Player> players();
     }
 
     public record GameSessionBridge(

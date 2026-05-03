@@ -5,15 +5,16 @@ import fi.monopoly.application.command.PassAuctionCommand;
 import fi.monopoly.application.command.PlaceAuctionBidCommand;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.SessionCommandPort;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.Players;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
 import fi.monopoly.domain.session.AuctionState;
 import fi.monopoly.domain.session.AuctionStatus;
+import fi.monopoly.domain.session.SeatKind;
+import fi.monopoly.domain.session.SeatState;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.types.SpotType;
+import javafx.scene.paint.Color;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
@@ -25,7 +26,6 @@ public final class AuctionViewAdapter {
     private final String sessionId;
     private final SessionCommandPort sessionApplicationService;
     private final PopupService popupService;
-    private final Players players;
     private String renderedAuctionSignature;
     private String renderedResolutionAuctionId;
 
@@ -38,12 +38,12 @@ public final class AuctionViewAdapter {
             return;
         }
         if (auctionState.status() == AuctionStatus.WON_PENDING_RESOLUTION) {
-            syncResolutionPopup(auctionState);
+            syncResolutionPopup(auctionState, state);
             return;
         }
         renderedResolutionAuctionId = null;
-        Player actor = playerById(auctionState.currentActorPlayerId());
-        if (actor == null || actor.isComputerControlled()) {
+        SeatState actorSeat = seatByPlayerId(auctionState.currentActorPlayerId(), state);
+        if (actorSeat == null || actorSeat.seatKind() == SeatKind.BOT) {
             renderedAuctionSignature = null;
             return;
         }
@@ -55,10 +55,12 @@ public final class AuctionViewAdapter {
         if (property == null) {
             return;
         }
+        SeatState leaderSeat = seatByPlayerId(auctionState.leadingPlayerId(), state);
         popupService.showPropertyAuction(
                 property,
-                text("property.auction.prompt", actor.getName(), property.getDisplayName()),
-                playerById(auctionState.leadingPlayerId()),
+                text("property.auction.prompt", actorSeat.displayName(), property.getDisplayName()),
+                leaderSeat != null ? leaderSeat.displayName() : null,
+                leaderSeat != null ? colorFromHex(leaderSeat.tokenColorHex()) : null,
                 auctionState.currentBid(),
                 text("property.auction.bid", auctionState.minimumNextBid()),
                 text("property.auction.pass"),
@@ -77,18 +79,18 @@ public final class AuctionViewAdapter {
         renderedAuctionSignature = signature;
     }
 
-    private void syncResolutionPopup(AuctionState auctionState) {
+    private void syncResolutionPopup(AuctionState auctionState, SessionState state) {
         renderedAuctionSignature = null;
         if (Objects.equals(renderedResolutionAuctionId, auctionState.auctionId()) && popupService.isAnyVisible()) {
             return;
         }
         Property property = propertyById(auctionState.propertyId());
-        Player winner = playerById(auctionState.winningPlayerId());
-        if (property == null || winner == null) {
+        SeatState winnerSeat = seatByPlayerId(auctionState.winningPlayerId(), state);
+        if (property == null || winnerSeat == null) {
             return;
         }
         popupService.show(
-                text("property.auction.won", winner.getName(), property.getDisplayName(), auctionState.winningBid()),
+                text("property.auction.won", winnerSeat.displayName(), property.getDisplayName(), auctionState.winningBid()),
                 () -> handleResult(sessionApplicationService.handle(new FinishAuctionResolutionCommand(
                         sessionId,
                         auctionState.auctionId()
@@ -114,16 +116,27 @@ public final class AuctionViewAdapter {
                 + "|" + auctionState.passedPlayerIds().hashCode();
     }
 
-    private Player playerById(String playerId) {
-        if (playerId == null || players == null) {
+    private static SeatState seatByPlayerId(String playerId, SessionState state) {
+        if (playerId == null || state == null) {
             return null;
         }
-        for (Player player : players.getPlayers()) {
-            if (playerId.equals("player-" + player.getId())) {
-                return player;
+        for (SeatState seat : state.seats()) {
+            if (playerId.equals(seat.playerId())) {
+                return seat;
             }
         }
         return null;
+    }
+
+    private static Color colorFromHex(String hex) {
+        if (hex == null || hex.length() != 7 || !hex.startsWith("#")) {
+            return null;
+        }
+        try {
+            return Color.web(hex);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private Property propertyById(String propertyId) {

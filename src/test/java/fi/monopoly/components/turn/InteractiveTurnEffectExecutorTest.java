@@ -296,7 +296,7 @@ class InteractiveTurnEffectExecutorTest {
         }
 
         @Override
-        public void showPropertyAuction(Property property, String title, Player currentLeader, int currentBidAmount, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
+        public void showPropertyAuction(Property property, String title, String leaderName, Color leaderColor, int currentBidAmount, String primaryLabel, String secondaryLabel, ButtonAction onAccept, ButtonAction onDecline) {
             messages.add(title);
             int responseIndex = customButtonResponses.isEmpty() ? 0 : customButtonResponses.removeFirst();
             if (responseIndex <= 0) {
