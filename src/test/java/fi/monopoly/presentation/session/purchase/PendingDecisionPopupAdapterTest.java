@@ -46,8 +46,7 @@ class PendingDecisionPopupAdapterTest {
                     throw new UnsupportedOperationException("Not needed in this test");
                 },
                 () -> {
-                },
-                playerId -> null
+                }
         );
 
         adapter.sync();

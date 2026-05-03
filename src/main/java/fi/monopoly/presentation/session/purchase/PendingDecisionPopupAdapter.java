@@ -5,7 +5,6 @@ import fi.monopoly.application.command.DeclinePropertyCommand;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.application.session.purchase.PropertyPurchaseFlow;
 import fi.monopoly.client.session.SessionCommandPort;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.popup.PopupService;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
@@ -17,7 +16,6 @@ import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 @RequiredArgsConstructor
 public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
@@ -26,7 +24,6 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
     private final PopupService popupService;
     private final LegacyPropertyPurchaseDecisionSupport propertyPurchaseDecisionSupport;
     private final Runnable postHandleSync;
-    private final Function<String, Player> playerResolver;
     private String renderedDecisionId;
 
     @Override
@@ -54,8 +51,7 @@ public final class PendingDecisionPopupAdapter implements PropertyPurchaseFlow {
             clearRenderedDecision();
             return;
         }
-        Player actor = playerResolver.apply(pendingDecision.actorPlayerId());
-        if (actor == null) {
+        if (pendingDecision.actorPlayerId() == null) {
             clearRenderedDecision();
             return;
         }

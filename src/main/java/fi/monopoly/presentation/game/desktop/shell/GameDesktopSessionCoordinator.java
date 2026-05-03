@@ -56,11 +56,6 @@ public final class GameDesktopSessionCoordinator {
             }
 
             @Override
-            public Player playerById(String playerId) {
-                return dependencies.playerById(playerId);
-            }
-
-            @Override
             public boolean computerTurn() {
                 fi.monopoly.domain.session.SessionState state = dependencies.sessionCommandPort().currentState();
                 if (state == null || state.turn() == null || state.turn().activePlayerId() == null) return false;

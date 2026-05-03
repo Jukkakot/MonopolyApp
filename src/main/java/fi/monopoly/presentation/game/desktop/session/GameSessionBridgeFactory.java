@@ -94,8 +94,7 @@ public final class GameSessionBridgeFactory {
                 commandProxy,
                 runtime.popupService(),
                 sessionApplicationService::openPropertyPurchaseDecision,
-                auctionViewAdapter::sync,
-                hooks::playerById
+                auctionViewAdapter::sync
         );
         TradeController tradeController = new TradeController(
                 runtime,
@@ -134,8 +133,6 @@ public final class GameSessionBridgeFactory {
         boolean projectedEndTurnActionAvailable();
 
         void endTurn();
-
-        Player playerById(String playerId);
 
         boolean computerTurn();
 
