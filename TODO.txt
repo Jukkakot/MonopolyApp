@@ -18,3 +18,9 @@ BACKEND EXTRACTION (separation-program)
 [Medium] Make desktop client render from received SessionState snapshot rather than
          authoritative in-process runtime mutation (Game + legacy runtime become pure
          client-side rendering projection)
+[Low] Remove remaining Player from GameSessionBridgeFactory.Hooks (currentTurnPlayer/players)
+      — TradeController and LegacyTradeGateway still need Player objects
+[Low] Remove Player from AuctionViewAdapter — replace PopupService.showPropertyAuction
+      leader param with name string; derive computer check from SessionState.seats
+[Low] Remove Player from RestoredSessionReattachmentCoordinator — use winnerPlayerId
+      and debtorPlayerId strings directly; restore Player only for focusWinner visual hook
