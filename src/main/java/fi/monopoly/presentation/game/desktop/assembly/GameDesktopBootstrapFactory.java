@@ -57,7 +57,7 @@ public final class GameDesktopBootstrapFactory {
                 hostContext.shellDependencies(),
                 config.debugPerformanceStats(),
                 config.sessionStateSupplier(),
-                hooks.currentTurnPlayerSupplier(),
+                () -> { fi.monopoly.components.Player p = hooks.currentTurnPlayerSupplier().get(); return p != null ? p.getName() : null; },
                 hostContext.gamePrimaryTurnControls(),
                 hostContext.gameSessionQueries(),
                 hostContext.gameUiController(),

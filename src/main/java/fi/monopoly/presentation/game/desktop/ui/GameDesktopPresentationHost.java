@@ -30,7 +30,7 @@ public final class GameDesktopPresentationHost {
     private final GameDesktopShellDependencies shellDependencies;
     private final DebugPerformanceStats debugPerformanceStats;
     private final Supplier<GameSessionState> sessionStateSupplier;
-    private final Supplier<Player> currentTurnPlayerSupplier;
+    private final Supplier<String> turnPlayerNameSupplier;
     private final GamePrimaryTurnControls gamePrimaryTurnControls;
     private final GameSessionQueries gameSessionQueries;
     private final GameUiController gameUiController;
@@ -42,7 +42,7 @@ public final class GameDesktopPresentationHost {
             GameDesktopShellDependencies shellDependencies,
             DebugPerformanceStats debugPerformanceStats,
             Supplier<GameSessionState> sessionStateSupplier,
-            Supplier<Player> currentTurnPlayerSupplier,
+            Supplier<String> turnPlayerNameSupplier,
             GamePrimaryTurnControls gamePrimaryTurnControls,
             GameSessionQueries gameSessionQueries,
             GameUiController gameUiController,
@@ -52,7 +52,7 @@ public final class GameDesktopPresentationHost {
         this.shellDependencies = shellDependencies;
         this.debugPerformanceStats = debugPerformanceStats;
         this.sessionStateSupplier = sessionStateSupplier;
-        this.currentTurnPlayerSupplier = currentTurnPlayerSupplier;
+        this.turnPlayerNameSupplier = turnPlayerNameSupplier;
         this.gamePrimaryTurnControls = gamePrimaryTurnControls;
         this.gameSessionQueries = gameSessionQueries;
         this.gameUiController = gameUiController;
@@ -153,11 +153,10 @@ public final class GameDesktopPresentationHost {
     public void updateLogTurnContext() {
         GameSessionState sessionState = sessionStateSupplier.get();
         Player winner = sessionState.winner();
-        Player turnPlayer = currentTurnPlayerSupplier.get();
         gameFrameCoordinator.updateLogTurnContext(
                 sessionState.gameOver(),
                 winner != null ? winner.getName() : null,
-                turnPlayer != null ? turnPlayer.getName() : null
+                turnPlayerNameSupplier.get()
         );
     }
 
