@@ -72,8 +72,7 @@ public final class GameSessionBridgeFactory {
         DebtActionDispatcher debtActionDispatcher = new DebtActionDispatcher(
                 sessionId,
                 commandProxy,
-                runtime.popupService(),
-                hooks::currentTurnPlayer
+                runtime.popupService()
         );
         AuctionViewAdapter auctionViewAdapter = new AuctionViewAdapter(
                 sessionId,
