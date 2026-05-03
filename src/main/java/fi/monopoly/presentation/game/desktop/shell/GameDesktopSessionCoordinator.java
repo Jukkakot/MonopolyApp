@@ -36,8 +36,8 @@ public final class GameDesktopSessionCoordinator {
             }
 
             @Override
-            public Player winner() {
-                return dependencies.sessionState().winner();
+            public String winnerPlayerId() {
+                return dependencies.sessionState().winnerPlayerId();
             }
 
             @Override

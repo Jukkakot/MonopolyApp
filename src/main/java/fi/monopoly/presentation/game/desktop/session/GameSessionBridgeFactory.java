@@ -52,7 +52,7 @@ public final class GameSessionBridgeFactory {
                 () -> debtController != null ? debtController.debtState() : null,
                 hooks::paused,
                 hooks::gameOver,
-                hooks::winner,
+                hooks::winnerPlayerId,
                 hooks::projectedRollDiceActionAvailable,
                 hooks::projectedEndTurnActionAvailable
         ).create(
@@ -128,7 +128,7 @@ public final class GameSessionBridgeFactory {
 
         boolean gameOver();
 
-        Player winner();
+        String winnerPlayerId();
 
         boolean projectedRollDiceActionAvailable();
 

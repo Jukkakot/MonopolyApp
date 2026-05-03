@@ -37,7 +37,7 @@ class LegacySessionProjectorTest {
                 () -> null,
                 () -> false,
                 () -> true,
-                () -> winner,
+                () -> "player-" + winner.getId(),
                 () -> false,
                 () -> false
         );

@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.legacy.session;
 
 import fi.monopoly.application.session.SessionApplicationService;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.payment.DebtState;
@@ -36,7 +35,7 @@ public final class LegacySessionApplicationFactory {
     private final Supplier<DebtState> debtStateSupplier;
     private final BooleanSupplier pausedSupplier;
     private final BooleanSupplier gameOverSupplier;
-    private final Supplier<Player> winnerSupplier;
+    private final Supplier<String> winnerPlayerIdSupplier;
     private final BooleanSupplier canRollSupplier;
     private final BooleanSupplier canEndTurnSupplier;
 
@@ -56,7 +55,7 @@ public final class LegacySessionApplicationFactory {
                         debtStateSupplier,
                         pausedSupplier,
                         gameOverSupplier,
-                        winnerSupplier,
+                        winnerPlayerIdSupplier,
                         canRollSupplier,
                         canEndTurnSupplier
                 )::project

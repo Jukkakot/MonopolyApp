@@ -19,6 +19,7 @@ public final class GameSessionState {
     private boolean paused;
     private boolean gameOver;
     private Player winner;
+    private String winnerPlayerId;
     private BotTurnScheduler.SpeedMode botSpeedMode = BotTurnScheduler.SpeedMode.NORMAL;
     private String persistenceNotice;
     private int persistenceNoticeExpiresAtMillis = Integer.MIN_VALUE;
@@ -33,6 +34,11 @@ public final class GameSessionState {
 
     public void setWinner(Player winner) {
         this.winner = winner;
+        this.winnerPlayerId = winner != null ? "player-" + winner.getId() : null;
+    }
+
+    public void setWinnerPlayerId(String winnerPlayerId) {
+        this.winnerPlayerId = winnerPlayerId;
     }
 
     public String winnerName() {

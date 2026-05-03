@@ -39,7 +39,7 @@ public final class LegacySessionProjector {
     private final Supplier<DebtState> debtStateSupplier;
     private final BooleanSupplier pausedSupplier;
     private final BooleanSupplier gameOverSupplier;
-    private final Supplier<Player> winnerSupplier;
+    private final Supplier<String> winnerPlayerIdSupplier;
     private final BooleanSupplier canRollSupplier;
     private final BooleanSupplier canEndTurnSupplier;
 
@@ -60,7 +60,7 @@ public final class LegacySessionProjector {
                 null,
                 buildActiveDebt(),
                 null,
-                buildWinnerPlayerId(identities)
+                buildWinnerPlayerId()
         );
     }
 
@@ -223,13 +223,8 @@ public final class LegacySessionProjector {
         return List.of(DecisionAction.PRIMARY, DecisionAction.SECONDARY);
     }
 
-    private String buildWinnerPlayerId(Map<Player, PlayerIdentity> identities) {
-        Player winner = winnerSupplier.get();
-        if (winner == null) {
-            return null;
-        }
-        PlayerIdentity identity = identities.get(winner);
-        return identity == null ? playerId(winner) : identity.playerId();
+    private String buildWinnerPlayerId() {
+        return winnerPlayerIdSupplier.get();
     }
 
     private DebtStateModel buildActiveDebt() {

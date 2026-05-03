@@ -42,6 +42,9 @@ public final class GameSessionStateCoordinator {
         sessionState.setPaused(restoredGameState.paused());
         sessionState.setGameOver(restoredGameState.gameOver());
         sessionState.setWinner(restoredGameState.winner());
+        if (restoredSessionState != null) {
+            sessionState.setWinnerPlayerId(restoredSessionState.winnerPlayerId());
+        }
     }
 
     public void initializePresentation(
