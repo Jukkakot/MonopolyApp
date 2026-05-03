@@ -390,17 +390,38 @@ Blockers A, B (partially), C (partially), and D are fully resolved. The standalo
    become a pure client-side rendering projection that reads from received `SessionState` rather
    than computing authoritative values themselves. This is the biggest remaining structural bridge.
 
-Progress since last update:
+Progress since last update (sessions 7–8):
 - `GameSidebarPresenter.SidebarState` fully migrated: no `Player` fields remain; player colors
   derive from `SeatState.tokenColorHex`, active player name/spot/computer-badge from `SessionState`
 - `GameSidebarStateFactory` simplified: sidebar phase display derives from `SessionState.turn().phase()`;
   removed legacy boolean flags (`gameOver`, `popupVisible`, `endRoundVisible`, `rollDiceVisible`)
-- `GameFrameCoordinator.FrameHooks` trimmed: removed `endRoundVisible()` and `rollDiceVisible()`
+- `GameFrameCoordinator.FrameHooks` trimmed: removed `endRoundVisible()`, `rollDiceVisible()`,
+  `turnPlayer()`, `debtDebtor()`, `focusPlayer(Player)`; all removed or replaced with
+  `focusDebtDebtor()` (encapsulates Player lookup inside coordinator implementation)
+- `GamePrimaryTurnControls` and `GameBotTurnControlCoordinator` no longer take `Player` parameters;
+  replaced with `BooleanSupplier isComputerControlled` / `boolean isComputer` booleans
+- MDC logging (`updateLogTurnContext`) now takes `String winnerName, String turnPlayerName` — no Player
+- `GameSidebarPresenter.SidebarState.debtState` field replaced with pre-formatted `String debtText`;
+  debt text formatting moved to `GameSidebarStateFactory`
+- `GamePresentationSupport.updateDebtButtons` now takes `boolean debtActive` instead of `DebtState`
+- `GameDesktopPresentationHost.currentTurnPlayerSupplier` changed to `Supplier<String> turnPlayerNameSupplier`;
+  player name extraction happens at assembly boundary (`GameDesktopBootstrapFactory`)
+- `GameSessionState.winnerName()` derived accessor added; `PresentationHost.updateLogTurnContext`
+  no longer accesses `Player winner` directly
+- `WinnerHooks.showVictoryPopup(Player)` changed to `showVictoryPopup(String winnerName)` — winner
+  name is now extracted in `GameSessionStateCoordinator.declareWinner()` before the hook call
 - `projectedRollDiceAvailableSupplier`/`projectedEndTurnAvailableSupplier` removed from
   `GameBotTurnHooksAdapter` and `SessionBackedComputerTurnContext`; debug log now reads
   `state.turn().canRoll()` / `canEndTurn()` directly from the authoritative snapshot
 - Legacy desktop starting order now uses `StartingOrderDeterminer` (dice-roll-based), matching
   `PureDomainSessionFactory`; `GameRuntimeAssemblyFactory` applies this at game setup
+
+Remaining `Player` dependencies in presentation layer (deferred — require larger refactoring):
+- `WinnerHooks.focusWinner(Player)` — needs actual Player for screen coordinates
+- `GameSessionBridgeFactory.Hooks.winner()/currentTurnPlayer()/playerById()/players()` — bridge
+  factory to `LegacySessionProjector`, needed until projector uses pure `SessionState`
+- `RestoredSessionReattachmentCoordinator` — looks up winner/debtor Player by ID from SessionState
+- `AuctionViewAdapter`, `DebtActionDispatcher`, `TradeController` — legacy runtime gameplay logic
 
 ## Relationship To Older Plan Docs
 
