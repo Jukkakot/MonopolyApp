@@ -2,8 +2,6 @@ package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.client.desktop.MonopolyRuntime;
-import fi.monopoly.components.payment.DebtState;
-import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.utils.LayoutMetrics;
 import fi.monopoly.utils.TextWrapUtils;
 import fi.monopoly.utils.UiTokens;
@@ -38,8 +36,8 @@ public final class GameSidebarPresenter {
         app.strokeWeight(2);
         app.line(sidebarX, 0, sidebarX, app.height);
         app.line(sidebarX + UiTokens.spacingMd(), layoutMetrics.sidebarHeaderHeight(), sidebarX + sidebarWidth - UiTokens.spacingMd(), layoutMetrics.sidebarHeaderHeight());
-        if (state.debtState() != null) {
-            app.line(sidebarX + UiTokens.spacingMd(), debtSectionBottom(layoutMetrics, state.debtState()), sidebarX + sidebarWidth - UiTokens.spacingMd(), debtSectionBottom(layoutMetrics, state.debtState()));
+        if (state.debtText() != null) {
+            app.line(sidebarX + UiTokens.spacingMd(), debtSectionBottom(layoutMetrics, state.debtText()), sidebarX + sidebarWidth - UiTokens.spacingMd(), debtSectionBottom(layoutMetrics, state.debtText()));
         }
 
         app.fill(46, 72, 63);
@@ -69,8 +67,8 @@ public final class GameSidebarPresenter {
         app.pop();
     }
 
-    public void drawDebtState(LayoutMetrics layoutMetrics, DebtState debtState) {
-        if (debtState == null) {
+    public void drawDebtState(LayoutMetrics layoutMetrics, String debtText) {
+        if (debtText == null) {
             return;
         }
         MonopolyApp app = runtime.app();
@@ -82,23 +80,23 @@ public final class GameSidebarPresenter {
         app.fill(0);
         app.textFont(runtime.font20());
         app.textAlign(PConstants.LEFT);
-        app.text(buildDebtSidebarText(debtState.paymentRequest()), layoutMetrics.sidebarX() + UiTokens.spacingMd(), layoutMetrics.debtTextY());
+        app.text(debtText, layoutMetrics.sidebarX() + UiTokens.spacingMd(), layoutMetrics.debtTextY());
         app.pop();
     }
 
     public float contentTop(LayoutMetrics layoutMetrics, SidebarState state) {
-        if (state.debtState() != null) {
-            return debtSectionBottom(layoutMetrics, state.debtState()) + 20;
+        if (state.debtText() != null) {
+            return debtSectionBottom(layoutMetrics, state.debtText()) + 20;
         }
         float availableTop = state.historyPanelY() - UiTokens.sidebarHistoryTopMargin();
         return Math.max(UiTokens.sidebarMinContentTop(), Math.min(state.reservedTop(), availableTop));
     }
 
-    public int debtSectionBottom(LayoutMetrics layoutMetrics, DebtState debtState) {
-        if (debtState == null) {
+    public int debtSectionBottom(LayoutMetrics layoutMetrics, String debtText) {
+        if (debtText == null) {
             return Math.round(layoutMetrics.debtTextY());
         }
-        int lineCount = buildDebtSidebarText(debtState.paymentRequest()).split("\\R").length;
+        int lineCount = debtText.split("\\R").length;
         return Math.round(layoutMetrics.debtTextY() + lineCount * UiTokens.sidebarLineHeight());
     }
 
@@ -252,22 +250,11 @@ public final class GameSidebarPresenter {
         return message.replaceAll("\\R+", " / ").replaceAll("\\s{2,}", " ").trim();
     }
 
-    private String buildDebtSidebarText(PaymentRequest request) {
-        return text(
-                "sidebar.debt.summary",
-                request.debtor().getName(),
-                request.amount(),
-                request.target().getDisplayName(),
-                request.debtor().getMoneyAmount(),
-                request.debtor().getTotalLiquidationValue()
-        );
-    }
-
     public record SidebarState(
             String currentTurnPhase,
             Map<String, int[]> playerColors,
             List<String> recentMessages,
-            DebtState debtState,
+            String debtText,
             String persistenceNotice,
             float historyPanelY,
             float historyHeight,

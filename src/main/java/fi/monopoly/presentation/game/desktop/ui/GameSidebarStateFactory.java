@@ -1,6 +1,7 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.components.payment.DebtState;
+import fi.monopoly.components.payment.PaymentRequest;
 import fi.monopoly.domain.session.PlayerSnapshot;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.turn.TurnPhase;
@@ -27,11 +28,12 @@ public final class GameSidebarStateFactory {
         boolean activePlayerIsComputer = resolveActivePlayerIsComputer(authoritativeSessionState);
         String activePlayerName = resolveActivePlayerName(authoritativeSessionState);
         Map<String, int[]> playerColors = resolvePlayerColors(authoritativeSessionState);
+        String debtText = debtState != null ? buildDebtSidebarText(debtState.paymentRequest()) : null;
         return new GameSidebarPresenter.SidebarState(
                 resolveCurrentTurnPhase(animationsRunning, authoritativeSessionState),
                 playerColors,
                 recentMessages,
-                debtState,
+                debtText,
                 persistenceNotice,
                 historyPanelY,
                 historyHeight,
@@ -106,6 +108,17 @@ public final class GameSidebarStateFactory {
         SpotType spotType = spots.get(boardIndex);
         String name = spotType.getStringProperty("name");
         return name.isBlank() ? spotType.name() : MonopolyUtils.parseIllegalCharacters(name);
+    }
+
+    private static String buildDebtSidebarText(PaymentRequest request) {
+        return text(
+                "sidebar.debt.summary",
+                request.debtor().getName(),
+                request.amount(),
+                request.target().getDisplayName(),
+                request.debtor().getMoneyAmount(),
+                request.debtor().getTotalLiquidationValue()
+        );
     }
 
     public String resolveCurrentTurnPhase(boolean animationsRunning, SessionState authoritativeSessionState) {

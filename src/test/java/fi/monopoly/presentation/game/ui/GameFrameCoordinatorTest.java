@@ -109,7 +109,7 @@ class GameFrameCoordinatorTest {
         );
 
         assertEquals(fi.monopoly.text.UiTexts.text("sidebar.phase.debt"), sidebarState.currentTurnPhase());
-        assertSame(debtState, sidebarState.debtState());
+        assertNotNull(sidebarState.debtText());
     }
 
     private static TestContext createContext(int width, int height) {

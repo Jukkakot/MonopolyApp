@@ -83,7 +83,7 @@ public final class GameFrameCoordinator {
                     !hooks.debtSidebarMode(),
                     !hooks.debtSidebarMode()
             );
-            gameSidebarPresenter.drawDebtState(layoutMetrics, sidebarState.debtState());
+            gameSidebarPresenter.drawDebtState(layoutMetrics, sidebarState.debtText());
             return;
         }
         hooks.players().drawTokens();
