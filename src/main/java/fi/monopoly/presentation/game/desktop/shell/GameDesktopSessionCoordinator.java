@@ -1,6 +1,5 @@
 package fi.monopoly.presentation.game.desktop.shell;
 
-import fi.monopoly.components.Player;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.game.desktop.session.GameSessionBridgeFactory;
 import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachmentCoordinator;
@@ -74,11 +73,6 @@ public final class GameDesktopSessionCoordinator {
             GameDesktopShellDependencies dependencies
     ) {
         return new RestoredSessionReattachmentCoordinator.Hooks() {
-            @Override
-            public Player playerById(String playerId) {
-                return dependencies.playerById(playerId);
-            }
-
             @Override
             public boolean gameOver() {
                 return dependencies.sessionState().gameOver();

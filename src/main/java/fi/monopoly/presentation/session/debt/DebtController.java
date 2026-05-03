@@ -5,6 +5,8 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.payment.*;
+import fi.monopoly.domain.session.DebtCreditorType;
+import fi.monopoly.domain.session.DebtStateModel;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.turn.PropertyAuctionResolver;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +75,43 @@ public final class DebtController {
         log.info("Entering debt resolution: debtor={}, target={}, amount={}, bankruptcyRisk={}",
                 request.debtor().getName(), request.target().getDisplayName(), request.amount(), bankruptcyRisk);
         runtime.popupService().show(buildDebtMessage(request, missingAmount, bankruptcyRisk));
+    }
+
+    public boolean restoreDebtStateFromModel(DebtStateModel activeDebt, Runnable onResolved) {
+        if (activeDebt == null) {
+            return false;
+        }
+        Player debtor = playerById(activeDebt.debtorPlayerId());
+        if (debtor == null) {
+            return false;
+        }
+        PaymentTarget target = activeDebt.creditorType() == DebtCreditorType.PLAYER
+                ? creditorTarget(activeDebt.creditorPlayerId())
+                : BankTarget.INSTANCE;
+        if (target == null) {
+            return false;
+        }
+        restoreDebtState(
+                new PaymentRequest(debtor, target, activeDebt.amountRemaining(), activeDebt.reason()),
+                onResolved,
+                activeDebt.bankruptcyRisk()
+        );
+        return true;
+    }
+
+    private Player playerById(String playerId) {
+        if (playerId == null) {
+            return null;
+        }
+        return players.getPlayers().stream()
+                .filter(p -> playerId.equals("player-" + p.getId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private PaymentTarget creditorTarget(String creditorPlayerId) {
+        Player creditor = playerById(creditorPlayerId);
+        return creditor == null ? null : new PlayerTarget(creditor);
     }
 
     public void restoreDebtState(PaymentRequest request, Runnable onResolved, boolean bankruptcyRisk) {

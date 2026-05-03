@@ -1,17 +1,9 @@
 package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.application.session.SessionPresentationStatePort;
-import fi.monopoly.components.Player;
-import fi.monopoly.components.payment.BankTarget;
-import fi.monopoly.components.payment.PaymentRequest;
-import fi.monopoly.components.payment.PaymentTarget;
-import fi.monopoly.components.payment.PlayerTarget;
-import fi.monopoly.domain.session.DebtCreditorType;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.SessionStatus;
 import fi.monopoly.presentation.session.debt.DebtController;
-
-import java.util.function.Function;
 
 /**
  * Reattaches authoritative session state to the current desktop presentation/runtime shell.
@@ -62,44 +54,10 @@ public final class RestoredSessionReattachmentCoordinator {
         if (debtController == null || restoredSessionState.activeDebt() == null) {
             return;
         }
-        PaymentRequest request = toRestoredPaymentRequest(restoredSessionState, hooks::playerById);
-        if (request == null) {
-            return;
-        }
-        debtController.restoreDebtState(
-                request,
-                () -> hooks.resumeContinuation(restoredSessionState.turnContinuationState()),
-                restoredSessionState.activeDebt().bankruptcyRisk()
+        debtController.restoreDebtStateFromModel(
+                restoredSessionState.activeDebt(),
+                () -> hooks.resumeContinuation(restoredSessionState.turnContinuationState())
         );
-    }
-
-    private PaymentRequest toRestoredPaymentRequest(
-            SessionState restoredSessionState,
-            Function<String, Player> playerById
-    ) {
-        var activeDebt = restoredSessionState.activeDebt();
-        if (activeDebt == null) {
-            return null;
-        }
-        Player debtor = playerById.apply(activeDebt.debtorPlayerId());
-        if (debtor == null) {
-            return null;
-        }
-        PaymentTarget target = activeDebt.creditorType() == DebtCreditorType.PLAYER
-                ? creditorTarget(activeDebt.creditorPlayerId(), playerById)
-                : BankTarget.INSTANCE;
-        if (target == null) {
-            return null;
-        }
-        return new PaymentRequest(debtor, target, activeDebt.amountRemaining(), activeDebt.reason());
-    }
-
-    private PaymentTarget creditorTarget(
-            String creditorPlayerId,
-            Function<String, Player> playerById
-    ) {
-        Player creditor = playerById.apply(creditorPlayerId);
-        return creditor == null ? null : new PlayerTarget(creditor);
     }
 
     private void restorePrimaryTurnControls(SessionState state, Hooks hooks) {
@@ -126,8 +84,6 @@ public final class RestoredSessionReattachmentCoordinator {
     }
 
     public interface Hooks {
-        Player playerById(String playerId);
-
         boolean gameOver();
 
         void refreshLabels();
