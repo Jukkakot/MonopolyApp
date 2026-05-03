@@ -443,12 +443,22 @@ More Player removal (session 9):
   playerById` parameter removed; `RestoredGameState` now carries `(boolean paused, boolean gameOver)`
   only — no `Player winner`; `winnerPlayerId` is read directly from `SessionState` by callers
 
+More Player removal (session 9, continued):
+- `GameRuntimeAssemblyFactory.Hooks.declareWinner(Player)` changed to
+  `declareWinner(String winnerPlayerId)`; `DebtController.declareWinner` changed from
+  `Consumer<Player>` to `Consumer<String>`; the Player is looked up in the hook
+  implementation from `dependencies.playerById` before calling the existing coordinator method
+- `WinnerHooks.focusWinner(Player)` changed to `focusWinner(String winnerPlayerId)`;
+  `GameSessionStateCoordinator.declareWinner` passes `sessionState.winnerPlayerId()` to the hook;
+  hook implementation in `GameDesktopPresentationCoordinator` looks up Player locally for the
+  visual focus effect
+- `RestoredSessionReattachmentCoordinator.Hooks.playerById` removed entirely; `DebtController`
+  gains `restoreDebtStateFromModel(DebtStateModel, Runnable)` that resolves debtor/creditor Players
+  internally using its own Players reference — callers no longer need a playerById function
+
 Remaining `Player` dependencies in presentation layer (deferred — require larger refactoring):
-- `WinnerHooks.focusWinner(Player)` — needs actual Player for screen coordinates
-- `RestoredSessionReattachmentCoordinator.Hooks.playerById` — still needed for debt restore
-  (PaymentRequest/PlayerTarget take Player objects)
-- `TradeController` — full Player objects needed for trade partner selection and AI trade logic
-- `GameRuntimeAssemblyFactory.Hooks.declareWinner(Player)` — assembly-layer hook
+- `TradeController` / `LegacyTradeGateway` — trade partner selection and AI trade logic deeply
+  tied to legacy Player objects; would require reworking trade UI and bot logic
 
 ## Relationship To Older Plan Docs
 
