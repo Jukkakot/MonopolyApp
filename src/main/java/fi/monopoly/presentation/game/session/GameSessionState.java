@@ -35,6 +35,10 @@ public final class GameSessionState {
         this.winner = winner;
     }
 
+    public String winnerName() {
+        return winner != null ? winner.getName() : null;
+    }
+
     public void setBotSpeedMode(BotTurnScheduler.SpeedMode botSpeedMode) {
         this.botSpeedMode = botSpeedMode;
     }

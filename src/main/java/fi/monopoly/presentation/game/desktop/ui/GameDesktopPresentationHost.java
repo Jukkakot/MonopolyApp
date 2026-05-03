@@ -152,10 +152,9 @@ public final class GameDesktopPresentationHost {
 
     public void updateLogTurnContext() {
         GameSessionState sessionState = sessionStateSupplier.get();
-        Player winner = sessionState.winner();
         gameFrameCoordinator.updateLogTurnContext(
                 sessionState.gameOver(),
-                winner != null ? winner.getName() : null,
+                sessionState.winnerName(),
                 turnPlayerNameSupplier.get()
         );
     }
