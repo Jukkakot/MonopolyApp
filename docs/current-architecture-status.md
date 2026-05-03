@@ -416,12 +416,25 @@ Progress since last update (sessions 7–8):
 - Legacy desktop starting order now uses `StartingOrderDeterminer` (dice-roll-based), matching
   `PureDomainSessionFactory`; `GameRuntimeAssemblyFactory` applies this at game setup
 
+More Player removal (session 8 continued):
+- `LegacySessionProjector.winnerPlayerId()` now uses `Supplier<String>` instead of `Supplier<Player>`;
+  `LegacySessionApplicationFactory` and `GameSessionBridgeFactory.Hooks` both changed to `winnerPlayerId()`
+- `GameSessionState.winnerPlayerId()` field added; set from both `setWinner(Player)` and
+  `restoreSessionState()` (from `restoredSessionState.winnerPlayerId()` directly)
+- `DebtActionDispatcher` no longer takes `Supplier<Player> actorSupplier`; actor playerId comes
+  from `DebtStateModel.debtorPlayerId()` directly — three-arg constructor, no Player import
+- `PendingDecisionPopupAdapter` no longer takes `Function<String, Player> playerResolver`;
+  actor validity checked via `pendingDecision.actorPlayerId() != null` — five-arg constructor, no Player
+- `GameSessionBridgeFactory.Hooks.playerById()` removed entirely (was only used by PopupAdapter)
+
 Remaining `Player` dependencies in presentation layer (deferred — require larger refactoring):
 - `WinnerHooks.focusWinner(Player)` — needs actual Player for screen coordinates
-- `GameSessionBridgeFactory.Hooks.winner()/currentTurnPlayer()/playerById()/players()` — bridge
-  factory to `LegacySessionProjector`, needed until projector uses pure `SessionState`
-- `RestoredSessionReattachmentCoordinator` — looks up winner/debtor Player by ID from SessionState
-- `AuctionViewAdapter`, `DebtActionDispatcher`, `TradeController` — legacy runtime gameplay logic
+- `GameSessionBridgeFactory.Hooks.currentTurnPlayer()/players()` — used by TradeController and
+  LegacyTradeGateway; trade logic deeply tied to legacy Player objects
+- `RestoredSessionReattachmentCoordinator` — looks up debtor/creditor Player objects for session restore
+- `AuctionViewAdapter` — passes Player to PopupService for auction UI rendering (leader name/color)
+- `TradeController` — full Player objects needed for trade partner selection and AI trade logic
+- `GameRuntimeAssemblyFactory.Hooks.declareWinner(Player)` — assembly-layer hook
 
 ## Relationship To Older Plan Docs
 
