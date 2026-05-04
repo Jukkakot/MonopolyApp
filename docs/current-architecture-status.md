@@ -463,6 +463,15 @@ More Player removal (session 10):
 - `GameDesktopPresentationCoordinator.declareWinner(GameDesktopShellDependencies, Player)` replaced with `declareWinner(GameDesktopShellDependencies, String, String)` — winner name resolved via private `resolveWinnerName()` helper that reads `SessionState.seats` 
 - `Game.java` dead private method `declareWinner(Player)` removed
 
+More Player removal (session 11):
+- `LegacyTurnActionGatewayAdapter`: `Supplier<Player> turnPlayerSupplier` → `BooleanSupplier hasActiveTurn` — `endTurn()` checks `getTurn() != null` without exposing Player to the gateway interface
+- `GameDesktopShellDependencies.StateAccess`: `playerByIdResolver` field removed; `ActionAccess.focusPlayerAction` (Consumer<Player>) → `focusPlayerByIdAction` (Consumer<String>)
+- `GameDesktopShellDependencies`: `playerById(String)` method removed; `focusPlayer(Player)` → `focusPlayerById(String playerId)`
+- `GameDesktopPresentationCoordinator.focusWinner(String)`: no longer looks up Player by ID; directly calls `dependencies.focusPlayerById(winnerPlayerId)`
+- `GameDesktopPresentationCoordinator.focusDebtDebtor()`: uses `"player-" + debt.paymentRequest().debtor().getId()` to get ID, then `focusPlayerById()` instead of `focusPlayer(Player)`
+- `GameDesktopHostFactory.Hooks`: `playerByIdResolver()` method removed; `focusPlayerAction(Consumer<Player>)` → `focusPlayerByIdAction(Consumer<String>)`
+- `Game.java`: `playerById(String)` method removed; new `focusPlayerById(String)` private method does the player lookup, coord reset, and `players.focusPlayer()` call internally
+
 Remaining `Player` dependencies in presentation layer (deferred):
 - `hasActivePlayer(deps)` / `isCurrentPlayerComputer(deps)` in `GameDesktopPresentationCoordinator` — use `dependencies.currentTurnPlayer()` from legacy runtime; cannot replace with `SessionState`-based query because it creates a circular dependency via `LegacySessionProjector.canRollSupplier` → `isRollDiceActionAvailable` → `hasActivePlayer` → `sessionCommandPort.currentState()` → projector
 - `createGameViewFor(Player)` / `createPlayerViewFor(Player)` in `GamePresentationFactory.Hooks` — tied to `HostBotInteractionAdapter` chain which uses Player throughout
