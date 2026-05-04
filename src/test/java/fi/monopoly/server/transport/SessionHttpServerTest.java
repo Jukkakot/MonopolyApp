@@ -101,15 +101,16 @@ class SessionHttpServerTest {
     }
 
     @Test
-    void sseListenerIsRegisteredOnStart() {
-        assertEquals(1, sessionUpdates.listeners.size());
+    void noSharedListenerRegisteredAtStartup() {
+        // Per-connection listeners are added only when a client opens /events — not at start.
+        assertEquals(0, sessionUpdates.listeners.size());
     }
 
     @Test
-    void sseListenerIsRemovedOnStop() {
-        server.stop();
-        assertEquals(0, sessionUpdates.listeners.size());
-        server = null; // prevent double-stop in tearDown
+    void corsHeadersPresentOnSnapshotResponse() throws Exception {
+        HttpResponse<String> response = get("/snapshot");
+        assertEquals("*", response.headers().firstValue("Access-Control-Allow-Origin").orElse(null));
+        assertNotNull(response.headers().firstValue("Access-Control-Allow-Methods").orElse(null));
     }
 
     // -------------------------------------------------------------------------
