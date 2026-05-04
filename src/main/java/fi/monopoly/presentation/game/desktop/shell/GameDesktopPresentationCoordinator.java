@@ -83,8 +83,8 @@ public final class GameDesktopPresentationCoordinator {
 
             @Override
             public void declareWinner(String winnerPlayerId) {
-                Player winner = winnerPlayerId != null ? dependencies.playerById(winnerPlayerId) : null;
-                GameDesktopPresentationCoordinator.this.declareWinner(dependencies, winner);
+                String winnerName = resolveWinnerName(winnerPlayerId, dependencies);
+                GameDesktopPresentationCoordinator.this.declareWinner(dependencies, winnerPlayerId, winnerName);
             }
 
             @Override
@@ -487,8 +487,8 @@ public final class GameDesktopPresentationCoordinator {
         );
     }
 
-    public void declareWinner(GameDesktopShellDependencies dependencies, Player winningPlayer) {
-        sessionStateCoordinator.declareWinner(dependencies.sessionState(), winningPlayer, new GameSessionStateCoordinator.WinnerHooks() {
+    public void declareWinner(GameDesktopShellDependencies dependencies, String winnerPlayerId, String winnerName) {
+        sessionStateCoordinator.declareWinner(dependencies.sessionState(), winnerPlayerId, winnerName, new GameSessionStateCoordinator.WinnerHooks() {
             @Override
             public void resetTransientTurnState() {
                 dependencies.gameTurnFlowCoordinator().resetTransientTurnState();
@@ -536,6 +536,15 @@ public final class GameDesktopPresentationCoordinator {
                 });
             }
         });
+    }
+
+    private static String resolveWinnerName(String winnerPlayerId, GameDesktopShellDependencies dependencies) {
+        if (winnerPlayerId == null) return null;
+        return dependencies.sessionCommandPort().currentState().seats().stream()
+                .filter(s -> winnerPlayerId.equals(s.playerId()))
+                .map(fi.monopoly.domain.session.SeatState::displayName)
+                .findFirst()
+                .orElse(null);
     }
 
     public boolean isRollDiceActionAvailable(GameDesktopShellDependencies dependencies) {

@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.session;
 
 import fi.monopoly.application.session.SessionPresentationStatePort;
-import fi.monopoly.components.Player;
 import fi.monopoly.host.bot.BotTurnScheduler;
 import fi.monopoly.presentation.game.desktop.session.RestoredSessionReattachmentCoordinator;
 import fi.monopoly.presentation.session.debt.DebtController;
@@ -124,20 +123,20 @@ public final class GameSessionStateCoordinator {
         showRollDiceControl.run();
     }
 
-    public void declareWinner(GameSessionState sessionState, Player winningPlayer, WinnerHooks hooks) {
+    public void declareWinner(GameSessionState sessionState, String winnerPlayerId, String winnerName, WinnerHooks hooks) {
         sessionState.setGameOver(true);
-        sessionState.setWinner(winningPlayer);
+        sessionState.setWinnerInfo(winnerPlayerId, winnerName);
         sessionState.setPaused(false);
         hooks.resetTransientTurnState();
         hooks.clearDebtState();
         hooks.updateDebtButtons();
         hooks.hidePrimaryTurnControls();
         hooks.refreshLabels();
-        if (winningPlayer != null) {
-            hooks.focusWinner(sessionState.winnerPlayerId());
+        if (winnerPlayerId != null) {
+            hooks.focusWinner(winnerPlayerId);
         }
         hooks.updateLogTurnContext();
-        hooks.showVictoryPopup(winningPlayer != null ? winningPlayer.getName() : null);
+        hooks.showVictoryPopup(winnerName);
     }
 
     public interface DebugResetHooks {

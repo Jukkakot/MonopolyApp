@@ -39,7 +39,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameDesktopShellCoordinatorTest {
@@ -88,10 +87,11 @@ class GameDesktopShellCoordinatorTest {
         GameDesktopPresentationCoordinator coordinator = createPresentationCoordinator(dependencies.runtime);
         Player winner = dependencies.currentTurnPlayer;
 
-        coordinator.declareWinner(dependencies.shellDependencies, winner);
+        coordinator.declareWinner(dependencies.shellDependencies, "player-1", winner.getName());
 
         assertTrue(dependencies.sessionState.gameOver());
-        assertSame(winner, dependencies.sessionState.winner());
+        assertEquals("player-1", dependencies.sessionState.winnerPlayerId());
+        assertEquals(winner.getName(), dependencies.sessionState.winnerName());
         assertTrue(dependencies.hideControlsCalled.get());
         assertTrue(dependencies.updateDebtButtonsCalled.get());
         assertTrue(dependencies.refreshLabelsCalled.get());

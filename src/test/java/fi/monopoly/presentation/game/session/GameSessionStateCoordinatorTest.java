@@ -1,8 +1,6 @@
 package fi.monopoly.presentation.game.session;
 
 import fi.monopoly.host.bot.BotTurnScheduler;
-import fi.monopoly.components.Player;
-import javafx.scene.paint.Color;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -77,7 +75,8 @@ class GameSessionStateCoordinatorTest {
     void declareWinnerUpdatesStateAndInvokesHooks() {
         GameSessionState sessionState = new GameSessionState();
         sessionState.setPaused(true);
-        Player winner = new Player("Winner", Color.PINK, 2000, 1);
+        String winnerPlayerId = "player-1";
+        String winnerName = "Winner";
         AtomicInteger resetTransientCalls = new AtomicInteger();
         AtomicInteger clearDebtCalls = new AtomicInteger();
         AtomicInteger updateDebtCalls = new AtomicInteger();
@@ -87,7 +86,7 @@ class GameSessionStateCoordinatorTest {
         AtomicReference<String> focusedWinnerId = new AtomicReference<>();
         AtomicReference<String> popupWinnerName = new AtomicReference<>();
 
-        coordinator.declareWinner(sessionState, winner, new GameSessionStateCoordinator.WinnerHooks() {
+        coordinator.declareWinner(sessionState, winnerPlayerId, winnerName, new GameSessionStateCoordinator.WinnerHooks() {
             @Override
             public void resetTransientTurnState() {
                 resetTransientCalls.incrementAndGet();
@@ -131,15 +130,16 @@ class GameSessionStateCoordinatorTest {
 
         assertTrue(sessionState.gameOver());
         assertFalse(sessionState.paused());
-        assertSame(winner, sessionState.winner());
+        assertEquals(winnerPlayerId, sessionState.winnerPlayerId());
+        assertEquals(winnerName, sessionState.winnerName());
         assertEquals(1, resetTransientCalls.get());
         assertEquals(1, clearDebtCalls.get());
         assertEquals(1, updateDebtCalls.get());
         assertEquals(1, hideControlsCalls.get());
         assertEquals(1, refreshCalls.get());
         assertEquals(1, updateLogCalls.get());
-        assertEquals(sessionState.winnerPlayerId(), focusedWinnerId.get());
-        assertEquals(winner.getName(), popupWinnerName.get());
+        assertEquals(winnerPlayerId, focusedWinnerId.get());
+        assertEquals(winnerName, popupWinnerName.get());
     }
 
     @Test

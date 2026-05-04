@@ -475,10 +475,6 @@ public class Game implements MonopolyEventListener {
         presentationHost.hidePrimaryTurnControls();
     }
 
-    private void declareWinner(Player winningPlayer) {
-        gameDesktopPresentationCoordinator.declareWinner(shellDependencies, winningPlayer);
-    }
-
     private void updateLogTurnContext() {
         presentationHost.updateLogTurnContext();
     }
