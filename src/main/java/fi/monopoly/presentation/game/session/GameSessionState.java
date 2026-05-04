@@ -36,10 +36,6 @@ public final class GameSessionState {
         this.winnerName = winnerName;
     }
 
-    public void setWinnerPlayerId(String winnerPlayerId) {
-        this.winnerPlayerId = winnerPlayerId;
-    }
-
     public String winnerName() {
         return winnerName;
     }

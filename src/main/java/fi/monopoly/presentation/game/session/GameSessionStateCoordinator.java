@@ -38,7 +38,8 @@ public final class GameSessionStateCoordinator {
         sessionState.setPaused(restoredGameState.paused());
         sessionState.setGameOver(restoredGameState.gameOver());
         if (restoredSessionState != null) {
-            sessionState.setWinnerPlayerId(restoredSessionState.winnerPlayerId());
+            String winnerPlayerId = restoredSessionState.winnerPlayerId();
+            sessionState.setWinnerInfo(winnerPlayerId, resolveWinnerName(restoredSessionState, winnerPlayerId));
         }
     }
 
@@ -153,6 +154,15 @@ public final class GameSessionStateCoordinator {
         void showRollDiceControl();
 
         void showDebugResetMessage();
+    }
+
+    private static String resolveWinnerName(fi.monopoly.domain.session.SessionState sessionState, String winnerPlayerId) {
+        if (sessionState == null || winnerPlayerId == null) return null;
+        return sessionState.seats().stream()
+                .filter(s -> winnerPlayerId.equals(s.playerId()))
+                .map(fi.monopoly.domain.session.SeatState::displayName)
+                .findFirst()
+                .orElse(null);
     }
 
     public interface WinnerHooks {
