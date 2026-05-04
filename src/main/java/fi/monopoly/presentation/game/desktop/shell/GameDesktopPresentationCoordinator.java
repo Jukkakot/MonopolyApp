@@ -167,13 +167,13 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public fi.monopoly.components.computer.GameView createGameViewFor(Player player) {
-                return dependencies.createGameViewFor(player);
+            public fi.monopoly.components.computer.GameView createGameViewFor(String playerId) {
+                return dependencies.createGameViewFor(playerId);
             }
 
             @Override
-            public fi.monopoly.components.computer.PlayerView createPlayerViewFor(Player player) {
-                return dependencies.createPlayerViewFor(player);
+            public fi.monopoly.components.computer.PlayerView createPlayerViewFor(String playerId) {
+                return dependencies.createPlayerViewFor(playerId);
             }
 
             @Override

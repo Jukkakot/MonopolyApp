@@ -19,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 public final class DesktopHostBotInteractionAdapter implements HostBotInteractionAdapter {
     private final PopupHooks popupHooks;
     private final TradeController tradeController;
-    private final java.util.function.Function<Player, GameView> currentGameViewFactory;
-    private final java.util.function.Function<Player, PlayerView> currentPlayerViewFactory;
+    private final java.util.function.Function<String, GameView> currentGameViewFactory;
+    private final java.util.function.Function<String, PlayerView> currentPlayerViewFactory;
 
     @Override
     public boolean popupVisible() {
@@ -53,13 +53,13 @@ public final class DesktopHostBotInteractionAdapter implements HostBotInteractio
     }
 
     @Override
-    public GameView currentGameView(Player player) {
-        return currentGameViewFactory.apply(player);
+    public GameView currentGameView(String playerId) {
+        return currentGameViewFactory.apply(playerId);
     }
 
     @Override
-    public PlayerView currentPlayerView(Player player) {
-        return currentPlayerViewFactory.apply(player);
+    public PlayerView currentPlayerView(String playerId) {
+        return currentPlayerViewFactory.apply(playerId);
     }
     public interface PopupHooks {
         boolean popupVisible();

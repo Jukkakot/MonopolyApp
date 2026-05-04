@@ -172,8 +172,8 @@ public class Game implements MonopolyEventListener {
                         this::gameSessionQueriesRef,
                         this::sessionCommandPortRef,
                         this::sessionPresentationStateRef,
-                        this::createGameView,
-                        this::createPlayerView,
+                        this::createGameViewById,
+                        this::createPlayerViewById,
                         this::refreshLabels,
                         this::rollDice,
                         (board, players) -> setupDefaultGameState(runtime, board, players),
@@ -509,12 +509,28 @@ public class Game implements MonopolyEventListener {
         return presentationHost.createGameView(currentPlayer);
     }
 
+    private GameView createGameViewById(String playerId) {
+        if (players == null) return null;
+        Player p = players.getPlayers().stream()
+                .filter(player -> playerId.equals("player-" + player.getId()))
+                .findFirst().orElse(null);
+        return p != null ? createGameView(p) : null;
+    }
+
     public List<String> debugPerformanceLines(float fps) {
         return presentationHost.debugPerformanceLines(fps);
     }
 
     private PlayerView createPlayerView(Player player) {
         return presentationHost.createPlayerView(player);
+    }
+
+    private PlayerView createPlayerViewById(String playerId) {
+        if (players == null) return null;
+        Player p = players.getPlayers().stream()
+                .filter(player -> playerId.equals("player-" + player.getId()))
+                .findFirst().orElse(null);
+        return p != null ? createPlayerView(p) : null;
     }
 
     private void enforcePrimaryTurnControlInvariant() {

@@ -31,12 +31,12 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public GameView gameView() {
-        return interactionAdapter.currentGameView(player);
+        return interactionAdapter.currentGameView("player-" + player.getId());
     }
 
     @Override
     public PlayerView currentPlayerView() {
-        return interactionAdapter.currentPlayerView(player);
+        return interactionAdapter.currentPlayerView("player-" + player.getId());
     }
 
     @Override

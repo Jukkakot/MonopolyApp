@@ -234,9 +234,9 @@ public final class GamePresentationFactory {
 
         boolean isCurrentPlayerComputerControlled();
 
-        fi.monopoly.components.computer.GameView createGameViewFor(Player player);
+        fi.monopoly.components.computer.GameView createGameViewFor(String playerId);
 
-        fi.monopoly.components.computer.PlayerView createPlayerViewFor(Player player);
+        fi.monopoly.components.computer.PlayerView createPlayerViewFor(String playerId);
 
         void updateLogTurnContext();
 

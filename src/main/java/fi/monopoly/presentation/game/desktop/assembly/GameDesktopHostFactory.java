@@ -5,7 +5,6 @@ import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.client.session.desktop.LocalSessionActions;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -236,8 +235,8 @@ public final class GameDesktopHostFactory {
                 Supplier<GameSessionQueries> gameSessionQueriesSupplier,
                 Supplier<SessionCommandPort> sessionCommandPortSupplier,
                 Supplier<SessionPresentationStatePort> sessionPresentationStateSupplier,
-                Function<Player, GameView> currentGameViewFactory,
-                Function<Player, PlayerView> currentPlayerViewFactory,
+                Function<String, GameView> currentGameViewFactory,
+                Function<String, PlayerView> currentPlayerViewFactory,
                 Runnable refreshLabelsAction,
                 Runnable rollDiceAction,
                 BiConsumer<Board, Players> setupDefaultGameStateAction,
@@ -332,9 +331,9 @@ public final class GameDesktopHostFactory {
 
         Supplier<SessionPresentationStatePort> sessionPresentationStateSupplier();
 
-        Function<Player, GameView> currentGameViewFactory();
+        Function<String, GameView> currentGameViewFactory();
 
-        Function<Player, PlayerView> currentPlayerViewFactory();
+        Function<String, PlayerView> currentPlayerViewFactory();
 
         Runnable refreshLabelsAction();
 
@@ -395,8 +394,8 @@ public final class GameDesktopHostFactory {
             Supplier<GameSessionQueries> gameSessionQueriesSupplier,
             Supplier<SessionCommandPort> sessionCommandPortSupplier,
             Supplier<SessionPresentationStatePort> sessionPresentationStateSupplier,
-            Function<Player, GameView> currentGameViewFactory,
-            Function<Player, PlayerView> currentPlayerViewFactory,
+            Function<String, GameView> currentGameViewFactory,
+            Function<String, PlayerView> currentPlayerViewFactory,
             Runnable refreshLabelsAction,
             Runnable rollDiceAction,
             BiConsumer<Board, Players> setupDefaultGameStateAction,

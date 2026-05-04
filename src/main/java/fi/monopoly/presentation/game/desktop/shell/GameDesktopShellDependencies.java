@@ -3,7 +3,6 @@ package fi.monopoly.presentation.game.desktop.shell;
 import fi.monopoly.application.session.SessionPresentationStatePort;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
@@ -104,12 +103,12 @@ public final class GameDesktopShellDependencies {
         return stateAccess.botTurnSchedulerSupplier().get();
     }
 
-    public GameView createGameViewFor(Player player) {
-        return projectionAccess.currentGameViewFactory().apply(player);
+    public GameView createGameViewFor(String playerId) {
+        return projectionAccess.currentGameViewFactory().apply(playerId);
     }
 
-    public PlayerView createPlayerViewFor(Player player) {
-        return projectionAccess.currentPlayerViewFactory().apply(player);
+    public PlayerView createPlayerViewFor(String playerId) {
+        return projectionAccess.currentPlayerViewFactory().apply(playerId);
     }
 
     public void refreshLabels() {
@@ -221,8 +220,8 @@ public final class GameDesktopShellDependencies {
     }
 
     public record ProjectionAccess(
-            java.util.function.Function<Player, GameView> currentGameViewFactory,
-            java.util.function.Function<Player, PlayerView> currentPlayerViewFactory
+            java.util.function.Function<String, GameView> currentGameViewFactory,
+            java.util.function.Function<String, PlayerView> currentPlayerViewFactory
     ) {
     }
 

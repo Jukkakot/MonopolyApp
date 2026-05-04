@@ -27,7 +27,7 @@ public interface HostBotInteractionAdapter {
 
     ComputerDecision tryInitiateComputerTrade(Player player);
 
-    GameView currentGameView(Player player);
+    GameView currentGameView(String playerId);
 
-    PlayerView currentPlayerView(Player player);
+    PlayerView currentPlayerView(String playerId);
 }
