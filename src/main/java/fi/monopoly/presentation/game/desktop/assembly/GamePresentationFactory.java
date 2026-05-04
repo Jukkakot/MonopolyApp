@@ -137,8 +137,8 @@ public final class GamePresentationFactory {
                     }
 
                     @Override
-                    public boolean resolveVisiblePopupFor(Player player) {
-                        return runtime.popupService().resolveForComputer(player.getComputerProfile());
+                    public boolean resolveVisiblePopupFor(fi.monopoly.components.computer.ComputerPlayerProfile profile) {
+                        return runtime.popupService().resolveForComputer(profile);
                     }
 
                     @Override

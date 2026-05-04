@@ -2,6 +2,7 @@ package fi.monopoly.presentation.game.desktop.assembly;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.host.bot.HostBotInteractionAdapter;
@@ -27,8 +28,8 @@ public final class DesktopHostBotInteractionAdapter implements HostBotInteractio
     }
 
     @Override
-    public boolean resolveVisiblePopupFor(Player player) {
-        return popupHooks.resolveVisiblePopupFor(player);
+    public boolean resolveVisiblePopupFor(ComputerPlayerProfile profile) {
+        return popupHooks.resolveVisiblePopupFor(profile);
     }
 
     @Override
@@ -63,7 +64,7 @@ public final class DesktopHostBotInteractionAdapter implements HostBotInteractio
     public interface PopupHooks {
         boolean popupVisible();
 
-        boolean resolveVisiblePopupFor(Player player);
+        boolean resolveVisiblePopupFor(ComputerPlayerProfile profile);
 
         boolean acceptActivePopup();
 

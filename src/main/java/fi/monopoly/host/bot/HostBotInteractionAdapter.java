@@ -2,6 +2,7 @@ package fi.monopoly.host.bot;
 
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
 
@@ -16,7 +17,7 @@ import fi.monopoly.components.computer.PlayerView;
 public interface HostBotInteractionAdapter {
     boolean popupVisible();
 
-    boolean resolveVisiblePopupFor(Player player);
+    boolean resolveVisiblePopupFor(ComputerPlayerProfile profile);
 
     boolean acceptActivePopup();
 

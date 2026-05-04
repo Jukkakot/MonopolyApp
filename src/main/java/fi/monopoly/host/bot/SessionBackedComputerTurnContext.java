@@ -73,7 +73,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public boolean resolveActivePopup() {
-        boolean resolved = interactionAdapter.resolveVisiblePopupFor(player);
+        boolean resolved = interactionAdapter.resolveVisiblePopupFor(player.getComputerProfile());
         if (resolved) {
             delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
         }

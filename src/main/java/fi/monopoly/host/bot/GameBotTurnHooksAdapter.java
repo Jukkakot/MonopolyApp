@@ -96,7 +96,7 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
 
     @Override
     public boolean resolveVisiblePopupFor(Player turnPlayer) {
-        return interactionAdapter.resolveVisiblePopupFor(turnPlayer);
+        return interactionAdapter.resolveVisiblePopupFor(turnPlayer.getComputerProfile());
     }
 
     @Override
