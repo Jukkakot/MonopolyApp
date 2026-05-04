@@ -159,7 +159,9 @@ public class Game implements MonopolyEventListener {
                 GameDesktopHostFactory.Hooks.of(
                         this::sessionStateRef,
                         this::players,
-                        this::currentTurnPlayer,
+                        () -> players != null && players.getTurn() != null,
+                        () -> players != null && players.getTurn() != null && players.getTurn().isComputerControlled(),
+                        () -> players != null && players.getTurn() != null ? players.getTurn().getName() : null,
                         this::getBoard,
                         this::dices,
                         this::animations,

@@ -48,8 +48,12 @@ public final class GameDesktopShellDependencies {
         return stateAccess.playersSupplier().get();
     }
 
-    public Player currentTurnPlayer() {
-        return stateAccess.currentTurnPlayerSupplier().get();
+    public boolean hasActiveTurn() {
+        return stateAccess.hasActiveTurnSupplier().getAsBoolean();
+    }
+
+    public boolean isComputerTurn() {
+        return stateAccess.isComputerTurnSupplier().getAsBoolean();
     }
 
     public Board board() {
@@ -199,7 +203,8 @@ public final class GameDesktopShellDependencies {
     public record StateAccess(
             Supplier<GameSessionState> sessionStateSupplier,
             Supplier<Players> playersSupplier,
-            Supplier<Player> currentTurnPlayerSupplier,
+            BooleanSupplier hasActiveTurnSupplier,
+            BooleanSupplier isComputerTurnSupplier,
             Supplier<Board> boardSupplier,
             Supplier<Dices> dicesSupplier,
             Supplier<Animations> animationsSupplier,

@@ -72,7 +72,8 @@ public final class GameDesktopHostFactory {
                 new GameDesktopShellDependencies.StateAccess(
                         hooks.sessionStateSupplier(),
                         hooks.playersSupplier(),
-                        hooks.currentTurnPlayerSupplier(),
+                        hooks.hasActiveTurnSupplier(),
+                        hooks.isComputerTurnSupplier(),
                         hooks.boardSupplier(),
                         hooks.dicesSupplier(),
                         hooks.animationsSupplier(),
@@ -222,7 +223,9 @@ public final class GameDesktopHostFactory {
         static Hooks of(
                 Supplier<GameSessionState> sessionStateSupplier,
                 Supplier<Players> playersSupplier,
-                Supplier<Player> currentTurnPlayerSupplier,
+                BooleanSupplier hasActiveTurnSupplier,
+                BooleanSupplier isComputerTurnSupplier,
+                Supplier<String> turnPlayerNameSupplier,
                 Supplier<Board> boardSupplier,
                 Supplier<Dices> dicesSupplier,
                 Supplier<Animations> animationsSupplier,
@@ -260,7 +263,9 @@ public final class GameDesktopHostFactory {
             return new DefaultHooks(
                     sessionStateSupplier,
                     playersSupplier,
-                    currentTurnPlayerSupplier,
+                    hasActiveTurnSupplier,
+                    isComputerTurnSupplier,
+                    turnPlayerNameSupplier,
                     boardSupplier,
                     dicesSupplier,
                     animationsSupplier,
@@ -301,7 +306,11 @@ public final class GameDesktopHostFactory {
 
         Supplier<Players> playersSupplier();
 
-        Supplier<Player> currentTurnPlayerSupplier();
+        BooleanSupplier hasActiveTurnSupplier();
+
+        BooleanSupplier isComputerTurnSupplier();
+
+        Supplier<String> turnPlayerNameSupplier();
 
         Supplier<Board> boardSupplier();
 
@@ -373,7 +382,9 @@ public final class GameDesktopHostFactory {
     private record DefaultHooks(
             Supplier<GameSessionState> sessionStateSupplier,
             Supplier<Players> playersSupplier,
-            Supplier<Player> currentTurnPlayerSupplier,
+            BooleanSupplier hasActiveTurnSupplier,
+            BooleanSupplier isComputerTurnSupplier,
+            Supplier<String> turnPlayerNameSupplier,
             Supplier<Board> boardSupplier,
             Supplier<Dices> dicesSupplier,
             Supplier<Animations> animationsSupplier,

@@ -582,12 +582,11 @@ public final class GameDesktopPresentationCoordinator {
     }
 
     private boolean hasActivePlayer(GameDesktopShellDependencies dependencies) {
-        return dependencies.currentTurnPlayer() != null;
+        return dependencies.hasActiveTurn();
     }
 
     private boolean isCurrentPlayerComputer(GameDesktopShellDependencies dependencies) {
-        Player player = dependencies.currentTurnPlayer();
-        return player != null && player.isComputerControlled();
+        return dependencies.isComputerTurn();
     }
 
     public SessionViewFacade createSessionViewFacade(GameDesktopShellDependencies dependencies) {

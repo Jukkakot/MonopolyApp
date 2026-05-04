@@ -239,7 +239,8 @@ class GameDesktopShellCoordinatorTest {
                     new GameDesktopShellDependencies.StateAccess(
                             () -> sessionState,
                             () -> players,
-                            () -> currentTurnPlayer,
+                            () -> currentTurnPlayer != null,
+                            () -> currentTurnPlayer != null && currentTurnPlayer.isComputerControlled(),
                             () -> null,
                             () -> dices,
                             () -> animations,
