@@ -472,10 +472,19 @@ More Player removal (session 11):
 - `GameDesktopHostFactory.Hooks`: `playerByIdResolver()` method removed; `focusPlayerAction(Consumer<Player>)` → `focusPlayerByIdAction(Consumer<String>)`
 - `Game.java`: `playerById(String)` method removed; new `focusPlayerById(String)` private method does the player lookup, coord reset, and `players.focusPlayer()` call internally
 
-Remaining `Player` dependencies in presentation layer (deferred):
-- `hasActivePlayer(deps)` / `isCurrentPlayerComputer(deps)` in `GameDesktopPresentationCoordinator` — use `dependencies.currentTurnPlayer()` from legacy runtime; cannot replace with `SessionState`-based query because it creates a circular dependency via `LegacySessionProjector.canRollSupplier` → `isRollDiceActionAvailable` → `hasActivePlayer` → `sessionCommandPort.currentState()` → projector
-- `createGameViewFor(Player)` / `createPlayerViewFor(Player)` in `GamePresentationFactory.Hooks` — tied to `HostBotInteractionAdapter` chain which uses Player throughout
+More Player removal (session 12):
+- `RestoredLegacySessionRuntime`: `playersById` map field removed — players can be found via `Players.getPlayers()` stream lookup by numeric ID; `LegacySessionRuntimeRestorerTest` and `SessionPersistenceServiceTest` updated with local `playerById()` helper
+- `GameDesktopShellDependencies.StateAccess`: `Supplier<Player> currentTurnPlayerSupplier` replaced with `BooleanSupplier hasActiveTurnSupplier` + `BooleanSupplier isComputerTurnSupplier`; `GameDesktopShellDependencies.currentTurnPlayer()` replaced with `hasActiveTurn()` + `isComputerTurn()`
+- `GameDesktopHostFactory.Hooks`: `currentTurnPlayerSupplier()` removed; `hasActiveTurnSupplier()` + `isComputerTurnSupplier()` + `turnPlayerNameSupplier()` added; `Game.java` wires three lambdas from `players.getTurn()` instead of passing `this::currentTurnPlayer`
+- `GameDesktopPresentationCoordinator.hasActivePlayer()` / `isCurrentPlayerComputer()` — now call `deps.hasActiveTurn()` / `deps.isComputerTurn()` (no longer access Player objects)
+- `GameDesktopBootstrapFactory`: `hooks.turnPlayerNameSupplier()` used directly instead of building a Player-unwrapping lambda from `hooks.currentTurnPlayerSupplier()`
+- `HostBotInteractionAdapter.acceptActivePopupFor(Player)` / `declineActivePopupFor(Player)` — renamed to `acceptActivePopup()` / `declineActivePopup()` (Player param was unused in the desktop implementation)
+
+Remaining `Player` dependencies in presentation/host layer (deferred):
+- `createGameViewFor(Player)` / `createPlayerViewFor(Player)` in `GamePresentationFactory.Hooks` — tied to `HostBotInteractionAdapter` chain which uses Player throughout for AI decision views
+- `HostBotInteractionAdapter.resolveVisiblePopupFor(Player)` — uses `player.getComputerProfile()`; could be `ComputerPlayerProfile` but doesn't reduce Player exposure in callers
 - `TradeController` / `LegacyTradeGateway` — trade partner selection and AI trade logic deeply tied to legacy Player objects; would require reworking trade UI and bot logic
+- `GameBotTurnDriver.Hooks.currentTurnPlayer()` / `findPlayerById(String) → Player` — bot turn advancement currently requires Player for view creation and trade/auction logic
 
 ## Relationship To Older Plan Docs
 
