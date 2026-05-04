@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.session;
 
 import fi.monopoly.application.session.turn.TurnActionGateway;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.PropertyFactory;
@@ -9,12 +8,12 @@ import fi.monopoly.components.properties.StreetProperty;
 import fi.monopoly.types.SpotType;
 import lombok.RequiredArgsConstructor;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 @RequiredArgsConstructor
 public final class LegacyTurnActionGatewayAdapter implements TurnActionGateway {
     private final Dices dices;
-    private final Supplier<Player> turnPlayerSupplier;
+    private final BooleanSupplier hasActiveTurn;
     private final Runnable endTurnAction;
 
     @Override
@@ -28,7 +27,7 @@ public final class LegacyTurnActionGatewayAdapter implements TurnActionGateway {
 
     @Override
     public boolean endTurn() {
-        if (turnPlayerSupplier.get() == null) {
+        if (!hasActiveTurn.getAsBoolean()) {
             return false;
         }
         endTurnAction.run();

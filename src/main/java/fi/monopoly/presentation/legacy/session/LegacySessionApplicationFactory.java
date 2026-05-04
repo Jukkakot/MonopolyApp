@@ -73,7 +73,7 @@ public final class LegacySessionApplicationFactory {
                         dices,
                         () -> {
                             Players currentPlayers = playersSupplier.get();
-                            return currentPlayers != null ? currentPlayers.getTurn() : null;
+                            return currentPlayers != null && currentPlayers.getTurn() != null;
                         },
                         endTurnAction
                 )
