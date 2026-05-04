@@ -142,12 +142,12 @@ public final class GamePresentationFactory {
                     }
 
                     @Override
-                    public boolean acceptActivePopupFor(Player player) {
+                    public boolean acceptActivePopup() {
                         return runtime.popupService().triggerPrimaryComputerAction();
                     }
 
                     @Override
-                    public boolean declineActivePopupFor(Player player) {
+                    public boolean declineActivePopup() {
                         return runtime.popupService().triggerSecondaryComputerAction();
                     }
                 },

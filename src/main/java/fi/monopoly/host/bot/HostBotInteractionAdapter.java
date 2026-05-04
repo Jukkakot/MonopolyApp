@@ -18,9 +18,9 @@ public interface HostBotInteractionAdapter {
 
     boolean resolveVisiblePopupFor(Player player);
 
-    boolean acceptActivePopupFor(Player player);
+    boolean acceptActivePopup();
 
-    boolean declineActivePopupFor(Player player);
+    boolean declineActivePopup();
 
     boolean handleComputerTradeTurn(Player player);
 

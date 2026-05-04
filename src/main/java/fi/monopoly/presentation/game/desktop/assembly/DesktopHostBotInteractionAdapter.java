@@ -32,13 +32,13 @@ public final class DesktopHostBotInteractionAdapter implements HostBotInteractio
     }
 
     @Override
-    public boolean acceptActivePopupFor(Player player) {
-        return popupHooks.acceptActivePopupFor(player);
+    public boolean acceptActivePopup() {
+        return popupHooks.acceptActivePopup();
     }
 
     @Override
-    public boolean declineActivePopupFor(Player player) {
-        return popupHooks.declineActivePopupFor(player);
+    public boolean declineActivePopup() {
+        return popupHooks.declineActivePopup();
     }
 
     @Override
@@ -65,8 +65,8 @@ public final class DesktopHostBotInteractionAdapter implements HostBotInteractio
 
         boolean resolveVisiblePopupFor(Player player);
 
-        boolean acceptActivePopupFor(Player player);
+        boolean acceptActivePopup();
 
-        boolean declineActivePopupFor(Player player);
+        boolean declineActivePopup();
     }
 }

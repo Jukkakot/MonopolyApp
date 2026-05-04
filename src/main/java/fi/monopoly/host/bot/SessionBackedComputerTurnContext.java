@@ -82,7 +82,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public boolean acceptActivePopup() {
-        boolean accepted = interactionAdapter.acceptActivePopupFor(player);
+        boolean accepted = interactionAdapter.acceptActivePopup();
         if (accepted) {
             delayKind = BotTurnScheduler.DelayKind.ACCEPT_POPUP;
         }
@@ -91,7 +91,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public boolean declineActivePopup() {
-        boolean declined = interactionAdapter.declineActivePopupFor(player);
+        boolean declined = interactionAdapter.declineActivePopup();
         if (declined) {
             delayKind = BotTurnScheduler.DelayKind.DECLINE_POPUP;
         }
