@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.session;
 
 import fi.monopoly.host.bot.BotTurnScheduler;
-import fi.monopoly.components.Player;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -18,7 +17,6 @@ import lombok.experimental.Accessors;
 public final class GameSessionState {
     private boolean paused;
     private boolean gameOver;
-    private Player winner;
     private String winnerPlayerId;
     private String winnerName;
     private BotTurnScheduler.SpeedMode botSpeedMode = BotTurnScheduler.SpeedMode.NORMAL;
@@ -31,12 +29,6 @@ public final class GameSessionState {
 
     public void setGameOver(boolean gameOver) {
         this.gameOver = gameOver;
-    }
-
-    public void setWinner(Player winner) {
-        this.winner = winner;
-        this.winnerPlayerId = winner != null ? "player-" + winner.getId() : null;
-        this.winnerName = winner != null ? winner.getName() : null;
     }
 
     public void setWinnerInfo(String winnerPlayerId, String winnerName) {
