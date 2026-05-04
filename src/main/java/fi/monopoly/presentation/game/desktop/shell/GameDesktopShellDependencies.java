@@ -52,10 +52,6 @@ public final class GameDesktopShellDependencies {
         return stateAccess.currentTurnPlayerSupplier().get();
     }
 
-    public Player playerById(String playerId) {
-        return stateAccess.playerByIdResolver().apply(playerId);
-    }
-
     public Board board() {
         return stateAccess.boardSupplier().get();
     }
@@ -172,8 +168,8 @@ public final class GameDesktopShellDependencies {
         actionAccess.resumeContinuationAction().accept(continuationState);
     }
 
-    public void focusPlayer(Player player) {
-        actionAccess.focusPlayerAction().accept(player);
+    public void focusPlayerById(String playerId) {
+        actionAccess.focusPlayerByIdAction().accept(playerId);
     }
 
     public int goMoneyAmount() {
@@ -204,7 +200,6 @@ public final class GameDesktopShellDependencies {
             Supplier<GameSessionState> sessionStateSupplier,
             Supplier<Players> playersSupplier,
             Supplier<Player> currentTurnPlayerSupplier,
-            java.util.function.Function<String, Player> playerByIdResolver,
             Supplier<Board> boardSupplier,
             Supplier<Dices> dicesSupplier,
             Supplier<Animations> animationsSupplier,
@@ -241,7 +236,7 @@ public final class GameDesktopShellDependencies {
             Consumer<Boolean> endRoundAction,
             ScheduleNextComputerAction scheduleNextComputerAction,
             Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction,
-            Consumer<Player> focusPlayerAction
+            Consumer<String> focusPlayerByIdAction
     ) {
     }
 

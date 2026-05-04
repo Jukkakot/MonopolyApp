@@ -399,7 +399,7 @@ public final class GameDesktopPresentationCoordinator {
             public void focusDebtDebtor() {
                 DebtState debt = dependencies.debtState();
                 if (debt != null) {
-                    dependencies.focusPlayer(debt.paymentRequest().debtor());
+                    dependencies.focusPlayerById("player-" + debt.paymentRequest().debtor().getId());
                 }
             }
 
@@ -516,10 +516,8 @@ public final class GameDesktopPresentationCoordinator {
 
             @Override
             public void focusWinner(String winnerPlayerId) {
-                Player winner = winnerPlayerId != null ? dependencies.playerById(winnerPlayerId) : null;
-                if (winner != null && winner.getSpot() != null) {
-                    winner.setCoords(winner.getSpot().getTokenCoords(winner));
-                    dependencies.focusPlayer(winner);
+                if (winnerPlayerId != null) {
+                    dependencies.focusPlayerById(winnerPlayerId);
                 }
             }
 

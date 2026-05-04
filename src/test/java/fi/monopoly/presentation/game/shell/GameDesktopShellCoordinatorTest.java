@@ -240,7 +240,6 @@ class GameDesktopShellCoordinatorTest {
                             () -> sessionState,
                             () -> players,
                             () -> currentTurnPlayer,
-                            playerId -> currentTurnPlayer,
                             () -> null,
                             () -> dices,
                             () -> animations,
@@ -284,7 +283,7 @@ class GameDesktopShellCoordinatorTest {
                             },
                             continuationState -> {
                             },
-                            player -> {
+                            playerId -> {
                             }
                     ),
                     new GameDesktopShellDependencies.VisibilityAccess(

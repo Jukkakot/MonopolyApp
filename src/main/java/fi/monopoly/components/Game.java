@@ -160,7 +160,6 @@ public class Game implements MonopolyEventListener {
                         this::sessionStateRef,
                         this::players,
                         this::currentTurnPlayer,
-                        this::playerById,
                         this::getBoard,
                         this::dices,
                         this::animations,
@@ -187,7 +186,7 @@ public class Game implements MonopolyEventListener {
                         this::endRound,
                         this::scheduleNextComputerAction,
                         this::resumeContinuation,
-                        this::focusPlayer,
+                        this::focusPlayerById,
                         this::goMoneyAmountRef,
                         this::retryDebtVisible,
                         this::declareBankruptcyVisible,
@@ -321,10 +320,17 @@ public class Game implements MonopolyEventListener {
         }
     }
 
-    private void focusPlayer(Player player) {
-        if (players != null && player != null) {
-            players.focusPlayer(player);
-        }
+    private void focusPlayerById(String playerId) {
+        if (players == null || playerId == null) return;
+        players.getPlayers().stream()
+                .filter(p -> playerId.equals("player-" + p.getId()))
+                .findFirst()
+                .ifPresent(player -> {
+                    if (player.getSpot() != null) {
+                        player.setCoords(player.getSpot().getTokenCoords(player));
+                    }
+                    players.focusPlayer(player);
+                });
     }
 
     private boolean retryDebtVisible() {
@@ -495,16 +501,6 @@ public class Game implements MonopolyEventListener {
 
     private void applyComputerActionCooldownIfAnimationJustFinished(boolean animationWasRunning) {
         presentationHost.applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
-    }
-
-    private Player playerById(String playerId) {
-        if (playerId == null || players == null) {
-            return null;
-        }
-        return players.getPlayers().stream()
-                .filter(player -> ("player-" + player.getId()).equals(playerId))
-                .findFirst()
-                .orElse(null);
     }
 
     private GameView createGameView(Player currentPlayer) {

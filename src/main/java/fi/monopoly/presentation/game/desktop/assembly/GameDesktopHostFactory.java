@@ -73,7 +73,6 @@ public final class GameDesktopHostFactory {
                         hooks.sessionStateSupplier(),
                         hooks.playersSupplier(),
                         hooks.currentTurnPlayerSupplier(),
-                        hooks.playerByIdResolver(),
                         hooks.boardSupplier(),
                         hooks.dicesSupplier(),
                         hooks.animationsSupplier(),
@@ -106,7 +105,7 @@ public final class GameDesktopHostFactory {
                         hooks.endRoundAction(),
                         hooks.scheduleNextComputerAction(),
                         hooks.resumeContinuationAction(),
-                        hooks.focusPlayerAction()
+                        hooks.focusPlayerByIdAction()
                 ),
                 new GameDesktopShellDependencies.VisibilityAccess(
                         hooks.goMoneyAmountSupplier(),
@@ -224,7 +223,6 @@ public final class GameDesktopHostFactory {
                 Supplier<GameSessionState> sessionStateSupplier,
                 Supplier<Players> playersSupplier,
                 Supplier<Player> currentTurnPlayerSupplier,
-                Function<String, Player> playerByIdResolver,
                 Supplier<Board> boardSupplier,
                 Supplier<Dices> dicesSupplier,
                 Supplier<Animations> animationsSupplier,
@@ -251,7 +249,7 @@ public final class GameDesktopHostFactory {
                 Consumer<Boolean> endRoundAction,
                 GameDesktopShellDependencies.ScheduleNextComputerAction scheduleNextComputerAction,
                 Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction,
-                Consumer<Player> focusPlayerAction,
+                Consumer<String> focusPlayerByIdAction,
                 IntSupplier goMoneyAmountSupplier,
                 BooleanSupplier retryDebtVisibleSupplier,
                 BooleanSupplier declareBankruptcyVisibleSupplier,
@@ -263,7 +261,6 @@ public final class GameDesktopHostFactory {
                     sessionStateSupplier,
                     playersSupplier,
                     currentTurnPlayerSupplier,
-                    playerByIdResolver,
                     boardSupplier,
                     dicesSupplier,
                     animationsSupplier,
@@ -290,7 +287,7 @@ public final class GameDesktopHostFactory {
                     endRoundAction,
                     scheduleNextComputerAction,
                     resumeContinuationAction,
-                    focusPlayerAction,
+                    focusPlayerByIdAction,
                     goMoneyAmountSupplier,
                     retryDebtVisibleSupplier,
                     declareBankruptcyVisibleSupplier,
@@ -305,8 +302,6 @@ public final class GameDesktopHostFactory {
         Supplier<Players> playersSupplier();
 
         Supplier<Player> currentTurnPlayerSupplier();
-
-        Function<String, Player> playerByIdResolver();
 
         Supplier<Board> boardSupplier();
 
@@ -360,7 +355,7 @@ public final class GameDesktopHostFactory {
 
         Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction();
 
-        Consumer<Player> focusPlayerAction();
+        Consumer<String> focusPlayerByIdAction();
 
         IntSupplier goMoneyAmountSupplier();
 
@@ -379,7 +374,6 @@ public final class GameDesktopHostFactory {
             Supplier<GameSessionState> sessionStateSupplier,
             Supplier<Players> playersSupplier,
             Supplier<Player> currentTurnPlayerSupplier,
-            Function<String, Player> playerByIdResolver,
             Supplier<Board> boardSupplier,
             Supplier<Dices> dicesSupplier,
             Supplier<Animations> animationsSupplier,
@@ -406,7 +400,7 @@ public final class GameDesktopHostFactory {
             Consumer<Boolean> endRoundAction,
             GameDesktopShellDependencies.ScheduleNextComputerAction scheduleNextComputerAction,
             Consumer<fi.monopoly.domain.session.TurnContinuationState> resumeContinuationAction,
-            Consumer<Player> focusPlayerAction,
+            Consumer<String> focusPlayerByIdAction,
             IntSupplier goMoneyAmountSupplier,
             BooleanSupplier retryDebtVisibleSupplier,
             BooleanSupplier declareBankruptcyVisibleSupplier,
