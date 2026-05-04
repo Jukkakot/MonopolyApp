@@ -308,14 +308,6 @@ public class Game implements MonopolyEventListener {
         return sessionPresentationState;
     }
 
-    private GameView currentGameView() {
-        return createGameView(currentTurnPlayer());
-    }
-
-    private PlayerView currentPlayerView() {
-        return createPlayerView(currentTurnPlayer());
-    }
-
     private void resumeContinuation(TurnContinuationState continuationState) {
         if (continuationState != null && gameTurnFlowCoordinator != null) {
             gameTurnFlowCoordinator.resumeContinuation(continuationState);

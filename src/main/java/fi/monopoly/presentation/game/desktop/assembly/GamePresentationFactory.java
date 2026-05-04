@@ -6,7 +6,6 @@ import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.MonopolyButton;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.animation.Animations;
 import fi.monopoly.components.board.Board;
