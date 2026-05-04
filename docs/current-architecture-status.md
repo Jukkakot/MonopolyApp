@@ -456,9 +456,17 @@ More Player removal (session 9, continued):
   gains `restoreDebtStateFromModel(DebtStateModel, Runnable)` that resolves debtor/creditor Players
   internally using its own Players reference — callers no longer need a playerById function
 
-Remaining `Player` dependencies in presentation layer (deferred — require larger refactoring):
-- `TradeController` / `LegacyTradeGateway` — trade partner selection and AI trade logic deeply
-  tied to legacy Player objects; would require reworking trade UI and bot logic
+More Player removal (session 10):
+- `GamePresentationFactory.Hooks.currentTurnPlayer()` replaced with `boolean isCurrentPlayerComputerControlled()` — the only caller needed the boolean, not the Player object
+- `GameSessionStateCoordinator.declareWinner(GameSessionState, Player, WinnerHooks)` replaced with `declareWinner(GameSessionState, String winnerPlayerId, String winnerName, WinnerHooks)` — winner name resolved from `SessionState.seats.displayName()` at the hook boundary
+- `GameSessionState.winner` (Player field), `setWinner(Player)`, and `setWinnerPlayerId(String)` all removed; winner identity now stored as `winnerPlayerId` + `winnerName` String fields via `setWinnerInfo(String, String)`; `restoreSessionState()` now also restores `winnerName` from seats so loaded completed games display the winner name correctly
+- `GameDesktopPresentationCoordinator.declareWinner(GameDesktopShellDependencies, Player)` replaced with `declareWinner(GameDesktopShellDependencies, String, String)` — winner name resolved via private `resolveWinnerName()` helper that reads `SessionState.seats` 
+- `Game.java` dead private method `declareWinner(Player)` removed
+
+Remaining `Player` dependencies in presentation layer (deferred):
+- `hasActivePlayer(deps)` / `isCurrentPlayerComputer(deps)` in `GameDesktopPresentationCoordinator` — use `dependencies.currentTurnPlayer()` from legacy runtime; cannot replace with `SessionState`-based query because it creates a circular dependency via `LegacySessionProjector.canRollSupplier` → `isRollDiceActionAvailable` → `hasActivePlayer` → `sessionCommandPort.currentState()` → projector
+- `createGameViewFor(Player)` / `createPlayerViewFor(Player)` in `GamePresentationFactory.Hooks` — tied to `HostBotInteractionAdapter` chain which uses Player throughout
+- `TradeController` / `LegacyTradeGateway` — trade partner selection and AI trade logic deeply tied to legacy Player objects; would require reworking trade UI and bot logic
 
 ## Relationship To Older Plan Docs
 
