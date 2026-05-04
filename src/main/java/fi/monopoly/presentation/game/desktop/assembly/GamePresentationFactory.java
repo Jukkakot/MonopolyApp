@@ -34,6 +34,7 @@ import fi.monopoly.presentation.session.debt.DebtController;
 import fi.monopoly.presentation.session.purchase.PendingDecisionPopupAdapter;
 import fi.monopoly.presentation.session.trade.TradeController;
 import fi.monopoly.presentation.session.trade.TradeViewAdapter;
+import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.utils.DebugPerformanceStats;
 
 import java.util.List;
@@ -68,10 +69,7 @@ public final class GamePresentationFactory {
                 dependencies.dices(),
                 buttons.endRoundButton(),
                 hooks::gameOver,
-                () -> {
-                    Player p = hooks.currentTurnPlayer();
-                    return p != null && p.isComputerControlled();
-                }
+                hooks::isCurrentPlayerComputerControlled
         );
         GameSessionQueries gameSessionQueries = new GameSessionQueries(dependencies.players(), dependencies.board());
         GameTurnFlowCoordinator gameTurnFlowCoordinator = new GameTurnFlowCoordinator(
@@ -163,7 +161,14 @@ public final class GamePresentationFactory {
                 gameSessionQueries,
                 interactionAdapter,
                 dependencies.debugPerformanceStats(),
-                hooks::currentTurnPlayer,
+                () -> {
+                    SessionState botState = dependencies.sessionCommandPort().currentState();
+                    if (botState == null || botState.turn() == null || botState.turn().activePlayerId() == null) return null;
+                    String botActiveId = botState.turn().activePlayerId();
+                    return dependencies.players().getPlayers().stream()
+                            .filter(p -> botActiveId.equals("player-" + p.getId()))
+                            .findFirst().orElse(null);
+                },
                 hooks::updateLogTurnContext,
                 hooks::syncTransientPresentationState,
                 hooks::gameOver,
@@ -235,7 +240,7 @@ public final class GamePresentationFactory {
 
         String sessionId();
 
-        Player currentTurnPlayer();
+        boolean isCurrentPlayerComputerControlled();
 
         fi.monopoly.components.computer.GameView createGameViewFor(Player player);
 

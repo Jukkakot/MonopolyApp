@@ -162,8 +162,8 @@ public final class GameDesktopPresentationCoordinator {
             }
 
             @Override
-            public Player currentTurnPlayer() {
-                return dependencies.currentTurnPlayer();
+            public boolean isCurrentPlayerComputerControlled() {
+                return isCurrentPlayerComputer(dependencies);
             }
 
             @Override
