@@ -100,7 +100,13 @@ class SessionPersistenceServiceTest {
         assertNotNull(restored.board());
         assertEquals(2, restored.players().count());
         assertEquals("Toka", restored.players().getTurn().getName());
-        assertEquals(1350, restored.playersById().get("player-1").getMoneyAmount());
+        assertEquals(1350, playerById(restored.players(), "player-1").getMoneyAmount());
+    }
+
+    private static fi.monopoly.components.Player playerById(fi.monopoly.components.Players players, String playerId) {
+        return players.getPlayers().stream()
+                .filter(p -> playerId.equals("player-" + p.getId()))
+                .findFirst().orElse(null);
     }
 
     private static SessionState sampleSessionState(String sessionId) {

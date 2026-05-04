@@ -64,8 +64,8 @@ class LegacySessionRuntimeRestorerTest {
 
         RestoredLegacySessionRuntime restored = restorer.restore(runtime, state);
 
-        Player human = restored.playersById().get("player-5");
-        Player bot = restored.playersById().get("player-7");
+        Player human = playerById(restored, "player-5");
+        Player bot = playerById(restored, "player-7");
         StreetProperty mediterranean = (StreetProperty) PropertyFactory.getProperty(SpotType.B1);
 
         assertEquals(2, restored.players().count());
@@ -78,6 +78,12 @@ class LegacySessionRuntimeRestorerTest {
         assertSame(human, mediterranean.getOwnerPlayer());
         assertEquals(2, mediterranean.getHouseCount());
         assertTrue(bot.getOwnedProperties().contains(PropertyFactory.getProperty(SpotType.RR1)));
+    }
+
+    private static Player playerById(RestoredLegacySessionRuntime restored, String playerId) {
+        return restored.players().getPlayers().stream()
+                .filter(p -> playerId.equals("player-" + p.getId()))
+                .findFirst().orElse(null);
     }
 
     private static MonopolyRuntime initHeadlessRuntime() {

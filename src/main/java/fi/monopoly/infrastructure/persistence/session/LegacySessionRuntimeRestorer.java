@@ -31,7 +31,7 @@ public final class LegacySessionRuntimeRestorer {
         restoreProperties(sessionState.properties(), playersById);
         restoreJailState(sessionState.players(), playersById);
         restoreTurn(sessionState, playersById, players);
-        return new RestoredLegacySessionRuntime(board, players, Map.copyOf(playersById));
+        return new RestoredLegacySessionRuntime(board, players);
     }
 
     private Map<String, PlayerSnapshot> indexPlayerSnapshots(List<PlayerSnapshot> snapshots) {
