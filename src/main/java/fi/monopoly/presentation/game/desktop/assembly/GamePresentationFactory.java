@@ -161,14 +161,6 @@ public final class GamePresentationFactory {
                 gameSessionQueries,
                 interactionAdapter,
                 dependencies.debugPerformanceStats(),
-                () -> {
-                    SessionState botState = dependencies.sessionCommandPort().currentState();
-                    if (botState == null || botState.turn() == null || botState.turn().activePlayerId() == null) return null;
-                    String botActiveId = botState.turn().activePlayerId();
-                    return dependencies.players().getPlayers().stream()
-                            .filter(p -> botActiveId.equals("player-" + p.getId()))
-                            .findFirst().orElse(null);
-                },
                 hooks::updateLogTurnContext,
                 hooks::syncTransientPresentationState,
                 hooks::gameOver,

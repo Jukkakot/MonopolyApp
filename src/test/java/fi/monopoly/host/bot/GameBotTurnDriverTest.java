@@ -31,9 +31,8 @@ class GameBotTurnDriverTest {
     @Test
     void debtStepUsesDebtorEvenWhenTurnPointerStillTargetsAnotherPlayer() {
         GameBotTurnDriver driver = new GameBotTurnDriver(new BotTurnScheduler(() -> false));
-        Player turnPlayer = new Player("Creditor", Color.CORNFLOWERBLUE, 1500, 1, ComputerPlayerProfile.HUMAN);
         Player debtor = new Player("Debtor", Color.PINK, 1500, 2, ComputerPlayerProfile.SMOKE_TEST);
-        HooksStub hooks = new HooksStub(turnPlayer, debtor, debtSessionState(debtor));
+        HooksStub hooks = new HooksStub(debtor, debtSessionState(debtor));
 
         driver.step(hooks);
 
@@ -72,7 +71,6 @@ class GameBotTurnDriverTest {
     }
 
     private static final class HooksStub implements GameBotTurnDriver.Hooks {
-        private final Player currentTurnPlayer;
         private final Player debtor;
         private final SessionState sessionState;
         private Player contextPlayer;
@@ -80,8 +78,7 @@ class GameBotTurnDriverTest {
         private BotTurnScheduler.DelayKind scheduledDelayKind;
         private boolean recoverPrimaryTurnControlsCalled;
 
-        private HooksStub(Player currentTurnPlayer, Player debtor, SessionState sessionState) {
-            this.currentTurnPlayer = currentTurnPlayer;
+        private HooksStub(Player debtor, SessionState sessionState) {
             this.debtor = debtor;
             this.sessionState = sessionState;
         }
@@ -120,11 +117,6 @@ class GameBotTurnDriverTest {
         }
 
         @Override
-        public Player currentTurnPlayer() {
-            return currentTurnPlayer;
-        }
-
-        @Override
         public Player findPlayerById(String playerId) {
             if (("player-" + debtor.getId()).equals(playerId)) {
                 return debtor;
@@ -153,7 +145,7 @@ class GameBotTurnDriverTest {
         }
 
         @Override
-        public boolean resolveVisiblePopupFor(Player turnPlayer) {
+        public boolean resolveVisiblePopupFor(ComputerPlayerProfile profile) {
             return false;
         }
 

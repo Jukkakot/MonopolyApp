@@ -4,6 +4,7 @@ import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.components.Player;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.utils.DebugPerformanceStats;
@@ -18,7 +19,6 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     private final BotSessionQueries sessionQueries;
     private final HostBotInteractionAdapter interactionAdapter;
     private final DebugPerformanceStats debugPerformanceStats;
-    private final Supplier<Player> turnPlayerSupplier;
     private final Runnable updateLogTurnContextAction;
     private final Runnable syncPresentationStateAction;
     private final BooleanSupplier gameOverSupplier;
@@ -65,11 +65,6 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     }
 
     @Override
-    public Player currentTurnPlayer() {
-        return turnPlayerSupplier.get();
-    }
-
-    @Override
     public Player findPlayerById(String playerId) {
         return sessionQueries.findPlayerById(playerId);
     }
@@ -95,8 +90,8 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     }
 
     @Override
-    public boolean resolveVisiblePopupFor(Player turnPlayer) {
-        return interactionAdapter.resolveVisiblePopupFor(turnPlayer.getComputerProfile());
+    public boolean resolveVisiblePopupFor(ComputerPlayerProfile profile) {
+        return interactionAdapter.resolveVisiblePopupFor(profile);
     }
 
     @Override

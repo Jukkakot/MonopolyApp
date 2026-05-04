@@ -4,6 +4,7 @@ import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerStrategies;
 import fi.monopoly.components.computer.ComputerTurnContext;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.domain.session.AuctionStatus;
 import fi.monopoly.domain.session.SessionState;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +58,8 @@ public final class GameBotTurnDriver {
                 return debtor;
             }
         }
-        return hooks.currentTurnPlayer();
+        if (sessionState.turn() == null || sessionState.turn().activePlayerId() == null) return null;
+        return hooks.findPlayerById(sessionState.turn().activePlayerId());
     }
 
     private void handleTradeStep(Hooks hooks, SessionState sessionState, int now, long stepStart) {
@@ -89,9 +91,10 @@ public final class GameBotTurnDriver {
             hooks.recordStep(System.nanoTime() - stepStart);
             return;
         }
-        Player turnPlayer = hooks.currentTurnPlayer();
         if (hooks.popupVisible()) {
-            if (turnPlayer != null && turnPlayer.isComputerControlled() && hooks.resolveVisiblePopupFor(turnPlayer)) {
+            String activePlayerId = sessionState.turn() != null ? sessionState.turn().activePlayerId() : null;
+            Player turnPlayer = activePlayerId != null ? hooks.findPlayerById(activePlayerId) : null;
+            if (turnPlayer != null && turnPlayer.isComputerControlled() && hooks.resolveVisiblePopupFor(turnPlayer.getComputerProfile())) {
                 hooks.scheduleNextAction(BotTurnScheduler.DelayKind.RESOLVE_POPUP, now);
             }
             hooks.recordStep(System.nanoTime() - stepStart);
@@ -122,8 +125,6 @@ public final class GameBotTurnDriver {
 
         SessionState sessionState();
 
-        Player currentTurnPlayer();
-
         Player findPlayerById(String playerId);
 
         String resolveTradeActorId(SessionState sessionState);
@@ -134,7 +135,7 @@ public final class GameBotTurnDriver {
 
         boolean finishAuctionResolution(FinishAuctionResolutionCommand command);
 
-        boolean resolveVisiblePopupFor(Player turnPlayer);
+        boolean resolveVisiblePopupFor(ComputerPlayerProfile profile);
 
         boolean handleComputerAuctionAction(String actorPlayerId);
 
