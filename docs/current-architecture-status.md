@@ -480,11 +480,17 @@ More Player removal (session 12):
 - `GameDesktopBootstrapFactory`: `hooks.turnPlayerNameSupplier()` used directly instead of building a Player-unwrapping lambda from `hooks.currentTurnPlayerSupplier()`
 - `HostBotInteractionAdapter.acceptActivePopupFor(Player)` / `declineActivePopupFor(Player)` — renamed to `acceptActivePopup()` / `declineActivePopup()` (Player param was unused in the desktop implementation)
 
+More Player removal (session 13):
+- `GameBotTurnDriver.Hooks.currentTurnPlayer()` removed — `resolveActingPlayer()` now uses `findPlayerById(sessionState.turn().activePlayerId())` directly; `handleAuctionStep()` does the same instead of calling the removed hook
+- `GameBotTurnDriver.Hooks.resolveVisiblePopupFor(Player)` → `resolveVisiblePopupFor(ComputerPlayerProfile)` — aligns the driver hooks signature with the already-updated `HostBotInteractionAdapter`
+- `GameBotTurnHooksAdapter.turnPlayerSupplier` field removed — no longer needed since `currentTurnPlayer()` hook is gone; the Player-fetching lambda in `GamePresentationFactory` that provided this supplier was also removed
+
 Remaining `Player` dependencies in presentation/host layer (deferred):
-- `createGameViewFor(Player)` / `createPlayerViewFor(Player)` in `GamePresentationFactory.Hooks` — tied to `HostBotInteractionAdapter` chain which uses Player throughout for AI decision views
-- `HostBotInteractionAdapter.resolveVisiblePopupFor(Player)` — uses `player.getComputerProfile()`; could be `ComputerPlayerProfile` but doesn't reduce Player exposure in callers
+- `createGameViewFor(Player)` / `createPlayerViewFor(Player)` in `GamePresentationFactory.Hooks` — tied to `HostBotInteractionAdapter` chain; `SessionViewFacade.createGameView(Player)` uses Player for popup views, visible-actions checks, and player id; removal requires changing signature all the way to `SessionViewFacade`
+- `HostBotInteractionAdapter.currentGameView(Player)` / `currentPlayerView(Player)` — view factories in the bot interaction chain; Player is the key to view building in `SessionViewFacade`
+- `GameBotTurnDriver.Hooks.findPlayerById(String) → Player` — still returns Player; used for trade actor, auction actor, debtor and turn player lookups in bot turn logic
+- `GameBotTurnDriver.Hooks.createTurnContext(Player)` / `handleComputerTradeTurn(Player)` — bot turn execution and trade logic still depend on Player for strategy dispatch and trade controller
 - `TradeController` / `LegacyTradeGateway` — trade partner selection and AI trade logic deeply tied to legacy Player objects; would require reworking trade UI and bot logic
-- `GameBotTurnDriver.Hooks.currentTurnPlayer()` / `findPlayerById(String) → Player` — bot turn advancement currently requires Player for view creation and trade/auction logic
 
 ## Relationship To Older Plan Docs
 
