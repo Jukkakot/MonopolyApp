@@ -7,7 +7,10 @@ import fi.monopoly.client.session.desktop.*;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.host.session.local.EmbeddedDesktopSessionHost;
 import fi.monopoly.presentation.game.desktop.assembly.DefaultDesktopHostedGameFactory;
+import fi.monopoly.server.session.EmbeddedSessionServer;
+import fi.monopoly.server.session.SessionRegistry;
 import fi.monopoly.server.session.SessionServer;
+import fi.monopoly.server.transport.SessionHttpServer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -23,9 +26,7 @@ import java.util.Objects;
 @Slf4j
 public final class EmbeddedLocalDesktopClientBindingFactory implements DesktopClientHostBindingFactory {
 
-    /**
-     * Set {@code -Dmonopoly.http.port=8080} to expose the session host over HTTP.
-     */
+    /** Override auto-detected port with {@code -Dmonopoly.http.port=8080}. */
     private static final String HTTP_PORT_PROPERTY = "monopoly.http.port";
 
     @Override
@@ -58,28 +59,43 @@ public final class EmbeddedLocalDesktopClientBindingFactory implements DesktopCl
                 feedbackSink
         );
         DesktopHostedGameTestAccess testAccess = embeddedSessionHost.testAccess();
-        maybeStartHttpServer(embeddedSessionHost);
+        startHttpServer(embeddedSessionHost);
         return new DesktopClientHostBinding(runtimeBridge, viewModels, sessionRuntime, testAccess);
     }
 
-    private static void maybeStartHttpServer(EmbeddedDesktopSessionHost host) {
-        String portProp = System.getProperty(HTTP_PORT_PROPERTY);
-        if (portProp == null) {
-            return;
-        }
-        int port;
+    /**
+     * Always starts an HTTP server exposing the embedded session. Port is auto-detected unless
+     * overridden with {@code -Dmonopoly.http.port=N}. A {@link SessionRegistry} is also attached
+     * so external clients can create independent pure-domain sessions via {@code POST /sessions}.
+     */
+    private static void startHttpServer(EmbeddedDesktopSessionHost host) {
+        int port = resolvePort();
+        SessionRegistry registry = new SessionRegistry();
+        SessionHttpServer httpServer = new SessionHttpServer(
+                host, host, host::currentSnapshot, port, registry);
         try {
-            port = Integer.parseInt(portProp);
-        } catch (NumberFormatException e) {
-            log.warn("Invalid {}: '{}' — HTTP server not started", HTTP_PORT_PROPERTY, portProp);
-            return;
-        }
-        SessionServer server = new SessionServer(host, host, host::currentSnapshot, port);
-        try {
-            server.start();
-            server.registerShutdownHook();
+            httpServer.start();
+            Runtime.getRuntime().addShutdownHook(
+                    Thread.ofVirtual().name("local-session-server-shutdown").unstarted(httpServer::stop));
+            log.info("Session HTTP server started — http://localhost:{} (legacy session + /sessions registry)", port);
         } catch (IOException e) {
-            log.error("Failed to start session server on port {}", port, e);
+            log.warn("Could not start HTTP server on port {} — continuing without HTTP exposure: {}", port, e.getMessage());
+        }
+    }
+
+    private static int resolvePort() {
+        String portProp = System.getProperty(HTTP_PORT_PROPERTY);
+        if (portProp != null) {
+            try {
+                return Integer.parseInt(portProp);
+            } catch (NumberFormatException e) {
+                log.warn("Invalid {}: '{}' — using auto-detected port", HTTP_PORT_PROPERTY, portProp);
+            }
+        }
+        try (java.net.ServerSocket s = new java.net.ServerSocket(0)) {
+            return s.getLocalPort();
+        } catch (IOException e) {
+            return 8080;
         }
     }
 

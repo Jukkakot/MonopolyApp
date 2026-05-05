@@ -3,6 +3,7 @@ package fi.monopoly.client.desktop;
 import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 import fi.monopoly.components.event.MonopolyEventBus;
 import fi.monopoly.components.event.MonopolyEventObserver;
+import fi.monopoly.presentation.remote.MouseInteractiveView;
 import fi.monopoly.utils.UiTokens;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
@@ -22,7 +23,7 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
     public static final char SPACE = ' ';
     public static final int DEFAULT_WINDOW_WIDTH = 1700;
     public static final int DEFAULT_WINDOW_HEIGHT = 996;
-    private final DesktopAppShell desktopAppShell = new DesktopAppShell(this, new EmbeddedLocalDesktopClientBindingFactory());
+    private final DesktopAppShell desktopAppShell = new DesktopAppShell(this, selectBindingFactory());
     private int lastDrawWidth = -1;
     private int lastDrawHeight = -1;
 
@@ -112,6 +113,13 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
         }
     }
 
+    public void mousePressed() {
+        DesktopSessionRenderView view = desktopAppShell.currentView();
+        if (view instanceof MouseInteractiveView interactive) {
+            interactive.handleMousePressed(mouseX, mouseY);
+        }
+    }
+
     public void saveLocalSession() {
         desktopAppShell.saveLocalSession();
     }
@@ -135,6 +143,22 @@ public class MonopolyApp extends MonopolyEventObserver implements DesktopRenderi
 
     public DesktopAppShell desktopAppShell() {
         return desktopAppShell;
+    }
+
+    /**
+     * Selects the binding factory based on {@code -Dmonopoly.mode}.
+     * <ul>
+     *   <li>{@code remote} — HTTP-backed pure domain server, no legacy runtime</li>
+     *   <li>{@code local} (default) — embedded in-process session with HTTP exposure</li>
+     * </ul>
+     */
+    private static DesktopClientHostBindingFactory selectBindingFactory() {
+        String mode = System.getProperty("monopoly.mode", "local");
+        if ("remote".equalsIgnoreCase(mode)) {
+            log.info("Starting in HTTP-backed remote mode (-Dmonopoly.mode=remote)");
+            return new HttpBackedDesktopClientBindingFactory();
+        }
+        return new EmbeddedLocalDesktopClientBindingFactory();
     }
 
     @Override

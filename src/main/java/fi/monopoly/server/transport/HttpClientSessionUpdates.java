@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public final class HttpClientSessionUpdates implements ClientSessionUpdates {
 
-    private final String baseUrl;
+    private final String eventsUrl;
     private final ObjectMapper objectMapper;
     private final Set<ClientSessionListener> listeners = new LinkedHashSet<>();
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -38,10 +38,25 @@ public final class HttpClientSessionUpdates implements ClientSessionUpdates {
     private Thread sseThread;
 
     /**
+     * Single-session constructor. Connects to {@code baseUrl/events}.
+     *
      * @param baseUrl  server base URL, e.g. {@code http://localhost:8080} (no trailing slash)
      */
     public HttpClientSessionUpdates(String baseUrl) {
-        this.baseUrl = baseUrl;
+        this.eventsUrl = baseUrl + "/events";
+        this.objectMapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    }
+
+    /**
+     * Multi-session factory. Connects to {@code baseUrl/sessions/{sessionId}/events}.
+     */
+    public static HttpClientSessionUpdates forSession(String baseUrl, String sessionId) {
+        return new HttpClientSessionUpdates(baseUrl, sessionId);
+    }
+
+    /** Private constructor for multi-session target URL. */
+    private HttpClientSessionUpdates(String baseUrl, String sessionId) {
+        this.eventsUrl = baseUrl + "/sessions/" + sessionId + "/events";
         this.objectMapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
 
@@ -110,7 +125,7 @@ public final class HttpClientSessionUpdates implements ClientSessionUpdates {
     private void connectAndRead() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/events"))
+                .uri(URI.create(eventsUrl))
                 .GET()
                 .header("Accept", "text/event-stream")
                 .build();

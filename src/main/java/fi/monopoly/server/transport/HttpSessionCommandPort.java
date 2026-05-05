@@ -34,16 +34,33 @@ import java.util.Map;
 @Slf4j
 public final class HttpSessionCommandPort implements SessionCommandPort {
 
-    private final String baseUrl;
+    private final String commandUrl;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final SessionCommandSerializer commandSerializer;
 
     /**
+     * Single-session constructor. Sends commands to {@code baseUrl/command}.
+     *
      * @param baseUrl  server base URL, e.g. {@code http://localhost:8080} (no trailing slash)
      */
     public HttpSessionCommandPort(String baseUrl) {
-        this.baseUrl = baseUrl;
+        this.commandUrl = baseUrl + "/command";
+        this.httpClient = HttpClient.newHttpClient();
+        this.objectMapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        this.commandSerializer = new SessionCommandSerializer(objectMapper);
+    }
+
+    /**
+     * Multi-session factory. Targets {@code baseUrl/sessions/{sessionId}/command}.
+     */
+    public static HttpSessionCommandPort forSession(String baseUrl, String sessionId) {
+        return new HttpSessionCommandPort(baseUrl, sessionId);
+    }
+
+    /** Private constructor for multi-session target URL. */
+    private HttpSessionCommandPort(String baseUrl, String sessionId) {
+        this.commandUrl = baseUrl + "/sessions/" + sessionId + "/command";
         this.httpClient = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         this.commandSerializer = new SessionCommandSerializer(objectMapper);
@@ -59,7 +76,7 @@ public final class HttpSessionCommandPort implements SessionCommandPort {
             return rejected("SERIALIZATION_ERROR", "Failed to serialize command");
         }
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/command"))
+                .uri(URI.create(commandUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                 .header("Content-Type", "application/json; charset=UTF-8")
                 .build();
