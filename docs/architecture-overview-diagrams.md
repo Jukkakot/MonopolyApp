@@ -243,10 +243,13 @@ What is important here:
   `overlay.get()` call — turn phase derivation and stale pending-decision clearing happen inside
   the store's `get()` method
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
+- **HTTP-backed remote session mode** (`-Dmonopoly.mode=remote`): `HttpBackedDesktopClientBindingFactory` starts an `EmbeddedSessionServer` (pure-domain, no legacy runtime), creates a session via `SessionRegistry`, and wires `RemoteSessionBoardView` — a new Processing renderer that draws the board and sidebar entirely from `SessionState` snapshots received over SSE; commands flow back via `HttpSessionCommandPort`; the legacy `Game`/`Players`/`TurnEngine` graph is not instantiated at all in this mode; local mode unchanged with auto-started HTTP server always exposed on a free port
 
 ## 3. Current Practical Runtime Shape
 
-This is the short “how the running app is assembled today” view.
+There are now two supported runtime shapes depending on the `-Dmonopoly.mode` JVM flag.
+
+### 3a. Local Mode (default — `-Dmonopoly.mode=local`)
 
 ```mermaid
 flowchart LR
@@ -265,6 +268,7 @@ flowchart LR
     CMDPORT[SessionCommandPort]
     STATE[SessionState]
     LEGACY[Legacy runtime objects]
+    HTTPSRV[SessionHttpServer auto-started]
 
     GAME --> HOSTFACTORY
     HOSTFACTORY --> EMBHOST
@@ -287,9 +291,60 @@ flowchart LR
     RUNTIME --> LEGACY
     APP --> LEGACY
     FRAME --> GAME
+    EMBHOST --> HTTPSRV
 ```
 
-This is already much closer to backend-safe behavior than the original project shape, but not fully backend-clean yet because:
+In local mode, the embedded HTTP server is always auto-started on an auto-detected port (override with `-Dmonopoly.http.port=<port>`). This exposes the running game session over HTTP for external clients and dev tools (`devclient.html`).
+
+### 3b. Remote Mode (`-Dmonopoly.mode=remote`)
+
+```mermaid
+flowchart LR
+    subgraph Server[Embedded Server process]
+        REGISTRY[SessionRegistry]
+        EMBSRV[EmbeddedSessionServer]
+        DOMAIN[PureDomainSessionFactory]
+        APP[SessionApplicationService]
+        STATE[SessionState]
+        HTTPSRV[SessionHttpServer]
+        REGISTRY --> EMBSRV
+        DOMAIN --> APP
+        APP --> STATE
+        EMBSRV --> HTTPSRV
+    end
+
+    subgraph Client[Desktop Client]
+        MONAPP[MonopolyApp]
+        SHELL[DesktopAppShell]
+        CTRL[DesktopClientSessionController]
+        SESMODEL[DesktopClientSessionModel]
+        RENMODEL[DesktopClientRenderModel]
+        BOARDVIEW[RemoteSessionBoardView]
+        HTTPCMD[HttpSessionCommandPort]
+        HTTPEVT[HttpClientSessionUpdates]
+        MONAPP --> SHELL
+        SHELL --> CTRL
+        CTRL --> SESMODEL
+        CTRL --> RENMODEL
+        CTRL --> BOARDVIEW
+        BOARDVIEW --> HTTPCMD
+        CTRL --> HTTPEVT
+        SESMODEL --> BOARDVIEW
+    end
+
+    HTTPSRV -->|SSE /events| HTTPEVT
+    HTTPCMD -->|POST /command| HTTPSRV
+```
+
+In remote mode:
+
+- an `EmbeddedSessionServer` starts in-process on a free port and creates a pure-domain session via `PureDomainSessionFactory`
+- `RemoteSessionBoardView` renders the 11×11 board and sidebar directly from `SessionState` snapshots — no legacy `Game`/`Players` objects involved
+- action buttons (Roll Dice, End Turn, Buy Property, etc.) dispatch commands via `HttpSessionCommandPort`
+- `HttpClientSessionUpdates` consumes SSE from `/sessions/{id}/events` and updates `DesktopClientSessionModel`
+- the Processing frame loop calls `RemoteSessionBoardView.draw()` each frame; `mousePressed()` forwards to `RemoteSessionBoardView.handleMousePressed()`
+
+This is already much closer to backend-safe behavior than the original project shape, but not fully backend-clean yet in local mode because:
 
 - the desktop client still owns the authoritative application service instance locally
 - the bridge still mutates legacy runtime objects in-process
@@ -334,9 +389,22 @@ flowchart TD
     SERVERSESSION --> SESSIONSERVER[SessionServer]
     SERVERSESSION --> PUBLISHER[SessionCommandPublisher]
     SERVERSESSION --> STARTSERVER[StartSessionServer]
+    SERVERSESSION --> REGISTRY[SessionRegistry]
+    SERVERSESSION --> EMBSRV[EmbeddedSessionServer]
     SESSIONSERVER --> HTTPSERVER
     PUBLISHER -.->|implements| CMDPORT
     PUBLISHER -.->|implements| CLIENTUPDATES
+
+    PRESENTREMOTE[presentation.remote]
+    PRESENTREMOTE --> BOARDVIEW[RemoteSessionBoardView]
+    PRESENTREMOTE --> MOUSEVIEW[MouseInteractiveView]
+    BOARDVIEW -.->|implements| MOUSEVIEW
+
+    CLIENTDESKTOP --> BINDINGFACTORY[DesktopClientHostBindingFactory]
+    BINDINGFACTORY --> LOCALFACTORY[EmbeddedLocalDesktopClientBindingFactory]
+    BINDINGFACTORY --> REMOTEFACTORY[HttpBackedDesktopClientBindingFactory]
+    REMOTEFACTORY --> EMBSRV
+    REMOTEFACTORY --> BOARDVIEW
 ```
 
 Useful mental model:
@@ -344,7 +412,7 @@ Useful mental model:
 - `bot`: bot scheduling and bot turn stepping
 - `session`: desktop session state/presentation coordination
 - `turn`: actual turn flow orchestration
-- `client.desktop`: Processing app-facing shell and runtime adapters around the embedded local host
+- `client.desktop`: Processing app-facing shell and runtime adapters; `selectBindingFactory()` picks `EmbeddedLocalDesktopClientBindingFactory` (default) or `HttpBackedDesktopClientBindingFactory` (remote mode) based on `-Dmonopoly.mode`
 - `client.session`: transport-neutral seam types — `SessionCommandPort` (send commands), `ClientSessionUpdates` (receive snapshots), `ClientSessionSnapshot` (snapshot payload)
 - `desktop.assembly`: object graph construction
 - `desktop.shell`: orchestration between host and extracted coordinators
@@ -352,8 +420,9 @@ Useful mental model:
 - `desktop.session`: session bridge and restored-session reattachment
 - `desktop.ui`: controls, layout, frame rendering, input binding, and the extracted desktop presentation host
 - `host.session.local`: `EmbeddedDesktopSessionHost` (single command entry point + snapshot publisher) and `HostedLocalSession` (combines all local host seams)
-- `server.transport`: `SessionCommandMapper` (JSON ↔ `SessionCommand`), `SessionHttpServer` (`POST /command`, `GET /snapshot`, `GET /health`); activated via `-Dmonopoly.http.port=<port>`
-- `server.session`: `SessionServer` (lifecycle wrapper around `SessionHttpServer`), `SessionCommandPublisher` (snapshot-publishing decorator over any `SessionCommandPort`), `StartSessionServer` (standalone server main — fully functional; starts a real game session over HTTP without Processing runtime)
+- `server.transport`: `SessionCommandMapper` (JSON ↔ `SessionCommand`), `SessionHttpServer` (multi-session endpoints: `POST /sessions`, `GET /sessions`, `POST /sessions/{id}/command`, `GET /sessions/{id}/snapshot`, `GET /sessions/{id}/events`, `GET /health`); auto-started in local mode
+- `server.session`: `SessionServer` (lifecycle wrapper), `SessionCommandPublisher` (snapshot-publishing decorator), `StartSessionServer` (standalone main), `SessionRegistry` (thread-safe multi-session registry), `EmbeddedSessionServer` (lifecycle wrapper used by remote mode binding factory)
+- `presentation.remote`: `RemoteSessionBoardView` (Processing renderer driven entirely from `SessionState` snapshots — no legacy Game/Players), `MouseInteractiveView` (optional interface for click handling)
 
 ## 5. Target Backend-Ready Architecture
 
@@ -438,7 +507,7 @@ Current practical status:
   - `LegacySessionPaymentPort` (new) implements `SessionPaymentPort` via `RentAndDebtOpeningHandler`; wired in `GameSessionBridgeFactory`
   - `SessionPaymentPort` moved to `client.session` (alongside `SessionCommandPort`)
   - `PropertyPurchaseCommandHandler.isAlreadyOwned()` now uses `SessionState.properties()` (pure domain) instead of legacy `PropertyFactory` FQCN
-- **Pure domain game simulation** (`PureDomainGameSimulationTest`): greedy-agent simulation drives complete 2- and 4-player games through all phases (roll, buy, auction, debt/mortgage/bankruptcy) without any Processing runtime; detects deadlocks via consecutive-rejection counting; 549 tests green
+- **Pure domain game simulation** (`PureDomainGameSimulationTest`): greedy-agent simulation drives complete 2- and 4-player games through all phases (roll, buy, auction, debt/mortgage/bankruptcy) without any Processing runtime; detects deadlocks via consecutive-rejection counting; 560 tests green
 - **`StartingOrderDeterminer`** extracted to `application.session`: shared utility for 2d6 dice-roll starting-order resolution with recursive tie-breaking; `PureDomainSessionFactory.determineStartOrder()` now delegates to it; `GameRuntimeAssemblyFactory` calls it after `setupDefaultGameState()` so the legacy desktop path now also applies the standard Finnish Monopoly starting-order rule
 - **Sidebar rendering from snapshot (first steps)**: `FrameHooks.authoritativeSessionState()` wired from `SessionCommandPort.currentState()`; `GameSidebarStateFactory` now reads turn phase from `SessionState.turn().phase()` when available (falls back to boolean heuristics); spot name and computer-player badge also derived from `PlayerSnapshot.boardIndex` and `SeatState.seatKind` respectively — the sidebar header now renders from the authoritative domain snapshot rather than legacy `Player` object fields
 - **Player objects removed from remaining hook interfaces**: `GamePresentationFactory.Hooks.currentTurnPlayer()` replaced with `boolean isCurrentPlayerComputerControlled()`; `GameSessionStateCoordinator.declareWinner(Player)` replaced with `declareWinner(String winnerPlayerId, String winnerName)` — winner name now resolved from `SessionState.seats.displayName()` at the hook boundary; `GameSessionState.winner` (Player field) removed — winner identity stored as `winnerPlayerId`/`winnerName` strings; restored game sessions now also restore `winnerName` from seats; `Game.declareWinner(Player)` removed as dead code
