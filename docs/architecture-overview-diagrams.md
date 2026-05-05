@@ -244,6 +244,7 @@ What is important here:
   the store's `get()` method
 - the main remaining monolith is the `Game` host itself, which now delegates more but still exposes many compatibility hooks for tests and the current desktop client
 - **HTTP-backed remote session mode** (`-Dmonopoly.mode=remote`): `HttpBackedDesktopClientBindingFactory` starts an `EmbeddedSessionServer` (pure-domain, no legacy runtime), creates a session via `SessionRegistry`, and wires `RemoteSessionBoardView` — a new Processing renderer that draws the board and sidebar entirely from `SessionState` snapshots received over SSE; commands flow back via `HttpSessionCommandPort`; the legacy `Game`/`Players`/`TurnEngine` graph is not instantiated at all in this mode; local mode unchanged with auto-started HTTP server always exposed on a free port
+- **`PureDomainBotDriver`** (server.session): event-driven server-side bot scheduler for pure-domain sessions; registered as `ClientSessionListener` on `SessionCommandPublisher`; when a snapshot arrives and the active actor is a BOT seat, schedules a greedy command after a 600 ms think delay via `ScheduledExecutorService`; same greedy strategy as `PureDomainGameSimulationTest` (roll → buy if affordable → decline → end turn; debt: pay/mortgage/bankruptcy; auction: bid minimum or pass); `SessionRegistry.create()` auto-starts the driver when any seat is `SeatKind.BOT`; `HttpBackedDesktopClientBindingFactory` marks the second player as BOT so "Botti" takes turns automatically in remote mode
 
 ## 3. Current Practical Runtime Shape
 
@@ -391,6 +392,9 @@ flowchart TD
     SERVERSESSION --> STARTSERVER[StartSessionServer]
     SERVERSESSION --> REGISTRY[SessionRegistry]
     SERVERSESSION --> EMBSRV[EmbeddedSessionServer]
+    SERVERSESSION --> BOTDRIVER[PureDomainBotDriver]
+    BOTDRIVER -.->|implements| CLIENTUPDATES
+    REGISTRY --> BOTDRIVER
     SESSIONSERVER --> HTTPSERVER
     PUBLISHER -.->|implements| CMDPORT
     PUBLISHER -.->|implements| CLIENTUPDATES
@@ -421,7 +425,7 @@ Useful mental model:
 - `desktop.ui`: controls, layout, frame rendering, input binding, and the extracted desktop presentation host
 - `host.session.local`: `EmbeddedDesktopSessionHost` (single command entry point + snapshot publisher) and `HostedLocalSession` (combines all local host seams)
 - `server.transport`: `SessionCommandMapper` (JSON ↔ `SessionCommand`), `SessionHttpServer` (multi-session endpoints: `POST /sessions`, `GET /sessions`, `POST /sessions/{id}/command`, `GET /sessions/{id}/snapshot`, `GET /sessions/{id}/events`, `GET /health`); auto-started in local mode
-- `server.session`: `SessionServer` (lifecycle wrapper), `SessionCommandPublisher` (snapshot-publishing decorator), `StartSessionServer` (standalone main), `SessionRegistry` (thread-safe multi-session registry), `EmbeddedSessionServer` (lifecycle wrapper used by remote mode binding factory)
+- `server.session`: `SessionServer` (lifecycle wrapper), `SessionCommandPublisher` (snapshot-publishing decorator), `StartSessionServer` (standalone main), `SessionRegistry` (thread-safe multi-session registry; auto-starts `PureDomainBotDriver` for BOT seats), `EmbeddedSessionServer` (lifecycle wrapper used by remote mode binding factory), `PureDomainBotDriver` (event-driven greedy bot — runs on the server side, drives BOT seats in pure-domain sessions without legacy Processing runtime)
 - `presentation.remote`: `RemoteSessionBoardView` (Processing renderer driven entirely from `SessionState` snapshots — no legacy Game/Players), `MouseInteractiveView` (optional interface for click handling)
 
 ## 5. Target Backend-Ready Architecture
