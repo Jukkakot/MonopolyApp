@@ -5,6 +5,7 @@ import fi.monopoly.client.session.ClientSessionFeedbackSink;
 import fi.monopoly.client.session.ClientSessionUpdates;
 import fi.monopoly.client.session.SessionCommandPort;
 import fi.monopoly.client.session.desktop.*;
+import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.host.session.local.DesktopHostedGame;
 import fi.monopoly.host.session.local.DesktopHostedGameTestAccess;
 import fi.monopoly.presentation.remote.RemoteSessionBoardView;
@@ -32,6 +33,7 @@ public final class HttpBackedDesktopClientBindingFactory implements DesktopClien
 
     private static final List<String> DEFAULT_PLAYER_NAMES = List.of("Jukka", "Botti");
     private static final List<String> DEFAULT_COLORS = List.of("#E63946", "#2A9D8F", "#E9C46A", "#F4A261");
+    private static final List<SeatKind> DEFAULT_SEAT_KINDS = List.of(SeatKind.HUMAN, SeatKind.BOT);
 
     @Override
     public DesktopClientHostBinding create(
@@ -39,7 +41,7 @@ public final class HttpBackedDesktopClientBindingFactory implements DesktopClien
             Runnable saveLocalSessionAction,
             Runnable loadLocalSessionAction) {
         EmbeddedSessionServer server = startServer();
-        String sessionId = server.create(DEFAULT_PLAYER_NAMES, DEFAULT_COLORS);
+        String sessionId = server.create(DEFAULT_PLAYER_NAMES, DEFAULT_COLORS, DEFAULT_SEAT_KINDS);
         String baseUrl = server.baseUrl();
 
         HttpSessionCommandPort commandPort = HttpSessionCommandPort.forSession(baseUrl, sessionId);

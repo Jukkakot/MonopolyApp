@@ -5,6 +5,7 @@ import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.ClientSessionListener;
 import fi.monopoly.client.session.ClientSessionUpdates;
 import fi.monopoly.client.session.SessionCommandPort;
+import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.server.transport.SessionHttpServer;
 import lombok.extern.slf4j.Slf4j;
@@ -47,11 +48,19 @@ public final class EmbeddedSessionServer {
     }
 
     /**
-     * Creates a new pure-domain session and returns its session ID.
+     * Creates a new all-human pure-domain session and returns its session ID.
      */
     public String create(List<String> playerNames, List<String> colors) {
-        String sessionId = registry.create(playerNames, colors);
-        log.info("Created session {} with players {}", sessionId.substring(0, 8), playerNames);
+        return create(playerNames, colors, List.of());
+    }
+
+    /**
+     * Creates a new pure-domain session with explicit seat kinds and returns its session ID.
+     * Bot seats will have a {@link PureDomainBotDriver} attached automatically.
+     */
+    public String create(List<String> playerNames, List<String> colors, List<SeatKind> seatKinds) {
+        String sessionId = registry.create(playerNames, colors, seatKinds);
+        log.info("Created session {} with players {} seatKinds={}", sessionId.substring(0, 8), playerNames, seatKinds);
         return sessionId;
     }
 

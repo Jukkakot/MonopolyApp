@@ -81,11 +81,25 @@ public final class PureDomainSessionFactory {
      * @param colors      ordered list of player colour hex strings (e.g. "#FF0000")
      */
     public static SessionState initialGameState(String sessionId, List<String> playerNames, List<String> colors) {
-        return initialGameState(sessionId, playerNames, colors, new Random());
+        return initialGameState(sessionId, playerNames, colors, List.of(), new Random());
+    }
+
+    /**
+     * Creates an initial game state with explicit seat kinds.
+     *
+     * @param seatKinds per-player seat kinds; if shorter than playerNames the remaining seats default to {@link SeatKind#HUMAN}
+     */
+    public static SessionState initialGameState(String sessionId, List<String> playerNames, List<String> colors, List<SeatKind> seatKinds) {
+        return initialGameState(sessionId, playerNames, colors, seatKinds, new Random());
     }
 
     /** Package-private variant used in tests to pass a seeded {@link Random}. */
     static SessionState initialGameState(String sessionId, List<String> playerNames, List<String> colors, Random rng) {
+        return initialGameState(sessionId, playerNames, colors, List.of(), rng);
+    }
+
+    /** Full variant with seat kinds and seeded RNG — used by tests and overloads above. */
+    static SessionState initialGameState(String sessionId, List<String> playerNames, List<String> colors, List<SeatKind> seatKinds, Random rng) {
         if (playerNames.isEmpty()) throw new IllegalArgumentException("At least one player is required");
 
         List<PropertyStateSnapshot> properties = SpotType.SPOT_TYPES.stream()
@@ -106,7 +120,9 @@ public final class PureDomainSessionFactory {
             String color = originalIndex < colors.size() ? colors.get(originalIndex) : "#AAAAAA";
             String playerId = "player-" + (originalIndex + 1);
             String seatId = "seat-" + seatIndex;
-            seats.add(new SeatState(seatId, seatIndex, playerId, SeatKind.HUMAN, ControlMode.MANUAL, name, "HUMAN", color));
+            SeatKind kind = originalIndex < seatKinds.size() ? seatKinds.get(originalIndex) : SeatKind.HUMAN;
+            String profile = kind == SeatKind.BOT ? "BOT" : "HUMAN";
+            seats.add(new SeatState(seatId, seatIndex, playerId, kind, ControlMode.MANUAL, name, profile, color));
             players.add(new PlayerSnapshot(playerId, seatId, name, 1500, 0, false, false, false, 0, 0, List.of()));
         }
 

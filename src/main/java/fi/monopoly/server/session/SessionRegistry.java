@@ -1,6 +1,7 @@
 package fi.monopoly.server.session;
 
 import fi.monopoly.application.session.SessionApplicationService;
+import fi.monopoly.domain.session.SeatKind;
 import fi.monopoly.domain.session.SessionState;
 
 import java.util.List;
@@ -13,23 +14,33 @@ import java.util.stream.Collectors;
  * Thread-safe registry of active game sessions for the multi-session server mode.
  *
  * <p>Sessions are created on demand via {@link #create} and identified by a random UUID.
- * The registry owns the {@link SessionCommandPublisher} lifecycle for each session.</p>
+ * The registry owns the {@link SessionCommandPublisher} lifecycle for each session.
+ * If any seat is {@link SeatKind#BOT}, a {@link PureDomainBotDriver} is also started.</p>
  */
 public final class SessionRegistry {
 
-    private record Entry(SessionCommandPublisher publisher, List<String> playerNames) {}
+    private record Entry(SessionCommandPublisher publisher, List<String> playerNames, PureDomainBotDriver botDriver) {}
 
     private final ConcurrentHashMap<String, Entry> sessions = new ConcurrentHashMap<>();
 
     /**
-     * Creates a new session with the given player names and colours, returns its session ID.
+     * Creates a new all-human session with the given player names and colours.
      */
     public String create(List<String> names, List<String> colors) {
+        return create(names, colors, List.of());
+    }
+
+    /**
+     * Creates a new session with explicit seat kinds. Seats not covered by {@code seatKinds}
+     * default to {@link SeatKind#HUMAN}. Bot seats get a {@link PureDomainBotDriver} attached.
+     */
+    public String create(List<String> names, List<String> colors, List<SeatKind> seatKinds) {
         String sessionId = UUID.randomUUID().toString();
-        SessionState initialState = PureDomainSessionFactory.initialGameState(sessionId, names, colors);
+        SessionState initialState = PureDomainSessionFactory.initialGameState(sessionId, names, colors, seatKinds);
         SessionApplicationService service = PureDomainSessionFactory.create(sessionId, initialState);
         SessionCommandPublisher publisher = new SessionCommandPublisher(service);
-        sessions.put(sessionId, new Entry(publisher, List.copyOf(names)));
+        PureDomainBotDriver botDriver = PureDomainBotDriver.createAndRegisterIfNeeded(publisher, initialState);
+        sessions.put(sessionId, new Entry(publisher, List.copyOf(names), botDriver));
         return sessionId;
     }
 
@@ -48,6 +59,9 @@ public final class SessionRegistry {
     }
 
     public void remove(String sessionId) {
-        sessions.remove(sessionId);
+        Entry entry = sessions.remove(sessionId);
+        if (entry != null && entry.botDriver() != null) {
+            entry.botDriver().stop();
+        }
     }
 }
