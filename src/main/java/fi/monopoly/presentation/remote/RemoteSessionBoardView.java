@@ -403,6 +403,11 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
 
         if (phase == TurnPhase.RESOLVING_DEBT && state.activeDebt() != null) {
             var debt = state.activeDebt();
+            app.fill(200, 100, 80);
+            app.textSize(9);
+            app.textAlign(PApplet.LEFT, PApplet.TOP);
+            app.text("💸 Velka €" + debt.amountRemaining() + " — käteinen €" + debt.currentCash(), sx + 6, y);
+            y += 14;
             if (debt.allowedActions().contains(DebtAction.PAY_DEBT_NOW)) {
                 y = addButton(sx, y, sw, bh, gap, "💸 Maksa velka",
                         new PayDebtCommand(sessionId, activeId, debt.debtId()),
