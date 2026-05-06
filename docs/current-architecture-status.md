@@ -486,11 +486,20 @@ More Player removal (session 13):
 - `GameBotTurnHooksAdapter.turnPlayerSupplier` field removed — no longer needed since `currentTurnPlayer()` hook is gone; the Player-fetching lambda in `GamePresentationFactory` that provided this supplier was also removed
 - `HostBotInteractionAdapter.currentGameView(Player)` / `currentPlayerView(Player)` → `currentGameView(String playerId)` / `currentPlayerView(String playerId)` — Player removed from view factory signatures throughout the chain; `GameDesktopHostFactory.Hooks`, `GameDesktopShellDependencies.ProjectionAccess`, `GamePresentationFactory.Hooks`, and `DesktopHostBotInteractionAdapter` all updated; `Game.java` adds `createGameViewById(String)` / `createPlayerViewById(String)` helpers with internal player stream lookup; `SessionBackedComputerTurnContext` calls with `"player-" + player.getId()`; `Player` import removed from `GameDesktopHostFactory` and `GameDesktopShellDependencies`
 
-Remaining `Player` dependencies in presentation/host layer (deferred):
-- `GameBotTurnDriver.Hooks.findPlayerById(String) → Player` — still returns Player; used for trade actor, auction actor, debtor and turn player lookups in bot turn logic; all internal callers use `isComputerControlled()` and `getComputerProfile()` from the result
-- `GameBotTurnDriver.Hooks.createTurnContext(Player)` / `handleComputerTradeTurn(Player)` — bot turn execution still passes Player for strategy dispatch and trade logic; `SessionBackedComputerTurnContext` keeps `Player player` field for logging + `initiateTrade()` trade chain
-- `HostBotInteractionAdapter.handleComputerTradeTurn(Player)` / `tryInitiateComputerTrade(Player)` — trade chain; `TradeController` does reference comparison `currentPlayerSupplier.get() != proposer`, uses `proposer.getComputerProfile()`, and calls `plan(proposer, players)` — cannot be removed without reworking `TradeController`
-- `TradeController` / `LegacyTradeGateway` — trade partner selection and AI trade logic deeply tied to legacy Player objects
+More Player removal (session 16):
+- `GameBotTurnDriver.Hooks.findPlayerById(String) → Player` removed entirely; replaced with two targeted hooks: `isComputerPlayer(String)` + `computerProfileFor(String)` — bot driver no longer needs a Player object at any step
+- `GameBotTurnDriver.Hooks.createTurnContext(Player)` → `createTurnContext(String playerId, ComputerPlayerProfile)` — `SessionBackedComputerTurnContext` now takes `playerId` string; the one remaining `player.getName()` log reference fixed to `playerId`
+- `GameBotTurnDriver.Hooks.handleComputerTradeTurn(Player)` → `handleComputerTradeTurn(String actorId, ComputerPlayerProfile)` — Player no longer passed across the bot driver boundary
+- `HostBotInteractionAdapter.handleComputerTradeTurn(Player)` / `tryInitiateComputerTrade(Player)` → both now take `String proposerId/actorId, ComputerPlayerProfile` — Player removed from the host/bot interaction adapter interface; `DesktopHostBotInteractionAdapter` updated accordingly
+- `TradeController.handleComputerTradeTurn` and `tryInitiateComputerTrade` now accept `String actorId, ComputerPlayerProfile` publicly; internal `findPlayerByDomainId(String)` helper added for the parts that still need a legacy Player (StrongTradePlanner, openTrade)
+- `TradeController.resolveTradeProfile(Player)` / `resolveStrongTradeConfig(Player)` → now take `ComputerPlayerProfile` directly — Player access removed from these private helpers
+- `BotSessionQueries` interface: `isComputerPlayer(String)` + `computerProfileFor(String)` methods; `GameSessionQueries` implements both via internal `findPlayerById` stream helper
+- `GameBotTurnDriverTest.HooksStub` updated to implement the new interface: `contextPlayer` (Player) → `contextPlayerId` (String); `findPlayerById` / `createTurnContext(Player)` / `handleComputerTradeTurn(Player)` replaced with new signatures
+
+Remaining `Player` dependencies in presentation/host layer (deferred — Low priority):
+- `TradeController.openTradeMenu()` and `openTrade(Player, Player)` — UI partner-selection popup and `StrongTradePlanner.plan(Player, List<Player>)` still use legacy Player objects internally; the public bot API is now clean
+- `GameSessionQueries.calculateBoardDangerScore(Player)` — board danger score for bot strategy; passed as `Function<Player, Integer>` into `SessionViewFacade`; requires Player to evaluate opponent rent exposure
+- `SessionViewFacade` + `LegacyTradeGateway` — view projection and trade gateway still depend on Player internally
 
 ## Relationship To Older Plan Docs
 
