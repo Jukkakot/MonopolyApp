@@ -496,10 +496,14 @@ More Player removal (session 16):
 - `BotSessionQueries` interface: `isComputerPlayer(String)` + `computerProfileFor(String)` methods; `GameSessionQueries` implements both via internal `findPlayerById` stream helper
 - `GameBotTurnDriverTest.HooksStub` updated to implement the new interface: `contextPlayer` (Player) → `contextPlayerId` (String); `findPlayerById` / `createTurnContext(Player)` / `handleComputerTradeTurn(Player)` replaced with new signatures
 
+More Player removal (session 17):
+- `GameSessionQueries.calculateBoardDangerScore(Player)` → `calculateBoardDangerScore(String playerId)` — Player lookup moved inside the method; `SessionViewFacade.boardDangerScoreSupplier` changed from `Function<Player,Integer>` to `Function<String,Integer>`; `GameDesktopPresentationCoordinator` lambda updated accordingly
+- `SessionViewFacade.createGameView(Player)` / `createPlayerView(Player)` — renamed to `buildGameView(Player)` / `buildPlayerView(Player)` (private); public API now `createGameView(String playerId)` / `createPlayerView(String playerId)` with internal player lookup via `findPlayerByDomainId()`; `GameDesktopPresentationHost` and `Game.java` updated to use String-based API, removing the player-lookup helpers that used to live in `Game.createGameViewById`/`createPlayerViewById`
+
 Remaining `Player` dependencies in presentation/host layer (deferred — Low priority):
 - `TradeController.openTradeMenu()` and `openTrade(Player, Player)` — UI partner-selection popup and `StrongTradePlanner.plan(Player, List<Player>)` still use legacy Player objects internally; the public bot API is now clean
-- `GameSessionQueries.calculateBoardDangerScore(Player)` — board danger score for bot strategy; passed as `Function<Player, Integer>` into `SessionViewFacade`; requires Player to evaluate opponent rent exposure
-- `SessionViewFacade` + `LegacyTradeGateway` — view projection and trade gateway still depend on Player internally
+- `SessionViewFacade` internal implementation — Player objects still used inside `buildGameView`, `buildPlayerView`, `createPropertyView`, `estimateRent`, `estimateOfferedPropertyRent`; these are now behind private methods not exposed outside the facade
+- `LegacyTradeGateway` — bridge between domain TradeOfferState and legacy TradeOffer; necessarily Player-tied as long as TradeOffer wraps Player objects
 
 ## Relationship To Older Plan Docs
 
