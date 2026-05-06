@@ -155,21 +155,31 @@ public final class PureDomainBotDriver implements ClientSessionListener {
         DebtStateModel debt = state.activeDebt();
         if (debt == null) return;
         String debtorId = debt.debtorPlayerId();
-        if (debt.currentCash() >= debt.amountRemaining()) {
+        List<DebtAction> allowed = debt.allowedActions();
+
+        if (allowed.contains(DebtAction.PAY_DEBT_NOW) && debt.currentCash() >= debt.amountRemaining()) {
             publisher.handle(new PayDebtCommand(sessionId, debtorId, debt.debtId()));
             return;
         }
-        if (debt.bankruptcyRisk()) {
-            publisher.handle(new DeclareBankruptcyCommand(sessionId, debtorId, debt.debtId()));
+        if (allowed.contains(DebtAction.SELL_BUILDING)) {
+            state.properties().stream()
+                    .filter(p -> debtorId.equals(p.ownerPlayerId()) && (p.houseCount() > 0 || p.hotelCount() > 0))
+                    .findFirst()
+                    .ifPresent(p -> publisher.handle(
+                            new SellBuildingForDebtCommand(sessionId, debtorId, debt.debtId(), p.propertyId(), 1)));
             return;
         }
-        state.properties().stream()
-                .filter(p -> debtorId.equals(p.ownerPlayerId()) && !p.mortgaged())
-                .findFirst()
-                .ifPresentOrElse(
-                        p -> publisher.handle(new MortgagePropertyForDebtCommand(sessionId, debtorId, debt.debtId(), p.propertyId())),
-                        () -> publisher.handle(new DeclareBankruptcyCommand(sessionId, debtorId, debt.debtId()))
-                );
+        if (allowed.contains(DebtAction.MORTGAGE_PROPERTY)) {
+            state.properties().stream()
+                    .filter(p -> debtorId.equals(p.ownerPlayerId()) && !p.mortgaged())
+                    .findFirst()
+                    .ifPresent(p -> publisher.handle(
+                            new MortgagePropertyForDebtCommand(sessionId, debtorId, debt.debtId(), p.propertyId())));
+            return;
+        }
+        if (allowed.contains(DebtAction.DECLARE_BANKRUPTCY)) {
+            publisher.handle(new DeclareBankruptcyCommand(sessionId, debtorId, debt.debtId()));
+        }
     }
 
     private void handleAuction(SessionState state) {
