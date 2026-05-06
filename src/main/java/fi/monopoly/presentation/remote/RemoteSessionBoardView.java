@@ -373,12 +373,34 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
 
         if (phase == TurnPhase.RESOLVING_DEBT && state.activeDebt() != null) {
             var debt = state.activeDebt();
-            y = addButton(sx, y, sw, bh, gap, "💸 Maksa velka",
-                    new PayDebtCommand(sessionId, activeId, debt.debtId()),
-                    new int[]{35, 100, 200});
-            y = addButton(sx, y, sw, bh, gap, "☠ Konkurssi",
-                    new DeclareBankruptcyCommand(sessionId, activeId, debt.debtId()),
-                    new int[]{160, 30, 30});
+            if (debt.allowedActions().contains(DebtAction.PAY_DEBT_NOW)) {
+                y = addButton(sx, y, sw, bh, gap, "💸 Maksa velka",
+                        new PayDebtCommand(sessionId, activeId, debt.debtId()),
+                        new int[]{35, 100, 200});
+            }
+            if (debt.allowedActions().contains(DebtAction.MORTGAGE_PROPERTY)) {
+                for (PropertyStateSnapshot prop : debtorUnmortgagedProperties(state, debt.debtorPlayerId())) {
+                    String label = "📜 Kiinnitä " + shortLabel(SpotType.valueOf(prop.propertyId()));
+                    y = addButton(sx, y, sw, bh, gap, label,
+                            new MortgagePropertyForDebtCommand(sessionId, activeId, debt.debtId(), prop.propertyId()),
+                            new int[]{100, 80, 20});
+                }
+            }
+            if (debt.allowedActions().contains(DebtAction.SELL_BUILDING)) {
+                for (PropertyStateSnapshot prop : debtorPropertiesWithBuildings(state, debt.debtorPlayerId())) {
+                    int buildingCount = prop.hotelCount() > 0 ? prop.hotelCount() : prop.houseCount();
+                    String type = prop.hotelCount() > 0 ? "hotelli" : "talo";
+                    String label = "🏠 Myy " + type + " (" + buildingCount + ") " + shortLabel(SpotType.valueOf(prop.propertyId()));
+                    y = addButton(sx, y, sw, bh, gap, label,
+                            new SellBuildingForDebtCommand(sessionId, activeId, debt.debtId(), prop.propertyId(), 1),
+                            new int[]{80, 100, 20});
+                }
+            }
+            if (debt.allowedActions().contains(DebtAction.DECLARE_BANKRUPTCY)) {
+                y = addButton(sx, y, sw, bh, gap, "☠ Konkurssi",
+                        new DeclareBankruptcyCommand(sessionId, activeId, debt.debtId()),
+                        new int[]{160, 30, 30});
+            }
         }
 
         if (phase == TurnPhase.GAME_OVER && state.winnerPlayerId() != null) {
@@ -562,6 +584,18 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
             return p.propertyId();
         }
         return "";
+    }
+
+    private static List<PropertyStateSnapshot> debtorUnmortgagedProperties(SessionState state, String debtorPlayerId) {
+        return state.properties().stream()
+                .filter(p -> debtorPlayerId.equals(p.ownerPlayerId()) && !p.mortgaged())
+                .toList();
+    }
+
+    private static List<PropertyStateSnapshot> debtorPropertiesWithBuildings(SessionState state, String debtorPlayerId) {
+        return state.properties().stream()
+                .filter(p -> debtorPlayerId.equals(p.ownerPlayerId()) && (p.houseCount() > 0 || p.hotelCount() > 0))
+                .toList();
     }
 
     // -------------------------------------------------------------------------
