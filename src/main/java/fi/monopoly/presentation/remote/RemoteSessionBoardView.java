@@ -373,6 +373,12 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
 
         if (phase == TurnPhase.WAITING_FOR_AUCTION && state.auctionState() != null) {
             var auction = state.auctionState();
+            app.fill(170, 150, 60);
+            app.textSize(9);
+            app.textAlign(PApplet.LEFT, PApplet.TOP);
+            String auctionProp = auction.propertyId() != null ? shortLabel(SpotType.valueOf(auction.propertyId())) : "?";
+            app.text("🏠 " + auctionProp + " — korkein tarjous: €" + auction.currentBid(), sx + 6, y);
+            y += 14;
             if (auction.status() == AuctionStatus.WON_PENDING_RESOLUTION) {
                 y = addButton(sx, y, sw, bh, gap, "🏆 Vahvista voitto",
                         new FinishAuctionResolutionCommand(sessionId, auction.auctionId()),
