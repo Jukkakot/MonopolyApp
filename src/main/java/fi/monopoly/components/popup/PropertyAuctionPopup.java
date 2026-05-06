@@ -1,20 +1,20 @@
 package fi.monopoly.components.popup;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
-import fi.monopoly.components.Player;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.utils.UiTokens;
+import javafx.scene.paint.Color;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
 import static fi.monopoly.text.UiTexts.text;
-import static processing.core.PConstants.CENTER;
-import static processing.core.PConstants.CORNER;
-import static processing.core.PConstants.TOP;
+import static processing.core.PConstants.*;
 
 public class PropertyAuctionPopup extends PropertyOfferPopup {
     private int currentBidAmount;
-    private Player currentLeader;
+    private String currentLeaderName;
+    private Color currentLeaderColor;
 
     protected PropertyAuctionPopup(MonopolyRuntime runtime) {
         super(runtime, "propertyAuction");
@@ -24,9 +24,15 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         setActionLabels(primaryLabel, secondaryLabel);
     }
 
-    public void setAuctionInfo(Player currentLeader, int currentBidAmount) {
-        this.currentLeader = currentLeader;
+    public void setAuctionInfo(String leaderName, Color leaderColor, int currentBidAmount) {
+        this.currentLeaderName = leaderName;
+        this.currentLeaderColor = leaderColor;
         this.currentBidAmount = currentBidAmount;
+    }
+
+    @Override
+    public String getPopupKind() {
+        return "propertyAuction";
     }
 
     @Override
@@ -83,13 +89,13 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         p.textFont(runtime.font10());
         p.text(text("property.auction.leaderLabel"), x + width / 2f, y + 6f);
 
-        if (currentLeader == null) {
+        if (currentLeaderName == null) {
             p.textFont(runtime.font20());
             p.text(text("property.auction.none"), x + width / 2f, y + 38f);
             return;
         }
 
-        PImage token = MonopolyApp.getImage("BigToken.png", currentLeader.getColor());
+        PImage token = DesktopImageCatalog.getImage("BigToken.png", currentLeaderColor);
         if (token != null) {
             float tokenSize = 28f;
             p.imageMode(CORNER);
@@ -97,7 +103,7 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
         }
         p.textFont(runtime.font10());
         p.textAlign(CENTER, TOP);
-        p.text(currentLeader.getName(), x + 6f, y + 56f, width - 12f, 24f);
+        p.text(currentLeaderName, x + 6f, y + 56f, width - 12f, 24f);
     }
 
     private void drawMoneyChip(PGraphics p, float x, float y, float width, float height, int amount) {
@@ -149,6 +155,7 @@ public class PropertyAuctionPopup extends PropertyOfferPopup {
     protected void hide() {
         super.hide();
         currentBidAmount = 0;
-        currentLeader = null;
+        currentLeaderName = null;
+        currentLeaderColor = null;
     }
 }

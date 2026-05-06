@@ -1,6 +1,6 @@
 package fi.monopoly.utils;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 
 /**
  * Centralized static UI design tokens shared across screens and components.
@@ -79,6 +79,18 @@ public final class UiTokens {
     private static final int TRADE_BACK_BUTTON_LEFT_INSET = 24;
     private static final int TRADE_BACK_BUTTON_TOP_INSET = 18;
 
+    // Remote board view
+    private static final int REMOTE_BOARD_CELL_SIZE = 64;
+    private static final int REMOTE_BOARD_LEFT_MARGIN = 16;
+    private static final int REMOTE_BOARD_SIDEBAR_GAP = 16;
+    private static final int REMOTE_BOARD_SIDEBAR_WIDTH = 320;
+    private static final int REMOTE_BOARD_COLOR_STRIP_HEIGHT = 10;
+    private static final int REMOTE_BOARD_TOKEN_RADIUS = 8;
+    private static final int REMOTE_BOARD_ACTION_BUTTON_HEIGHT = 40;
+    private static final int REMOTE_BOARD_ACTION_BUTTON_GAP = 8;
+    private static final int REMOTE_BOARD_PLAYER_CARD_HEIGHT = 56;
+    private static final int REMOTE_BOARD_PLAYER_CARD_GAP = 6;
+
     private UiTokens() {
     }
 
@@ -154,4 +166,15 @@ public final class UiTokens {
     public static int tradeBackButtonHeight() { return TRADE_BACK_BUTTON_HEIGHT; }
     public static int tradeBackButtonLeftInset() { return TRADE_BACK_BUTTON_LEFT_INSET; }
     public static int tradeBackButtonTopInset() { return TRADE_BACK_BUTTON_TOP_INSET; }
+
+    public static int remoteBoardCellSize() { return REMOTE_BOARD_CELL_SIZE; }
+    public static int remoteBoardLeftMargin() { return REMOTE_BOARD_LEFT_MARGIN; }
+    public static int remoteBoardSidebarGap() { return REMOTE_BOARD_SIDEBAR_GAP; }
+    public static int remoteBoardSidebarWidth() { return REMOTE_BOARD_SIDEBAR_WIDTH; }
+    public static int remoteBoardColorStripHeight() { return REMOTE_BOARD_COLOR_STRIP_HEIGHT; }
+    public static int remoteBoardTokenRadius() { return REMOTE_BOARD_TOKEN_RADIUS; }
+    public static int remoteBoardActionButtonHeight() { return REMOTE_BOARD_ACTION_BUTTON_HEIGHT; }
+    public static int remoteBoardActionButtonGap() { return REMOTE_BOARD_ACTION_BUTTON_GAP; }
+    public static int remoteBoardPlayerCardHeight() { return REMOTE_BOARD_PLAYER_CARD_HEIGHT; }
+    public static int remoteBoardPlayerCardGap() { return REMOTE_BOARD_PLAYER_CARD_GAP; }
 }

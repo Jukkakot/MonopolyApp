@@ -12,8 +12,8 @@ public class Animations {
         List<Animation> sameAnim = animationList.stream().filter(a -> a.getDrawable().equals(animation.getDrawable())).toList();
         if (!sameAnim.isEmpty()) {
             Animation anim = sameAnim.get(0);
-            anim.finishAnimation();
             animationList.remove(anim);
+            anim.finishAnimation();
         }
         animationList.add(animation);
 
@@ -34,8 +34,8 @@ public class Animations {
         // and those must remain queued instead of being wiped by a blanket clear().
         List<Animation> pendingAtStart = new ArrayList<>(animationList);
         for (Animation animation : pendingAtStart) {
-            animation.finishAnimation();
             animationList.remove(animation);
+            animation.finishAnimation();
         }
     }
 

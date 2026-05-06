@@ -1,4 +1,4 @@
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyApp;
 import fi.monopoly.logging.LogStartupCleanup;
 import processing.core.PApplet;
 

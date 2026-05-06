@@ -2,15 +2,13 @@ package fi.monopoly.components.computer;
 
 import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.StreetType;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Comparator;
 
+@RequiredArgsConstructor
 final class StrongUnmortgageEvaluator {
     private final StrongBotConfig config;
-
-    StrongUnmortgageEvaluator(StrongBotConfig config) {
-        this.config = config;
-    }
 
     UnmortgagePlan evaluate(GameView view, PlayerView self) {
         PropertyView target = self.ownedProperties().stream()

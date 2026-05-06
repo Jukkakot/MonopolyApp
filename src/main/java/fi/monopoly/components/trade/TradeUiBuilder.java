@@ -7,6 +7,7 @@ import fi.monopoly.components.popup.TradePopupView;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.properties.StreetProperty;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,12 +17,10 @@ import java.util.function.Function;
 
 import static fi.monopoly.text.UiTexts.text;
 
+@RequiredArgsConstructor
 public final class TradeUiBuilder {
     private final TradeOfferEvaluator tradeOfferEvaluator;
 
-    public TradeUiBuilder(TradeOfferEvaluator tradeOfferEvaluator) {
-        this.tradeOfferEvaluator = tradeOfferEvaluator;
-    }
 
     public TradePopupView buildPartnerSelectionView(
             Player proposer,

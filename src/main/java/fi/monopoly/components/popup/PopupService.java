@@ -1,10 +1,12 @@
 package fi.monopoly.components.popup;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.popup.components.ButtonProps;
 import fi.monopoly.components.properties.Property;
+import javafx.scene.paint.Color;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -13,6 +15,7 @@ import java.util.function.Supplier;
 import static fi.monopoly.text.UiTexts.text;
 
 @Slf4j
+@RequiredArgsConstructor
 public class PopupService {
     private static final int MAX_HISTORY_ENTRIES = 12;
     private final MonopolyRuntime runtime;
@@ -20,10 +23,6 @@ public class PopupService {
     private final Queue<PopupRequest> pendingRequests = new ArrayDeque<>();
     private final ArrayDeque<String> popupHistory = new ArrayDeque<>();
     private Popup activePopup;
-
-    public PopupService(MonopolyRuntime runtime) {
-        this.runtime = runtime;
-    }
 
     public boolean isAnyVisible() {
         return activePopup != null;
@@ -74,7 +73,8 @@ public class PopupService {
     public void showPropertyAuction(
             Property property,
             String title,
-            Player currentLeader,
+            String leaderName,
+            Color leaderColor,
             int currentBidAmount,
             String primaryLabel,
             String secondaryLabel,
@@ -89,7 +89,7 @@ public class PopupService {
             PropertyAuctionPopup propertyAuctionPopup = getInstance(PropertyAuctionPopup.class);
             propertyAuctionPopup.setPopupText(adaptPopupText(title));
             propertyAuctionPopup.setOfferedProperty(property);
-            propertyAuctionPopup.setAuctionInfo(currentLeader, currentBidAmount);
+            propertyAuctionPopup.setAuctionInfo(leaderName, leaderColor, currentBidAmount);
             propertyAuctionPopup.setOnAcceptAction(onAccept);
             propertyAuctionPopup.setOnDeclineAction(onDecline);
             propertyAuctionPopup.setButtonLabels(primaryLabel, secondaryLabel);
@@ -186,6 +186,17 @@ public class PopupService {
 
     public boolean triggerSecondaryComputerAction() {
         return activePopup != null && activePopup.triggerSecondaryAction(PopupActionTrigger.COMPUTER);
+    }
+
+    public boolean dismissActivePopup(String popupKind) {
+        if (activePopup == null || (popupKind != null && !popupKind.equals(activePopup.getPopupKind()))) {
+            return false;
+        }
+        Popup popupToHide = activePopup;
+        activePopup = null;
+        popupToHide.hide();
+        showNextPending();
+        return true;
     }
 
     public Property activeOfferedProperty() {

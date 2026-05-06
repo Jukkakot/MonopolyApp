@@ -4,9 +4,9 @@ import fi.monopoly.components.CallbackAction;
 import fi.monopoly.components.Drawable;
 import fi.monopoly.utils.Coordinates;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
-@Slf4j
+@RequiredArgsConstructor
 public class Animation {
     public static final float REFERENCE_FRAME_SECONDS = 1f / 60f;
     @Getter
@@ -16,14 +16,13 @@ public class Animation {
     // Larger value moves farther per reference frame and makes animations faster; smaller value slows them down.
     private final static float ANIMATION_SPEED = 0.3f;
     private final CallbackAction onAnimationEnd;
-
-    public Animation(Drawable drawable, AnimationPath path, CallbackAction onAnimationEnd) {
-        this.drawable = drawable;
-        this.path = path;
-        this.onAnimationEnd = onAnimationEnd;
-    }
+    private boolean finished;
 
     public void finishAnimation() {
+        if (finished) {
+            return;
+        }
+        finished = true;
         if (!path.isEmpty()) {
             drawable.setCoords(path.getLast());
         }
@@ -37,6 +36,9 @@ public class Animation {
     }
 
     public boolean updateAnimation(float deltaSeconds) {
+        if (finished) {
+            return false;
+        }
         if (path.isEmpty()) {
             finishAnimation();
             return false;
@@ -83,9 +85,9 @@ public class Animation {
     static Coordinates getNextAnimationCoords(Coordinates currCoords, Coordinates goalCoords, float deltaSeconds) {
         float dx = goalCoords.x() - currCoords.x();
         float dy = goalCoords.y() - currCoords.y();
-        if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
-//            log.warn("No movement?");
-        }
+//        if (Math.abs(dx) <= MIN_ANIM_DISTANCE && Math.abs(dy) <= MIN_ANIM_DISTANCE) {
+////            log.warn("No movement?");
+//        }
         float speedFactor = Math.max(0f, deltaSeconds / REFERENCE_FRAME_SECONDS);
         return currCoords.move(dx * ANIMATION_SPEED * speedFactor, dy * ANIMATION_SPEED * speedFactor);
     }

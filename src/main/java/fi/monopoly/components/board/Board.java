@@ -1,7 +1,8 @@
 package fi.monopoly.components.board;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopImageCatalog;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.spots.Spot;
 import fi.monopoly.components.spots.SpotFactory;
@@ -137,7 +138,7 @@ public class Board {
             backgroundLayer.imageMode(p.CENTER);
             float imgSize = Spot.SPOT_W * 9;
             float middleRadius = Spot.SPOT_W * 6;
-            backgroundLayer.image(MonopolyApp.getImage("Background.png"), middleRadius, middleRadius, imgSize, imgSize);
+            backgroundLayer.image(DesktopImageCatalog.getImage("Background.png"), middleRadius, middleRadius, imgSize, imgSize);
             backgroundLayer.endDraw();
         }
         p.imageMode(p.CORNER);

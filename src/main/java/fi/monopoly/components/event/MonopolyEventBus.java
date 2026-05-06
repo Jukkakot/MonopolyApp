@@ -31,11 +31,25 @@ public class MonopolyEventBus {
         removeListeners.add(listener);
     }
 
+    public int eventListenerCount() {
+        return eventListeners.size() + addListeners.size() - removeListeners.size();
+    }
+
     public void sendConsumableEvent(Event event) {
-        eventListeners.stream().anyMatch(listener -> listener.onEvent(event));
+        flushPendingChanges();
+        for (MonopolyEventListener listener : List.copyOf(eventListeners)) {
+            if (listener.onEvent(event)) {
+                break;
+            }
+        }
+        flushPendingChanges();
     }
 
     public void sendEventToAll(Event event) {
-        eventListeners.forEach(eventListener -> eventListener.onEvent(event));
+        flushPendingChanges();
+        for (MonopolyEventListener eventListener : List.copyOf(eventListeners)) {
+            eventListener.onEvent(event);
+        }
+        flushPendingChanges();
     }
 }

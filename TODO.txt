@@ -1,8 +1,6 @@
 BACKLOG
 
 RULES AND GAME START
-[High] Add starting order by dice roll
-[Low] Remove random starting deeds from normal game setup
 
 TRADING
 
@@ -14,3 +12,8 @@ PLAYER SETUP
 [Medium] Add player setup screen for names, player count, and colors
 
 ECONOMY AND PACING
+
+BACKEND EXTRACTION (separation-program)
+[Low] Remove Player from trade subsystem internals — openTradeMenu and TradeUiBuilder
+      partner-selection UI, StrongTradePlanner.plan(), LegacyTradeGateway, TradeViewAdapter
+      all still use legacy Player objects; public bot API is already clean

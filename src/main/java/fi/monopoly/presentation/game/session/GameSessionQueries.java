@@ -1,0 +1,104 @@
+package fi.monopoly.presentation.game.session;
+
+import fi.monopoly.components.Player;
+import fi.monopoly.components.Players;
+import fi.monopoly.components.board.Board;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.components.properties.Property;
+import fi.monopoly.components.spots.PropertySpot;
+import fi.monopoly.components.spots.Spot;
+import fi.monopoly.domain.session.SessionState;
+import fi.monopoly.domain.session.TradeStatus;
+import fi.monopoly.types.PlaceType;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+public final class GameSessionQueries implements fi.monopoly.host.bot.BotSessionQueries {
+    private final Players players;
+    private final Board board;
+
+    private Player findPlayerById(String playerId) {
+        if (playerId == null) return null;
+        for (Player player : players.getPlayers()) {
+            if (playerId.equals("player-" + player.getId())) return player;
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isComputerPlayer(String playerId) {
+        Player p = findPlayerById(playerId);
+        return p != null && p.isComputerControlled();
+    }
+
+    @Override
+    public ComputerPlayerProfile computerProfileFor(String playerId) {
+        Player p = findPlayerById(playerId);
+        return p != null ? p.getComputerProfile() : ComputerPlayerProfile.HUMAN;
+    }
+
+    public String resolveTradeActorId(SessionState sessionState) {
+        if (sessionState.tradeState() == null) {
+            return null;
+        }
+        if (sessionState.tradeState().status() == TradeStatus.EDITING) {
+            return sessionState.tradeState().editingPlayerId();
+        }
+        return sessionState.tradeState().decisionRequiredFromPlayerId();
+    }
+
+    public int countUnownedProperties() {
+        int unownedProperties = 0;
+        for (Spot spot : board.getSpots()) {
+            if (spot instanceof PropertySpot propertySpot && !propertySpot.getProperty().hasOwner()) {
+                unownedProperties++;
+            }
+        }
+        return unownedProperties;
+    }
+
+    public int calculateBoardDangerScore(String playerId) {
+        Player player = findPlayerById(playerId);
+        int boardDangerScore = 0;
+        for (Spot spot : board.getSpots()) {
+            if (!(spot instanceof PropertySpot propertySpot)) {
+                continue;
+            }
+            Property property = propertySpot.getProperty();
+            if (!property.hasOwner() || !property.isNotOwner(player)) {
+                continue;
+            }
+            boardDangerScore += calculateDangerRent(property);
+        }
+        return boardDangerScore;
+    }
+
+    private int calculateDangerRent(Property property) {
+        Player owner = property.getOwnerPlayer();
+        if (owner == null) {
+            return 0;
+        }
+        return switch (property.getSpotType().streetType.placeType) {
+            case UTILITY -> owner.countOwnedProperties(property.getSpotType().streetType) >= 2 ? 70 : 28;
+            case RAILROAD, STREET -> estimateRent(property, owner);
+            default -> 0;
+        };
+    }
+
+    private int estimateRent(Property property, Player owner) {
+        if (property.getSpotType().streetType.placeType == PlaceType.UTILITY) {
+            return switch (owner.countOwnedProperties(property.getSpotType().streetType)) {
+                case 2 -> 70;
+                default -> 28;
+            };
+        }
+        Player nonOwner = null;
+        for (Player candidate : players.getPlayers()) {
+            if (candidate != owner) {
+                nonOwner = candidate;
+                break;
+            }
+        }
+        return nonOwner == null ? 0 : property.getRent(nonOwner);
+    }
+}

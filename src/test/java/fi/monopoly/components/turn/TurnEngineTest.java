@@ -1,11 +1,12 @@
 package fi.monopoly.components.turn;
 
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.board.Board;
 import fi.monopoly.components.board.Path;
 import fi.monopoly.components.dices.DiceValue;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.types.DiceState;
 import fi.monopoly.types.PathMode;
 import fi.monopoly.types.SpotType;
@@ -57,8 +58,7 @@ class TurnEngineTest {
 
     @Test
     void createFollowUpPlanCreatesMovementPlanWhenTurnResultExists() {
-        new MonopolyApp();
-        MonopolyRuntime runtime = MonopolyRuntime.get();
+        MonopolyRuntime runtime = TestDesktopRuntimeFactory.create().runtime();
         Board board = new Board(runtime);
         Player player = new Player(runtime, "Player", Color.BLACK, board.getSpots().get(0));
         TurnResult turnResult = TurnResult.builder()
@@ -76,8 +76,7 @@ class TurnEngineTest {
 
     @Test
     void createMovementPlanUsesFlyPathWhenDiceStateSendsPlayerToJail() {
-        new MonopolyApp();
-        MonopolyRuntime runtime = MonopolyRuntime.get();
+        MonopolyRuntime runtime = TestDesktopRuntimeFactory.create().runtime();
         Board board = new Board(runtime);
         Player player = new Player(runtime, "Player", Color.BLACK, board.getSpots().get(0));
 
@@ -94,8 +93,7 @@ class TurnEngineTest {
 
     @Test
     void createMovementPlanUsesNormalPathForRegularRoll() {
-        new MonopolyApp();
-        MonopolyRuntime runtime = MonopolyRuntime.get();
+        MonopolyRuntime runtime = TestDesktopRuntimeFactory.create().runtime();
         Board board = new Board(runtime);
         Player player = new Player(runtime, "Player", Color.BLACK, board.getSpots().get(0));
 

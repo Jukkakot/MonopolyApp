@@ -1,12 +1,12 @@
 package fi.monopoly.components.popup;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.MonopolyButton;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.utils.UiTokens;
 import lombok.Setter;
 
-import static fi.monopoly.MonopolyApp.SPACE;
+import static fi.monopoly.client.desktop.MonopolyApp.SPACE;
 import static fi.monopoly.text.UiTexts.text;
 import static fi.monopoly.utils.UiTokens.popupButtonGapX;
 import static fi.monopoly.utils.UiTokens.popupButtonGapY;

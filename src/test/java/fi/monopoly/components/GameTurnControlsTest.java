@@ -1,20 +1,28 @@
 package fi.monopoly.components;
 
-import controlP5.ControlP5;
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopClientSettings;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.components.board.Board;
 import fi.monopoly.components.dices.Dice;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.spots.Spot;
+import fi.monopoly.presentation.game.session.GameSessionState;
+import fi.monopoly.domain.decision.DecisionAction;
+import fi.monopoly.domain.decision.DecisionType;
+import fi.monopoly.domain.decision.PendingDecision;
+import fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload;
+import fi.monopoly.domain.session.*;
+import fi.monopoly.domain.turn.TurnPhase;
+import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.support.TestGameSessions;
 import fi.monopoly.utils.LayoutMetrics;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 import processing.event.KeyEvent;
 
 import java.lang.reflect.Field;
@@ -31,19 +39,7 @@ class GameTurnControlsTest {
     }
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
-        MonopolyApp app = new MonopolyApp();
-        app.width = width;
-        app.height = height;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create(width, height).runtime();
     }
 
     private static MonopolyButton getEndRoundButton(Game game) throws ReflectiveOperationException {
@@ -58,8 +54,24 @@ class GameTurnControlsTest {
         return getButton(game, "pauseButton");
     }
 
+    private static MonopolyButton getRetryDebtButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "retryDebtButton");
+    }
+
+    private static MonopolyButton getDeclareBankruptcyButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "declareBankruptcyButton");
+    }
+
     private static MonopolyButton getTradeButton(Game game) throws ReflectiveOperationException {
         return getButton(game, "tradeButton");
+    }
+
+    private static MonopolyButton getSaveButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "saveButton");
+    }
+
+    private static MonopolyButton getLoadButton(Game game) throws ReflectiveOperationException {
+        return getButton(game, "loadButton");
     }
 
     private static MonopolyButton getBotSpeedButton(Game game) throws ReflectiveOperationException {
@@ -79,19 +91,44 @@ class GameTurnControlsTest {
     }
 
     private static MonopolyButton getButton(Game game, String fieldName) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        return (MonopolyButton) field.get(game);
+        return switch (fieldName) {
+            case "endRoundButton" -> game.testFacade().endRoundButton();
+            case "languageButton" -> game.testFacade().languageButton();
+            case "pauseButton" -> game.testFacade().pauseButton();
+            case "retryDebtButton" -> game.testFacade().retryDebtButton();
+            case "declareBankruptcyButton" -> game.testFacade().declareBankruptcyButton();
+            case "tradeButton" -> game.testFacade().tradeButton();
+            case "saveButton" -> game.testFacade().saveButton();
+            case "loadButton" -> game.testFacade().loadButton();
+            case "botSpeedButton" -> game.testFacade().botSpeedButton();
+            case "debugGodModeButton" -> game.testFacade().debugGodModeButton();
+            default -> throw new IllegalArgumentException("Unknown game button field: " + fieldName);
+        };
     }
 
     private static float invokeFloatMethod(Game game, String methodName) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod(methodName);
-        method.setAccessible(true);
-        return (float) method.invoke(game);
+        return switch (methodName) {
+            case "getSidebarHistoryHeight" -> game.testFacade().sidebarHistoryHeight();
+            case "getSidebarHistoryPanelY" -> game.testFacade().sidebarHistoryPanelY();
+            case "getSidebarContentTop" -> game.testFacade().sidebarContentTop();
+            default -> throw new IllegalArgumentException("Unknown float method: " + methodName);
+        };
     }
 
     private static MonopolyButton getDebugGodModeButton(Game game) throws ReflectiveOperationException {
         return getButton(game, "debugGodModeButton");
+    }
+
+    private static GameSessionState getSessionState(Game game) throws ReflectiveOperationException {
+        return game.testFacade().sessionState();
+    }
+
+    private static fi.monopoly.presentation.game.desktop.runtime.DebugController getDebugController(Game game) throws ReflectiveOperationException {
+        return game.testFacade().debugController();
+    }
+
+    private static void openGodModeMenu(Game game) throws ReflectiveOperationException {
+        getDebugController(game).openGodModeMenu();
     }
 
     @SuppressWarnings("unchecked")
@@ -108,55 +145,73 @@ class GameTurnControlsTest {
     }
 
     private static void invokePrimaryControlInvariant(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("enforcePrimaryTurnControlInvariant");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().enforcePrimaryTurnControlInvariant();
     }
 
     private static void updateSidebarControlPositions(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("updateSidebarControlPositions");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().updateSidebarControlPositions();
     }
 
     private static void invokeShowRollDiceControl(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("showRollDiceControl");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().showRollDiceControl();
     }
 
     private static void invokeShowEndTurnControl(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("showEndTurnControl");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().showEndTurnControl();
     }
 
     private static void updateDebugButtons(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("updateDebugButtons");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().updateDebugButtons();
+    }
+
+    private static void refreshButtonInteractivityState(Game game) throws ReflectiveOperationException {
+        game.testFacade().refreshButtonInteractivityState();
     }
 
     private static void dispatchKey(MonopolyRuntime runtime, char key) {
         runtime.eventBus().sendConsumableEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
     }
 
+    private static Players players(Game game) {
+        return game.testFacade().players();
+    }
+
+    private static Dices dices(Game game) {
+        return game.testFacade().dices();
+    }
+
+    private static fi.monopoly.components.animation.Animations animations(Game game) {
+        return game.testFacade().animations();
+    }
+
+    private static Board board(Game game) {
+        return game.testFacade().board();
+    }
+
+    private static SessionState projectedSessionState(Game game) {
+        return game.testFacade().projectedSessionState();
+    }
+
     private static void configureSingleHumanTurn(Game game, MonopolyRuntime runtime) throws ReflectiveOperationException {
-        Spot spot = game.getBoard().getSpots().get(0);
+        Spot spot = board(game).getSpots().get(0);
+        Players previousPlayers = players(game);
+        if (previousPlayers != null) {
+            previousPlayers.dispose();
+        }
         Players players = new Players(runtime);
         players.addPlayer(new Player(runtime, "Human", Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.HUMAN));
         Field playersField = Game.class.getDeclaredField("players");
         playersField.setAccessible(true);
         playersField.set(game, players);
-        TestGameSessions.install(runtime, players, game.dices(), game.animations());
+        TestGameSessions.install(runtime, players, dices(game), animations(game));
         invokeShowRollDiceControl(game);
         runtime.eventBus().flushPendingChanges();
     }
 
     @AfterEach
     void tearDown() {
-        MonopolyApp.DEBUG_MODE = false;
-        MonopolyApp.SKIP_ANNIMATIONS = false;
+        DesktopClientSettings.setDebugMode(false);
+        DesktopClientSettings.setSkipAnimations(false);
         fi.monopoly.text.UiTexts.setLocale(Locale.ENGLISH);
     }
 
@@ -168,13 +223,13 @@ class GameTurnControlsTest {
         runtime.eventBus().flushPendingChanges();
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
-        game.dices().show();
+        dices(game).show();
         endRoundButton.show();
 
         invokePrimaryControlInvariant(game);
 
         assertTrue(endRoundButton.isVisible());
-        assertFalse(game.dices().isVisible());
+        assertFalse(dices(game).isVisible());
     }
 
     @Test
@@ -204,14 +259,39 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void godModeControllerMenuCanSwitchCurrentPlayerBetweenHumanSmokeTestAndStrong() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Player turnPlayer = players(game).getTurn();
+        assertNotNull(turnPlayer);
+        assertEquals(ComputerPlayerProfile.STRONG, turnPlayer.getComputerProfile());
+
+        openGodModeMenu(game);
+        assertTrue(runtime.popupService().triggerPrimaryComputerAction());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Strong"));
+        assertTrue(runtime.popupService().triggerPrimaryComputerAction());
+        assertEquals(ComputerPlayerProfile.HUMAN, turnPlayer.getComputerProfile());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Human"));
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+
+        openGodModeMenu(game);
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        dispatchKey(runtime, '2');
+        runtime.eventBus().flushPendingChanges();
+        assertEquals(ComputerPlayerProfile.SMOKE_TEST, turnPlayer.getComputerProfile());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Smoke"));
+    }
+
+    @Test
     void gameReadsSidebarMetricsFromCurrentWindowSize() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(1200, 800);
         Game game = new Game(runtime);
 
-        var method = Game.class.getDeclaredMethod("getLayoutMetrics");
-        method.setAccessible(true);
-        LayoutMetrics metrics = (LayoutMetrics) method.invoke(game);
+        LayoutMetrics metrics = game.testFacade().layoutMetrics();
 
         assertEquals(1200, metrics.windowWidth(), 0.0001f);
         assertEquals(800, metrics.windowHeight(), 0.0001f);
@@ -224,17 +304,9 @@ class GameTurnControlsTest {
         MonopolyRuntime runtime = initHeadlessRuntime(1700, 560);
         Game game = new Game(runtime);
 
-        var historyHeightMethod = Game.class.getDeclaredMethod("getSidebarHistoryHeight");
-        historyHeightMethod.setAccessible(true);
-        float historyHeight = (float) historyHeightMethod.invoke(game);
-
-        var historyYMethod = Game.class.getDeclaredMethod("getSidebarHistoryPanelY");
-        historyYMethod.setAccessible(true);
-        float historyY = (float) historyYMethod.invoke(game);
-
-        var contentTopMethod = Game.class.getDeclaredMethod("getSidebarContentTop");
-        contentTopMethod.setAccessible(true);
-        float contentTop = (float) contentTopMethod.invoke(game);
+        float historyHeight = game.testFacade().sidebarHistoryHeight();
+        float historyY = game.testFacade().sidebarHistoryPanelY();
+        float contentTop = game.testFacade().sidebarContentTop();
 
         assertTrue(historyHeight <= 192f);
         assertTrue(historyHeight >= 112f);
@@ -255,26 +327,45 @@ class GameTurnControlsTest {
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton tradeButton = getTradeButton(game);
+        MonopolyButton saveButton = getSaveButton(game);
+        MonopolyButton loadButton = getLoadButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
+        Pair<Dice, Dice> dicePair = getDicePair(dices(game));
         float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
         float historyHeight = invokeFloatMethod(game, "getSidebarHistoryHeight");
+        float primaryControlRowY = historyY + historyHeight + 12f;
 
         assertTrue(endRoundButton.getPosition()[0] >= 16f);
-        assertEquals(pauseButton.getPosition()[1], tradeButton.getPosition()[1], 0.0001f);
         assertTrue(pauseButton.getPosition()[0] >= 0f);
         assertTrue(tradeButton.getPosition()[0] < pauseButton.getPosition()[0]);
-        assertEquals(historyY + historyHeight + 12, languageButton.getPosition()[1], 0.0001f);
+        assertTrue(pauseButton.getPosition()[0] < saveButton.getPosition()[0]);
+        assertTrue(saveButton.getPosition()[0] < loadButton.getPosition()[0]);
         assertTrue(languageButton.getPosition()[1] + languageButton.getHeight() <= runtime.app().height);
-        assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
-        assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
-        assertTrue(dicePair.getKey().getCoords().y() > 206f);
+        boolean usesSidebarBottomRows = Math.abs(pauseButton.getPosition()[1] - primaryControlRowY) < 0.0001f;
+        if (usesSidebarBottomRows) {
+            assertEquals(primaryControlRowY, pauseButton.getPosition()[1], 0.0001f);
+            assertEquals(primaryControlRowY, tradeButton.getPosition()[1], 0.0001f);
+            assertEquals(primaryControlRowY, saveButton.getPosition()[1], 0.0001f);
+            assertEquals(primaryControlRowY, loadButton.getPosition()[1], 0.0001f);
+            assertEquals(primaryControlRowY + languageButton.getHeight() + 8f, languageButton.getPosition()[1], 0.0001f);
+            assertTrue(dicePair.getKey().getCoords().x() >= metrics.sidebarX());
+            assertTrue(dicePair.getValue().getCoords().x() <= metrics.sidebarRight() - 16);
+            assertTrue(dicePair.getKey().getCoords().y() > 206f);
+        } else {
+            assertEquals(156f, pauseButton.getPosition()[1], 0.0001f);
+            assertEquals(156f, tradeButton.getPosition()[1], 0.0001f);
+            assertEquals(156f, saveButton.getPosition()[1], 0.0001f);
+            assertEquals(156f, loadButton.getPosition()[1], 0.0001f);
+            assertEquals(200f, languageButton.getPosition()[1], 0.0001f);
+            assertTrue(dicePair.getKey().getCoords().x() <= runtime.app().width);
+            assertTrue(dicePair.getValue().getCoords().x() <= runtime.app().width);
+        }
     }
 
     @Test
     void shortDebugSidebarKeepsControlsAboveHistoryPanel() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.DEBUG_MODE = true;
+        DesktopClientSettings.setDebugMode(true);
         MonopolyRuntime runtime = initHeadlessRuntime(1700, 560);
         Game game = new Game(runtime);
 
@@ -282,7 +373,7 @@ class GameTurnControlsTest {
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton debugGodModeButton = getDebugGodModeButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
+        Pair<Dice, Dice> dicePair = getDicePair(dices(game));
         float historyY = invokeFloatMethod(game, "getSidebarHistoryPanelY");
 
         float lowestDiceBottom = Math.max(
@@ -306,17 +397,23 @@ class GameTurnControlsTest {
         MonopolyButton endRoundButton = getEndRoundButton(game);
         MonopolyButton pauseButton = getPauseButton(game);
         MonopolyButton tradeButton = getTradeButton(game);
+        MonopolyButton saveButton = getSaveButton(game);
+        MonopolyButton loadButton = getLoadButton(game);
         MonopolyButton languageButton = getLanguageButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
+        Pair<Dice, Dice> dicePair = getDicePair(dices(game));
 
         assertEquals(16f, endRoundButton.getPosition()[0], 0.0001f);
         assertEquals(16f, endRoundButton.getPosition()[1], 0.0001f);
         assertEquals(156f, pauseButton.getPosition()[1], 0.0001f);
         assertEquals(156f, tradeButton.getPosition()[1], 0.0001f);
+        assertEquals(156f, saveButton.getPosition()[1], 0.0001f);
+        assertEquals(156f, loadButton.getPosition()[1], 0.0001f);
         assertTrue(pauseButton.getPosition()[0] >= 16f);
         assertTrue(tradeButton.getPosition()[0] >= 16f);
+        assertTrue(pauseButton.getPosition()[0] < saveButton.getPosition()[0]);
+        assertTrue(saveButton.getPosition()[0] < loadButton.getPosition()[0]);
         assertTrue(languageButton.getPosition()[0] + languageButton.getWidth() <= runtime.app().width);
-        assertEquals(156f, languageButton.getPosition()[1], 0.0001f);
+        assertEquals(200f, languageButton.getPosition()[1], 0.0001f);
         assertTrue(dicePair.getKey().getCoords().x() <= runtime.app().width);
         assertTrue(dicePair.getValue().getCoords().x() <= runtime.app().width);
     }
@@ -329,7 +426,7 @@ class GameTurnControlsTest {
 
         assertTrue(game.onEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, 't', 't')));
         assertTrue(runtime.popupService().isAnyVisible());
-        assertEquals("TradePopup", runtime.popupService().activePopupKind());
+        assertEquals("trade", runtime.popupService().activePopupKind());
     }
 
     @Test
@@ -339,17 +436,17 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         configureSingleHumanTurn(game, runtime);
 
-        assertTrue(game.dices().isVisible());
+        assertTrue(dices(game).isVisible());
 
         runtime.popupService().show("Test popup");
         updateSidebarControlPositions(game);
 
-        assertFalse(game.dices().isVisible(), "Roll dice button should never remain above an active popup");
+        assertFalse(dices(game).isVisible(), "Roll dice button should never remain above an active popup");
 
         runtime.popupService().triggerPrimaryAction();
         updateSidebarControlPositions(game);
 
-        assertTrue(game.dices().isVisible(), "Roll dice button should return after popup closes when rolling is still allowed");
+        assertTrue(dices(game).isVisible(), "Roll dice button should return after popup closes when rolling is still allowed");
     }
 
     @Test
@@ -359,19 +456,19 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         configureSingleHumanTurn(game, runtime);
 
-        assertTrue(game.dices().isVisible());
+        assertTrue(dices(game).isVisible());
 
-        game.dices().rollDice();
-        assertFalse(game.dices().isVisible(), "Roll dice button must hide immediately after rolling");
+        dices(game).rollDice();
+        assertFalse(dices(game).isVisible(), "Roll dice button must hide immediately after rolling");
 
         runtime.popupService().show("Follow-up popup");
         updateSidebarControlPositions(game);
-        assertFalse(game.dices().isVisible(), "Roll dice button must stay hidden while popup is visible");
+        assertFalse(dices(game).isVisible(), "Roll dice button must stay hidden while popup is visible");
 
         runtime.popupService().triggerPrimaryAction();
         updateSidebarControlPositions(game);
 
-        assertFalse(game.dices().isVisible(),
+        assertFalse(dices(game).isVisible(),
                 "Roll dice button must not reappear after popup closes once the turn has already rolled");
     }
 
@@ -384,7 +481,7 @@ class GameTurnControlsTest {
         updateSidebarControlPositions(game);
 
         MonopolyButton endRoundButton = getEndRoundButton(game);
-        Pair<Dice, Dice> dicePair = getDicePair(game.dices());
+        Pair<Dice, Dice> dicePair = getDicePair(dices(game));
         float firstDiceLeft = dicePair.getKey().getCoords().x() - dicePair.getKey().getUnScaledWidth() / 2f;
 
         assertTrue(endRoundButton.getPosition()[0] + endRoundButton.getWidth() < firstDiceLeft,
@@ -397,13 +494,13 @@ class GameTurnControlsTest {
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         invokeShowRollDiceControl(game);
-        assertFalse(game.dices().isVisible(), "Roll dice must stay hidden on bot turns");
+        assertFalse(dices(game).isVisible(), "Roll dice must stay hidden on bot turns");
         assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
 
         invokeShowEndTurnControl(game);
-        assertFalse(game.dices().isVisible(), "Roll dice must stay hidden on bot turns");
+        assertFalse(dices(game).isVisible(), "Roll dice must stay hidden on bot turns");
         assertFalse(getEndRoundButton(game).isVisible(), "End turn must stay hidden on bot turns");
     }
 
@@ -414,7 +511,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -434,7 +531,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -451,7 +548,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         runtime.popupService().show("Bot popup");
         runtime.eventBus().flushPendingChanges();
 
@@ -468,7 +565,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         final boolean[] accepted = {false};
         runtime.popupService().showManualDecision(
                 "Auction prompt",
@@ -496,7 +593,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
 
         getTradeButton(game).pressButton();
         runtime.eventBus().flushPendingChanges();
@@ -512,19 +609,121 @@ class GameTurnControlsTest {
     }
 
     @Test
+    void persistentSaveAndLoadButtonsAreVisibleDuringNormalPlay() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        updateDebugButtons(game);
+
+        assertTrue(getSaveButton(game).isVisible());
+        assertTrue(getLoadButton(game).isVisible());
+    }
+
+    @Test
+    void saveAndLoadButtonsRemainUsableDuringBotTurn() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        players(game).switchTurn();
+        updateDebugButtons(game);
+
+        assertTrue(getSaveButton(game).isVisible());
+        assertTrue(getLoadButton(game).isVisible());
+        getSaveButton(game).pressButton();
+        getLoadButton(game).pressButton();
+    }
+
+    @Test
     void pauseButtonRemainsUsableDuringBotTurn() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
 
         getPauseButton(game).pressButton();
 
-        Field pausedField = Game.class.getDeclaredField("paused");
-        pausedField.setAccessible(true);
-        assertTrue((boolean) pausedField.get(game), "Pause button should still work during a bot turn");
+        assertTrue(getSessionState(game).paused(), "Pause button should still work during a bot turn");
+    }
+
+    @Test
+    void debugModeAllowsTradeButtonDuringBotTurn() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        DesktopClientSettings.setDebugMode(true);
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        players(game).switchTurn();
+        updateDebugButtons(game);
+
+        getTradeButton(game).pressButton();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertEquals("trade", runtime.popupService().activePopupKind());
+    }
+
+    @Test
+    void disabledButtonTurnsGrayAndDoesNotOpenActionOutsideDebugMode() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        players(game).switchTurn();
+        updateDebugButtons(game);
+        refreshButtonInteractivityState(game);
+
+        MonopolyButton tradeButton = getTradeButton(game);
+        assertEquals(0xff9f9f9f, tradeButton.currentBackgroundColor());
+        assertEquals(0xff9f9f9f, tradeButton.currentForegroundColor());
+        assertEquals(0xff9f9f9f, tradeButton.currentActiveColor());
+
+        tradeButton.pressButton();
+        assertFalse(runtime.popupService().isAnyVisible());
+    }
+
+    @Test
+    void enabledButtonKeepsNormalColorsWhenInteractionIsAllowed() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        refreshButtonInteractivityState(game);
+
+        MonopolyButton pauseButton = getPauseButton(game);
+        assertNotEquals(0xff9f9f9f, pauseButton.currentBackgroundColor());
+        assertNotEquals(0xff9f9f9f, pauseButton.currentForegroundColor());
+        assertNotEquals(0xff9f9f9f, pauseButton.currentActiveColor());
+    }
+
+    @Test
+    void godModeMenusRemainUsableDuringBotTurnWithoutGlobalDebugOverride() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        Game game = new Game(runtime);
+        runtime.eventBus().flushPendingChanges();
+
+        Player bot = players(game).switchTurn();
+        assertTrue(bot.isComputerControlled());
+
+        openGodModeMenu(game);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        runtime.eventBus().flushPendingChanges();
+        dispatchKey(runtime, '2');
+        runtime.eventBus().flushPendingChanges();
+
+        assertEquals(ComputerPlayerProfile.SMOKE_TEST, bot.getComputerProfile());
+        assertTrue(runtime.popupService().activePopupMessage().contains("Smoke"));
     }
 
     @Test
@@ -535,7 +734,7 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Player bot = game.players().switchTurn();
+        Player bot = players(game).switchTurn();
         runtime.popupService().show("Arrived at WATER WORKS. Do you want to buy it for M150?");
         runtime.eventBus().flushPendingChanges();
 
@@ -553,9 +752,9 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        Player bot = game.players().switchTurn();
-        TestGameSessions.install(runtime, game.players(), game.dices(), game.animations());
-        game.players().focusPlayer(bot);
+        Player bot = players(game).switchTurn();
+        TestGameSessions.install(runtime, players(game), dices(game), animations(game));
+        players(game).focusPlayer(bot);
         for (fi.monopoly.types.SpotType spotType : java.util.List.of(
                 fi.monopoly.types.SpotType.B1,
                 fi.monopoly.types.SpotType.B2,
@@ -571,13 +770,13 @@ class GameTurnControlsTest {
                     fi.monopoly.components.properties.PropertyFactory.getProperty(spotType));
         }
 
-        MonopolyButton nextDeedsButton = getPlayersButton(game.players(), "nextDeedsButton");
+        MonopolyButton nextDeedsButton = getPlayersButton(players(game), "nextDeedsButton");
         var updatePagerMethod = Players.class.getDeclaredMethod("updateDeedPagerButtons", fi.monopoly.utils.Coordinates.class, int.class);
         updatePagerMethod.setAccessible(true);
-        updatePagerMethod.invoke(game.players(), new fi.monopoly.utils.Coordinates(0, 0), bot.getOwnedProperties().size());
+        updatePagerMethod.invoke(players(game), new fi.monopoly.utils.Coordinates(0, 0), bot.getOwnedProperties().size());
 
         nextDeedsButton.pressButton();
-        assertTrue(getPlayersIntField(game.players(), "deedPageStartIndex") > 0,
+        assertTrue(getPlayersIntField(players(game), "deedPageStartIndex") > 0,
                 "Deed pager buttons should remain usable during a bot turn");
     }
 
@@ -600,7 +799,7 @@ class GameTurnControlsTest {
     @Test
     void botSpeedButtonCyclesModeWithoutPopup() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.DEBUG_MODE = true;
+        DesktopClientSettings.setDebugMode(true);
         MonopolyRuntime runtime = initHeadlessRuntime();
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
@@ -626,10 +825,409 @@ class GameTurnControlsTest {
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        List<Player> players = game.players().getPlayers();
+        List<Player> players = players(game).getPlayers();
         assertTrue(players.size() >= 2);
 
         assertNotEquals(players.get(0).getCoords(), players.get(1).getCoords(),
                 "Players on the same spot must not collapse to the same token coordinates");
+    }
+
+    @Test
+    void restoredGameReopensPendingPropertyPurchaseDecision() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                3L,
+                SessionStatus.IN_PROGRESS,
+                List.of(new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB")),
+                List.of(new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 0, false, false, false, 0, 0, List.of())),
+                List.of(),
+                new TurnState("player-1", TurnPhase.WAITING_FOR_DECISION, false, false),
+                new PendingDecision(
+                        "decision-1",
+                        DecisionType.PROPERTY_PURCHASE,
+                        "player-1",
+                        List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
+                        "Buy WATER WORKS?",
+                        new PropertyPurchaseDecisionPayload("U2", "WATER WORKS", 150)
+                ),
+                null,
+                null,
+                null,
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertEquals("Eka", players(game).getTurn().getName());
+        assertNotNull(projectedSessionState(game).pendingDecision());
+        assertTrue(runtime.popupService().isAnyVisible());
+        assertEquals("Buy WATER WORKS?", runtime.popupService().activePopupMessage());
+        assertFalse(dices(game).isVisible(), "Roll dice should stay hidden while restored decision is pending");
+        assertFalse(getEndRoundButton(game).isVisible(), "End turn should stay hidden while restored decision is pending");
+    }
+
+    @Test
+    void restoredPropertyPurchaseDecisionCanBeAcceptedAndContinuesGame() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                3L,
+                SessionStatus.IN_PROGRESS,
+                List.of(new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB")),
+                List.of(new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 0, false, false, false, 0, 0, List.of())),
+                List.of(new fi.monopoly.domain.session.PropertyStateSnapshot("U2", null, false, 0, 0)),
+                new TurnState("player-1", TurnPhase.WAITING_FOR_DECISION, false, false),
+                new PendingDecision(
+                        "decision-1",
+                        DecisionType.PROPERTY_PURCHASE,
+                        "player-1",
+                        List.of(DecisionAction.BUY_PROPERTY, DecisionAction.DECLINE_PROPERTY),
+                        "Buy WATER WORKS?",
+                        new PropertyPurchaseDecisionPayload("U2", "WATER WORKS", 150)
+                ),
+                null,
+                null,
+                null,
+                new fi.monopoly.domain.session.TurnContinuationState(
+                        "continuation-property",
+                        "player-1",
+                        fi.monopoly.domain.session.TurnContinuationType.RESUME_TURN_FOLLOW_UP,
+                        fi.monopoly.domain.session.TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                        "U2",
+                        "resume-turn-follow-up"
+                ),
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        runtime.eventBus().flushPendingChanges();
+
+        assertFalse(runtime.popupService().isAnyVisible());
+        assertEquals(players(game).getTurn(), fi.monopoly.components.properties.PropertyFactory.getProperty(fi.monopoly.types.SpotType.U2).getOwnerPlayer());
+        assertTrue(getEndRoundButton(game).isVisible(), "End turn should become available after restored property purchase resolves");
+    }
+
+    @Test
+    void restoredGameReattachesDebtControlsFromAuthoritativeSession() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                4L,
+                SessionStatus.IN_PROGRESS,
+                List.of(
+                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB"),
+                        new SeatState("seat-2", 1, "player-2", SeatKind.HUMAN, ControlMode.MANUAL, "Toka", "HUMAN", "#FFC0CB")
+                ),
+                List.of(
+                        new PlayerSnapshot("player-1", "seat-1", "Eka", 40, 1, false, false, false, 0, 0, List.of("B1")),
+                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1200, 3, false, false, false, 0, 0, List.of())
+                ),
+                List.of(new fi.monopoly.domain.session.PropertyStateSnapshot("B1", "player-1", false, 0, 0)),
+                new TurnState("player-1", TurnPhase.RESOLVING_DEBT, false, false),
+                null,
+                null,
+                new DebtStateModel(
+                        "debt-1",
+                        "player-1",
+                        DebtCreditorType.PLAYER,
+                        "player-2",
+                        200,
+                        "Pay rent",
+                        true,
+                        40,
+                        120,
+                        List.of(
+                                DebtAction.PAY_DEBT_NOW,
+                                DebtAction.MORTGAGE_PROPERTY,
+                                DebtAction.SELL_BUILDING,
+                                DebtAction.SELL_BUILDING_ROUNDS_ACROSS_SET,
+                                DebtAction.DECLARE_BANKRUPTCY
+                        )
+                ),
+                null,
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(getRetryDebtButton(game).isVisible(), "Retry debt button should reopen from restored debt state");
+        assertTrue(getDeclareBankruptcyButton(game).isVisible(), "Bankruptcy button should reflect restored bankruptcy risk");
+        assertFalse(dices(game).isVisible(), "Roll dice should stay hidden while restored debt is active");
+        assertFalse(getEndRoundButton(game).isVisible(), "End turn should stay hidden while restored debt is active");
+    }
+
+    @Test
+    void restoredDebtStateCanBeResolvedThroughDebtButton() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                4L,
+                SessionStatus.IN_PROGRESS,
+                List.of(
+                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB"),
+                        new SeatState("seat-2", 1, "player-2", SeatKind.HUMAN, ControlMode.MANUAL, "Toka", "HUMAN", "#FFC0CB")
+                ),
+                List.of(
+                        new PlayerSnapshot("player-1", "seat-1", "Eka", 300, 1, false, false, false, 0, 0, List.of()),
+                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1200, 3, false, false, false, 0, 0, List.of())
+                ),
+                List.of(),
+                new TurnState("player-1", TurnPhase.RESOLVING_DEBT, false, false),
+                null,
+                null,
+                new DebtStateModel(
+                        "debt-1",
+                        "player-1",
+                        DebtCreditorType.PLAYER,
+                        "player-2",
+                        200,
+                        "Pay rent",
+                        false,
+                        300,
+                        0,
+                        List.of(DebtAction.PAY_DEBT_NOW)
+                ),
+                null,
+                new fi.monopoly.domain.session.TurnContinuationState(
+                        "continuation-debt",
+                        "player-1",
+                        fi.monopoly.domain.session.TurnContinuationType.RESUME_AFTER_DEBT,
+                        fi.monopoly.domain.session.TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                        null,
+                        "resume-after-debt"
+                ),
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        getRetryDebtButton(game).pressButton();
+        runtime.eventBus().flushPendingChanges();
+        runtime.popupService().triggerPrimaryAction();
+        runtime.eventBus().flushPendingChanges();
+
+        assertFalse(getRetryDebtButton(game).isVisible());
+        assertFalse(getDeclareBankruptcyButton(game).isVisible());
+        assertTrue(getEndRoundButton(game).isVisible(), "End turn should become available after restored debt resolves");
+    }
+
+    @Test
+    void restoredGameReopensAuctionPopupFromAuthoritativeSession() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                5L,
+                SessionStatus.IN_PROGRESS,
+                List.of(
+                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB"),
+                        new SeatState("seat-2", 1, "player-2", SeatKind.HUMAN, ControlMode.MANUAL, "Toka", "HUMAN", "#FFC0CB")
+                ),
+                List.of(
+                        new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 0, false, false, false, 0, 0, List.of()),
+                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1400, 0, false, false, false, 0, 0, List.of())
+                ),
+                List.of(new fi.monopoly.domain.session.PropertyStateSnapshot("B1", null, false, 0, 0)),
+                new TurnState("player-1", TurnPhase.WAITING_FOR_AUCTION, false, false),
+                null,
+                new AuctionState(
+                        "auction-1",
+                        "B1",
+                        "player-1",
+                        "player-1",
+                        "player-2",
+                        70,
+                        80,
+                        java.util.Set.of(),
+                        List.of("player-1", "player-2"),
+                        AuctionStatus.ACTIVE,
+                        0,
+                        null
+                ),
+                null,
+                null,
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible(), "Auction popup should reopen from restored auction state");
+        assertEquals("propertyAuction", runtime.popupService().activePopupKind());
+        assertFalse(dices(game).isVisible(), "Roll dice should stay hidden while restored auction is active");
+        assertFalse(getEndRoundButton(game).isVisible(), "End turn should stay hidden while restored auction is active");
+    }
+
+    @Test
+    void restoredAuctionCanAdvanceAndResolve() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                5L,
+                SessionStatus.IN_PROGRESS,
+                List.of(
+                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB"),
+                        new SeatState("seat-2", 1, "player-2", SeatKind.HUMAN, ControlMode.MANUAL, "Toka", "HUMAN", "#FFC0CB")
+                ),
+                List.of(
+                        new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 0, false, false, false, 0, 0, List.of()),
+                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1400, 0, false, false, false, 0, 0, List.of())
+                ),
+                List.of(new fi.monopoly.domain.session.PropertyStateSnapshot("B1", null, false, 0, 0)),
+                new TurnState("player-1", TurnPhase.WAITING_FOR_AUCTION, false, false),
+                null,
+                new AuctionState(
+                        "auction-1",
+                        "B1",
+                        "player-1",
+                        "player-1",
+                        "player-2",
+                        70,
+                        80,
+                        java.util.Set.of(),
+                        List.of("player-1", "player-2"),
+                        AuctionStatus.ACTIVE,
+                        0,
+                        null
+                ),
+                null,
+                null,
+                new fi.monopoly.domain.session.TurnContinuationState(
+                        "continuation-auction",
+                        "player-1",
+                        fi.monopoly.domain.session.TurnContinuationType.RESUME_AFTER_AUCTION,
+                        fi.monopoly.domain.session.TurnContinuationAction.APPLY_TURN_FOLLOW_UP,
+                        "B1",
+                        "resume-after-auction"
+                ),
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        runtime.eventBus().flushPendingChanges();
+        assertTrue(runtime.popupService().triggerSecondaryAction());
+        runtime.eventBus().flushPendingChanges();
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        runtime.eventBus().flushPendingChanges();
+
+        assertFalse(runtime.popupService().isAnyVisible());
+        assertEquals(players(game).getTurn(), fi.monopoly.components.properties.PropertyFactory.getProperty(fi.monopoly.types.SpotType.B1).getOwnerPlayer());
+        assertTrue(getEndRoundButton(game).isVisible(), "End turn should become available after restored auction resolves");
+    }
+
+    @Test
+    void restoredGameReopensTradePopupFromAuthoritativeSession() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                6L,
+                SessionStatus.IN_PROGRESS,
+                List.of(
+                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB"),
+                        new SeatState("seat-2", 1, "player-2", SeatKind.HUMAN, ControlMode.MANUAL, "Toka", "HUMAN", "#FFC0CB")
+                ),
+                List.of(
+                        new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 0, false, false, false, 0, 0, List.of("B1")),
+                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1400, 0, false, false, false, 0, 0, List.of())
+                ),
+                List.of(new fi.monopoly.domain.session.PropertyStateSnapshot("B1", "player-1", false, 0, 0)),
+                new TurnState("player-2", TurnPhase.WAITING_FOR_DECISION, false, false),
+                null,
+                null,
+                null,
+                new TradeState(
+                        "trade-1",
+                        "player-1",
+                        "player-2",
+                        TradeStatus.SUBMITTED,
+                        new TradeOfferState(
+                                "player-1",
+                                "player-2",
+                                new TradeSelectionState(0, List.of("B1"), 0),
+                                TradeSelectionState.NONE
+                        ),
+                        "player-1",
+                        true,
+                        "player-2",
+                        "player-1",
+                        List.of()
+                ),
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().isAnyVisible(), "Trade popup should reopen from restored trade state");
+        assertEquals("trade", runtime.popupService().activePopupKind());
+        assertFalse(dices(game).isVisible(), "Roll dice should stay hidden while restored trade is active");
+        assertFalse(getEndRoundButton(game).isVisible(), "End turn should stay hidden while restored trade is active");
+    }
+
+    @Test
+    void restoredTradeCanBeAccepted() throws ReflectiveOperationException {
+        resetNextPlayerId();
+        MonopolyRuntime runtime = initHeadlessRuntime();
+        SessionState restoredState = new SessionState(
+                "local-session",
+                6L,
+                SessionStatus.IN_PROGRESS,
+                List.of(
+                        new SeatState("seat-1", 0, "player-1", SeatKind.HUMAN, ControlMode.MANUAL, "Eka", "HUMAN", "#9370DB"),
+                        new SeatState("seat-2", 1, "player-2", SeatKind.HUMAN, ControlMode.MANUAL, "Toka", "HUMAN", "#FFC0CB")
+                ),
+                List.of(
+                        new PlayerSnapshot("player-1", "seat-1", "Eka", 1500, 0, false, false, false, 0, 0, List.of("B1")),
+                        new PlayerSnapshot("player-2", "seat-2", "Toka", 1400, 0, false, false, false, 0, 0, List.of())
+                ),
+                List.of(new fi.monopoly.domain.session.PropertyStateSnapshot("B1", "player-1", false, 0, 0)),
+                new TurnState("player-2", TurnPhase.WAITING_FOR_DECISION, false, false),
+                null,
+                null,
+                null,
+                new TradeState(
+                        "trade-1",
+                        "player-1",
+                        "player-2",
+                        TradeStatus.SUBMITTED,
+                        new TradeOfferState(
+                                "player-1",
+                                "player-2",
+                                new TradeSelectionState(0, List.of("B1"), 0),
+                                TradeSelectionState.NONE
+                        ),
+                        "player-2",
+                        false,
+                        "player-2",
+                        "player-1",
+                        List.of()
+                ),
+                null
+        );
+
+        Game game = new Game(runtime, restoredState);
+        runtime.eventBus().flushPendingChanges();
+
+        assertTrue(runtime.popupService().triggerPrimaryAction());
+        runtime.eventBus().flushPendingChanges();
+
+        assertFalse(runtime.popupService().isAnyVisible());
+        assertEquals(players(game).getPlayers().get(1), fi.monopoly.components.properties.PropertyFactory.getProperty(fi.monopoly.types.SpotType.B1).getOwnerPlayer());
     }
 }

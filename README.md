@@ -35,7 +35,7 @@ tests for the main game flow.
 
 ## Tech Stack
 
-- Java 19
+- Java 21
 - Processing 4
 - ControlP5
 - Maven
@@ -46,7 +46,7 @@ tests for the main game flow.
 
 ### Requirements
 
-- Java 19
+- Java 21
 - Maven
 
 ### Start the Game
@@ -80,6 +80,10 @@ These keys are available during the game:
   toggle debug mode
 - `P`  
   pause / resume
+- `Ctrl+S`  
+  save the current local session to `saves/local-session.json`
+- `Ctrl+L`  
+  load the saved local session from `saves/local-session.json`
 - `T`  
   open trading on your turn
 - `H`  

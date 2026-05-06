@@ -1,6 +1,6 @@
 package fi.monopoly.utils;
 
-import fi.monopoly.MonopolyApp;
+import fi.monopoly.client.desktop.DesktopRenderingContext;
 import javafx.scene.paint.Color;
 import lombok.experimental.UtilityClass;
 
@@ -17,29 +17,20 @@ public class MonopolyUtils {
         return map((float) value, 0, 1, 0, 255);
     }
 
-    public static int toColor(Color color) {
-        return toColor(MonopolyApp.self, color);
-    }
-
-    public static int toColor(MonopolyApp app, Color color) {
-        return app.color(toFloat(color.getRed()), toFloat(color.getGreen()), toFloat(color.getBlue()));
+    public static int toColor(DesktopRenderingContext renderingContext, Color color) {
+        return renderingContext.color(toFloat(color.getRed()), toFloat(color.getGreen()), toFloat(color.getBlue()));
     }
 
     public static Color toColor(int r, int g, int b) {
         return color(toFloat(r), toFloat(g), toFloat(b));
     }
 
-    public static boolean isMouseInArea(SpotProps areaProps) {
-        MonopolyApp app = MonopolyApp.self;
-        return isMouseInArea(app, areaProps);
+    public static boolean isMouseInArea(DesktopRenderingContext renderingContext, SpotProps areaProps) {
+        return isPointInArea(renderingContext.mouseX(), renderingContext.mouseY(), areaProps);
     }
 
-    public static boolean isMouseInArea(MonopolyApp app, SpotProps areaProps) {
-        return isPointInArea(app.mouseX, app.mouseY, areaProps);
-    }
-
-    public static boolean isMouseInArea(Coordinates coords, float width, float height) {
-        return isMouseInArea(new SpotProps(coords, width, height));
+    public static boolean isMouseInArea(DesktopRenderingContext renderingContext, Coordinates coords, float width, float height) {
+        return isMouseInArea(renderingContext, new SpotProps(coords, width, height));
     }
 
     public static boolean isPointInArea(int pX, int pY, SpotProps spotProps) {

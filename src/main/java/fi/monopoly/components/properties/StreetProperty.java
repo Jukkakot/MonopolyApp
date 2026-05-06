@@ -1,6 +1,6 @@
 package fi.monopoly.components.properties;
 
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.types.SpotType;
@@ -417,16 +417,20 @@ public class StreetProperty extends Property {
     }
 
     private boolean isDebtResolutionActive() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        MonopolyRuntime runtime = runtimeOrNull();
         return runtime != null && runtime.gameSessionOrNull() != null && runtime.gameSessionOrNull().isDebtResolutionActive();
     }
 
     private Players getPlayersOrNull() {
-        MonopolyRuntime runtime = MonopolyRuntime.peek();
+        MonopolyRuntime runtime = runtimeOrNull();
         if (runtime == null || runtime.gameSessionOrNull() == null) {
             return null;
         }
         return runtime.gameSessionOrNull().players();
+    }
+
+    private MonopolyRuntime runtimeOrNull() {
+        return ownerPlayer != null ? ownerPlayer.getRuntime() : null;
     }
 
     private enum BuildValidationResult {
@@ -440,6 +444,11 @@ public class StreetProperty extends Property {
         NO_HOUSES_LEFT,
         NO_HOTELS_LEFT,
         NO_HOUSES_TO_BREAK_HOTEL
+    }
+
+    public void restoreBuildings(int houseCount, int hotelCount) {
+        this.houseCount = houseCount;
+        this.hotelCount = hotelCount;
     }
 
     @Override

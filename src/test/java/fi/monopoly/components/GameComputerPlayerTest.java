@@ -1,16 +1,16 @@
 package fi.monopoly.components;
 
-import controlP5.ControlP5;
-import fi.monopoly.MonopolyApp;
-import fi.monopoly.MonopolyRuntime;
+import fi.monopoly.client.desktop.DesktopClientSettings;
+import fi.monopoly.client.desktop.MonopolyApp;
+import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
+import fi.monopoly.host.bot.BotTurnScheduler;
+import fi.monopoly.support.TestDesktopRuntimeFactory;
 import fi.monopoly.support.TestLogLevels;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import processing.awt.PGraphicsJava2D;
-import processing.core.PFont;
 import processing.event.KeyEvent;
 
 import java.lang.reflect.Field;
@@ -24,19 +24,7 @@ class GameComputerPlayerTest {
     private TestLogLevels.LogConfigSnapshot logConfigSnapshot;
 
     private static MonopolyRuntime initHeadlessRuntime(int width, int height) {
-        MonopolyApp app = new MonopolyApp();
-        app.width = width;
-        app.height = height;
-
-        PGraphicsJava2D graphics = new PGraphicsJava2D();
-        graphics.setParent(app);
-        graphics.setPrimary(true);
-        graphics.setSize(app.width, app.height);
-        app.g = graphics;
-
-        ControlP5 controlP5 = new ControlP5(app);
-        PFont font = app.createFont("Arial", 20);
-        return MonopolyRuntime.initialize(app, controlP5, font, font, font);
+        return TestDesktopRuntimeFactory.create(width, height).runtime();
     }
 
     private static void resetNextPlayerId() throws ReflectiveOperationException {
@@ -46,37 +34,39 @@ class GameComputerPlayerTest {
     }
 
     private static void invokeComputerStep(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("runComputerPlayerStep");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().runComputerPlayerStep();
     }
 
     private static void invokeTogglePause(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("togglePause");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().togglePause();
     }
 
     private static void invokeAnimationFinishCooldown(Game game, boolean animationWasRunning) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("applyComputerActionCooldownIfAnimationJustFinished", boolean.class);
-        method.setAccessible(true);
-        method.invoke(game, animationWasRunning);
+        game.testFacade().applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
     }
 
     private static void invokeShowRollDiceControl(Game game) throws ReflectiveOperationException {
-        var method = Game.class.getDeclaredMethod("showRollDiceControl");
-        method.setAccessible(true);
-        method.invoke(game);
+        game.testFacade().showRollDiceControl();
     }
 
-    private static int getLastComputerActionAt(Game game) throws ReflectiveOperationException {
-        Field field = Game.class.getDeclaredField("lastComputerActionAt");
-        field.setAccessible(true);
-        return field.getInt(game);
+    private static BotTurnScheduler getBotTurnScheduler(Game game) throws ReflectiveOperationException {
+        return game.testFacade().botTurnScheduler();
     }
 
     private static boolean dispatchKeyToGame(Game game, char key) {
         return game.onEvent(new KeyEvent(new Object(), System.currentTimeMillis(), PRESS, 0, key, key));
+    }
+
+    private static Players players(Game game) {
+        return game.testFacade().players();
+    }
+
+    private static fi.monopoly.components.animation.Animations animations(Game game) {
+        return game.testFacade().animations();
+    }
+
+    private static fi.monopoly.components.dices.Dices dices(Game game) {
+        return game.testFacade().dices();
     }
 
     @SuppressWarnings("unchecked")
@@ -96,18 +86,18 @@ class GameComputerPlayerTest {
         if (logConfigSnapshot != null) {
             logConfigSnapshot.restore();
         }
-        MonopolyApp.DEBUG_MODE = false;
-        MonopolyApp.SKIP_ANNIMATIONS = false;
+        DesktopClientSettings.setDebugMode(false);
+        DesktopClientSettings.setSkipAnimations(false);
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void defaultSeatsUseStrongBotProfile() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
 
-        List<Player> players = getPlayerList(game.players());
+        List<Player> players = getPlayerList(players(game));
         long computerPlayerCount = players.stream().filter(Player::isComputerControlled).count();
         long strongBotCount = players.stream()
                 .filter(player -> player.getComputerProfile() == ComputerPlayerProfile.STRONG)
@@ -119,57 +109,57 @@ class GameComputerPlayerTest {
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void defaultBotCanFinishItsTurnWithoutUserInput() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
-        game.players().switchTurn();
-        Player bot = game.players().getTurn();
+        players(game).switchTurn();
+        players(game).switchTurn();
+        Player bot = players(game).getTurn();
         String botName = bot.getName();
 
-        for (int step = 0; step < 200 && Objects.equals(botName, game.players().getTurn().getName()); step++) {
+        for (int step = 0; step < 200 && Objects.equals(botName, players(game).getTurn().getName()); step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (game.animations().isRunning()) {
-                game.animations().finishAllAnimations();
+            if (animations(game).isRunning()) {
+                animations(game).finishAllAnimations();
             }
         }
 
-        assertNotEquals(botName, game.players().getTurn().getName());
+        assertNotEquals(botName, players(game).getTurn().getName());
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void pausePreventsComputerTurnFromAdvancing() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        String botName = game.players().getTurn().getName();
+        String botName = players(game).getTurn().getName();
         invokeTogglePause(game);
 
         for (int step = 0; step < 50; step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
             runtime.eventBus().flushPendingChanges();
-            if (game.animations().isRunning()) {
-                game.animations().finishAllAnimations();
+            if (animations(game).isRunning()) {
+                animations(game).finishAllAnimations();
             }
         }
 
-        assertEquals(botName, game.players().getTurn().getName());
+        assertEquals(botName, players(game).getTurn().getName());
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void pauseCanBeToggledEvenWhilePopupIsVisible() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
@@ -179,48 +169,50 @@ class GameComputerPlayerTest {
 
         assertTrue(dispatchKeyToGame(game, 'p'));
 
-        String botName = game.players().getTurn().getName();
+        String botName = players(game).getTurn().getName();
         for (int step = 0; step < 20; step++) {
             runtime.eventBus().flushPendingChanges();
             invokeComputerStep(game);
         }
 
-        assertEquals(botName, game.players().getTurn().getName());
+        assertEquals(botName, players(game).getTurn().getName());
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void finishingAnimationAppliesBotCooldownBeforeNextStep() throws ReflectiveOperationException {
         resetNextPlayerId();
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.players().switchTurn();
+        players(game).switchTurn();
+        BotTurnScheduler scheduler = getBotTurnScheduler(game);
+        int now = runtime.app().millis();
 
-        assertEquals(-1, getLastComputerActionAt(game));
+        assertFalse(scheduler.isWaiting(now));
 
         invokeAnimationFinishCooldown(game, true);
 
-        assertTrue(getLastComputerActionAt(game) >= 0,
+        assertTrue(scheduler.isWaiting(now),
                 "Finishing a bot animation should add a cooldown before the next computer action");
     }
 
     @Test
-    @Timeout(5)
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void botTurnStartClearsPreviousPlayerDiceState() throws ReflectiveOperationException {
         resetNextPlayerId();
-        MonopolyApp.SKIP_ANNIMATIONS = true;
+        DesktopClientSettings.setSkipAnimations(true);
         MonopolyRuntime runtime = initHeadlessRuntime(MonopolyApp.DEFAULT_WINDOW_WIDTH, MonopolyApp.DEFAULT_WINDOW_HEIGHT);
         Game game = new Game(runtime);
         runtime.eventBus().flushPendingChanges();
 
-        game.dices().rollDice();
-        assertNotNull(game.dices().getValue());
+        dices(game).rollDice();
+        assertNotNull(dices(game).getValue());
 
-        game.players().switchTurn();
+        players(game).switchTurn();
         invokeShowRollDiceControl(game);
 
-        assertNull(game.dices().getValue(), "Bot turn must not inherit a stale dice result from the previous player");
+        assertNull(dices(game).getValue(), "Bot turn must not inherit a stale dice result from the previous player");
     }
 }

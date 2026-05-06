@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<title>Monopoly Dev Client</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', monospace; font-size: 13px;
+       height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Header ── */
+#header { background: #161b22; border-bottom: 1px solid #30363d; padding: 6px 10px;
+          display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+#header label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+input[type=text] { background: #21262d; border: 1px solid #30363d; color: #e6edf3;
+                   padding: 4px 7px; border-radius: 4px; font-size: 12px; }
+#inp-url  { width: 190px; }
+#inp-sid  { width: 240px; }
+#inp-names { width: 130px; }
+button { background: #238636; border: none; color: #fff; padding: 4px 11px; border-radius: 4px;
+         cursor: pointer; font-size: 12px; }
+button:hover { background: #2ea043; }
+button.sec  { background: #21262d; border: 1px solid #30363d; }
+button.sec:hover { background: #30363d; }
+button.warn { background: #9e3a08; }
+button.warn:hover { background: #c04a0a; }
+button.red  { background: #b62324; }
+button.red:hover { background: #da3633; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Main ── */
+#main { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+/* ── Board ── */
+#board-wrap { flex: 1; display: flex; align-items: center; justify-content: center;
+              overflow: auto; padding: 16px; }
+#board { display: grid; grid-template-columns: repeat(11, 64px); grid-template-rows: repeat(11, 64px);
+         gap: 1px; background: #30363d; border: 2px solid #30363d;
+         box-shadow: 0 0 40px rgba(0,0,0,.6); }
+.cell { background: #0d1117; display: flex; flex-direction: column; align-items: center;
+        justify-content: flex-start; position: relative; overflow: hidden; }
+.cell.inner { background: #111827; }
+.cstrip { position: absolute; top: 0; left: 0; right: 0; height: 12px; }
+.cname  { font-size: 9px; color: #adbac7; margin-top: 14px; line-height: 1.2; text-align: center;
+          padding: 0 2px; font-weight: 500; }
+.cbldg  { font-size: 9px; line-height: 1; margin-top: 2px; text-align: center; }
+.ctokens { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; margin-top: 2px;
+           padding: 0 3px; }
+.token  { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.3);
+          flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+
+/* ── Panel ── */
+#panel { width: 320px; min-width: 320px; background: #161b22; border-left: 1px solid #30363d;
+         display: flex; flex-direction: column; overflow: hidden; }
+.section { padding: 8px 10px; border-bottom: 1px solid #30363d; }
+.section h3 { font-size: 10px; text-transform: uppercase; color: #8b949e; margin-bottom: 6px;
+              letter-spacing: .06em; }
+
+/* turn */
+#turn-content { font-size: 12px; }
+.phase-badge { display: inline-block; background: #1f6feb22; border: 1px solid #1f6feb;
+               color: #79c0ff; font-size: 10px; padding: 1px 7px; border-radius: 10px; margin-top: 3px; }
+
+/* player cards */
+.pcard { display: flex; align-items: center; gap: 7px; padding: 4px 6px; border-radius: 4px;
+         margin-bottom: 3px; background: #0d1117; border-left: 3px solid transparent; }
+.pcard.active  { border-left-color: #3fb950; }
+.pcard.bankrupt .pname { text-decoration: line-through; color: #8b949e; }
+.pdot   { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.pname  { font-size: 12px; font-weight: 600; }
+.ppos   { font-size: 10px; color: #8b949e; }
+.pcash  { margin-left: auto; color: #3fb950; font-size: 11px; font-weight: bold; white-space: nowrap; }
+
+/* actions */
+#action-btns { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* debt property list */
+#debt-info { font-size: 11px; color: #f85149; margin-bottom: 6px; font-weight: 600; }
+.dprop { display: flex; align-items: center; gap: 5px; padding: 4px 5px; border-radius: 4px;
+         background: #0d1117; margin-bottom: 3px; }
+.dprop.mortgaged { opacity: 0.45; }
+.dpstrip { width: 8px; height: 28px; border-radius: 2px; flex-shrink: 0; }
+.dpname { font-size: 11px; flex: 1; }
+.dpbldg { font-size: 10px; color: #8b949e; min-width: 24px; }
+.dpbtns { display: flex; gap: 3px; margin-left: auto; flex-shrink: 0; }
+.dpbtns button { padding: 2px 6px; font-size: 10px; }
+
+/* custom json */
+#cmd-json { width: 100%; height: 72px; background: #0d1117; border: 1px solid #30363d;
+            color: #e6edf3; font-family: monospace; font-size: 10px; padding: 4px;
+            border-radius: 4px; resize: vertical; margin-bottom: 4px; }
+
+/* log */
+#log-wrap { flex: 1; overflow-y: auto; padding: 8px 10px; min-height: 0; }
+#log-wrap h3 { font-size: 10px; text-transform: uppercase; color: #8b949e; margin-bottom: 4px;
+               letter-spacing: .06em; position: sticky; top: 0; background: #161b22; padding-bottom: 3px; }
+.lentry { font-size: 10px; font-family: monospace; padding: 2px 0;
+          border-bottom: 1px solid #1c2128; word-break: break-all; line-height: 1.4; }
+.lentry.ev   { color: #79c0ff; }
+.lentry.cmd  { color: #3fb950; }
+.lentry.err  { color: #f85149; }
+.lentry.info { color: #e3b341; }
+
+/* status bar */
+#statusbar { background: #161b22; border-top: 1px solid #30363d; padding: 3px 10px;
+             font-size: 10px; color: #8b949e; display: flex; gap: 14px; flex-shrink: 0; }
+#sdot { width: 7px; height: 7px; border-radius: 50%; background: #484f58; display: inline-block; margin-right: 4px; }
+#sdot.on { background: #3fb950; }
+#sdot.err { background: #f85149; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <label>Server</label>
+  <input type="text" id="inp-url"   value="http://localhost:8080">
+  <label>Session&nbsp;ID</label>
+  <input type="text" id="inp-sid"   placeholder="tyhjä = luo uusi">
+  <label>Pelaajat</label>
+  <input type="text" id="inp-names" placeholder="Eka,Toka" value="Jukka,Botti">
+  <button onclick="connectOrCreate()">⚡ Yhdistä / Luo</button>
+  <button class="sec" onclick="disconnectSse()">✂ Katkaise SSE</button>
+  <button class="sec" onclick="fetchSnap()">🔄 Refresh</button>
+</div>
+
+<div id="main">
+
+  <!-- Board -->
+  <div id="board-wrap"><div id="board"></div></div>
+
+  <!-- Side panel -->
+  <div id="panel">
+
+    <div class="section" id="sec-turn">
+      <h3>Vuoro</h3>
+      <div id="turn-content"><span style="color:#484f58">—</span></div>
+    </div>
+
+    <div class="section" id="sec-players">
+      <h3>Pelaajat</h3>
+      <div id="player-cards"></div>
+    </div>
+
+    <div class="section">
+      <h3>Toiminnot</h3>
+      <div id="action-btns"></div>
+    </div>
+
+    <div class="section" id="sec-debt" style="display:none">
+      <h3>Velkakriisi — kiinteistöt</h3>
+      <div id="debt-info"></div>
+      <div id="debt-props"></div>
+    </div>
+
+    <div class="section">
+      <h3>Oma komento</h3>
+      <textarea id="cmd-json"></textarea>
+      <button onclick="sendCustomCmd()" style="width:100%">▶ Lähetä JSON</button>
+    </div>
+
+    <div id="log-wrap">
+      <h3>Loki</h3>
+      <div id="log-entries"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="statusbar">
+  <span><span id="sdot"></span><span id="stext">Ei yhteyttä</span></span>
+  <span id="ssid"></span>
+  <span id="sver"></span>
+</div>
+
+<script>
+// ── Spot definitions (40, board order) ───────────────────────────────────
+
+const GC = {
+  BROWN:'#6b3a2a', LIGHT_BLUE:'#4fa3c7', PURPLE:'#b347a0', ORANGE:'#e07b00',
+  RED:'#cc2222',   YELLOW:'#c9a800',     GREEN:'#1a7a3c',  DARK_BLUE:'#1a3fa0',
+  RAILROAD:'#444', UTILITY:'#666',       TAX:'#7a1a1a',    COMMUNITY:'#1a5fa0',
+  CHANCE:'#c97a00',CORNER:'#1c2a1c',
+};
+
+const SPOTS = [
+  {id:'GO_SPOT',     s:'GO',     g:'CORNER'},     // 0
+  {id:'B1',         s:'B1',     g:'BROWN'},       // 1
+  {id:'COMMUNITY1', s:'YK',     g:'COMMUNITY'},   // 2
+  {id:'B2',         s:'B2',     g:'BROWN'},       // 3
+  {id:'TAX1',       s:'Vero',   g:'TAX'},         // 4
+  {id:'RR1',        s:'RR1',    g:'RAILROAD'},    // 5
+  {id:'LB1',        s:'LB1',    g:'LIGHT_BLUE'},  // 6
+  {id:'CHANCE1',    s:'?',      g:'CHANCE'},      // 7
+  {id:'LB2',        s:'LB2',    g:'LIGHT_BLUE'},  // 8
+  {id:'LB3',        s:'LB3',    g:'LIGHT_BLUE'},  // 9
+  {id:'JAIL',       s:'Vanki',  g:'CORNER'},      // 10
+  {id:'P1',         s:'P1',     g:'PURPLE'},      // 11
+  {id:'U1',         s:'U1',     g:'UTILITY'},     // 12
+  {id:'P2',         s:'P2',     g:'PURPLE'},      // 13
+  {id:'P3',         s:'P3',     g:'PURPLE'},      // 14
+  {id:'RR2',        s:'RR2',    g:'RAILROAD'},    // 15
+  {id:'O1',         s:'O1',     g:'ORANGE'},      // 16
+  {id:'COMMUNITY2', s:'YK',     g:'COMMUNITY'},   // 17
+  {id:'O2',         s:'O2',     g:'ORANGE'},      // 18
+  {id:'O3',         s:'O3',     g:'ORANGE'},      // 19
+  {id:'FREE_PARKING',s:'Vapaa', g:'CORNER'},      // 20
+  {id:'R1',         s:'R1',     g:'RED'},         // 21
+  {id:'CHANCE2',    s:'?',      g:'CHANCE'},      // 22
+  {id:'R2',         s:'R2',     g:'RED'},         // 23
+  {id:'R3',         s:'R3',     g:'RED'},         // 24
+  {id:'RR3',        s:'RR3',    g:'RAILROAD'},    // 25
+  {id:'Y1',         s:'Y1',     g:'YELLOW'},      // 26
+  {id:'Y2',         s:'Y2',     g:'YELLOW'},      // 27
+  {id:'U2',         s:'U2',     g:'UTILITY'},     // 28
+  {id:'Y3',         s:'Y3',     g:'YELLOW'},      // 29
+  {id:'GO_TO_JAIL', s:'→Jail',  g:'CORNER'},      // 30
+  {id:'G1',         s:'G1',     g:'GREEN'},       // 31
+  {id:'G2',         s:'G2',     g:'GREEN'},       // 32
+  {id:'COMMUNITY3', s:'YK',     g:'COMMUNITY'},   // 33
+  {id:'G3',         s:'G3',     g:'GREEN'},       // 34
+  {id:'RR4',        s:'RR4',    g:'RAILROAD'},    // 35
+  {id:'CHANCE3',    s:'?',      g:'CHANCE'},      // 36
+  {id:'DB1',        s:'DB1',    g:'DARK_BLUE'},   // 37
+  {id:'TAX2',       s:'Vero',   g:'TAX'},         // 38
+  {id:'DB2',        s:'DB2',    g:'DARK_BLUE'},   // 39
+];
+
+// ── Grid layout: GRID[row][col] = boardIndex, -1 = inner cell ──────────
+
+const GRID = Array.from({length:11}, () => Array(11).fill(-1));
+// Bottom row (row 10): col 0–10 → spots 10, 9, 8, …, 0
+for (let c = 0; c <= 10; c++) GRID[10][c] = 10 - c;
+// Top row (row 0): col 0–10 → spots 20, 21, …, 30
+for (let c = 0; c <= 10; c++) GRID[0][c]  = 20 + c;
+// Left col rows 1–9: row r → spot 20-r  (row1=19 … row9=11)
+for (let r = 1; r <= 9; r++) GRID[r][0]   = 20 - r;
+// Right col rows 1–9: row r → spot 30+r (row1=31 … row9=39)
+for (let r = 1; r <= 9; r++) GRID[r][10]  = 30 + r;
+
+// ── App state ──────────────────────────────────────────────────────────
+
+let BASE = 'http://localhost:8080';
+let SID  = null;
+let SSE  = null;
+let snap = null;          // state sub-object of latest snapshot
+let pColors = {};         // playerId → color
+
+// ── Connection ─────────────────────────────────────────────────────────
+
+async function connectOrCreate() {
+  BASE = document.getElementById('inp-url').value.replace(/\/$/, '');
+  let sid = document.getElementById('inp-sid').value.trim();
+
+  if (!sid) {
+    const names = document.getElementById('inp-names').value
+      .split(',').map(s => s.trim()).filter(Boolean);
+    if (!names.length) { log('Syötä pelaajien nimet', 'err'); return; }
+    try {
+      const r = await fetch(`${BASE}/sessions`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({names, colors:['#E63946','#2A9D8F','#E9C46A','#F4A261']}),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      sid = j.sessionId;
+      document.getElementById('inp-sid').value = sid;
+      log(`Sessio luotu: ${sid}`, 'info');
+    } catch(e) {
+      log(`Session luonti epäonnistui: ${e.message}`, 'err');
+      return;
+    }
+  }
+
+  SID = sid;
+  document.getElementById('ssid').textContent = `sid:${sid.slice(0,8)}…`;
+  openSse();
+  await fetchSnap();
+}
+
+function openSse() {
+  if (SSE) SSE.close();
+  SSE = new EventSource(`${BASE}/sessions/${SID}/events`);
+  SSE.onopen  = () => { setDot('on', 'SSE yhdistetty'); };
+  SSE.onerror = () => { setDot('err', 'SSE katkesi'); };
+  SSE.onmessage = e => {
+    const full = JSON.parse(e.data);
+    log(`↓ v${full.version} ${full.state?.turn?.phase ?? ''}`, 'ev');
+    applySnap(full);
+  };
+}
+
+function disconnectSse() {
+  if (SSE) { SSE.close(); SSE = null; }
+  setDot('', 'SSE katkaistu');
+}
+
+async function fetchSnap() {
+  if (!SID) return;
+  try {
+    const r = await fetch(`${BASE}/sessions/${SID}/snapshot`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    applySnap(await r.json());
+  } catch(e) { log(`Snapshot-virhe: ${e.message}`, 'err'); }
+}
+
+// ── Snapshot ───────────────────────────────────────────────────────────
+
+function applySnap(full) {
+  snap = full.state;
+  if (!snap) return;
+  document.getElementById('sver').textContent = `v${full.version}`;
+
+  pColors = {};
+  (snap.seats || []).forEach(s => { pColors[s.playerId] = s.tokenColorHex; });
+
+  renderBoard();
+  renderPlayers();
+  renderTurn();
+  renderActions();
+  prefillJson();
+}
+
+// ── Board ──────────────────────────────────────────────────────────────
+
+function renderBoard() {
+  const el = document.getElementById('board');
+  if (!el.children.length) buildBoard(el);
+
+  const propMap = {};
+  (snap.properties || []).forEach(p => { propMap[p.propertyId] = p; });
+
+  const posMap = {};
+  (snap.players || []).forEach(p => {
+    if (!p.bankrupt && !p.eliminated)
+      (posMap[p.boardIndex] = posMap[p.boardIndex] || []).push(p);
+  });
+
+  for (let r = 0; r <= 10; r++) {
+    for (let c = 0; c <= 10; c++) {
+      const idx = GRID[r][c];
+      if (idx === -1) continue;
+      const cell = document.getElementById(`c${r}_${c}`);
+      if (!cell) continue;
+      const spot = SPOTS[idx];
+      const ps = propMap[spot.id];
+
+      // owner bottom border
+      if (ps?.ownerPlayerId) {
+        cell.style.borderBottom = `3px solid ${pColors[ps.ownerPlayerId] || '#aaa'}`;
+      } else {
+        cell.style.borderBottom = '';
+      }
+      cell.style.opacity = ps?.mortgaged ? '0.4' : '';
+
+      // buildings
+      const bdiv = cell.querySelector('.cbldg');
+      if (ps) {
+        if (ps.hotelCount > 0)       bdiv.textContent = '🏨';
+        else if (ps.houseCount > 0)  bdiv.textContent = '🏠'.repeat(ps.houseCount);
+        else                         bdiv.textContent = '';
+      }
+
+      // player tokens
+      const tdiv = cell.querySelector('.ctokens');
+      tdiv.innerHTML = '';
+      (posMap[idx] || []).forEach(p => {
+        const d = document.createElement('div');
+        d.className = 'token';
+        d.style.background = pColors[p.playerId] || '#888';
+        d.title = p.name;
+        tdiv.appendChild(d);
+      });
+    }
+  }
+}
+
+function buildBoard(el) {
+  for (let r = 0; r <= 10; r++) {
+    for (let c = 0; c <= 10; c++) {
+      const idx = GRID[r][c];
+      const cell = document.createElement('div');
+      cell.id = `c${r}_${c}`;
+      if (idx === -1) {
+        cell.className = 'cell inner';
+      } else {
+        const spot = SPOTS[idx];
+        const col = GC[spot.g] || '#333';
+        cell.className = 'cell';
+        cell.innerHTML =
+          `<div class="cstrip" style="background:${col}"></div>` +
+          `<div class="cname">${spot.s}</div>` +
+          `<div class="cbldg"></div>` +
+          `<div class="ctokens"></div>`;
+      }
+      el.appendChild(cell);
+    }
+  }
+}
+
+// ── Players ────────────────────────────────────────────────────────────
+
+function renderPlayers() {
+  const active = snap.turn?.activePlayerId;
+  const cont = document.getElementById('player-cards');
+  cont.innerHTML = '';
+  (snap.players || []).forEach(p => {
+    const col = pColors[p.playerId] || '#888';
+    const spotName = SPOTS[p.boardIndex]?.s ?? `#${p.boardIndex}`;
+    const div = document.createElement('div');
+    div.className = 'pcard'
+      + (p.playerId === active ? ' active' : '')
+      + (p.bankrupt ? ' bankrupt' : '');
+    div.innerHTML =
+      `<div class="pdot" style="background:${col}"></div>` +
+      `<div><div class="pname">${esc(p.name)}</div>` +
+      `<div class="ppos">${spotName}${p.inJail?' 🔒':''} · ${p.ownedPropertyIds?.length??0} kiint.</div></div>` +
+      `<div class="pcash">€${p.cash}</div>`;
+    cont.appendChild(div);
+  });
+}
+
+// ── Turn ───────────────────────────────────────────────────────────────
+
+function renderTurn() {
+  const t = snap.turn;
+  if (!t) return;
+  const p = (snap.players || []).find(x => x.playerId === t.activePlayerId);
+  const name = p?.name ?? t.activePlayerId ?? '—';
+  const col  = pColors[t.activePlayerId] || '#aaa';
+  document.getElementById('turn-content').innerHTML =
+    `<span style="color:${col};font-weight:600">${esc(name)}</span>` +
+    `<br><span class="phase-badge">${t.phase}</span>`;
+}
+
+// ── Actions ────────────────────────────────────────────────────────────
+
+function renderActions() {
+  const cont    = document.getElementById('action-btns');
+  const secDebt = document.getElementById('sec-debt');
+  cont.innerHTML = '';
+  secDebt.style.display = 'none';
+  if (!snap || !SID) return;
+
+  const t      = snap.turn;
+  const active = t?.activePlayerId;
+  const phase  = t?.phase;
+
+  const mk = (label, cmd, cls='') => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (cls) b.className = cls;
+    b.onclick = () => sendCmd(cmd);
+    cont.appendChild(b);
+  };
+
+  if (phase === 'WAITING_FOR_ROLL')
+    mk('🎲 Heitä', {type:'RollDice', sessionId:SID, actorPlayerId:active});
+
+  if (phase === 'WAITING_FOR_END_TURN')
+    mk('✅ Lopeta vuoro', {type:'EndTurn', sessionId:SID, actorPlayerId:active});
+
+  if (phase === 'WAITING_FOR_DECISION' && snap.pendingDecision) {
+    const dec     = snap.pendingDecision;
+    const payload = dec.payload ?? {};
+    const propId  = payload.propertyId
+      ?? Object.values(payload).find(v => v?.propertyId)?.propertyId ?? '';
+    mk('💰 Osta',  {type:'BuyProperty',     sessionId:SID, actorPlayerId:active,
+                    decisionId:dec.decisionId, propertyId:propId});
+    mk('❌ Ohita', {type:'DeclineProperty', sessionId:SID, actorPlayerId:active,
+                    decisionId:dec.decisionId, propertyId:propId}, 'sec');
+  }
+
+  if (phase === 'WAITING_FOR_AUCTION' && snap.auctionState) {
+    const {auctionId, currentBid} = snap.auctionState;
+    mk('📢 Huuto +10', {type:'PlaceAuctionBid', sessionId:SID, actorPlayerId:active,
+                         auctionId, amount:(currentBid??0)+10});
+    mk('🚫 Passi', {type:'PassAuction', sessionId:SID, actorPlayerId:active, auctionId}, 'sec');
+  }
+
+  if (phase === 'RESOLVING_DEBT' && snap.activeDebt) {
+    const {debtId, debtorPlayerId, amount} = snap.activeDebt;
+    mk('💸 Maksa velka', {type:'PayDebt', sessionId:SID, actorPlayerId:active, debtId});
+    mk('☠ Konkurssi',   {type:'DeclareBankruptcy', sessionId:SID, actorPlayerId:active, debtId}, 'red');
+    renderDebtProps(debtId, debtorPlayerId, amount);
+    secDebt.style.display = '';
+  }
+}
+
+function renderDebtProps(debtId, debtorId, amount) {
+  const debtor = (snap.players || []).find(p => p.playerId === debtorId);
+  const propMap = {};
+  (snap.properties || []).forEach(p => { propMap[p.propertyId] = p; });
+
+  // Debt summary
+  const debtorName = debtor?.name ?? debtorId ?? '?';
+  const debtorColor = pColors[debtorId] || '#aaa';
+  document.getElementById('debt-info').innerHTML =
+    `<span style="color:${debtorColor}">${esc(debtorName)}</span> velkaa` +
+    (amount != null ? ` <strong>€${amount}</strong>` : '') +
+    ` · saldo <strong style="color:#3fb950">€${debtor?.cash ?? '?'}</strong>`;
+
+  // Property list
+  const cont = document.getElementById('debt-props');
+  cont.innerHTML = '';
+  const ownedIds = debtor?.ownedPropertyIds ?? [];
+
+  if (!ownedIds.length) {
+    cont.innerHTML = '<div style="font-size:10px;color:#8b949e">Ei kiinteistöjä</div>';
+    return;
+  }
+
+  ownedIds.forEach(pid => {
+    const ps   = propMap[pid];
+    const spot = SPOTS.find(s => s.id === pid);
+    if (!ps || !spot) return;
+
+    const color    = GC[spot.g] || '#555';
+    const hasHouses = ps.houseCount > 0;
+    const hasHotel  = ps.hotelCount > 0;
+    const canSell   = hasHouses || hasHotel;
+    const bldgText  = hasHotel ? '🏨' : hasHouses ? '🏠'.repeat(ps.houseCount) : '';
+
+    const row = document.createElement('div');
+    row.className = 'dprop' + (ps.mortgaged ? ' mortgaged' : '');
+    row.innerHTML =
+      `<div class="dpstrip" style="background:${color}"></div>` +
+      `<div class="dpname">${esc(spot.s)}${ps.mortgaged ? ' <span style="color:#f85149;font-size:9px">PANTTU</span>' : ''}</div>` +
+      `<div class="dpbldg">${bldgText}</div>` +
+      `<div class="dpbtns"></div>`;
+
+    const btns = row.querySelector('.dpbtns');
+
+    if (canSell) {
+      const b = document.createElement('button');
+      b.className = 'warn';
+      b.textContent = hasHotel ? 'Myy hotelli' : 'Myy talo';
+      b.onclick = () => sendCmd({
+        type: 'SellBuildingForDebt', sessionId: SID,
+        actorPlayerId: debtorId, debtId, propertyId: pid, count: 1,
+      });
+      btns.appendChild(b);
+    }
+
+    if (!ps.mortgaged) {
+      const b = document.createElement('button');
+      b.className = 'sec';
+      b.textContent = 'Panttaa';
+      b.onclick = () => sendCmd({
+        type: 'MortgagePropertyForDebt', sessionId: SID,
+        actorPlayerId: debtorId, debtId, propertyId: pid,
+      });
+      btns.appendChild(b);
+    }
+
+    cont.appendChild(row);
+  });
+}
+
+// ── Command sending ────────────────────────────────────────────────────
+
+async function sendCmd(cmd) {
+  if (!cmd) { log('Lisää komento manuaalisesti JSON-kenttään', 'info'); return; }
+  if (!SID) { log('Ei sessiota', 'err'); return; }
+  log('→ ' + JSON.stringify(cmd), 'cmd');
+  try {
+    const r = await fetch(`${BASE}/sessions/${SID}/command`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(cmd),
+    });
+    const j = await r.json();
+    if (j.accepted) {
+      log('✓ Hyväksytty', 'info');
+    } else {
+      const reasons = (j.rejections || []).map(x => x.code + ': ' + x.reason).join(' | ');
+      log('✗ Hylätty — ' + (reasons || '?'), 'err');
+    }
+  } catch(e) { log('Verkkovirhe: ' + e.message, 'err'); }
+}
+
+async function sendCustomCmd() {
+  const raw = document.getElementById('cmd-json').value.trim();
+  try {
+    await sendCmd(JSON.parse(raw));
+  } catch(e) { log('JSON-virhe: ' + e.message, 'err'); }
+}
+
+function prefillJson() {
+  const el  = document.getElementById('cmd-json');
+  const act = snap?.turn?.activePlayerId;
+  if (act && SID && !el.dataset.edited) {
+    el.value = JSON.stringify({type:'RollDice', sessionId:SID, actorPlayerId:act}, null, 2);
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────
+
+function setDot(cls, text) {
+  document.getElementById('sdot').className  = cls;
+  document.getElementById('stext').textContent = text;
+}
+
+function log(msg, type='info') {
+  const cont = document.getElementById('log-entries');
+  const d = document.createElement('div');
+  d.className = 'lentry ' + type;
+  d.textContent = `[${new Date().toTimeString().slice(0,8)}] ${msg}`;
+  cont.prepend(d);
+  while (cont.children.length > 60) cont.removeChild(cont.lastChild);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// mark json textarea as user-edited so prefill stops overwriting
+document.getElementById('cmd-json').addEventListener('input', e => {
+  e.target.dataset.edited = '1';
+});
+</script>
+</body>
+</html>

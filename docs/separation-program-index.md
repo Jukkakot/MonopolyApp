@@ -14,6 +14,15 @@ It collects the current design documents into one implementation-oriented progra
 The goal is that implementation can later proceed in controlled slices without reopening architecture from scratch every
 time.
 
+Important note:
+
+- this document is the original roadmap/program index
+- it is not the most up-to-date implementation status tracker anymore
+- for current truth, read:
+  - [current-architecture-status.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/current-architecture-status.md)
+  - [architecture-overview-diagrams.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/architecture-overview-diagrams.md)
+  - [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
+
 ## Program Goal
 
 Move the current Monopoly Processing app toward this target:
@@ -91,7 +100,7 @@ Use this when deciding where code should move and what not to grow anymore.
 
 ### 5. PR1 design note
 
-- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
+- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr1-design-note-session-state-seam.md)
 
 Purpose:
 
@@ -106,7 +115,7 @@ Status:
 
 ### 6. PR2 design note
 
-- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr2-design-note-property-purchase-slice.md)
+- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr2-design-note-property-purchase-slice.md)
 
 Purpose:
 
@@ -122,7 +131,7 @@ Status:
 
 ### 7. PR3 design note
 
-- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr3-design-note-rent-and-debt-opening.md)
+- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr3-design-note-rent-and-debt-opening.md)
 
 Purpose:
 
@@ -137,7 +146,7 @@ Status:
 
 ### 8. PR4 design note
 
-- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr4-design-note-debt-remediation.md)
+- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr4-design-note-debt-remediation.md)
 
 Purpose:
 
@@ -153,7 +162,7 @@ Status:
 
 ### 9. PR5 design note
 
-- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr5-design-note-auction-flow.md)
+- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr5-design-note-auction-flow.md)
 
 Purpose:
 
@@ -169,7 +178,7 @@ Status:
 
 ### 10. PR6 design note
 
-- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr6-design-note-trade-flow.md)
+- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr6-design-note-trade-flow.md)
 
 Purpose:
 
@@ -184,7 +193,7 @@ Status:
 
 ### 11. PR7 design note
 
-- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr7-design-note-bot-command-unification.md)
+- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr7-design-note-bot-command-unification.md)
 
 Purpose:
 
@@ -196,7 +205,7 @@ Status:
 
 ### 12. PR8 design note
 
-- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr8-design-note-game-presentation-shell-cleanup.md)
 
 Purpose:
 
@@ -253,7 +262,7 @@ PR1:
 
 Primary document:
 
-- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr1-design-note-session-state-seam.md)
+- [pr1-design-note-session-state-seam.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr1-design-note-session-state-seam.md)
 
 ### Phase 2: Migrate property purchase
 
@@ -265,7 +274,7 @@ PR2:
 
 Primary document:
 
-- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr2-design-note-property-purchase-slice.md)
+- [pr2-design-note-property-purchase-slice.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr2-design-note-property-purchase-slice.md)
 
 ### Phase 3: Migrate rent and debt opening
 
@@ -276,7 +285,7 @@ PR3:
 
 Primary document:
 
-- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr3-design-note-rent-and-debt-opening.md)
+- [pr3-design-note-rent-and-debt-opening.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr3-design-note-rent-and-debt-opening.md)
 
 ### Phase 4: Migrate debt remediation
 
@@ -290,7 +299,7 @@ PR4:
 
 Primary document:
 
-- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr4-design-note-debt-remediation.md)
+- [pr4-design-note-debt-remediation.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr4-design-note-debt-remediation.md)
 
 ### Phase 5: Migrate auction flow
 
@@ -302,7 +311,7 @@ PR5:
 
 Primary document:
 
-- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr5-design-note-auction-flow.md)
+- [pr5-design-note-auction-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr5-design-note-auction-flow.md)
 
 ### Phase 6: Migrate trade flow
 
@@ -315,7 +324,7 @@ PR6:
 
 Primary document:
 
-- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr6-design-note-trade-flow.md)
+- [pr6-design-note-trade-flow.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr6-design-note-trade-flow.md)
 
 ### Phase 7: Unify bots behind commands
 
@@ -326,7 +335,7 @@ PR7:
 
 Primary document:
 
-- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr7-design-note-bot-command-unification.md)
+- [pr7-design-note-bot-command-unification.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr7-design-note-bot-command-unification.md)
 
 ### Phase 8: Shrink `Game` to presentation shell
 
@@ -338,20 +347,54 @@ PR8:
 
 Primary document:
 
-- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr8-design-note-game-presentation-shell-cleanup.md)
+- [pr8-design-note-game-presentation-shell-cleanup.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/completed-plans/pr8-design-note-game-presentation-shell-cleanup.md)
 
 ### Phase 9: Persistence-ready authoritative session
 
-Future scope:
+PR9:
 
-- save/load around authoritative session state
+- stable session snapshot boundary
+- save/load on authoritative session
+- restore across pending decision / debt / auction / trade
+
+Primary document:
+
+- [pr9-design-note-persistence-ready-session.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr9-design-note-persistence-ready-session.md)
 
 ### Phase 10: Server extraction
 
-Future scope:
+PR10:
 
-- move application + domain into backend host
-- Processing becomes network client
+- backend session host
+- command transport
+- full snapshot sync
+- backend bots/autoplay
+
+Primary document:
+
+- [pr10-design-note-server-extraction-mvp.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr10-design-note-server-extraction-mvp.md)
+
+### Phase 11: Callback elimination and authoritative turn continuation
+
+PR11:
+
+- replace callback-owned gameplay continuation with authoritative continuation state
+- make save/load truly resumable across property purchase / debt / auction
+
+Primary document:
+
+- [pr11-design-note-turn-continuation-state.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr11-design-note-turn-continuation-state.md)
+
+### Phase 12: Local load reattachment
+
+PR12:
+
+- reattach local runtime/presentation to restored authoritative session
+- make saved local sessions actually resumable in the client
+
+Primary document:
+
+- [pr12-design-note-local-load-reattachment.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/pr12-design-note-local-load-reattachment.md)
 
 ## Which PRs Are Ready Enough To Implement
 
@@ -365,15 +408,53 @@ Future scope:
 - PR6
 - PR7
 - PR8
+- PR9
+- PR10
+- PR11
+- PR12
 
-These are specified well enough that implementation could start without re-architecting first.
+These are specified well enough that implementation could start without reopening architecture first.
 
-### Partially specified, but not implementation-ready yet
+### Current branch status
 
-- persistence-ready authoritative session wave
-- server extraction wave
+On branch `separation-program`:
 
-These still need their own focused design notes before implementation.
+- PR1 through PR8 are already substantially implemented
+- PR9, PR11, and PR12 have also been substantially advanced in implementation spirit through local persistence, restoration, continuation, and desktop reattachment work
+- the codebase is now past the original “start PR9 next” framing
+- the main remaining architectural milestone is no longer basic local separation, but reaching a real client/host boundary
+- PR10 remains the next major architecture milestone in substance, even if some remaining local cleanup still continues in parallel
+
+## Current Interpretation Of The Original PR Plan
+
+This is the practical reading of the original PR-wave today.
+
+### Largely realized in code already
+
+- PR1: session-state seam
+- PR2: property purchase command-oriented flow
+- PR3: rent and debt opening
+- PR4: debt remediation
+- PR5: auction flow
+- PR6: trade flow
+- PR7: bot command unification
+- PR8: game presentation shell cleanup
+
+### Substantially advanced, but still carrying transitional legacy seams
+
+- PR9: persistence-ready authoritative session
+- PR11: authoritative continuation / callback elimination
+- PR12: local load reattachment
+
+### Still the next real architecture jump
+
+- PR10: server extraction / host-client split
+
+In other words:
+
+- the original plan is still directionally right
+- but the repo is now closer to “finish host/client seam and start backend extraction”
+  than to “begin persistence planning from scratch”
 
 ## Suggested Task Breakdown
 
@@ -463,14 +544,15 @@ These are not blockers yet, but they will need explicit decisions before their d
 
 ## Recommended Immediate Next Planning Step
 
-The next best planning move is:
+The next best implementation move is:
 
-- decide whether to continue planning persistence/server extraction in the same level of detail now, or begin
-  implementation of PR1
+- stop treating PR9 as untouched future work
+- use the current implementation status as the starting point
+- move next toward the client/host seam described in
+  [backend-ready-fast-track-plan.md](/E:/Documents/ProcessingProjects/MonopolyApp/docs/backend-ready-fast-track-plan.md)
 
 Reason:
 
-- PR1..PR8 now cover the full local separation wave
-- the next step is either:
-    - start executing from PR1
-    - or continue with persistence/server-side design notes
+- local separation is already far along
+- the next architectural risk now sits at the host/client boundary
+- continued local cleanup only matters if it helps create that boundary

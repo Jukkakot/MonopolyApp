@@ -1,11 +1,15 @@
 package fi.monopoly.components.computer;
 
-import fi.monopoly.types.SpotType;
-
+import fi.monopoly.application.command.SessionCommand;
+import fi.monopoly.domain.session.SessionState;
 public interface ComputerTurnContext {
     GameView gameView();
 
     PlayerView currentPlayerView();
+
+    SessionState sessionState();
+
+    boolean submit(SessionCommand command);
 
     boolean resolveActivePopup();
 
@@ -13,19 +17,5 @@ public interface ComputerTurnContext {
 
     boolean declineActivePopup();
 
-    boolean sellBuilding(SpotType spotType, int count);
-
-    boolean buyBuildingRound(SpotType spotType);
-
-    boolean toggleMortgage(SpotType spotType);
-
     ComputerDecision initiateTrade();
-
-    void retryPendingDebtPayment();
-
-    void declareBankruptcy();
-
-    void rollDice();
-
-    void endTurn();
 }

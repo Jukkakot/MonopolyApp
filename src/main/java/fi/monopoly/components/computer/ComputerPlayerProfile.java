@@ -8,4 +8,8 @@ public enum ComputerPlayerProfile {
     public boolean isComputerControlled() {
         return this != HUMAN;
     }
+
+    public String textKey() {
+        return "game.player.mode." + name().toLowerCase();
+    }
 }
