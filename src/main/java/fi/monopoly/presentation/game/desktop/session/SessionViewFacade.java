@@ -35,7 +35,7 @@ public final class SessionViewFacade {
     private final BooleanSupplier rollDiceAvailable;
     private final BooleanSupplier endTurnAvailable;
     private final IntSupplier unownedPropertyCountSupplier;
-    private final Function<Player, Integer> boardDangerScoreSupplier;
+    private final Function<String, Integer> boardDangerScoreSupplier;
 
     private final Map<Integer, CachedPlayerView> playerViewCache = new HashMap<>();
     private CachedGameView cachedGameView;
@@ -118,7 +118,7 @@ public final class SessionViewFacade {
                 player.getTotalHouseCount(),
                 player.getTotalHotelCount(),
                 player.getTotalLiquidationValue(),
-                boardDangerScoreSupplier.apply(player),
+                boardDangerScoreSupplier.apply("player-" + player.getId()),
                 completedSets,
                 ownedProperties
         );
@@ -169,7 +169,7 @@ public final class SessionViewFacade {
         signature = signature * 31 + player.getTotalHouseCount();
         signature = signature * 31 + player.getTotalHotelCount();
         signature = signature * 31 + player.getTotalLiquidationValue();
-        signature = signature * 31 + boardDangerScoreSupplier.apply(player);
+        signature = signature * 31 + boardDangerScoreSupplier.apply("player-" + player.getId());
         for (Property property : player.getOwnedProperties()) {
             signature = signature * 31 + property.getSpotType().ordinal();
             signature = signature * 31 + property.getPrice();

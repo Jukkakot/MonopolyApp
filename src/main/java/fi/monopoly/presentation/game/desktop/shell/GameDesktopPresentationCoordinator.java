@@ -599,7 +599,7 @@ public final class GameDesktopPresentationCoordinator {
                 () -> isRollDiceActionAvailable(dependencies),
                 () -> isEndTurnActionAvailable(dependencies),
                 () -> dependencies.gameSessionQueries().countUnownedProperties(),
-                player -> dependencies.gameSessionQueries().calculateBoardDangerScore(player)
+                playerId -> dependencies.gameSessionQueries().calculateBoardDangerScore(playerId)
         );
     }
 }

@@ -57,7 +57,8 @@ public final class GameSessionQueries implements fi.monopoly.host.bot.BotSession
         return unownedProperties;
     }
 
-    public int calculateBoardDangerScore(Player player) {
+    public int calculateBoardDangerScore(String playerId) {
+        Player player = findPlayerById(playerId);
         int boardDangerScore = 0;
         for (Spot spot : board.getSpots()) {
             if (!(spot instanceof PropertySpot propertySpot)) {
