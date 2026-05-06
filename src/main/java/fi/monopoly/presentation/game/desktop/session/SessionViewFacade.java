@@ -32,8 +32,8 @@ public final class SessionViewFacade {
     private final Supplier<DebtState> debtStateSupplier;
     private final BooleanSupplier retryDebtVisibleSupplier;
     private final BooleanSupplier declareBankruptcyVisibleSupplier;
-    private final Function<Player, Boolean> rollDiceAvailable;
-    private final Function<Player, Boolean> endTurnAvailable;
+    private final BooleanSupplier rollDiceAvailable;
+    private final BooleanSupplier endTurnAvailable;
     private final IntSupplier unownedPropertyCountSupplier;
     private final Function<Player, Integer> boardDangerScoreSupplier;
 
@@ -73,8 +73,8 @@ public final class SessionViewFacade {
                         popupService.isAnyVisible(),
                         retryDebtVisibleSupplier.getAsBoolean(),
                         declareBankruptcyVisibleSupplier.getAsBoolean(),
-                        rollDiceAvailable.apply(currentPlayer),
-                        endTurnAvailable.apply(currentPlayer)
+                        rollDiceAvailable.getAsBoolean(),
+                        endTurnAvailable.getAsBoolean()
                 ),
                 popupView,
                 debtView,
@@ -137,8 +137,8 @@ public final class SessionViewFacade {
         }
         signature = signature * 31 + Boolean.hashCode(retryDebtVisibleSupplier.getAsBoolean());
         signature = signature * 31 + Boolean.hashCode(declareBankruptcyVisibleSupplier.getAsBoolean());
-        signature = signature * 31 + Boolean.hashCode(rollDiceAvailable.apply(currentPlayer));
-        signature = signature * 31 + Boolean.hashCode(endTurnAvailable.apply(currentPlayer));
+        signature = signature * 31 + Boolean.hashCode(rollDiceAvailable.getAsBoolean());
+        signature = signature * 31 + Boolean.hashCode(endTurnAvailable.getAsBoolean());
         signature = signature * 31 + unownedPropertyCountSupplier.getAsInt();
         signature = signature * 31 + (StreetProperty.BANK_HOUSE_SUPPLY - players.getTotalHouseCount());
         signature = signature * 31 + (StreetProperty.BANK_HOTEL_SUPPLY - players.getTotalHotelCount());

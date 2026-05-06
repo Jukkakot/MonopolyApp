@@ -596,8 +596,8 @@ public final class GameDesktopPresentationCoordinator {
                 dependencies::debtState,
                 dependencies::retryDebtVisible,
                 dependencies::declareBankruptcyVisible,
-                player -> isRollDiceActionAvailable(dependencies),
-                player -> isEndTurnActionAvailable(dependencies),
+                () -> isRollDiceActionAvailable(dependencies),
+                () -> isEndTurnActionAvailable(dependencies),
                 () -> dependencies.gameSessionQueries().countUnownedProperties(),
                 player -> dependencies.gameSessionQueries().calculateBoardDangerScore(player)
         );
