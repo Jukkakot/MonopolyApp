@@ -341,6 +341,15 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
         int gap = UiTokens.remoteBoardActionButtonGap();
 
         if (phase == TurnPhase.WAITING_FOR_ROLL) {
+            PlayerSnapshot activePlayer = state.players().stream()
+                    .filter(p -> activeId.equals(p.playerId())).findFirst().orElse(null);
+            if (activePlayer != null && activePlayer.inJail()) {
+                app.fill(170, 130, 50);
+                app.textSize(9);
+                app.textAlign(PApplet.LEFT, PApplet.TOP);
+                app.text("🔒 Vankilassa — " + activePlayer.jailRoundsRemaining() + " kierrosta jäljellä", sx + 6, y);
+                y += 14;
+            }
             y = addButton(sx, y, sw, bh, gap, "🎲 Heitä nopat",
                     new RollDiceCommand(sessionId, activeId), new int[]{35, 134, 54});
         }
