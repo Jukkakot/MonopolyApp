@@ -9,6 +9,7 @@ import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.StrongBotConfig;
 import fi.monopoly.components.trade.*;
+import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.domain.session.TradeOfferState;
 import fi.monopoly.domain.session.TradeSelectionState;
 import fi.monopoly.domain.session.TradeState;
@@ -42,7 +43,6 @@ public final class TradeController {
     private final TradeViewAdapter tradeViewAdapter;
     private final LegacyTradeGateway legacyTradeGateway;
     private final BooleanSupplier canOpenTrade;
-    private final Supplier<Player> currentPlayerSupplier;
     private final Supplier<List<Player>> playersSupplier;
     private final TradeOfferEvaluator tradeOfferEvaluator = new TradeOfferEvaluator();
     private final TradeUiBuilder tradeUiBuilder = new TradeUiBuilder(tradeOfferEvaluator);
@@ -58,7 +58,7 @@ public final class TradeController {
         if (!canOpenTrade.getAsBoolean() || sessionApplicationService.currentState().tradeState() != null) {
             return;
         }
-        Player proposer = currentPlayerSupplier.get();
+        Player proposer = currentTurnPlayer();
         if (proposer == null) {
             return;
         }
@@ -85,7 +85,7 @@ public final class TradeController {
                 || proposerId == null || !proposerProfile.isComputerControlled()) {
             return null;
         }
-        Player currentPlayer = currentPlayerSupplier.get();
+        Player currentPlayer = currentTurnPlayer();
         if (currentPlayer == null || !proposerId.equals(playerId(currentPlayer))
                 || proposerId.equals(lastProactiveTradePlayerId)) {
             return null;
@@ -210,6 +210,12 @@ public final class TradeController {
             runtime.popupService().show(result.rejections().get(0).message());
         }
         return result;
+    }
+
+    private Player currentTurnPlayer() {
+        SessionState state = sessionApplicationService.currentState();
+        if (state == null || state.turn() == null) return null;
+        return findPlayerByDomainId(state.turn().activePlayerId());
     }
 
     private Player findPlayerByDomainId(String domainId) {

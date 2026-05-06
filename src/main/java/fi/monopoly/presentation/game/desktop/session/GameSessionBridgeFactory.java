@@ -8,7 +8,6 @@ import fi.monopoly.application.session.turn.TurnContinuationGateway;
 import fi.monopoly.client.desktop.MonopolyRuntime;
 import fi.monopoly.client.session.ForwardingSessionCommandPort;
 import fi.monopoly.client.session.SessionCommandPort;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
@@ -102,7 +101,6 @@ public final class GameSessionBridgeFactory {
                 tradeViewAdapter,
                 legacyTradeGateway,
                 hooks::canOpenTrade,
-                currentTurnPlayerSupplier(sessionApplicationService, players),
                 players::getPlayers
         );
         return new GameSessionBridge(
@@ -118,23 +116,6 @@ public final class GameSessionBridgeFactory {
                 tradeViewAdapter,
                 tradeController
         );
-    }
-
-    private static java.util.function.Supplier<Player> currentTurnPlayerSupplier(
-            SessionApplicationService sessionApplicationService,
-            Players players
-    ) {
-        return () -> {
-            SessionState state = sessionApplicationService.currentState();
-            if (state == null || state.turn() == null || state.turn().activePlayerId() == null) {
-                return null;
-            }
-            String activeId = state.turn().activePlayerId();
-            return players.getPlayers().stream()
-                    .filter(p -> activeId.equals("player-" + p.getId()))
-                    .findFirst()
-                    .orElse(null);
-        };
     }
 
     public interface Hooks {
