@@ -363,6 +363,13 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
         if (phase == TurnPhase.WAITING_FOR_DECISION && state.pendingDecision() != null) {
             var dec = state.pendingDecision();
             String propId = extractPropertyId(dec);
+            if (dec.payload() instanceof fi.monopoly.domain.decision.PropertyPurchaseDecisionPayload purchase) {
+                app.fill(170, 200, 170);
+                app.textSize(9);
+                app.textAlign(PApplet.LEFT, PApplet.TOP);
+                app.text("🏠 " + purchase.propertyDisplayName() + " — €" + purchase.price(), sx + 6, y);
+                y += 14;
+            }
             y = addButton(sx, y, sw, bh, gap, "💰 Osta kiinteistö",
                     new BuyPropertyCommand(sessionId, activeId, dec.decisionId(), propId),
                     new int[]{35, 100, 200});
