@@ -7,6 +7,7 @@ import fi.monopoly.client.session.desktop.DesktopSessionRenderView;
 import fi.monopoly.domain.session.*;
 import fi.monopoly.domain.turn.TurnPhase;
 import fi.monopoly.domain.turn.TurnState;
+import fi.monopoly.types.PlaceType;
 import fi.monopoly.types.SpotType;
 import fi.monopoly.types.StreetType;
 import fi.monopoly.utils.UiTokens;
@@ -592,7 +593,7 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
             if (!activeId.equals(prop.ownerPlayerId())) continue;
             SpotType spotType = SpotType.valueOf(prop.propertyId());
             // Build: only street properties, not mortgaged
-            if (!prop.mortgaged() && spotType.streetType.placeType == fi.monopoly.types.PlaceType.STREET) {
+            if (!prop.mortgaged() && spotType.streetType.placeType == PlaceType.STREET) {
                 String label = "🏠 Rakenna " + shortLabel(spotType);
                 y = addButton(sx, y, sw, bh, gap, label,
                         new BuyBuildingRoundCommand(sessionId, activeId, prop.propertyId()),
