@@ -345,6 +345,7 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
         }
 
         if (phase == TurnPhase.WAITING_FOR_END_TURN) {
+            y = addManagementButtons(state, sx, y, sw, bh, gap, activeId);
             y = addButton(sx, y, sw, bh, gap, "✅ Lopeta vuoro",
                     new EndTurnCommand(sessionId, activeId), new int[]{35, 134, 54});
         }
@@ -584,6 +585,29 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
             return p.propertyId();
         }
         return "";
+    }
+
+    private int addManagementButtons(SessionState state, int sx, int y, int sw, int bh, int gap, String activeId) {
+        for (PropertyStateSnapshot prop : state.properties()) {
+            if (!activeId.equals(prop.ownerPlayerId())) continue;
+            SpotType spotType = SpotType.valueOf(prop.propertyId());
+            // Build: only street properties, not mortgaged
+            if (!prop.mortgaged() && spotType.streetType.placeType == fi.monopoly.types.PlaceType.STREET) {
+                String label = "🏠 Rakenna " + shortLabel(spotType);
+                y = addButton(sx, y, sw, bh, gap, label,
+                        new BuyBuildingRoundCommand(sessionId, activeId, prop.propertyId()),
+                        new int[]{50, 80, 140});
+            }
+            // Mortgage toggle
+            String mortgageLabel = prop.mortgaged()
+                    ? "💰 Lunasta " + shortLabel(spotType)
+                    : "📜 Kiinnitä " + shortLabel(spotType);
+            int[] mortgageColor = prop.mortgaged() ? new int[]{80, 120, 40} : new int[]{100, 80, 20};
+            y = addButton(sx, y, sw, bh, gap, mortgageLabel,
+                    new ToggleMortgageCommand(sessionId, activeId, prop.propertyId()),
+                    mortgageColor);
+        }
+        return y;
     }
 
     private static List<PropertyStateSnapshot> debtorUnmortgagedProperties(SessionState state, String debtorPlayerId) {
