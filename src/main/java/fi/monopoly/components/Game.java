@@ -68,11 +68,61 @@ public class Game implements MonopolyEventListener {
             Locale.forLanguageTag("fi"),
             Locale.ENGLISH
     );
+    private static final List<Color> DEFAULT_PLAYER_COLORS = List.of(
+            Color.MEDIUMPURPLE, Color.PINK, Color.DARKOLIVEGREEN,
+            Color.TURQUOISE, Color.MEDIUMBLUE, Color.ORANGE
+    );
+    private static final List<String> DEFAULT_PLAYER_NAMES = List.of(
+            "game.player.default1", "game.player.default2", "game.player.default3"
+    );
+
     void setupDefaultGameState(MonopolyRuntime runtime, Board board, Players players) {
         Spot spot = board.getSpots().get(0);
-        players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
-        players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
-        players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
+        List<String[]> config = resolveLocalPlayerConfig();
+        for (int i = 0; i < config.size(); i++) {
+            String name = config.get(i)[0];
+            ComputerPlayerProfile profile = parseProfile(config.get(i)[1]);
+            Color color = DEFAULT_PLAYER_COLORS.get(i % DEFAULT_PLAYER_COLORS.size());
+            players.addPlayer(new Player(runtime, name, color, spot, profile));
+        }
+    }
+
+    /**
+     * Reads local player config from system properties, falling back to defaults.
+     *
+     * <p>Supported properties:
+     * <ul>
+     *   <li>{@code monopoly.players} — comma-separated names, e.g. {@code Jukka,Mari}</li>
+     *   <li>{@code monopoly.profiles} — comma-separated profiles per seat, e.g.
+     *       {@code HUMAN,STRONG,SMOKE_TEST}. If absent, defaults to STRONG for all.</li>
+     * </ul>
+     */
+    private static List<String[]> resolveLocalPlayerConfig() {
+        String playersProp = System.getProperty("monopoly.players");
+        if (playersProp == null || playersProp.isBlank()) {
+            return List.of(
+                    new String[]{text(DEFAULT_PLAYER_NAMES.get(0)), "STRONG"},
+                    new String[]{text(DEFAULT_PLAYER_NAMES.get(1)), "STRONG"},
+                    new String[]{text(DEFAULT_PLAYER_NAMES.get(2)), "STRONG"}
+            );
+        }
+        String[] names = playersProp.split(",");
+        String profilesProp = System.getProperty("monopoly.profiles", "");
+        String[] profiles = profilesProp.isBlank() ? new String[0] : profilesProp.split(",");
+        List<String[]> result = new java.util.ArrayList<>();
+        for (int i = 0; i < Math.min(names.length, DEFAULT_PLAYER_COLORS.size()); i++) {
+            String profile = i < profiles.length ? profiles[i].trim() : "STRONG";
+            result.add(new String[]{names[i].trim(), profile});
+        }
+        return result;
+    }
+
+    private static ComputerPlayerProfile parseProfile(String profileName) {
+        return switch (profileName.toUpperCase()) {
+            case "HUMAN" -> ComputerPlayerProfile.HUMAN;
+            case "SMOKE_TEST", "EASY" -> ComputerPlayerProfile.SMOKE_TEST;
+            default -> ComputerPlayerProfile.STRONG;
+        };
     }
 
     // Core services
