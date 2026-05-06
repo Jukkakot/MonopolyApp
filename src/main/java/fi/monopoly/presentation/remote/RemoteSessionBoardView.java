@@ -373,13 +373,19 @@ public final class RemoteSessionBoardView implements DesktopSessionRenderView, M
 
         if (phase == TurnPhase.WAITING_FOR_AUCTION && state.auctionState() != null) {
             var auction = state.auctionState();
-            int nextBid = auction.minimumNextBid() > 0 ? auction.minimumNextBid() : auction.currentBid() + 10;
-            y = addButton(sx, y, sw, bh, gap, "📢 Huuto +" + nextBid,
-                    new PlaceAuctionBidCommand(sessionId, activeId, auction.auctionId(), nextBid),
-                    new int[]{35, 100, 200});
-            y = addButton(sx, y, sw, bh, gap, "🚫 Passi",
-                    new PassAuctionCommand(sessionId, activeId, auction.auctionId()),
-                    new int[]{100, 50, 50});
+            if (auction.status() == AuctionStatus.WON_PENDING_RESOLUTION) {
+                y = addButton(sx, y, sw, bh, gap, "🏆 Vahvista voitto",
+                        new FinishAuctionResolutionCommand(sessionId, auction.auctionId()),
+                        new int[]{160, 130, 40});
+            } else {
+                int nextBid = auction.minimumNextBid() > 0 ? auction.minimumNextBid() : auction.currentBid() + 10;
+                y = addButton(sx, y, sw, bh, gap, "📢 Huuto +" + nextBid,
+                        new PlaceAuctionBidCommand(sessionId, activeId, auction.auctionId(), nextBid),
+                        new int[]{35, 100, 200});
+                y = addButton(sx, y, sw, bh, gap, "🚫 Passi",
+                        new PassAuctionCommand(sessionId, activeId, auction.auctionId()),
+                        new int[]{100, 50, 50});
+            }
         }
 
         if (phase == TurnPhase.RESOLVING_DEBT && state.activeDebt() != null) {
