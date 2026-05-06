@@ -14,5 +14,6 @@ PLAYER SETUP
 ECONOMY AND PACING
 
 BACKEND EXTRACTION (separation-program)
-[Low] Remove Player from TradeController/LegacyTradeGateway — trade partner selection and
-      AI trade logic are deeply tied to legacy Player objects
+[Low] Remove Player from trade subsystem internals — openTradeMenu and TradeUiBuilder
+      partner-selection UI, StrongTradePlanner.plan(), LegacyTradeGateway, TradeViewAdapter
+      all still use legacy Player objects; public bot API is already clean
