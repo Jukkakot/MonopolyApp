@@ -47,7 +47,7 @@ public final class TradeController {
     private final TradeOfferEvaluator tradeOfferEvaluator = new TradeOfferEvaluator();
     private final TradeUiBuilder tradeUiBuilder = new TradeUiBuilder(tradeOfferEvaluator);
     private final StrongTradePlanner strongTradePlanner = new StrongTradePlanner(STRONG_CONFIG);
-    private Player lastProactiveTradePlayer;
+    private String lastProactiveTradePlayerId;
 
 
     public void sync() {
@@ -80,18 +80,23 @@ public final class TradeController {
         );
     }
 
-    public ComputerDecision tryInitiateComputerTrade(Player proposer) {
-        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.currentState().tradeState() != null || proposer == null || !proposer.isComputerControlled()) {
+    public ComputerDecision tryInitiateComputerTrade(String proposerId, ComputerPlayerProfile proposerProfile) {
+        if (!canOpenTrade.getAsBoolean() || sessionApplicationService.currentState().tradeState() != null
+                || proposerId == null || !proposerProfile.isComputerControlled()) {
             return null;
         }
-        if (currentPlayerSupplier.get() != proposer || lastProactiveTradePlayer == proposer) {
+        Player currentPlayer = currentPlayerSupplier.get();
+        if (currentPlayer == null || !proposerId.equals(playerId(currentPlayer))
+                || proposerId.equals(lastProactiveTradePlayerId)) {
             return null;
         }
-        lastProactiveTradePlayer = proposer;
-        if (proposer.getComputerProfile() != ComputerPlayerProfile.STRONG) {
+        lastProactiveTradePlayerId = proposerId;
+        if (proposerProfile != ComputerPlayerProfile.STRONG) {
             return null;
         }
-        StrongTradePlanner.TradePlan plan = strongTradePlanner.plan(proposer, playersSupplier.get());
+        Player proposerPlayer = findPlayerByDomainId(proposerId);
+        if (proposerPlayer == null) return null;
+        StrongTradePlanner.TradePlan plan = strongTradePlanner.plan(proposerPlayer, playersSupplier.get());
         if (plan == null) {
             return null;
         }
@@ -104,16 +109,16 @@ public final class TradeController {
         }
         replaceOffer(tradeState, legacyTradeGateway.toState(plan.offer()), true);
         handleResult(sessionApplicationService.handle(new SubmitTradeOfferCommand(sessionId, playerId(plan.offer().proposer()), tradeState.tradeId())));
-        handleComputerTradeTurn(plan.offer().recipient());
+        Player recipient = plan.offer().recipient();
+        handleComputerTradeTurn(playerId(recipient), recipient.getComputerProfile());
         return plan.decision();
     }
 
-    public boolean handleComputerTradeTurn(Player actor) {
+    public boolean handleComputerTradeTurn(String actorId, ComputerPlayerProfile actorProfile) {
         TradeState tradeState = sessionApplicationService.currentState().tradeState();
-        if (tradeState == null || actor == null || !actor.isComputerControlled()) {
+        if (tradeState == null || actorId == null || !actorProfile.isComputerControlled()) {
             return false;
         }
-        String actorId = playerId(actor);
         if (tradeState.status() == TradeStatus.EDITING && actorId.equals(tradeState.editingPlayerId())) {
             return handleResult(sessionApplicationService.handle(new SubmitTradeOfferCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
         }
@@ -121,22 +126,22 @@ public final class TradeController {
                 || !actorId.equals(tradeState.decisionRequiredFromPlayerId())) {
             return false;
         }
-        BotTradeProfile profile = resolveTradeProfile(actor);
-        StrongBotConfig strongConfig = resolveStrongTradeConfig(actor);
+        BotTradeProfile tradeProfile = resolveTradeProfile(actorProfile);
+        StrongBotConfig strongConfig = resolveStrongTradeConfig(actorProfile);
         TradeDecision decision = tradeOfferEvaluator.evaluateForRecipient(
                 legacyTradeGateway.toLegacyOffer(tradeState.currentOffer()),
-                profile,
+                tradeProfile,
                 strongConfig
         );
         log.info("Bot trade decision: player={}, accept={}, score={}, reason={}",
-                actor.getName(),
+                actorId,
                 decision.accept(),
                 Math.round(decision.score() * 10.0) / 10.0,
                 decision.reason());
         if (decision.accept()) {
             return handleResult(sessionApplicationService.handle(new AcceptTradeCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
         }
-        TradeOfferState counterOffer = legacyTradeGateway.proposeCounterOffer(tradeState.currentOffer(), profile, strongConfig);
+        TradeOfferState counterOffer = legacyTradeGateway.proposeCounterOffer(tradeState.currentOffer(), tradeProfile, strongConfig);
         if (counterOffer == null) {
             return handleResult(sessionApplicationService.handle(new DeclineTradeCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
         }
@@ -207,16 +212,23 @@ public final class TradeController {
         return result;
     }
 
-    private BotTradeProfile resolveTradeProfile(Player player) {
-        return switch (player.getComputerProfile()) {
+    private Player findPlayerByDomainId(String domainId) {
+        if (domainId == null) return null;
+        return playersSupplier.get().stream()
+                .filter(p -> domainId.equals("player-" + p.getId()))
+                .findFirst().orElse(null);
+    }
+
+    private BotTradeProfile resolveTradeProfile(ComputerPlayerProfile profile) {
+        return switch (profile) {
             case SMOKE_TEST -> BotTradeProfile.CAUTIOUS;
             case STRONG -> BotTradeProfile.BALANCED;
             case HUMAN -> BotTradeProfile.AGGRESSIVE;
         };
     }
 
-    private StrongBotConfig resolveStrongTradeConfig(Player player) {
-        return player.getComputerProfile() == ComputerPlayerProfile.STRONG ? STRONG_CONFIG : null;
+    private StrongBotConfig resolveStrongTradeConfig(ComputerPlayerProfile profile) {
+        return profile == ComputerPlayerProfile.STRONG ? STRONG_CONFIG : null;
     }
 
     private String playerId(Player player) {

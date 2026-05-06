@@ -1,7 +1,6 @@
 package fi.monopoly.host.bot;
 
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerStrategies;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
@@ -34,16 +33,17 @@ public final class GameBotTurnDriver {
             return;
         }
 
-        Player actingPlayer = resolveActingPlayer(hooks, sessionState);
-        if (actingPlayer == null || !actingPlayer.isComputerControlled()) {
+        String actingPlayerId = resolveActingPlayerId(sessionState);
+        if (actingPlayerId == null || !hooks.isComputerPlayer(actingPlayerId)) {
             return;
         }
 
-        ComputerTurnContext context = hooks.createTurnContext(actingPlayer);
-        boolean acted = ComputerStrategies.forProfile(actingPlayer.getComputerProfile()).takeStep(context);
+        ComputerPlayerProfile profile = hooks.computerProfileFor(actingPlayerId);
+        ComputerTurnContext context = hooks.createTurnContext(actingPlayerId, profile);
+        boolean acted = ComputerStrategies.forProfile(profile).takeStep(context);
         if (!acted && sessionState.activeDebt() == null && hooks.recoverPrimaryTurnControlsForCurrentComputerTurn()) {
             hooks.syncPresentationState();
-            acted = ComputerStrategies.forProfile(actingPlayer.getComputerProfile()).takeStep(context);
+            acted = ComputerStrategies.forProfile(profile).takeStep(context);
         }
         if (acted) {
             hooks.scheduleNextAction(hooks.delayKindFor(context), now);
@@ -51,27 +51,22 @@ public final class GameBotTurnDriver {
         hooks.recordStep(System.nanoTime() - stepStart);
     }
 
-    private Player resolveActingPlayer(Hooks hooks, SessionState sessionState) {
+    private String resolveActingPlayerId(SessionState sessionState) {
         if (sessionState.activeDebt() != null) {
-            Player debtor = hooks.findPlayerById(sessionState.activeDebt().debtorPlayerId());
-            if (debtor != null) {
-                return debtor;
-            }
+            return sessionState.activeDebt().debtorPlayerId();
         }
-        if (sessionState.turn() == null || sessionState.turn().activePlayerId() == null) return null;
-        return hooks.findPlayerById(sessionState.turn().activePlayerId());
+        if (sessionState.turn() == null) return null;
+        return sessionState.turn().activePlayerId();
     }
 
     private void handleTradeStep(Hooks hooks, SessionState sessionState, int now, long stepStart) {
-        Player tradeActor = hooks.findPlayerById(hooks.resolveTradeActorId(sessionState));
-        if (tradeActor == null) {
-            return;
-        }
-        if (!tradeActor.isComputerControlled()) {
+        String tradeActorId = hooks.resolveTradeActorId(sessionState);
+        if (tradeActorId == null || !hooks.isComputerPlayer(tradeActorId)) {
             hooks.recordStep(System.nanoTime() - stepStart);
             return;
         }
-        boolean acted = hooks.handleComputerTradeTurn(tradeActor);
+        ComputerPlayerProfile profile = hooks.computerProfileFor(tradeActorId);
+        boolean acted = hooks.handleComputerTradeTurn(tradeActorId, profile);
         if (acted) {
             hooks.scheduleNextAction(BotTurnScheduler.DelayKind.TRADE, now);
         }
@@ -93,18 +88,19 @@ public final class GameBotTurnDriver {
         }
         if (hooks.popupVisible()) {
             String activePlayerId = sessionState.turn() != null ? sessionState.turn().activePlayerId() : null;
-            Player turnPlayer = activePlayerId != null ? hooks.findPlayerById(activePlayerId) : null;
-            if (turnPlayer != null && turnPlayer.isComputerControlled() && hooks.resolveVisiblePopupFor(turnPlayer.getComputerProfile())) {
+            if (activePlayerId != null && hooks.isComputerPlayer(activePlayerId)
+                    && hooks.resolveVisiblePopupFor(hooks.computerProfileFor(activePlayerId))) {
                 hooks.scheduleNextAction(BotTurnScheduler.DelayKind.RESOLVE_POPUP, now);
             }
             hooks.recordStep(System.nanoTime() - stepStart);
             return;
         }
-        Player auctionActor = hooks.findPlayerById(sessionState.auctionState().currentActorPlayerId());
-        if (auctionActor == null || !auctionActor.isComputerControlled() || sessionState.auctionState().status() != AuctionStatus.ACTIVE) {
+        String auctionActorId = sessionState.auctionState().currentActorPlayerId();
+        if (auctionActorId == null || !hooks.isComputerPlayer(auctionActorId)
+                || sessionState.auctionState().status() != AuctionStatus.ACTIVE) {
             return;
         }
-        if (hooks.handleComputerAuctionAction(sessionState.auctionState().currentActorPlayerId())) {
+        if (hooks.handleComputerAuctionAction(auctionActorId)) {
             hooks.scheduleNextAction(BotTurnScheduler.DelayKind.AUCTION_ACTION, now);
         }
         hooks.recordStep(System.nanoTime() - stepStart);
@@ -125,11 +121,13 @@ public final class GameBotTurnDriver {
 
         SessionState sessionState();
 
-        Player findPlayerById(String playerId);
+        boolean isComputerPlayer(String playerId);
+
+        ComputerPlayerProfile computerProfileFor(String playerId);
 
         String resolveTradeActorId(SessionState sessionState);
 
-        boolean handleComputerTradeTurn(Player tradeActor);
+        boolean handleComputerTradeTurn(String actorId, ComputerPlayerProfile profile);
 
         boolean popupVisible();
 
@@ -139,7 +137,7 @@ public final class GameBotTurnDriver {
 
         boolean handleComputerAuctionAction(String actorPlayerId);
 
-        ComputerTurnContext createTurnContext(Player turnPlayer);
+        ComputerTurnContext createTurnContext(String playerId, ComputerPlayerProfile profile);
 
         BotTurnScheduler.DelayKind delayKindFor(ComputerTurnContext context);
 

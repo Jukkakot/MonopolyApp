@@ -1,6 +1,5 @@
 package fi.monopoly.host.bot;
 
-import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.GameView;
@@ -23,9 +22,9 @@ public interface HostBotInteractionAdapter {
 
     boolean declineActivePopup();
 
-    boolean handleComputerTradeTurn(Player player);
+    boolean handleComputerTradeTurn(String actorId, ComputerPlayerProfile profile);
 
-    ComputerDecision tryInitiateComputerTrade(Player player);
+    ComputerDecision tryInitiateComputerTrade(String proposerId, ComputerPlayerProfile profile);
 
     GameView currentGameView(String playerId);
 

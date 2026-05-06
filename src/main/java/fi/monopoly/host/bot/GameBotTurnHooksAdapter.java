@@ -3,7 +3,6 @@ package fi.monopoly.host.bot;
 import fi.monopoly.application.command.FinishAuctionResolutionCommand;
 import fi.monopoly.application.result.CommandResult;
 import fi.monopoly.client.session.SessionCommandPort;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.domain.session.SessionState;
@@ -65,8 +64,13 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     }
 
     @Override
-    public Player findPlayerById(String playerId) {
-        return sessionQueries.findPlayerById(playerId);
+    public boolean isComputerPlayer(String playerId) {
+        return sessionQueries.isComputerPlayer(playerId);
+    }
+
+    @Override
+    public ComputerPlayerProfile computerProfileFor(String playerId) {
+        return sessionQueries.computerProfileFor(playerId);
     }
 
     @Override
@@ -75,8 +79,8 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     }
 
     @Override
-    public boolean handleComputerTradeTurn(Player tradeActor) {
-        return interactionAdapter.handleComputerTradeTurn(tradeActor);
+    public boolean handleComputerTradeTurn(String actorId, ComputerPlayerProfile profile) {
+        return interactionAdapter.handleComputerTradeTurn(actorId, profile);
     }
 
     @Override
@@ -100,9 +104,10 @@ public final class GameBotTurnHooksAdapter implements GameBotTurnDriver.Hooks {
     }
 
     @Override
-    public ComputerTurnContext createTurnContext(Player turnPlayer) {
+    public ComputerTurnContext createTurnContext(String playerId, ComputerPlayerProfile profile) {
         return new SessionBackedComputerTurnContext(
-                turnPlayer,
+                playerId,
+                profile,
                 sessionCommandPort,
                 interactionAdapter,
                 syncPresentationStateAction

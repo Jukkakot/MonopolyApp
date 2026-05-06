@@ -3,6 +3,7 @@ package fi.monopoly.presentation.game.session;
 import fi.monopoly.components.Player;
 import fi.monopoly.components.Players;
 import fi.monopoly.components.board.Board;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.properties.Property;
 import fi.monopoly.components.spots.PropertySpot;
 import fi.monopoly.components.spots.Spot;
@@ -16,16 +17,24 @@ public final class GameSessionQueries implements fi.monopoly.host.bot.BotSession
     private final Players players;
     private final Board board;
 
-    public Player findPlayerById(String playerId) {
-        if (playerId == null) {
-            return null;
-        }
+    private Player findPlayerById(String playerId) {
+        if (playerId == null) return null;
         for (Player player : players.getPlayers()) {
-            if (playerId.equals("player-" + player.getId())) {
-                return player;
-            }
+            if (playerId.equals("player-" + player.getId())) return player;
         }
         return null;
+    }
+
+    @Override
+    public boolean isComputerPlayer(String playerId) {
+        Player p = findPlayerById(playerId);
+        return p != null && p.isComputerControlled();
+    }
+
+    @Override
+    public ComputerPlayerProfile computerProfileFor(String playerId) {
+        Player p = findPlayerById(playerId);
+        return p != null ? p.getComputerProfile() : ComputerPlayerProfile.HUMAN;
     }
 
     public String resolveTradeActorId(SessionState sessionState) {

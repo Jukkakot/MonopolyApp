@@ -23,7 +23,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameBotTurnDriverTest {
@@ -32,11 +31,12 @@ class GameBotTurnDriverTest {
     void debtStepUsesDebtorEvenWhenTurnPointerStillTargetsAnotherPlayer() {
         GameBotTurnDriver driver = new GameBotTurnDriver(new BotTurnScheduler(() -> false));
         Player debtor = new Player("Debtor", Color.PINK, 1500, 2, ComputerPlayerProfile.SMOKE_TEST);
-        HooksStub hooks = new HooksStub(debtor, debtSessionState(debtor));
+        String debtorPlayerId = "player-" + debtor.getId();
+        HooksStub hooks = new HooksStub(debtorPlayerId, ComputerPlayerProfile.SMOKE_TEST, debtSessionState(debtor));
 
         driver.step(hooks);
 
-        assertSame(debtor, hooks.contextPlayer);
+        assertEquals(debtorPlayerId, hooks.contextPlayerId);
         assertTrue(hooks.scheduled);
         assertEquals(BotTurnScheduler.DelayKind.RETRY_DEBT_PAYMENT, hooks.scheduledDelayKind);
         assertFalse(hooks.recoverPrimaryTurnControlsCalled);
@@ -71,15 +71,17 @@ class GameBotTurnDriverTest {
     }
 
     private static final class HooksStub implements GameBotTurnDriver.Hooks {
-        private final Player debtor;
+        private final String computerPlayerId;
+        private final ComputerPlayerProfile computerProfile;
         private final SessionState sessionState;
-        private Player contextPlayer;
-        private boolean scheduled;
-        private BotTurnScheduler.DelayKind scheduledDelayKind;
-        private boolean recoverPrimaryTurnControlsCalled;
+        String contextPlayerId;
+        boolean scheduled;
+        BotTurnScheduler.DelayKind scheduledDelayKind;
+        boolean recoverPrimaryTurnControlsCalled;
 
-        private HooksStub(Player debtor, SessionState sessionState) {
-            this.debtor = debtor;
+        private HooksStub(String computerPlayerId, ComputerPlayerProfile computerProfile, SessionState sessionState) {
+            this.computerPlayerId = computerPlayerId;
+            this.computerProfile = computerProfile;
             this.sessionState = sessionState;
         }
 
@@ -117,11 +119,13 @@ class GameBotTurnDriverTest {
         }
 
         @Override
-        public Player findPlayerById(String playerId) {
-            if (("player-" + debtor.getId()).equals(playerId)) {
-                return debtor;
-            }
-            return null;
+        public boolean isComputerPlayer(String playerId) {
+            return computerPlayerId.equals(playerId);
+        }
+
+        @Override
+        public ComputerPlayerProfile computerProfileFor(String playerId) {
+            return computerPlayerId.equals(playerId) ? computerProfile : ComputerPlayerProfile.HUMAN;
         }
 
         @Override
@@ -130,7 +134,7 @@ class GameBotTurnDriverTest {
         }
 
         @Override
-        public boolean handleComputerTradeTurn(Player tradeActor) {
+        public boolean handleComputerTradeTurn(String actorId, ComputerPlayerProfile profile) {
             return false;
         }
 
@@ -155,13 +159,13 @@ class GameBotTurnDriverTest {
         }
 
         @Override
-        public ComputerTurnContext createTurnContext(Player turnPlayer) {
-            contextPlayer = turnPlayer;
+        public ComputerTurnContext createTurnContext(String playerId, ComputerPlayerProfile profile) {
+            contextPlayerId = playerId;
             return new ComputerTurnContext() {
                 @Override
                 public GameView gameView() {
                     return new GameView(
-                            debtor.getId(),
+                            0,
                             List.of(currentPlayerView()),
                             new VisibleActionsView(false, true, false, false, false),
                             null,
@@ -175,11 +179,11 @@ class GameBotTurnDriverTest {
                 @Override
                 public PlayerView currentPlayerView() {
                     return new PlayerView(
-                            debtor.getId(),
-                            debtor.getName(),
-                            debtor.getMoneyAmount(),
-                            debtor.getTurnNumber(),
-                            debtor.getComputerProfile(),
+                            0,
+                            "Debtor",
+                            1500,
+                            2,
+                            computerProfile,
                             null,
                             false,
                             0,

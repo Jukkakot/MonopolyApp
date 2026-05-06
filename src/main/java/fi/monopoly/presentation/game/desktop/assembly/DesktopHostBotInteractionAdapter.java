@@ -1,6 +1,5 @@
 package fi.monopoly.presentation.game.desktop.assembly;
 
-import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
 import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.GameView;
@@ -43,13 +42,13 @@ public final class DesktopHostBotInteractionAdapter implements HostBotInteractio
     }
 
     @Override
-    public boolean handleComputerTradeTurn(Player player) {
-        return tradeController.handleComputerTradeTurn(player);
+    public boolean handleComputerTradeTurn(String actorId, ComputerPlayerProfile profile) {
+        return tradeController.handleComputerTradeTurn(actorId, profile);
     }
 
     @Override
-    public ComputerDecision tryInitiateComputerTrade(Player player) {
-        return tradeController.tryInitiateComputerTrade(player);
+    public ComputerDecision tryInitiateComputerTrade(String proposerId, ComputerPlayerProfile profile) {
+        return tradeController.tryInitiateComputerTrade(proposerId, profile);
     }
 
     @Override

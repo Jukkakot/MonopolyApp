@@ -2,8 +2,8 @@ package fi.monopoly.host.bot;
 
 import fi.monopoly.application.command.*;
 import fi.monopoly.client.session.SessionCommandPort;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.ComputerDecision;
+import fi.monopoly.components.computer.ComputerPlayerProfile;
 import fi.monopoly.components.computer.ComputerTurnContext;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
@@ -18,7 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public final class SessionBackedComputerTurnContext implements ComputerTurnContext {
-    private final Player player;
+    private final String playerId;
+    private final ComputerPlayerProfile profile;
     private final SessionCommandPort sessionCommandPort;
     private final HostBotInteractionAdapter interactionAdapter;
     private final Runnable syncPresentationState;
@@ -31,12 +32,12 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public GameView gameView() {
-        return interactionAdapter.currentGameView("player-" + player.getId());
+        return interactionAdapter.currentGameView(playerId);
     }
 
     @Override
     public PlayerView currentPlayerView() {
-        return interactionAdapter.currentPlayerView("player-" + player.getId());
+        return interactionAdapter.currentPlayerView(playerId);
     }
 
     @Override
@@ -53,10 +54,11 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
             if (!result.rejections().isEmpty()) {
                 log.debug("Rejected bot command {} for player {}: {}",
                         command.getClass().getSimpleName(),
-                        player.getName(),
+                        playerId,
                         result.rejections().get(0).message());
             }
-            log.debug("Bot command seam state: phase={}, pendingDecision={}, auctionState={}, tradeState={}, debtState={}, rollAvailable={}, endTurnAvailable={}",
+            log.debug("Bot command seam state: player={} phase={}, pendingDecision={}, auctionState={}, tradeState={}, debtState={}, rollAvailable={}, endTurnAvailable={}",
+                    playerId,
                     state.turn().phase(),
                     state.pendingDecision() != null,
                     state.auctionState() != null,
@@ -73,7 +75,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public boolean resolveActivePopup() {
-        boolean resolved = interactionAdapter.resolveVisiblePopupFor(player.getComputerProfile());
+        boolean resolved = interactionAdapter.resolveVisiblePopupFor(profile);
         if (resolved) {
             delayKind = BotTurnScheduler.DelayKind.RESOLVE_POPUP;
         }
@@ -100,7 +102,7 @@ public final class SessionBackedComputerTurnContext implements ComputerTurnConte
 
     @Override
     public ComputerDecision initiateTrade() {
-        ComputerDecision decision = interactionAdapter.tryInitiateComputerTrade(player);
+        ComputerDecision decision = interactionAdapter.tryInitiateComputerTrade(playerId, profile);
         if (decision != null) {
             delayKind = BotTurnScheduler.DelayKind.TRADE;
         }
