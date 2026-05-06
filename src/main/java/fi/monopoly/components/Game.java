@@ -68,22 +68,11 @@ public class Game implements MonopolyEventListener {
             Locale.forLanguageTag("fi"),
             Locale.ENGLISH
     );
-    private static final boolean FORCE_DEBT_DEBUG_SCENARIO = false;
     void setupDefaultGameState(MonopolyRuntime runtime, Board board, Players players) {
         Spot spot = board.getSpots().get(0);
         players.addPlayer(new Player(runtime, text("game.player.default1"), Color.MEDIUMPURPLE, spot, ComputerPlayerProfile.STRONG));
         players.addPlayer(new Player(runtime, text("game.player.default2"), Color.PINK, spot, ComputerPlayerProfile.STRONG));
         players.addPlayer(new Player(runtime, text("game.player.default3"), Color.DARKOLIVEGREEN, spot, ComputerPlayerProfile.STRONG));
-
-        //        players.addPlayer(new Player("Neljäs", Color.TURQUOISE, spot));
-        //        players.addPlayer(new Player("Viides", Color.MEDIUMBLUE, spot));
-        //        players.addPlayer(new Player("Kuudes", Color.MEDIUMSPRINGGREEN, spot));
-
-        //        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B1));
-        //        players.getTurn().buyProperty(PropertyFactory.getProperty(SpotType.B2));
-        //        if (!FORCE_DEBT_DEBUG_SCENARIO) {
-        //            players.giveRandomDeeds(board);
-        //        }
     }
 
     // Core services
@@ -231,9 +220,6 @@ public class Game implements MonopolyEventListener {
         gameDesktopSessionCoordinator.applyRestoredSessionState(shellDependencies, restoredSessionState);
         gameDesktopSessionCoordinator.initializeSessionPresentation(shellDependencies, restoredSessionState);
 
-        if (FORCE_DEBT_DEBUG_SCENARIO) {
-            debugController.initializeDebtDebugScenario();
-        }
     }
 
     private Board getBoard() {

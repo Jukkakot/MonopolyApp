@@ -1,7 +1,6 @@
 BACKLOG
 
 RULES AND GAME START
-[Low] Remove random starting deeds from normal game setup
 
 TRADING
 

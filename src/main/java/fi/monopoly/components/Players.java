@@ -93,26 +93,6 @@ public class Players {
         );
     }
 
-    public void giveRandomDeeds(Board board) {
-        List<Spot> propertySpots = new ArrayList<>(board.getSpots().stream().filter(spot -> spot instanceof PropertySpot).toList());
-        Collections.shuffle(propertySpots);
-        int loopCount = 0;
-        while (propertySpots.size() > 20) {
-            PropertySpot spot = (PropertySpot) propertySpots.get(0);
-            playerList.forEach(player -> {
-                if (Math.random() < 0.2) {
-                    boolean couldBuyProperty = player.buyProperty(spot.getProperty());
-                    if (couldBuyProperty) {
-                        propertySpots.remove(spot);
-                    }
-                }
-            });
-            if (loopCount++ >= 100) {
-                break;
-            }
-        }
-    }
-
     public int count() {
         return playerList.size();
     }
