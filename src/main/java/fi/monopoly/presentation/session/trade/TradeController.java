@@ -75,7 +75,7 @@ public final class TradeController {
                 tradeUiBuilder.buildPartnerSelectionView(
                         proposer,
                         tradePartners,
-                        player -> () -> openTrade(proposer, player)
+                        player -> () -> openTrade(playerId(proposer), playerId(player))
                 )
         );
     }
@@ -100,7 +100,9 @@ public final class TradeController {
         if (plan == null) {
             return null;
         }
-        if (!openTrade(plan.offer().proposer(), plan.offer().recipient())) {
+        String planProposerId = playerId(plan.offer().proposer());
+        String planRecipientId = playerId(plan.offer().recipient());
+        if (!openTrade(planProposerId, planRecipientId)) {
             return null;
         }
         TradeState tradeState = sessionApplicationService.currentState().tradeState();
@@ -108,9 +110,9 @@ public final class TradeController {
             return null;
         }
         replaceOffer(tradeState, legacyTradeGateway.toState(plan.offer()), true);
-        handleResult(sessionApplicationService.handle(new SubmitTradeOfferCommand(sessionId, playerId(plan.offer().proposer()), tradeState.tradeId())));
+        handleResult(sessionApplicationService.handle(new SubmitTradeOfferCommand(sessionId, planProposerId, tradeState.tradeId())));
         Player recipient = plan.offer().recipient();
-        handleComputerTradeTurn(playerId(recipient), recipient.getComputerProfile());
+        handleComputerTradeTurn(planRecipientId, recipient.getComputerProfile());
         return plan.decision();
     }
 
@@ -149,12 +151,9 @@ public final class TradeController {
         return handleResult(sessionApplicationService.handle(new CounterTradeCommand(sessionId, actorId, tradeState.tradeId()))).accepted();
     }
 
-    private boolean openTrade(Player proposer, Player recipient) {
+    private boolean openTrade(String proposerId, String recipientId) {
         CommandResult result = sessionApplicationService.handle(new OpenTradeCommand(
-                sessionId,
-                playerId(proposer),
-                playerId(recipient)
-        ));
+                sessionId, proposerId, recipientId));
         handleResult(result);
         return result.accepted();
     }
