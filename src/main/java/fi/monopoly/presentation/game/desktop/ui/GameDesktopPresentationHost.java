@@ -1,7 +1,6 @@
 package fi.monopoly.presentation.game.desktop.ui;
 
 import fi.monopoly.client.desktop.DesktopImageCatalog;
-import fi.monopoly.components.Player;
 import fi.monopoly.components.computer.GameView;
 import fi.monopoly.components.computer.PlayerView;
 import fi.monopoly.domain.session.SessionState;
@@ -176,15 +175,15 @@ public final class GameDesktopPresentationHost {
         gameFrameCoordinator.enforcePrimaryTurnControlInvariant(shellDependencies.debtState() != null);
     }
 
-    public GameView createGameView(Player currentPlayer) {
+    public GameView createGameView(String playerId) {
         long snapshotStart = System.nanoTime();
-        GameView view = sessionViewFacade.createGameView(currentPlayer);
+        GameView view = sessionViewFacade.createGameView(playerId);
         debugPerformanceStats.recordGameViewBuild(System.nanoTime() - snapshotStart);
         return view;
     }
 
-    public PlayerView createPlayerView(Player player) {
-        return sessionViewFacade.createPlayerView(player);
+    public PlayerView createPlayerView(String playerId) {
+        return sessionViewFacade.createPlayerView(playerId);
     }
 
     public List<String> debugPerformanceLines(float fps) {

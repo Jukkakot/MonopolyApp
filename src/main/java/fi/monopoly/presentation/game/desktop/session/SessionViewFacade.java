@@ -40,7 +40,17 @@ public final class SessionViewFacade {
     private final Map<Integer, CachedPlayerView> playerViewCache = new HashMap<>();
     private CachedGameView cachedGameView;
 
-    public GameView createGameView(Player currentPlayer) {
+    public GameView createGameView(String playerId) {
+        Player currentPlayer = findPlayerByDomainId(playerId);
+        return buildGameView(currentPlayer);
+    }
+
+    public PlayerView createPlayerView(String playerId) {
+        Player player = findPlayerByDomainId(playerId);
+        return player != null ? buildPlayerView(player) : null;
+    }
+
+    private GameView buildGameView(Player currentPlayer) {
         Players players = players();
         long gameViewSignature = buildGameViewSignature(currentPlayer);
         if (cachedGameView != null && cachedGameView.signature() == gameViewSignature) {
@@ -63,11 +73,11 @@ public final class SessionViewFacade {
                 debtTargetName(debtState.paymentRequest())
         );
         List<PlayerView> playerViews = players.getPlayers().stream()
-                .map(this::createPlayerView)
+                .map(this::buildPlayerView)
                 .sorted(Comparator.comparingInt(PlayerView::turnNumber))
                 .toList();
         GameView view = new GameView(
-                currentPlayer.getId(),
+                currentPlayer != null ? currentPlayer.getId() : -1,
                 playerViews,
                 new VisibleActionsView(
                         popupService.isAnyVisible(),
@@ -86,7 +96,7 @@ public final class SessionViewFacade {
         return view;
     }
 
-    public PlayerView createPlayerView(Player player) {
+    private PlayerView buildPlayerView(Player player) {
         Players players = players();
         long playerSignature = buildPlayerViewSignature(player);
         CachedPlayerView cachedPlayerView = playerViewCache.get(player.getId());
@@ -124,6 +134,14 @@ public final class SessionViewFacade {
         );
         playerViewCache.put(player.getId(), new CachedPlayerView(playerSignature, playerView));
         return playerView;
+    }
+
+    private Player findPlayerByDomainId(String playerId) {
+        if (playerId == null) return null;
+        for (Player candidate : players().getPlayers()) {
+            if (playerId.equals("player-" + candidate.getId())) return candidate;
+        }
+        return null;
     }
 
     private long buildGameViewSignature(Player currentPlayer) {

@@ -533,32 +533,16 @@ public class Game implements MonopolyEventListener {
         presentationHost.applyComputerActionCooldownIfAnimationJustFinished(animationWasRunning);
     }
 
-    private GameView createGameView(Player currentPlayer) {
-        return presentationHost.createGameView(currentPlayer);
-    }
-
     private GameView createGameViewById(String playerId) {
-        if (players == null) return null;
-        Player p = players.getPlayers().stream()
-                .filter(player -> playerId.equals("player-" + player.getId()))
-                .findFirst().orElse(null);
-        return p != null ? createGameView(p) : null;
+        return players != null ? presentationHost.createGameView(playerId) : null;
     }
 
     public List<String> debugPerformanceLines(float fps) {
         return presentationHost.debugPerformanceLines(fps);
     }
 
-    private PlayerView createPlayerView(Player player) {
-        return presentationHost.createPlayerView(player);
-    }
-
     private PlayerView createPlayerViewById(String playerId) {
-        if (players == null) return null;
-        Player p = players.getPlayers().stream()
-                .filter(player -> playerId.equals("player-" + player.getId()))
-                .findFirst().orElse(null);
-        return p != null ? createPlayerView(p) : null;
+        return players != null ? presentationHost.createPlayerView(playerId) : null;
     }
 
     private void enforcePrimaryTurnControlInvariant() {
@@ -740,11 +724,11 @@ public class Game implements MonopolyEventListener {
         }
 
         public GameView createGameView(Player player) {
-            return Game.this.createGameView(player);
+            return Game.this.presentationHost.createGameView("player-" + player.getId());
         }
 
         public PlayerView createPlayerView(Player player) {
-            return Game.this.createPlayerView(player);
+            return Game.this.presentationHost.createPlayerView("player-" + player.getId());
         }
     }
 
