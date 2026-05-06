@@ -17,5 +17,3 @@ ECONOMY AND PACING
 BACKEND EXTRACTION (separation-program)
 [Low] Remove Player from TradeController/LegacyTradeGateway — trade partner selection and
       AI trade logic are deeply tied to legacy Player objects
-[Low] Make default player names/count configurable for remote mode via system properties
-      (currently hardcoded to ["Jukka", "Botti"] in HttpBackedDesktopClientBindingFactory)
