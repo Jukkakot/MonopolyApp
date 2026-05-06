@@ -12,7 +12,6 @@ import fi.monopoly.components.Players;
 import fi.monopoly.components.dices.Dices;
 import fi.monopoly.components.trade.TradeOfferEvaluator;
 import fi.monopoly.components.trade.TradeUiBuilder;
-import fi.monopoly.domain.session.SessionState;
 import fi.monopoly.presentation.legacy.session.LegacySessionApplicationFactory;
 import fi.monopoly.presentation.legacy.session.LegacySessionPaymentPort;
 import fi.monopoly.presentation.legacy.session.debt.LegacyPaymentGateway;
