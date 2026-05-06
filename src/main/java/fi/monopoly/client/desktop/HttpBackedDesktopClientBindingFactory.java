@@ -35,13 +35,49 @@ public final class HttpBackedDesktopClientBindingFactory implements DesktopClien
     private static final List<String> DEFAULT_COLORS = List.of("#E63946", "#2A9D8F", "#E9C46A", "#F4A261");
     private static final List<SeatKind> DEFAULT_SEAT_KINDS = List.of(SeatKind.HUMAN, SeatKind.BOT);
 
+    /**
+     * Reads player configuration from system properties.
+     *
+     * <p>Supported properties:
+     * <ul>
+     *   <li>{@code monopoly.players} — comma-separated names, e.g. {@code Jukka,Mari,Pekka}</li>
+     *   <li>{@code monopoly.bots} — comma-separated 0/1 flags matching players, e.g. {@code 0,1,0}.
+     *       Defaults to first seat HUMAN, all others BOT.</li>
+     * </ul>
+     * If {@code monopoly.players} is absent the defaults above are used.
+     */
+    private static SessionConfig resolveSessionConfig() {
+        String playersProp = System.getProperty("monopoly.players");
+        if (playersProp == null || playersProp.isBlank()) {
+            return new SessionConfig(DEFAULT_PLAYER_NAMES, DEFAULT_COLORS, DEFAULT_SEAT_KINDS);
+        }
+        List<String> names = List.of(playersProp.split(",")).stream().map(String::trim).toList();
+        String botsProp = System.getProperty("monopoly.bots", "");
+        String[] botFlags = botsProp.isBlank() ? new String[0] : botsProp.split(",");
+        List<SeatKind> seatKinds = new java.util.ArrayList<>();
+        for (int i = 0; i < names.size(); i++) {
+            boolean isBot = i < botFlags.length
+                    ? "1".equals(botFlags[i].trim())
+                    : (i > 0);
+            seatKinds.add(isBot ? SeatKind.BOT : SeatKind.HUMAN);
+        }
+        List<String> colors = DEFAULT_COLORS.subList(0, Math.min(names.size(), DEFAULT_COLORS.size()));
+        return new SessionConfig(names, colors, seatKinds);
+    }
+
+    private record SessionConfig(List<String> names, List<String> colors, List<SeatKind> seatKinds) {}
+
     @Override
     public DesktopClientHostBinding create(
             MonopolyApp app,
             Runnable saveLocalSessionAction,
             Runnable loadLocalSessionAction) {
         EmbeddedSessionServer server = startServer();
-        String sessionId = server.create(DEFAULT_PLAYER_NAMES, DEFAULT_COLORS, DEFAULT_SEAT_KINDS);
+        SessionConfig config = resolveSessionConfig();
+        log.info("Remote session config: players={} bots={}",
+                config.names(),
+                config.seatKinds().stream().map(k -> k == SeatKind.BOT ? "BOT" : "HUMAN").toList());
+        String sessionId = server.create(config.names(), config.colors(), config.seatKinds());
         String baseUrl = server.baseUrl();
 
         HttpSessionCommandPort commandPort = HttpSessionCommandPort.forSession(baseUrl, sessionId);
